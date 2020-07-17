@@ -1,0 +1,18 @@
+.DS_Store
+.Trashes
+ehthumbs.db
+Thumbs.db
+build
+.cxx
+/app/release
+.gradle
+local.properties
+.idea/
+*.apk
+*.ap_
+*.dex
+*.class
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so

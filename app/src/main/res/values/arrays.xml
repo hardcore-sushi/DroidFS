@@ -1,0 +1,18 @@
+<resources>
+    <string-array name="sort_orders_entries">
+        <item>Name</item>
+        <item>Date</item>
+        <item>Size</item>
+        <item>Name (desc)</item>
+        <item>Size (desc)</item>
+        <item>Date (desc)</item>
+    </string-array>
+    <string-array name="sort_orders_values">
+        <item>name</item>
+        <item>date</item>
+        <item>size</item>
+        <item>name_desc</item>
+        <item>size_desc</item>
+        <item>date_desc</item>
+    </string-array>
+</resources>

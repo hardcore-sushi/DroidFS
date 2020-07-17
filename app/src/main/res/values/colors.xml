@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#262626</color>
+    <color name="colorPrimaryDark">#262626</color>
+    <color name="colorAccent">#6CC341</color>
+    <color name="cyanea_primary_reference">@color/colorPrimaryDark</color>
+    <color name="cyanea_primary_dark_reference">@color/colorPrimaryDark</color>
+    <color name="themeColor">@color/colorAccent</color>
+    <color name="backgroundColor">#333333</color>
+    <color name="fullScreenBackgroundColor">#000000</color>
+    <color name="textColor">#ffffff</color>
+    <!--<color name="textColorSecondary">#666666</color>
+    <color name="editTextColor">@color/textColor</color>
+    <color name="editBackgroundTint">@color/themeColor</color>
+    <color name="buttonTextColor">#000000</color>
+    <color name="alert_dialogBackgroundColor">@color/backgroundColor</color>-->
+    <color name="buttonBackgroundColor">#5B5A5C</color>
+    <color name="item_selected">#66666666</color>
+    <color name="menuIcon">#ffffff</color>
+    <color name="infoBarBackgroundColor">#111111</color>
+    <color name="fingerprint_wait">#ffffff</color>
+    <color name="fingerprint_success">#6CC341</color>
+    <color name="fingerprint_failed">#ff0000</color>
+</resources>

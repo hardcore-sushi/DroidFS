@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="25dp"
+    android:background="@color/infoBarBackgroundColor"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/current_path_text"
+        android:layout_width="20dp"
+        android:layout_height="wrap_content"
+        android:ellipsize="start"
+        android:singleLine="true"
+        android:layout_weight="1"
+        android:layout_marginStart="50dp"
+        android:textSize="15dp"/>
+
+    <TextView
+        android:id="@+id/total_size_text"
+        android:layout_width="20dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:textAlignment="viewEnd"
+        android:layout_marginEnd="50dp"
+        android:textSize="15dp"/>
+
+</LinearLayout>

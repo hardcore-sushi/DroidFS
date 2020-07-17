@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:background="@color/fullScreenBackgroundColor"
+    android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/music_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAlignment="center"
+            android:textSize="18sp"
+            android:padding="10dp"/>
+
+        <sushi.hardcore.droidfs.widgets.ColoredSeekBar
+            android:id="@+id/seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_horizontal">
+
+            <sushi.hardcore.droidfs.widgets.ColoredImageButton
+                android:id="@+id/button_pause"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/icon_pause"
+                android:scaleType="fitCenter"
+                android:background="#00000000"/>
+
+            <sushi.hardcore.droidfs.widgets.ColoredImageButton
+                android:id="@+id/button_stop"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/icon_stop"
+                android:scaleType="fitCenter"
+                android:background="#00000000"/>
+
+        </LinearLayout>
+
+</LinearLayout>

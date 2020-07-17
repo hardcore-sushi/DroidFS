@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/explorer_menu_validate"
+        app:showAsAction="always"
+        android:visible="false"
+        android:icon="@drawable/icon_check"/>
+
+    <item
+        android:id="@+id/explorer_menu_select_all"
+        app:showAsAction="always"
+        android:visible="false"
+        android:icon="@drawable/icon_select_all"/>
+
+    <item
+        android:id="@+id/explorer_menu_rename"
+        app:showAsAction="never"
+        android:visible="false"
+        android:title="@string/rename"/>
+
+    <item
+        android:id="@+id/explorer_menu_sort"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_sort"
+        app:iconTint="@color/menuIcon"/>
+
+    <item
+        android:id="@+id/explorer_menu_close"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_close"/>
+
+</menu>
