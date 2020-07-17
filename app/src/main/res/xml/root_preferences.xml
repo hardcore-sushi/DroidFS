@@ -1,0 +1,35 @@
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory android:title="@string/ui">
+
+        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
+            android:defaultValue="@color/themeColor"
+            android:key="themeColor"
+            android:title="@string/preference_theme_color_title"
+            android:icon="@drawable/icon_palette"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/explorer">
+
+        <ListPreference
+            app:defaultValue="name"
+            app:entries="@array/sort_orders_entries"
+            app:entryValues="@array/sort_orders_values"
+            app:key="sort_order"
+            android:title="@string/settings_title_sort_order"
+            android:icon="@drawable/icon_sort"
+            app:useSimpleSummaryProvider="true"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/unsafe_features">
+        <Preference
+            android:title="@string/manage_unsafe_features"
+            android:summary="@string/manage_unsafe_features_summary"
+            android:icon="@drawable/icon_warning"
+            android:fragment="sushi.hardcore.droidfs.SettingsActivity$UnsafeFeaturesSettingsFragment"/>
+    </PreferenceCategory>
+
+</PreferenceScreen>

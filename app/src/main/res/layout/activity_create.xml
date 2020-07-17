@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <include layout="@layout/toolbar"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="@dimen/create_activity_label_width"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="@string/volume_path"
+                    android:textSize="@dimen/edit_text_label_size" />
+
+                <sushi.hardcore.droidfs.widgets.ColoredEditText
+                    android:id="@+id/edit_volume_path"
+                    android:layout_width="0dp"
+                    android:layout_weight="0.5"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:maxLines="1"/>
+
+                <sushi.hardcore.droidfs.widgets.ColoredImageButton
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:onClick="pick_directory"
+                    android:scaleType="fitCenter"
+                    android:background="#00000000"
+                    android:src="@drawable/icon_folder" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="@dimen/create_activity_label_width"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="@string/password"
+                    android:textSize="@dimen/edit_text_label_size" />
+
+                <sushi.hardcore.droidfs.widgets.ColoredEditText
+                    android:id="@+id/edit_password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:maxLines="1"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="@dimen/create_activity_label_width"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    android:text="@string/password_confirm"
+                    android:textSize="@dimen/edit_text_label_size" />
+
+                <sushi.hardcore.droidfs.widgets.ColoredEditText
+                    android:id="@+id/edit_password_confirm"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:inputType="textPassword"
+                    android:maxLines="1"
+                    android:imeOptions="actionDone"/>
+
+            </LinearLayout>
+
+            <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+                android:id="@+id/checkbox_remember_path"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/remember_volume_path"
+                android:onClick="onClickRememberPath"/>
+
+            <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+                android:id="@+id/checkbox_save_password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/fingerprint_save_checkbox_text"
+                android:onClick="onClickSavePasswordHash"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="20dp"
+                android:gravity="center"
+                android:text="@string/create_password_warning"/>
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/action_activity_button_height"
+                android:layout_marginHorizontal="@dimen/action_activity_button_hor_margin"
+                android:onClick="onClickCreate"
+                android:text="@string/create_volume"
+                style="@style/button"/>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>

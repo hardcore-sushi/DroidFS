@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <PreferenceCategory
+        android:title="@string/ui">
+
+        <SwitchPreference
+            android:icon="@drawable/icon_screenshot"
+            android:key="usf_screenshot"
+            android:title="@string/usf_screenshot"
+            android:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/explorer">
+
+        <SwitchPreference
+            android:icon="@drawable/icon_open_in_new"
+            android:key="usf_open"
+            android:title="@string/usf_open"
+            android:defaultValue="false"/>
+        <SwitchPreference
+            android:icon="@drawable/icon_decrypt"
+            android:key="usf_decrypt"
+            android:title="@string/usf_decrypt"
+            android:defaultValue="false"/>
+        <SwitchPreference
+            android:icon="@drawable/icon_share"
+            android:key="usf_share"
+            android:title="@string/usf_share"
+            android:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        android:title="@string/usf_volume_management">
+
+        <SwitchPreference
+            android:icon="@drawable/icon_fingerprint"
+            android:key="usf_fingerprint"
+            android:title="@string/usf_fingerprint"
+            android:defaultValue="false"/>
+
+    </PreferenceCategory>
+
+</PreferenceScreen>

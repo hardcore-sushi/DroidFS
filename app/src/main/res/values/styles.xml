@@ -1,0 +1,29 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <!--<item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorAccent">@color/colorAccent</item>-->
+        <item name="android:colorBackground">@color/backgroundColor</item>
+        <item name="android:textColor">@color/textColor</item>
+        <item name="buttonStyle">@style/button</item>
+        <item name="checkboxStyle">@style/checkbox</item>
+        <!--<item name="actionOverflowMenuStyle">@style/menu_overflow</item>-->
+    </style>
+    <style name="fab_label">
+        <item name="android:background">@drawable/fab_label_background</item>
+    </style>
+    <style name="button" parent="Widget.AppCompat.Button">
+        <item name="android:backgroundTint">@color/buttonBackgroundColor</item>
+    </style>
+    <style name="listViewNoDivider">
+        <item name="android:divider">#000000</item>
+        <item name="android:dividerHeight">0dp</item>
+    </style>
+    <style name="checkbox" parent="Widget.AppCompat.CompoundButton.CheckBox">
+        <item name="android:textColor">@color/textColor</item>
+    </style>
+    <!--<style name="menu_overflow" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@drawable/popupmenu_overflow</item>
+    </style>-->
+</resources>

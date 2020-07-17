@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="main_activity_button_height">70dp</dimen>
+    <dimen name="main_activity_button_hor_margin">50dp</dimen>
+    <dimen name="main_activity_button_ver_margin">15dp</dimen>
+    <dimen name="create_activity_label_width">100dp</dimen>
+    <dimen name="edit_text_label_size">15sp</dimen>
+    <dimen name="open_activity_label_width">90dp</dimen>
+    <dimen name="change_password_activity_label_width">100dp</dimen>
+    <dimen name="action_activity_button_hor_margin">60dp</dimen>
+    <dimen name="action_activity_button_height">60dp</dimen>
+</resources>
