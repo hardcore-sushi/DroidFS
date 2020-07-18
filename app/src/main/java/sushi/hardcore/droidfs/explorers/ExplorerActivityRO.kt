@@ -54,7 +54,7 @@ open class ExplorerActivityRO : ColoredActivity() {
         }
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         val intent = intent
-        volume_name = intent.getStringExtra("volume_name")
+        volume_name = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
         sort_modes_entries = resources.getStringArray(R.array.sort_orders_entries)
@@ -143,7 +143,7 @@ open class ExplorerActivityRO : ColoredActivity() {
         invalidateOptionsMenu()
     }
 
-    private fun sort_explorer_elements() {
+    private fun sortExplorerElements() {
         when (sort_modes_values[current_sort_mode_index]) {
             "name" -> {
                 explorer_elements.sortWith(Comparator { o1, o2 -> o1.name.compareTo(o2.name) })
@@ -171,7 +171,7 @@ open class ExplorerActivityRO : ColoredActivity() {
     protected fun setCurrentPath(path: String) {
         explorer_elements = gocryptfsVolume.list_dir(path)
         text_dir_empty.visibility = if (explorer_elements.size == 0) View.VISIBLE else View.INVISIBLE
-        sort_explorer_elements()
+        sortExplorerElements()
         if (path.isNotEmpty()) { //not root
             explorer_elements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1))
         }
@@ -213,7 +213,7 @@ open class ExplorerActivityRO : ColoredActivity() {
         }
     }
 
-    fun createFolder(folder_name: String){
+    private fun createFolder(folder_name: String){
         if (folder_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
@@ -270,7 +270,7 @@ open class ExplorerActivityRO : ColoredActivity() {
         }
     }
 
-    fun handle_menu_items(menu: Menu){
+    fun handleMenuItems(menu: Menu){
         menu.findItem(R.id.explorer_menu_rename).isVisible = false
         if (usf_open){
             menu.findItem(R.id.explorer_menu_external_open)?.isVisible = false

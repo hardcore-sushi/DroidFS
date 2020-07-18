@@ -189,7 +189,7 @@ class ExplorerActivity : ExplorerActivityRO() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer, menu)
-        handle_menu_items(menu)
+        handleMenuItems(menu)
         if (usf_share){
             menu.findItem(R.id.explorer_menu_share).isVisible = false
         }

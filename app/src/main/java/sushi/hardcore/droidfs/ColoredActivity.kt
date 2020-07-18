@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.WindowManager
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
@@ -13,12 +14,9 @@ open class ColoredActivity: CyaneaAppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
         val themeColor = ThemeColor.getThemeColor(this)
-        val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
         if (cyanea.accent != themeColor){
+            val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
             cyanea.edit{
                 accent(themeColor)
                 //accentDark(themeColor)

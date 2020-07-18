@@ -5,6 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_change_password.*
@@ -39,6 +40,9 @@ class OpenActivity : ColoredActivity() {
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
         setContentView(R.layout.activity_open)
         setSupportActionBar(toolbar)
         //val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)

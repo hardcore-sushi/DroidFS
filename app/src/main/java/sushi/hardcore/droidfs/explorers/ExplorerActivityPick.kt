@@ -41,7 +41,7 @@ class ExplorerActivityPick : ExplorerActivityRO() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer_pick, menu)
-        handle_menu_items(menu)
+        handleMenuItems(menu)
         val any_item_selected = explorer_adapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.explorer_menu_select_all).isVisible = any_item_selected
         menu.findItem(R.id.explorer_menu_validate).isVisible = any_item_selected

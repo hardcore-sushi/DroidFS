@@ -1,64 +1,59 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.drawable.Drawable
 import android.os.Handler
-import android.util.DisplayMetrics
 import android.view.View
+import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
+import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.R
+import java.security.MessageDigest
 
 class ImageViewer: FileViewerActivity() {
     companion object {
         private const val hideDelay: Long = 3000
     }
-    private lateinit var bmpImage: Bitmap
+    private lateinit var glideImage: RequestBuilder<Drawable>
+    private var rotationAngle: Float = 0F
     private val handler = Handler()
     private val hideActionButtons = Runnable { action_buttons.visibility = View.GONE }
     override fun viewFile() {
-        loadWholeFile(filePath)?.let {
-            val metrics = DisplayMetrics()
-            windowManager.defaultDisplay.getRealMetrics(metrics)
-            bmpImage = decodeSampledBitmapFromBuffer(it, metrics.widthPixels, metrics.heightPixels)
+        val imageBuff = loadWholeFile(filePath)
+        if (imageBuff != null){
             setContentView(R.layout.activity_image_viewer)
-            image_viewer.setImageBitmap(bmpImage)
+            glideImage = Glide.with(this).load(imageBuff)
+            glideImage.into(image_viewer)
             handler.postDelayed(hideActionButtons, hideDelay)
         }
     }
 
-    private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-        var inSampleSize = 1
-        if (options.outHeight > reqHeight || options.outWidth > reqWidth){
-            val halfHeight = options.outHeight/2
-            val halfWidth = options.outWidth/2
-            while (halfHeight/inSampleSize >= reqHeight && halfWidth/inSampleSize >= reqWidth){
-                inSampleSize *= 2
-            }
+    class RotateTransformation(private val rotationAngle: Float): BitmapTransformation() {
+
+        override fun transform(pool: BitmapPool, toTransform: Bitmap, outWidth: Int, outHeight: Int): Bitmap {
+            val matrix = Matrix()
+            matrix.postRotate(rotationAngle)
+            return Bitmap.createBitmap(toTransform, 0, 0, toTransform.width, toTransform.height, matrix, true)
         }
-        return inSampleSize
-    }
-    private fun decodeSampledBitmapFromBuffer(buff: ByteArray, reqWidth: Int, reqHeight: Int): Bitmap {
-        return BitmapFactory.Options().run {
-            inJustDecodeBounds = true
-            BitmapFactory.decodeByteArray(buff, 0, buff.size, this)
-            inSampleSize = calculateInSampleSize(this, reqWidth, reqHeight)
-            inJustDecodeBounds = false
-            BitmapFactory.decodeByteArray(buff, 0, buff.size, this)
+
+        override fun updateDiskCacheKey(messageDigest: MessageDigest) {
+            messageDigest.update("rotate$rotationAngle".toByteArray())
         }
     }
 
-    private fun rotateImage(degrees: Float){
-        val matrix = Matrix()
-        matrix.postRotate(degrees)
-        bmpImage = Bitmap.createBitmap(bmpImage, 0, 0, bmpImage.width, bmpImage.height, matrix, true)
-        image_viewer.setImageBitmap(bmpImage)
+    private fun rotateImage(){
+        glideImage.transform(RotateTransformation(rotationAngle)).into(image_viewer)
     }
     fun onCLickRotateRight(view: View){
-        rotateImage(90F)
+        rotationAngle += 90
+        rotateImage()
     }
     fun onClickRotateLeft(view: View){
-        rotateImage(-90F)
+        rotationAngle -= 90
+        rotateImage()
     }
 
     override fun onUserInteraction() {

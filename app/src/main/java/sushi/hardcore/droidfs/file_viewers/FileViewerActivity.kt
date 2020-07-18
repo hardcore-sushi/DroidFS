@@ -15,7 +15,7 @@ import java.io.File
 import java.util.ArrayList
 
 abstract class FileViewerActivity: ColoredActivity() {
-    var cachedFiles: MutableList<Uri> = ArrayList()
+    private var cachedFiles: MutableList<Uri> = ArrayList()
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
     override fun onCreate(savedInstanceState: Bundle?) {
