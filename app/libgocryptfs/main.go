@@ -48,7 +48,6 @@ type SessionVars struct {
   fileIDs map[int][]byte
 }
 
-//var fdebug *os.File
 var sessions map[int]SessionVars
 
 func err_to_bool(e error) bool {
@@ -519,7 +518,6 @@ func init_new_session(root_cipher_dir string, masterkey []byte) int {
       c++
     }
     if sessions == nil {
-        //fdebug, _ = os.OpenFile("/storage/emulated/0/gologs.txt", os.O_WRONLY | os.O_TRUNC | os.O_CREATE, os.FileMode(file_mode))
         sessions = make(map[int]SessionVars)
     }
     sessions[sessionID] = new_session;
@@ -797,7 +795,7 @@ func gcf_open_write_mode(sessionID int, path string) int {
 			return -1
 		}
 		// Create content
-    fd, err = syscallcompat.Openat(dirfd, cName, newFlags|syscall.O_CREAT, file_mode)
+			fd, err = syscallcompat.Openat(dirfd, cName, newFlags|syscall.O_CREAT, file_mode)
 		if err != nil {
 			nametransform.DeleteLongNameAt(dirfd, cName)
 		}

@@ -8,7 +8,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.FilesUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 
-class ExplorerActivityDrop : ExplorerActivityRO() {
+class ExplorerActivityDrop : BaseExplorerActivity() {
     override fun init() {
         setContentView(R.layout.activity_explorer_drop)
     }

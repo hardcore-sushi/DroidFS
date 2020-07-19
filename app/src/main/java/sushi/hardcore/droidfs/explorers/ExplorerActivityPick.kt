@@ -9,7 +9,7 @@ import sushi.hardcore.droidfs.provider.TemporaryFileProvider
 import sushi.hardcore.droidfs.util.FilesUtils
 import java.util.*
 
-class ExplorerActivityPick : ExplorerActivityRO() {
+class ExplorerActivityPick : BaseExplorerActivity() {
     private var result_intent = Intent()
     override fun init() {
         super.init()

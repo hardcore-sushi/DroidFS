@@ -13,7 +13,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.Toast
 import com.github.clans.fab.FloatingActionMenu
-import kotlinx.android.synthetic.main.activity_explorer_ro.*
+import kotlinx.android.synthetic.main.activity_explorer_base.*
 import kotlinx.android.synthetic.main.explorer_info_bar.*
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.ColoredActivity
@@ -36,7 +36,7 @@ import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.util.*
 
-open class ExplorerActivityRO : ColoredActivity() {
+open class BaseExplorerActivity : ColoredActivity() {
     private lateinit var shared_prefs_editor: SharedPreferences.Editor
     private lateinit var sort_modes_entries: Array<String>
     private lateinit var sort_modes_values: Array<String>
@@ -81,7 +81,7 @@ open class ExplorerActivityRO : ColoredActivity() {
     }
 
     protected open fun init() {
-        setContentView(R.layout.activity_explorer_ro)
+        setContentView(R.layout.activity_explorer_base)
     }
 
     private fun startFileViewer(cls: Class<*>, filePath: String){
@@ -232,21 +232,21 @@ open class ExplorerActivityRO : ColoredActivity() {
 
     fun onClickAddFolder(view: View?) {
         findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
-        val dialog_edit_text_view = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-        val dialog_edit_text = dialog_edit_text_view.findViewById<EditText>(R.id.dialog_edit_text)
+        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
         val dialog = ColoredAlertDialog(this)
-                .setView(dialog_edit_text_view)
+                .setView(dialogEditTextView)
                 .setTitle(R.string.enter_folder_name)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    val folder_name = dialog_edit_text.text.toString()
-                    createFolder(folder_name)
+                    val folderName = dialogEditText.text.toString()
+                    createFolder(folderName)
                 }
                 .setNegativeButton(R.string.cancel, null)
                 .create()
-        dialog_edit_text.setOnEditorActionListener { _, _, _ ->
-            val folder_name = dialog_edit_text.text.toString()
+        dialogEditText.setOnEditorActionListener { _, _, _ ->
+            val folderName = dialogEditText.text.toString()
             dialog.dismiss()
-            createFolder(folder_name)
+            createFolder(folderName)
             true
         }
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
