@@ -12,6 +12,7 @@ import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
+import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         val metrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(metrics)
         image_logo.layoutParams.height = (metrics.heightPixels/2.2).toInt()
+        Glide.with(this).load(R.drawable.logo).into(image_logo)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
