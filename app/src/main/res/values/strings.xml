@@ -118,4 +118,7 @@
     <string name="discard">Discard</string>
     <string name="word_wrap">Word Wrap</string>
     <string name="outofmemoryerror_msg">OutOfMemoryError: This file is too large to be loaded in memory.</string>
+    <string name="new_file">New File</string>
+    <string name="enter_file_name">File name:</string>
+    <string name="file_creation_failed">Failed to create the file.</string>
 </resources>

@@ -6,6 +6,7 @@
     <color name="cyanea_primary_reference">@color/colorPrimaryDark</color>
     <color name="cyanea_primary_dark_reference">@color/colorPrimaryDark</color>
     <color name="themeColor">@color/colorAccent</color>
+    <color name="cyanea_accent">@color/themeColor</color>
     <color name="backgroundColor">#333333</color>
     <color name="fullScreenBackgroundColor">#000000</color>
     <color name="textColor">#ffffff</color>

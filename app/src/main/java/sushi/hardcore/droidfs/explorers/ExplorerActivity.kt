@@ -6,6 +6,10 @@ import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
+import android.widget.EditText
+import android.widget.Toast
+import com.github.clans.fab.FloatingActionMenu
 import kotlinx.android.synthetic.main.activity_explorer.*
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
@@ -17,7 +21,7 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.io.File
 import java.util.*
 
-class ExplorerActivity : ExplorerActivityRO() {
+class ExplorerActivity : BaseExplorerActivity() {
     private val PICK_DIRECTORY_REQUEST_CODE = 1
     private val PICK_FILES_REQUEST_CODE = 2
     private val PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE = 3
@@ -27,6 +31,48 @@ class ExplorerActivity : ExplorerActivityRO() {
         setContentView(R.layout.activity_explorer)
         usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
         usf_share = sharedPrefs.getBoolean("usf_share", false)
+    }
+
+    private fun createNewFile(fileName: String){
+        if (fileName.isEmpty()) {
+            Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
+        } else {
+            val handleID = gocryptfsVolume.open_write_mode(FilesUtils.path_join(current_path, fileName))
+            if (handleID == -1) {
+                ColoredAlertDialog(this)
+                    .setTitle(R.string.error)
+                    .setMessage(getString(R.string.file_creation_failed))
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else {
+                gocryptfsVolume.close_file(handleID)
+                setCurrentPath(current_path)
+                invalidateOptionsMenu()
+            }
+        }
+    }
+
+    fun onClickCreateFile(view: View) {
+        findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
+        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+        val dialog = ColoredAlertDialog(this)
+            .setView(dialogEditTextView)
+            .setTitle(getString(R.string.enter_file_name))
+            .setPositiveButton(R.string.ok) { _, _ ->
+                val fileName = dialogEditText.text.toString()
+                createNewFile(fileName)
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dialogEditText.setOnEditorActionListener { _, _, _ ->
+            val fileName = dialogEditText.text.toString()
+            dialog.dismiss()
+            createNewFile(fileName)
+            true
+        }
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        dialog.show()
     }
 
     fun onClickAddFile(view: View?) {

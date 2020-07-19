@@ -44,7 +44,7 @@ func Faccessat(dirfd int, path string, mode uint32) error {
 
 // Openat wraps the Openat syscall.
 func Openat(dirfd int, path string, flags int, mode uint32) (fd int, err error) {
-	if flags&syscall.O_CREAT != 0 {
+	/*if flags&syscall.O_CREAT != 0 {
 		// O_CREAT should be used with O_EXCL. O_NOFOLLOW has no effect with O_EXCL.
 		if flags&syscall.O_EXCL == 0 {
 			flags |= syscall.O_EXCL
@@ -54,6 +54,12 @@ func Openat(dirfd int, path string, flags int, mode uint32) (fd int, err error) 
 		if flags&syscall.O_NOFOLLOW == 0 {
 			flags |= syscall.O_NOFOLLOW
 		}
+	}*/
+	if flags&syscall.O_CREAT == 0 {
+		// If O_CREAT is not used, we should use O_NOFOLLOW
+                if flags&syscall.O_NOFOLLOW == 0 {
+                        flags |= syscall.O_NOFOLLOW
+                }
 	}
 	return unix.Openat(dirfd, path, flags, mode)
 }
