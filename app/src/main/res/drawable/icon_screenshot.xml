@@ -4,7 +4,7 @@
     android:viewportHeight="512"
     android:width="24dp"
     android:height="24dp"
-    android:tint="@color/cyanea_accent">
+    android:tint="#FFFFFF">
 
     <path
         android:fillColor="#000000"

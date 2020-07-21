@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowManager
 import androidx.preference.PreferenceManager
-import sushi.hardcore.droidfs.ColoredActivity
+import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.provider.TemporaryFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
@@ -14,16 +14,12 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.io.File
 import java.util.ArrayList
 
-abstract class FileViewerActivity: ColoredActivity() {
+abstract class FileViewerActivity: BaseActivity() {
     private var cachedFiles: MutableList<Uri> = ArrayList()
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
         filePath = intent.getStringExtra("path")!!
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)

@@ -25,7 +25,7 @@ import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.util.*
 
-class ChangePasswordActivity : ColoredActivity() {
+class ChangePasswordActivity : BaseActivity() {
     companion object {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
@@ -34,9 +34,6 @@ class ChangePasswordActivity : ColoredActivity() {
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
         setContentView(R.layout.activity_change_password)
         setSupportActionBar(toolbar)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
@@ -73,7 +70,7 @@ class ChangePasswordActivity : ColoredActivity() {
         }
     }
 
-    fun pick_directory(view: View?) {
+    fun pickDirectory(view: View?) {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
     }

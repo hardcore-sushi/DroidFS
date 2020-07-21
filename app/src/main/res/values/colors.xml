@@ -9,12 +9,12 @@
     <color name="cyanea_accent">@color/themeColor</color>
     <color name="backgroundColor">#333333</color>
     <color name="fullScreenBackgroundColor">#000000</color>
-    <color name="textColor">#ffffff</color>
+    <color name="textColor">#FFFFFF</color>
     <color name="buttonBackgroundColor">#5B5A5C</color>
     <color name="item_selected">#66666666</color>
-    <color name="menuIcon">#ffffff</color>
+    <color name="menuIcon">#FFFFFF</color>
     <color name="infoBarBackgroundColor">#111111</color>
-    <color name="fingerprint_wait">#ffffff</color>
+    <color name="fingerprint_wait">#FFFFFF</color>
     <color name="fingerprint_success">#6CC341</color>
     <color name="fingerprint_failed">#ff0000</color>
 </resources>

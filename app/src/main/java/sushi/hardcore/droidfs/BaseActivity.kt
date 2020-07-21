@@ -9,11 +9,14 @@ import androidx.preference.PreferenceManager
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
 import sushi.hardcore.droidfs.widgets.ThemeColor
 
-open class ColoredActivity: CyaneaAppCompatActivity() {
+open class BaseActivity: CyaneaAppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
+            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
+        }
         val themeColor = ThemeColor.getThemeColor(this)
         if (cyanea.accent != themeColor){
             val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)

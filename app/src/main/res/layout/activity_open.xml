@@ -39,7 +39,7 @@
                 <sushi.hardcore.droidfs.widgets.ColoredImageButton
                     android:layout_width="40dp"
                     android:layout_height="40dp"
-                    android:onClick="pick_directory"
+                    android:onClick="pickDirectory"
                     android:scaleType="fitCenter"
                     android:background="#00000000"
                     android:src="@drawable/icon_folder"/>
