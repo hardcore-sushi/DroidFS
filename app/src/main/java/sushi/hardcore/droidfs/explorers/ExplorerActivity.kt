@@ -77,7 +77,7 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     fun onClickAddFile(view: View?) {
         fam_explorer.close(true)
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
+        val i = Intent(Intent.ACTION_GET_CONTENT)
         i.type = "*/*"
         i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         i.addCategory(Intent.CATEGORY_OPENABLE)
@@ -96,24 +96,23 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (requestCode == PICK_FILES_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 val uris: MutableList<Uri> = ArrayList()
-                val single_uri = data.data
-                if (single_uri == null) { //multiples choices
-                    val clipdata = data.clipData
-                    if (clipdata != null){
-                        for (i in 0 until clipdata.itemCount) {
-                            uris.add(clipdata.getItemAt(i).uri)
+                val singleUri = data.data
+                if (singleUri == null) { //multiples choices
+                    val clipData = data.clipData
+                    if (clipData != null){
+                        for (i in 0 until clipData.itemCount) {
+                            uris.add(clipData.getItemAt(i).uri)
                         }
                     }
                 } else {
-                    uris.add(single_uri)
+                    uris.add(singleUri)
                 }
                 if (uris.isNotEmpty()){
                     var success = true
                     for (uri in uris) {
-                        val dst_path = FilesUtils.path_join(current_path, FilesUtils.getFilenameFromURI(this, uri))
-                        var `is` = contentResolver.openInputStream(uri)
-                        if (`is` != null) {
-                            success = gocryptfsVolume.import_file(`is`, dst_path)
+                        val dstPath = FilesUtils.path_join(current_path, FilesUtils.getFilenameFromURI(this, uri))
+                        contentResolver.openInputStream(uri)?.let {
+                            success = gocryptfsVolume.import_file(it, dstPath)
                         }
                         if (!success) {
                             ColoredAlertDialog(this)

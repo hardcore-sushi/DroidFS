@@ -126,38 +126,38 @@ class GocryptfsVolume(var sessionID: Int) {
         return false
     }
 
-    fun import_file(`is`: InputStream, handleID: Int): Boolean {
+    fun import_file(inputStream: InputStream, handleID: Int): Boolean {
         var offset: Long = 0
         val io_buffer = ByteArray(DefaultBS)
         var length: Int
-        while (`is`.read(io_buffer).also { length = it } > 0) {
+        while (inputStream.read(io_buffer).also { length = it } > 0) {
             val written = native_write_file(sessionID, handleID, offset, io_buffer, length).toLong()
             if (written == length.toLong()) {
                  offset += written
             } else {
-                `is`.close()
+                inputStream.close()
                 return false
             }
         }
         native_close_file(sessionID, handleID)
-        `is`.close()
+        inputStream.close()
         return true
     }
 
-    fun import_file(`is`: InputStream, dst_path: String): Boolean {
+    fun import_file(inputStream: InputStream, dst_path: String): Boolean {
         var success = false
         val dst_handleID = open_write_mode(dst_path)
         if (dst_handleID != -1) {
-            success = import_file(`is`, dst_handleID)
+            success = import_file(inputStream, dst_handleID)
             close_file(dst_handleID)
         }
         return success
     }
 
     fun import_file(context: Context, src_uri: Uri, dst_path: String): Boolean {
-        val `is` = context.contentResolver.openInputStream(src_uri)
-        if (`is` != null){
-            return import_file(`is`, dst_path)
+        val inputStream = context.contentResolver.openInputStream(src_uri)
+        if (inputStream != null){
+            return import_file(inputStream, dst_path)
         }
         return false
     }

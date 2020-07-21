@@ -8,8 +8,6 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
-import kotlinx.android.synthetic.main.activity_change_password.*
-import kotlinx.android.synthetic.main.activity_open.*
 import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
 import kotlinx.android.synthetic.main.activity_open.checkbox_save_password
 import kotlinx.android.synthetic.main.activity_open.edit_password
@@ -29,7 +27,7 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.io.File
 import java.util.*
 
-class OpenActivity : ColoredActivity() {
+class OpenActivity : BaseActivity() {
     companion object {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
@@ -40,12 +38,8 @@ class OpenActivity : ColoredActivity() {
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
         setContentView(R.layout.activity_open)
         setSupportActionBar(toolbar)
-        //val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
             fingerprintPasswordHashSaver = FingerprintPasswordHashSaver(this, sharedPrefs)
@@ -72,7 +66,7 @@ class OpenActivity : ColoredActivity() {
         }
     }
 
-    fun pick_directory(view: View?) {
+    fun pickDirectory(view: View?) {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
         startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
     }

@@ -16,7 +16,6 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".SettingsActivity"
-            android:theme="@style/Theme.Cyanea.Dark.NoActionBar"
             android:label="@string/title_activity_settings"
             android:parentActivityName=".MainActivity"/>
         <activity android:name=".explorers.ExplorerActivity" />
@@ -24,7 +23,6 @@
         <activity android:name=".explorers.ExplorerActivityDrop" />
         <activity
             android:name=".OpenActivity"
-            android:theme="@style/Theme.Cyanea.Dark.NoActionBar"
             android:screenOrientation="nosensor"
             android:windowSoftInputMode="adjustPan">
             <intent-filter android:label="@string/share_menu_label">
@@ -36,11 +34,9 @@
         </activity>
         <activity
             android:name=".CreateActivity"
-            android:theme="@style/Theme.Cyanea.Dark.NoActionBar"
             android:screenOrientation="nosensor" />
         <activity
             android:name=".ChangePasswordActivity"
-            android:theme="@style/Theme.Cyanea.Dark.NoActionBar"
             android:screenOrientation="nosensor"
             android:windowSoftInputMode="adjustPan" />
         <activity

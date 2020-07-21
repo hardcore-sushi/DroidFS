@@ -16,7 +16,7 @@ import com.github.clans.fab.FloatingActionMenu
 import kotlinx.android.synthetic.main.activity_explorer_base.*
 import kotlinx.android.synthetic.main.explorer_info_bar.*
 import kotlinx.android.synthetic.main.toolbar.*
-import sushi.hardcore.droidfs.ColoredActivity
+import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.ConstValues.Companion.isAudio
 import sushi.hardcore.droidfs.ConstValues.Companion.isImage
@@ -36,7 +36,7 @@ import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.util.*
 
-open class BaseExplorerActivity : ColoredActivity() {
+open class BaseExplorerActivity : BaseActivity() {
     private lateinit var shared_prefs_editor: SharedPreferences.Editor
     private lateinit var sort_modes_entries: Array<String>
     private lateinit var sort_modes_values: Array<String>
@@ -49,9 +49,6 @@ open class BaseExplorerActivity : ColoredActivity() {
     private var usf_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        if (!sharedPrefs.getBoolean("usf_screenshot", false)){
-            window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
-        }
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         val intent = intent
         volume_name = intent.getStringExtra("volume_name") ?: ""

@@ -34,7 +34,8 @@
                     android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
                     android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
                     android:onClick="onClickOpen"
-                    android:text="@string/open_volume" />
+                    android:text="@string/open_volume"
+                    style="@style/button"/>
 
                 <Button
                     android:layout_width="match_parent"
@@ -42,7 +43,8 @@
                     android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
                     android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
                     android:onClick="onClickCreate"
-                    android:text="@string/create_volume" />
+                    android:text="@string/create_volume"
+                    style="@style/button"/>
 
                 <Button
                     android:layout_width="match_parent"
@@ -50,7 +52,8 @@
                     android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
                     android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
                     android:onClick="onClickChangePassword"
-                    android:text="@string/change_volume_password" />
+                    android:text="@string/change_volume_password"
+                    style="@style/button"/>
 
             </LinearLayout>
 

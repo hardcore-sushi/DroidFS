@@ -13,7 +13,7 @@ class ConstValues {
             Pair("image", listOf("png", "jpg", "jpeg")),
             Pair("video", listOf("mp4", "webm")),
             Pair("audio", listOf("mp3", "ogg")),
-            Pair("text", listOf("txt", "json", "conf", "xml", "java", "kt", "py", "go", "c", "h", "cpp", "hpp", "sh", "js", "html", "css", "php"))
+            Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "go", "c", "h", "cpp", "hpp", "sh", "js", "html", "css", "php"))
         )
 
         fun isImage(path: String): Boolean {
