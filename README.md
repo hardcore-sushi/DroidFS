@@ -2,7 +2,12 @@
 DroidFS is an implementation of encrypted overlay filesystems for Android.
 It allows you to store files and folder in encrypted virtual volumes so that you can share them, store them in the cloud or simply access them more securely.
 It currently only supports [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) is expected to be added soon.<br>
-DroidFS require Android API level 21+ (Android Lollipop).
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/1.jpg" height="500">
+<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/2.jpg" height="500">
+<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/3.jpg" height="500">
+</p>
 
 # Disclamer
 DroidFS is provided "as is", without any warranty of any kind.
