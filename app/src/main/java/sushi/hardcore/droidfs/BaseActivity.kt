@@ -3,7 +3,6 @@ package sushi.hardcore.droidfs
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity

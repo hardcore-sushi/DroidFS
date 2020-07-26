@@ -1,42 +1,18 @@
 package sushi.hardcore.droidfs.util;
 
-import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
-import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
-import android.os.Build;
-import android.os.Environment;
 import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
-import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-
 import androidx.annotation.Nullable;
-
 import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
-import java.util.ArrayList;
 
-public final class FilesUtils {
-
-    /*public static ArrayList<File> recursive_get_files(File root_path){
-        ArrayList<File> results_files = new ArrayList<>();
-        final File[] elements = root_path.listFiles();
-        if (elements != null){
-            for (File item : elements){
-                if (item.isDirectory()){
-                    results_files.addAll(recursive_get_files(item));
-                } else if (item.isFile()){
-                    results_files.add(item);
-                }
-            }
-        }
-        return results_files;
-    }*/
+public class PathUtils {
 
     public static String get_parent_path(String path){
         if (path.endsWith("/")){

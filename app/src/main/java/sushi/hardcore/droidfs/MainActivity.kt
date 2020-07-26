@@ -35,14 +35,14 @@ class MainActivity : BaseActivity() {
         if (!storageAvailable) {
             ColoredAlertDialog(this)
                     .setTitle(R.string.storage_unavailable)
-                    .setMessage(getString(R.string.storage_unavailable_msg))
+                    .setMessage(R.string.storage_unavailable_msg)
                     .setPositiveButton(R.string.ok
                     ) { _, _ -> finish() }.show()
         }
         if (!sharedPrefs.getBoolean("alreadyLaunched", false)){
             ColoredAlertDialog(this)
                     .setTitle(R.string.warning)
-                    .setMessage(getString(R.string.usf_home_warning_msg))
+                    .setMessage(R.string.usf_home_warning_msg)
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.see_unsafe_features)){ _, _ ->
                         val intent = Intent(this, SettingsActivity::class.java)
@@ -65,7 +65,7 @@ class MainActivity : BaseActivity() {
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
                     ColoredAlertDialog(this)
                             .setTitle(R.string.storage_perm_denied)
-                            .setMessage(getString(R.string.storage_perm_denied_msg))
+                            .setMessage(R.string.storage_perm_denied_msg)
                             .setPositiveButton(R.string.ok
                             ) { _, _ -> finish() }.show()
                 }

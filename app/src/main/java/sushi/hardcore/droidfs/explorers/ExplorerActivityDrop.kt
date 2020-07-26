@@ -5,7 +5,7 @@ import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
@@ -16,7 +16,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer_drop, menu)
         handleMenuItems(menu)
-        menu.findItem(R.id.explorer_menu_validate).isVisible = explorer_adapter.selectedItems.isEmpty()
+        menu.findItem(R.id.explorer_menu_validate).isVisible = explorerAdapter.selectedItems.isEmpty()
         return true
     }
 
@@ -31,13 +31,13 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                 if (extras != null && extras.containsKey(Intent.EXTRA_STREAM)){
                     if (intent.action == Intent.ACTION_SEND) {
                         val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                        val output_path = FilesUtils.path_join(current_path, FilesUtils.getFilenameFromURI(this, uri))
+                        val output_path = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(this, uri))
                         error_msg = if (gocryptfsVolume.import_file(this, uri, output_path)) null else getString(R.string.import_failed, output_path)
                     } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
                         val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                         if (uris != null){
                             for (uri in uris) {
-                                val output_path = FilesUtils.path_join(current_path, FilesUtils.getFilenameFromURI(this, uri))
+                                val output_path = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(this, uri))
                                 if (!gocryptfsVolume.import_file(this, uri, output_path)) {
                                     error_msg = getString(R.string.import_failed, output_path)
                                     break
