@@ -26,7 +26,6 @@ class GocryptfsVolume(var sessionID: Int) {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
         const val DefaultBS = 4096
-        //external fun scrypt_hash(data: CharArray, logN: Int): ByteArray
         external fun create_volume(root_cipher_dir: String, password: CharArray, logN: Int, creator: String): Boolean
         external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun change_password(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean

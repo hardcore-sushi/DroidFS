@@ -1,7 +1,6 @@
 package sushi.hardcore.droidfs.explorers
 
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -29,50 +28,48 @@ import sushi.hardcore.droidfs.file_viewers.AudioPlayer
 import sushi.hardcore.droidfs.file_viewers.ImageViewer
 import sushi.hardcore.droidfs.file_viewers.TextEditor
 import sushi.hardcore.droidfs.file_viewers.VideoPlayer
-import sushi.hardcore.droidfs.provider.TemporaryFileProvider
+import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.ExternalProvider
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
 import java.util.*
 
 open class BaseExplorerActivity : BaseActivity() {
-    private lateinit var shared_prefs_editor: SharedPreferences.Editor
-    private lateinit var sort_modes_entries: Array<String>
-    private lateinit var sort_modes_values: Array<String>
-    private var current_sort_mode_index = 0
+    private lateinit var sortModesEntries: Array<String>
+    private lateinit var sortModesValues: Array<String>
+    private var currentSortModeIndex = 0
     protected lateinit var gocryptfsVolume: GocryptfsVolume
-    private lateinit var volume_name: String
-    protected var current_path = ""
-    protected lateinit var explorer_elements: MutableList<ExplorerElement>
-    protected lateinit var explorer_adapter: ExplorerElementAdapter
+    private lateinit var volumeName: String
+    protected var currentDirectoryPath = ""
+    protected lateinit var explorerElements: MutableList<ExplorerElement>
+    protected lateinit var explorerAdapter: ExplorerElementAdapter
     private var usf_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         val intent = intent
-        volume_name = intent.getStringExtra("volume_name") ?: ""
+        volumeName = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
-        sort_modes_entries = resources.getStringArray(R.array.sort_orders_entries)
-        sort_modes_values = resources.getStringArray(R.array.sort_orders_values)
-        current_sort_mode_index = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
-        shared_prefs_editor = sharedPrefs.edit()
+        sortModesEntries = resources.getStringArray(R.array.sort_orders_entries)
+        sortModesValues = resources.getStringArray(R.array.sort_orders_values)
+        currentSortModeIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
         setSupportActionBar(toolbar)
         title = ""
-        title_text.text = getString(R.string.volume, volume_name)
-        explorer_adapter = ExplorerElementAdapter(this)
-        setCurrentPath(current_path)
-        list_explorer.adapter = explorer_adapter
+        title_text.text = getString(R.string.volume, volumeName)
+        explorerAdapter = ExplorerElementAdapter(this)
+        setCurrentPath(currentDirectoryPath)
+        list_explorer.adapter = explorerAdapter
         list_explorer.onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
         list_explorer.onItemLongClickListener = OnItemLongClickListener { _, _, position, _ ->
-            explorer_adapter.onItemLongClick(position)
+            explorerAdapter.onItemLongClick(position)
             invalidateOptionsMenu()
             true
         }
         refresher.setOnRefreshListener {
-            setCurrentPath(current_path)
+            setCurrentPath(currentDirectoryPath)
             refresher.isRefreshing = false
         }
     }
@@ -89,29 +86,29 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     protected open fun onExplorerItemClick(position: Int) {
-        val wasSelecting = explorer_adapter.selectedItems.isNotEmpty()
-        explorer_adapter.onItemClick(position)
-        if (explorer_adapter.selectedItems.isEmpty()) {
+        val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
+        explorerAdapter.onItemClick(position)
+        if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
-                val full_path = FilesUtils.path_join(current_path, explorer_elements[position].name)
+                val fullPath = PathUtils.path_join(currentDirectoryPath, explorerElements[position].name)
                 when {
-                    explorer_elements[position].isDirectory -> {
-                        setCurrentPath(full_path)
+                    explorerElements[position].isDirectory -> {
+                        setCurrentPath(fullPath)
                     }
-                    explorer_elements[position].isParentFolder -> {
-                        setCurrentPath(FilesUtils.get_parent_path(current_path))
+                    explorerElements[position].isParentFolder -> {
+                        setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
                     }
-                    isImage(full_path) -> {
-                        startFileViewer(ImageViewer::class.java, full_path)
+                    isImage(fullPath) -> {
+                        startFileViewer(ImageViewer::class.java, fullPath)
                     }
-                    isVideo(full_path) -> {
-                        startFileViewer(VideoPlayer::class.java, full_path)
+                    isVideo(fullPath) -> {
+                        startFileViewer(VideoPlayer::class.java, fullPath)
                     }
-                    isText(full_path) -> {
-                        startFileViewer(TextEditor::class.java, full_path)
+                    isText(fullPath) -> {
+                        startFileViewer(TextEditor::class.java, fullPath)
                     }
-                    isAudio(full_path) -> {
-                        startFileViewer(AudioPlayer::class.java, full_path)
+                    isAudio(fullPath) -> {
+                        startFileViewer(AudioPlayer::class.java, fullPath)
                     }
                     else -> {
                         val dialogListView = layoutInflater.inflate(R.layout.dialog_listview, null)
@@ -125,10 +122,10 @@ open class BaseExplorerActivity : BaseActivity() {
                             .create()
                         listView.setOnItemClickListener{_, _, fileTypePosition, _ ->
                             when (adapter.getItem(fileTypePosition)){
-                                "image" -> startFileViewer(ImageViewer::class.java, full_path)
-                                "video" -> startFileViewer(VideoPlayer::class.java, full_path)
-                                "audio" -> startFileViewer(AudioPlayer::class.java, full_path)
-                                "text" -> startFileViewer(TextEditor::class.java, full_path)
+                                "image" -> startFileViewer(ImageViewer::class.java, fullPath)
+                                "video" -> startFileViewer(VideoPlayer::class.java, fullPath)
+                                "audio" -> startFileViewer(AudioPlayer::class.java, fullPath)
+                                "text" -> startFileViewer(TextEditor::class.java, fullPath)
                             }
                             dialog.dismiss()
                         }
@@ -141,41 +138,42 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     private fun sortExplorerElements() {
-        when (sort_modes_values[current_sort_mode_index]) {
+        when (sortModesValues[currentSortModeIndex]) {
             "name" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> o1.name.compareTo(o2.name) })
+                explorerElements.sortWith(Comparator { o1, o2 -> o1.name.compareTo(o2.name) })
             }
             "size" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> (o1.size - o2.size).toInt() })
+                explorerElements.sortWith(Comparator { o1, o2 -> (o1.size - o2.size).toInt() })
             }
             "date" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> o1.mTime.compareTo(o2.mTime) })
+                explorerElements.sortWith(Comparator { o1, o2 -> o1.mTime.compareTo(o2.mTime) })
             }
             "name_desc" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> o2.name.compareTo(o1.name) })
+                explorerElements.sortWith(Comparator { o1, o2 -> o2.name.compareTo(o1.name) })
             }
             "size_desc" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> (o2.size - o1.size).toInt() })
+                explorerElements.sortWith(Comparator { o1, o2 -> (o2.size - o1.size).toInt() })
             }
             "date_desc" -> {
-                explorer_elements.sortWith(Comparator { o1, o2 -> o2.mTime.compareTo(o1.mTime) })
+                explorerElements.sortWith(Comparator { o1, o2 -> o2.mTime.compareTo(o1.mTime) })
             }
         }
-        shared_prefs_editor.putString(ConstValues.sort_order_key, sort_modes_values[current_sort_mode_index])
-        shared_prefs_editor.apply()
+        val sharedPrefsEditor = sharedPrefs.edit()
+        sharedPrefsEditor.putString(ConstValues.sort_order_key, sortModesValues[currentSortModeIndex])
+        sharedPrefsEditor.apply()
     }
 
     protected fun setCurrentPath(path: String) {
-        explorer_elements = gocryptfsVolume.list_dir(path)
-        text_dir_empty.visibility = if (explorer_elements.size == 0) View.VISIBLE else View.INVISIBLE
+        explorerElements = gocryptfsVolume.list_dir(path)
+        text_dir_empty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
         sortExplorerElements()
         if (path.isNotEmpty()) { //not root
-            explorer_elements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1))
+            explorerElements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1))
         }
-        explorer_adapter.setExplorerElements(explorer_elements)
-        current_path = path
-        current_path_text.text = getString(R.string.location, current_path)
-        total_size_text.text = getString(R.string.total_size, FilesUtils.formatSize(explorer_adapter.currentDirectoryTotalSize))
+        explorerAdapter.setExplorerElements(explorerElements)
+        currentDirectoryPath = path
+        current_path_text.text = getString(R.string.location, currentDirectoryPath)
+        total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(explorerAdapter.currentDirectoryTotalSize))
     }
 
     private fun askCloseVolume() {
@@ -193,19 +191,19 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected open fun closeVolumeOnDestroy() {
         gocryptfsVolume.close()
-        TemporaryFileProvider.wipeAll() //additional security
+        RestrictedFileProvider.wipeAll() //additional security
     }
 
     override fun onBackPressed() {
-        if (explorer_adapter.selectedItems.isEmpty()) {
-            val parent_path = FilesUtils.get_parent_path(current_path)
-            if (parent_path == current_path) {
+        if (explorerAdapter.selectedItems.isEmpty()) {
+            val parentPath = PathUtils.get_parent_path(currentDirectoryPath)
+            if (parentPath == currentDirectoryPath) {
                 askCloseVolume()
             } else {
-                setCurrentPath(FilesUtils.get_parent_path(current_path))
+                setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
             }
         } else {
-            explorer_adapter.unSelectAll()
+            explorerAdapter.unSelectAll()
             invalidateOptionsMenu()
         }
     }
@@ -214,14 +212,14 @@ open class BaseExplorerActivity : BaseActivity() {
         if (folder_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.mkdir(FilesUtils.path_join(current_path, folder_name))) {
+            if (!gocryptfsVolume.mkdir(PathUtils.path_join(currentDirectoryPath, folder_name))) {
                 ColoredAlertDialog(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
                         .setPositiveButton(R.string.ok, null)
                         .show()
             } else {
-                setCurrentPath(current_path)
+                setCurrentPath(currentDirectoryPath)
                 invalidateOptionsMenu()
             }
         }
@@ -254,14 +252,14 @@ open class BaseExplorerActivity : BaseActivity() {
         if (new_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.rename(FilesUtils.path_join(current_path, old_name), FilesUtils.path_join(current_path, new_name))) {
+            if (!gocryptfsVolume.rename(PathUtils.path_join(currentDirectoryPath, old_name), PathUtils.path_join(currentDirectoryPath, new_name))) {
                 ColoredAlertDialog(this)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
                         .setPositiveButton(R.string.ok, null)
                         .show()
             } else {
-                setCurrentPath(current_path)
+                setCurrentPath(currentDirectoryPath)
                 invalidateOptionsMenu()
             }
         }
@@ -272,7 +270,7 @@ open class BaseExplorerActivity : BaseActivity() {
         if (usf_open){
             menu.findItem(R.id.explorer_menu_external_open)?.isVisible = false
         }
-        val selectedItems = explorer_adapter.selectedItems
+        val selectedItems = explorerAdapter.selectedItems
         if (selectedItems.isEmpty()){
             toolbar.navigationIcon = null
             menu.findItem(R.id.explorer_menu_close).isVisible = true
@@ -283,7 +281,7 @@ open class BaseExplorerActivity : BaseActivity() {
             menu.findItem(R.id.explorer_menu_sort).isVisible = false
             if (selectedItems.size == 1) {
                 menu.findItem(R.id.explorer_menu_rename).isVisible = true
-                if (usf_open && explorer_elements[selectedItems[0]].isRegularFile) {
+                if (usf_open && explorerElements[selectedItems[0]].isRegularFile) {
                     menu.findItem(R.id.explorer_menu_external_open)?.isVisible = true
                 }
             }
@@ -293,39 +291,39 @@ open class BaseExplorerActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                explorer_adapter.unSelectAll()
+                explorerAdapter.unSelectAll()
                 invalidateOptionsMenu()
                 true
             }
             R.id.explorer_menu_sort -> {
                 ColoredAlertDialog(this)
                         .setTitle(R.string.sort_order)
-                        .setSingleChoiceItems(sort_modes_entries, current_sort_mode_index) { dialog, which ->
-                            current_sort_mode_index = which
-                            setCurrentPath(current_path)
+                        .setSingleChoiceItems(sortModesEntries, currentSortModeIndex) { dialog, which ->
+                            currentSortModeIndex = which
+                            setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()
                         }.show()
                 true
             }
             R.id.explorer_menu_rename -> {
-                val dialog_edit_text_view = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-                val old_name = explorer_elements[explorer_adapter.selectedItems[0]].name
-                val dialog_edit_text = dialog_edit_text_view.findViewById<EditText>(R.id.dialog_edit_text)
-                dialog_edit_text.setText(old_name)
-                dialog_edit_text.selectAll()
+                val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+                val oldName = explorerElements[explorerAdapter.selectedItems[0]].name
+                val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+                dialogEditText.setText(oldName)
+                dialogEditText.selectAll()
                 val dialog = ColoredAlertDialog(this)
-                        .setView(dialog_edit_text_view)
+                        .setView(dialogEditTextView)
                         .setTitle(R.string.rename_title)
                         .setPositiveButton(R.string.ok) { _, _ ->
-                            val new_name = dialog_edit_text.text.toString()
-                            rename(old_name, new_name)
+                            val newName = dialogEditText.text.toString()
+                            rename(oldName, newName)
                         }
                         .setNegativeButton(R.string.cancel, null)
                         .create()
-                dialog_edit_text.setOnEditorActionListener { _, _, _ ->
-                    val new_name = dialog_edit_text.text.toString()
+                dialogEditText.setOnEditorActionListener { _, _, _ ->
+                    val newName = dialogEditText.text.toString()
                     dialog.dismiss()
-                    rename(old_name, new_name)
+                    rename(oldName, newName)
                     true
                 }
                 dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
@@ -334,8 +332,8 @@ open class BaseExplorerActivity : BaseActivity() {
             }
             R.id.explorer_menu_external_open -> {
                 if (usf_open){
-                    ExternalProvider.open(this, gocryptfsVolume, FilesUtils.path_join(current_path, explorer_elements[explorer_adapter.selectedItems[0]].name))
-                    explorer_adapter.unSelectAll()
+                    ExternalProvider.open(this, gocryptfsVolume, PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
+                    explorerAdapter.unSelectAll()
                     invalidateOptionsMenu()
                 }
                 true
@@ -357,6 +355,6 @@ open class BaseExplorerActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        ExternalProvider.clear_cache(this)
+        ExternalProvider.removeFiles(this)
     }
 }

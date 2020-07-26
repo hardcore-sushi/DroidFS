@@ -5,8 +5,8 @@ import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.provider.TemporaryFileProvider
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.provider.RestrictedFileProvider
+import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
 class ExplorerActivityPick : BaseExplorerActivity() {
@@ -17,21 +17,21 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     }
 
     override fun onExplorerItemClick(position: Int) {
-        val wasSelecting = explorer_adapter.selectedItems.isNotEmpty()
-        explorer_adapter.onItemClick(position)
-        if (explorer_adapter.selectedItems.isEmpty()) {
+        val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
+        explorerAdapter.onItemClick(position)
+        if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
-                val full_path = FilesUtils.path_join(current_path, explorer_elements[position].name)
+                val full_path = PathUtils.path_join(currentDirectoryPath, explorerElements[position].name)
                 when {
-                    explorer_elements[position].isDirectory -> {
+                    explorerElements[position].isDirectory -> {
                         setCurrentPath(full_path)
                     }
-                    explorer_elements[position].isParentFolder -> {
-                        setCurrentPath(FilesUtils.get_parent_path(current_path))
+                    explorerElements[position].isParentFolder -> {
+                        setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
                     }
                     else -> {
                         result_intent.putExtra("path", full_path)
-                        return_activity_result()
+                        returnActivityResult()
                     }
                 }
             }
@@ -42,7 +42,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer_pick, menu)
         handleMenuItems(menu)
-        val any_item_selected = explorer_adapter.selectedItems.isNotEmpty()
+        val any_item_selected = explorerAdapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.explorer_menu_select_all).isVisible = any_item_selected
         menu.findItem(R.id.explorer_menu_validate).isVisible = any_item_selected
         return true
@@ -51,35 +51,35 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.explorer_menu_select_all -> {
-                explorer_adapter.selectAll()
+                explorerAdapter.selectAll()
                 invalidateOptionsMenu()
                 true
             }
             R.id.explorer_menu_validate -> {
                 val paths = ArrayList<String>()
                 val types = ArrayList<Int>()
-                for (i in explorer_adapter.selectedItems) {
-                    val e = explorer_elements[i]
-                    paths.add(FilesUtils.path_join(current_path, e.name))
+                for (i in explorerAdapter.selectedItems) {
+                    val e = explorerElements[i]
+                    paths.add(PathUtils.path_join(currentDirectoryPath, e.name))
                     types.add(e.elementType.toInt())
                 }
                 result_intent.putStringArrayListExtra("paths", paths)
                 result_intent.putIntegerArrayListExtra("types", types)
-                return_activity_result()
+                returnActivityResult()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    private fun return_activity_result() {
+    private fun returnActivityResult() {
         setResult(Activity.RESULT_OK, result_intent)
         finish()
     }
 
     override fun closeVolumeOnDestroy() {
         //don't close volume
-        TemporaryFileProvider.wipeAll()
+        RestrictedFileProvider.wipeAll()
     }
 
     override fun closeVolumeOnUserExit() {

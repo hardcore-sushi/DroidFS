@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
-import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_change_password.*
@@ -18,7 +17,7 @@ import kotlinx.android.synthetic.main.activity_change_password.saved_path_listvi
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
@@ -80,7 +79,7 @@ class ChangePasswordActivity : BaseActivity() {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
                 if (data != null) {
-                    val path = FilesUtils.getFullPathFromTreeUri(data.data, this)
+                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
                     edit_volume_path.setText(path)
                 }
             }

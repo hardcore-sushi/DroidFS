@@ -5,7 +5,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
@@ -19,7 +18,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
@@ -76,7 +75,7 @@ class OpenActivity : BaseActivity() {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
                 if (data != null) {
-                    val path = FilesUtils.getFullPathFromTreeUri(data.data, this)
+                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
                     edit_volume_path.setText(path)
                 }
             }
@@ -128,7 +127,7 @@ class OpenActivity : BaseActivity() {
         } else {
             ColoredAlertDialog(this)
                     .setTitle(R.string.open_volume_failed)
-                    .setMessage(getString(R.string.open_failed_hash_msg))
+                    .setMessage(R.string.open_failed_hash_msg)
                     .setPositiveButton(R.string.ok, null)
                     .show()
         }

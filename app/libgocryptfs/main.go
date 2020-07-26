@@ -771,7 +771,6 @@ func gcf_open_read_mode(sessionID int, path string) int {
 	}
 	defer syscall.Close(dirfd)
 	fd, err := syscallcompat.Openat(dirfd, cName, newFlags, 0)
-	// Handle a few specific errors
 	if err != nil {
 		return -1
 	}

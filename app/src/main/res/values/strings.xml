@@ -109,7 +109,7 @@
     <string name="video">Video</string>
     <string name="audio">Audio</string>
     <string name="media_player_prepare_failed">Failed to initialize the media player.</string>
-    <string name="video_play_failed">Failed to play this video.</string>
+    <string name="playing_failed">Failed to play this file.</string>
     <string name="text">Text</string>
     <string name="save_failed">Save failed</string>
     <string name="file_saved">File saved !</string>

@@ -1,21 +1,13 @@
 package sushi.hardcore.droidfs.file_viewers
 
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.view.WindowManager
-import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.provider.TemporaryFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
-import java.io.File
-import java.util.ArrayList
 
 abstract class FileViewerActivity: BaseActivity() {
-    private var cachedFiles: MutableList<Uri> = ArrayList()
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -23,15 +15,17 @@ abstract class FileViewerActivity: BaseActivity() {
         filePath = intent.getStringExtra("path")!!
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
-        toggleFullscreen()
+        hideSystemUi()
         viewFile()
     }
-    open fun toggleFullscreen(){
-        var uiOptions = window.decorView.systemUiVisibility
-        //uiOptions ^= View.SYSTEM_UI_FLAG_HIDE_NAVIGATION;
-        uiOptions = uiOptions xor View.SYSTEM_UI_FLAG_FULLSCREEN
-        uiOptions = uiOptions xor View.SYSTEM_UI_FLAG_IMMERSIVE
-        window.decorView.systemUiVisibility = uiOptions
+    open fun hideSystemUi(){
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LOW_PROFILE or
+            View.SYSTEM_UI_FLAG_FULLSCREEN/* or
+            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION*/
     }
     abstract fun viewFile()
     fun loadWholeFile(path: String): ByteArray? {
@@ -43,10 +37,10 @@ abstract class FileViewerActivity: BaseActivity() {
                 val handleID = gocryptfsVolume.open_read_mode(path)
                 if (handleID != -1) {
                     var offset: Long = 0
-                    val io_buffer = ByteArray(GocryptfsVolume.DefaultBS)
+                    val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
                     var length: Int
-                    while (gocryptfsVolume.read_file(handleID, offset, io_buffer).also { length = it } > 0){
-                        System.arraycopy(io_buffer, 0, fileBuff, offset.toInt(), length)
+                    while (gocryptfsVolume.read_file(handleID, offset, ioBuffer).also { length = it } > 0){
+                        System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
                         offset += length.toLong()
                     }
                     gocryptfsVolume.close_file(handleID)
@@ -65,7 +59,7 @@ abstract class FileViewerActivity: BaseActivity() {
             } catch (e: OutOfMemoryError){
                 ColoredAlertDialog(this)
                     .setTitle(R.string.error)
-                    .setMessage(getString(R.string.outofmemoryerror_msg))
+                    .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                     .show()
@@ -80,31 +74,5 @@ abstract class FileViewerActivity: BaseActivity() {
                 .show()
         }
         return null
-    }
-    fun exportFile(path: String): Uri? {
-        val tmpFileUri = TemporaryFileProvider.createFile(this, File(path).name)
-        cachedFiles.add(tmpFileUri)
-        return if (gocryptfsVolume.export_file(this, path, tmpFileUri)) {
-            tmpFileUri
-        } else {
-            ColoredAlertDialog(this)
-                .setTitle(R.string.error)
-                .setMessage(getString(R.string.export_failed, path))
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ -> finish() }
-                .show()
-            null
-        }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Thread{
-            for (uri in cachedFiles) {
-                if (Wiper.wipe(this, uri)){
-                    cachedFiles.remove(uri)
-                }
-            }
-        }.start()
     }
 }

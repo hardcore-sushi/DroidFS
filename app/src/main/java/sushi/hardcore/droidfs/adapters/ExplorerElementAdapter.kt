@@ -14,23 +14,23 @@ import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.ConstValues.Companion.getAssociatedDrawable
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.FilesUtils
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ThemeColor
 import java.text.DateFormat
 import java.util.*
 
 class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
     private val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, context.resources.configuration.locale)
-    private lateinit var explorer_elements: List<ExplorerElement>
+    private lateinit var explorerElements: List<ExplorerElement>
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     val selectedItems: MutableList<Int> = ArrayList()
     private val themeColor = ThemeColor.getThemeColor(context)
     override fun getCount(): Int {
-        return explorer_elements.size
+        return explorerElements.size
     }
 
     override fun getItem(position: Int): ExplorerElement {
-        return explorer_elements[position]
+        return explorerElements[position]
     }
 
     override fun getItemId(position: Int): Long {
@@ -55,7 +55,7 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
             }
             else -> {
                 textElementMtime.text = dateFormat.format(currentElement.mTime)
-                textElementSize.text = FilesUtils.formatSize(currentElement.size)
+                textElementSize.text = PathUtils.formatSize(currentElement.size)
                 drawableId = getAssociatedDrawable(currentElement.name)
             }
         }
@@ -73,56 +73,55 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
 
     fun onItemClick(position: Int) {
         if (selectedItems.isNotEmpty()) {
-            if (!explorer_elements[position].isParentFolder) {
+            if (!explorerElements[position].isParentFolder) {
                 if (selectedItems.contains(position)) {
                     selectedItems.remove(position)
                 } else {
                     selectedItems.add(position)
                 }
-                notifyDataSetInvalidated()
+                notifyDataSetChanged()
             }
         }
     }
 
     fun onItemLongClick(position: Int) {
-        if (!explorer_elements[position].isParentFolder) {
+        if (!explorerElements[position].isParentFolder) {
             if (!selectedItems.contains(position)) {
                 selectedItems.add(position)
             } else {
                 selectedItems.remove(position)
             }
-            notifyDataSetInvalidated()
+            notifyDataSetChanged()
         }
     }
 
     fun selectAll() {
-        for (i in explorer_elements.indices) {
-            if (!selectedItems.contains(i) && !explorer_elements[i].isParentFolder) {
+        for (i in explorerElements.indices) {
+            if (!selectedItems.contains(i) && !explorerElements[i].isParentFolder) {
                 selectedItems.add(i)
             }
         }
-        notifyDataSetInvalidated()
+        notifyDataSetChanged()
     }
 
     fun unSelectAll() {
         selectedItems.clear()
-        notifyDataSetInvalidated()
+        notifyDataSetChanged()
     }
 
     fun setExplorerElements(explorer_elements: List<ExplorerElement>) {
         unSelectAll()
-        this.explorer_elements = explorer_elements
+        this.explorerElements = explorer_elements
     }
 
     val currentDirectoryTotalSize: Long
         get() {
-            var total_size: Long = 0
-            for (e in explorer_elements) {
+            var totalSize: Long = 0
+            for (e in explorerElements) {
                 if (e.isRegularFile) {
-                    total_size += e.size
+                    totalSize += e.size
                 }
             }
-            return total_size
+            return totalSize
         }
-
 }

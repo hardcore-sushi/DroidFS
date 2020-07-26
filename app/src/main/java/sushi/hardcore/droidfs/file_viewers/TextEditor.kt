@@ -21,8 +21,8 @@ class TextEditor: FileViewerActivity() {
     private lateinit var titleText: TextView
     private var changedSinceLastSave = false
     private var wordWrap = true
-    override fun toggleFullscreen() {
-        //don't toggle fullscreen
+    override fun hideSystemUi() {
+        //don't hide system ui
     }
     override fun viewFile() {
         loadWholeFile(filePath)?.let {
@@ -32,7 +32,7 @@ class TextEditor: FileViewerActivity() {
             } catch (e: OutOfMemoryError){
                 ColoredAlertDialog(this)
                     .setTitle(R.string.error)
-                    .setMessage(getString(R.string.outofmemoryerror_msg))
+                    .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
                     .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
                     .show()
@@ -100,7 +100,7 @@ class TextEditor: FileViewerActivity() {
         if (changedSinceLastSave){
             ColoredAlertDialog(this)
                 .setTitle(R.string.warning)
-                .setMessage(getString(R.string.ask_save))
+                .setMessage(R.string.ask_save)
                 .setPositiveButton(getString(R.string.save)) { _, _ ->
                     if (save()){
                         finish()
