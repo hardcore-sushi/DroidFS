@@ -1,10 +1,11 @@
 package sushi.hardcore.droidfs.widgets
 
-//import android.app.AlertDialog
 import androidx.appcompat.app.AlertDialog
 import android.content.Context
 
-class ColoredAlertDialog(context: Context): AlertDialog.Builder(context) {
+class ColoredAlertDialogBuilder: AlertDialog.Builder {
+    constructor(context: Context): super(context)
+    constructor(context: Context, themeResId: Int): super(context, themeResId)
     private fun applyColor(dialog: AlertDialog){
         dialog.setOnShowListener{
             val themeColor = ThemeColor.getThemeColor(context)

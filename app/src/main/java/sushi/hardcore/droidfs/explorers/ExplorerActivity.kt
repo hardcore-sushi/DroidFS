@@ -17,7 +17,7 @@ import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
@@ -39,7 +39,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         } else {
             val handleID = gocryptfsVolume.open_write_mode(PathUtils.path_join(currentDirectoryPath, fileName))
             if (handleID == -1) {
-                ColoredAlertDialog(this)
+                ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.file_creation_failed)
                     .setPositiveButton(R.string.ok, null)
@@ -56,7 +56,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        val dialog = ColoredAlertDialog(this)
+        val dialog = ColoredAlertDialogBuilder(this)
             .setView(dialogEditTextView)
             .setTitle(getString(R.string.enter_file_name))
             .setPositiveButton(R.string.ok) { _, _ ->
@@ -115,7 +115,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             success = gocryptfsVolume.import_file(it, dstPath)
                         }
                         if (!success) {
-                            ColoredAlertDialog(this)
+                            ColoredAlertDialogBuilder(this)
                                     .setTitle(R.string.error)
                                     .setMessage(getString(R.string.import_failed, uri))
                                     .setPositiveButton(R.string.ok, null)
@@ -124,7 +124,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         }
                     }
                     if (success) {
-                        ColoredAlertDialog(this)
+                        ColoredAlertDialogBuilder(this)
                                 .setTitle(R.string.success_import)
                                 .setMessage("""
                                     ${getString(R.string.success_import_msg)}
@@ -134,7 +134,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     success = true
                                     for (uri in uris) {
                                         if (!Wiper.wipe(this, uri)) {
-                                            ColoredAlertDialog(this)
+                                            ColoredAlertDialogBuilder(this)
                                                     .setTitle(R.string.error)
                                                     .setMessage(getString(R.string.wipe_failed, uri))
                                                     .setPositiveButton(R.string.ok, null)
@@ -144,7 +144,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                         }
                                     }
                                     if (success) {
-                                        ColoredAlertDialog(this)
+                                        ColoredAlertDialogBuilder(this)
                                                 .setTitle(R.string.wipe_successful)
                                                 .setMessage(R.string.wipe_success_msg)
                                                 .setPositiveButton(R.string.ok, null)
@@ -171,7 +171,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         if (gocryptfsVolume.export_file(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
                     }
                     if (failedItem != null) {
-                        ColoredAlertDialog(this)
+                        ColoredAlertDialogBuilder(this)
                                 .setTitle(R.string.error)
                                 .setMessage(getString(R.string.export_failed, failedItem))
                                 .setPositiveButton(R.string.ok, null)
@@ -180,7 +180,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     }
                 }
                 if (failedItem == null) {
-                    ColoredAlertDialog(this)
+                    ColoredAlertDialogBuilder(this)
                             .setTitle(R.string.success_export)
                             .setMessage(R.string.success_export_msg)
                             .setPositiveButton(R.string.ok, null)
@@ -214,13 +214,13 @@ class ExplorerActivity : BaseExplorerActivity() {
                     failedItem = if (importFileFromOtherVolume(remoteGocryptfsVolume, path, currentDirectoryPath)) null else path
                 }
                 if (failedItem == null) {
-                    ColoredAlertDialog(this)
+                    ColoredAlertDialogBuilder(this)
                             .setTitle(R.string.success_import)
                             .setMessage(R.string.success_import_msg)
                             .setPositiveButton(R.string.ok, null)
                             .show()
                 } else {
-                    ColoredAlertDialog(this)
+                    ColoredAlertDialogBuilder(this)
                             .setTitle(R.string.error)
                             .setMessage(getString(R.string.import_failed, failedItem))
                             .setPositiveButton(R.string.ok, null)
@@ -266,7 +266,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.explorer_menu_delete -> {
                 val size = explorerAdapter.selectedItems.size
-                val dialog = ColoredAlertDialog(this)
+                val dialog = ColoredAlertDialogBuilder(this)
                 dialog.setTitle(R.string.warning)
                 dialog.setPositiveButton(R.string.ok) { _, _ -> removeSelectedItems() }
                 dialog.setNegativeButton(R.string.cancel, null)
@@ -399,7 +399,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
             }
             if (failedItem != null) {
-                ColoredAlertDialog(this)
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.remove_failed, failedItem))
                         .setPositiveButton(R.string.ok, null)

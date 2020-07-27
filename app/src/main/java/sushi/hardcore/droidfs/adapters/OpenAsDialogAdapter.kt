@@ -18,7 +18,7 @@ class OpenAsDialogAdapter(private val context: Context): BaseAdapter() {
         listOf("text", context.getString(R.string.text), R.drawable.icon_file_text)
     )
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
-        val view: View = convertView ?: inflater.inflate(R.layout.adapter_dialog_listview, parent, false)
+        val view: View = convertView ?: inflater.inflate(R.layout.adapter_dialog_icon_text, parent, false)
         val text = view.findViewById<TextView>(R.id.text)
         text.text = items[position][1] as String
         val icon = view.findViewById<ColoredImageView>(R.id.icon)

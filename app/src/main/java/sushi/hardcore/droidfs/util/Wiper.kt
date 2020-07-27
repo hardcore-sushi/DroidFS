@@ -79,7 +79,7 @@ object Wiper {
             return false
         }
     }
-    fun randomString(minSize: Int, maxSize: Int): String {
+    private fun randomString(minSize: Int, maxSize: Int): String {
         val r = Random()
         val sb = StringBuilder()
         val length = r.nextInt(maxSize-minSize)+minSize

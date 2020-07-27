@@ -14,15 +14,13 @@ import android.os.Handler
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
-import android.util.Log
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.security.KeyStore
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
@@ -31,11 +29,11 @@ import javax.crypto.spec.GCMParameterSpec
 class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivity, private val shared_prefs: SharedPreferences) {
     private var isPrepared = false
     var isListening = false
-    var authenticationFailed = false
-    private val shared_prefs_editor: SharedPreferences.Editor = shared_prefs.edit()
+    private var authenticationFailed = false
+    private val sharedPrefsEditor: SharedPreferences.Editor = shared_prefs.edit()
     private val fingerprintManager = activityContext.getSystemService(Context.FINGERPRINT_SERVICE) as FingerprintManager
-    private lateinit var root_cipher_dir: String
-    private lateinit var action_description: String
+    private lateinit var rootCipherDir: String
+    private lateinit var actionDescription: String
     private lateinit var onAuthenticationResult: (success: Boolean) -> Unit
     private lateinit var onPasswordDecrypted: (password: ByteArray) -> Unit
     private lateinit var keyStore: KeyStore
@@ -55,16 +53,16 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
         private const val SUCCESS_DISMISS_DIALOG_DELAY: Long = 400
         private const val FAILED_DISMISS_DIALOG_DELAY: Long = 800
     }
-    private fun reset_hash_storage() {
+    private fun resetHashStorage() {
         keyStore.deleteEntry(KEY_ALIAS)
-        val saved_volume_paths = shared_prefs.getStringSet(ConstValues.saved_volumes_key, HashSet<String>()) as Set<String>
-        for (path in saved_volume_paths){
-            val saved_hash = shared_prefs.getString(path, null)
-            if (saved_hash != null){
-                shared_prefs_editor.remove(path)
+        val savedVolumePaths = shared_prefs.getStringSet(ConstValues.saved_volumes_key, HashSet<String>()) as Set<String>
+        for (path in savedVolumePaths){
+            val savedHash = shared_prefs.getString(path, null)
+            if (savedHash != null){
+                sharedPrefsEditor.remove(path)
             }
         }
-        shared_prefs_editor.apply()
+        sharedPrefsEditor.apply()
         Toast.makeText(activityContext, activityContext.getString(R.string.hash_storage_reset), Toast.LENGTH_SHORT).show()
     }
 
@@ -99,13 +97,13 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
             keyGenerator.generateKey()
         }
         cipher = Cipher.getInstance(CIPHER_TYPE)
-        fingerprintFragment = FingerprintFragment(root_cipher_dir, action_description, ::stopListening)
+        fingerprintFragment = FingerprintFragment(rootCipherDir, actionDescription, ::stopListening)
         isPrepared = true
     }
     fun encryptAndSave(plainText: ByteArray, root_cipher_dir: String, onAuthenticationResult: (success: Boolean) -> Unit){
         if (shared_prefs.getString(root_cipher_dir, null) == null){
-            this.root_cipher_dir = root_cipher_dir
-            this.action_description = activityContext.getString(R.string.encrypt_action_description)
+            this.rootCipherDir = root_cipher_dir
+            this.actionDescription = activityContext.getString(R.string.encrypt_action_description)
             this.onAuthenticationResult = onAuthenticationResult
             if (!isPrepared){
                 prepare()
@@ -117,8 +115,8 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
         }
     }
     fun decrypt(cipherText: String, root_cipher_dir: String, onPasswordDecrypted: (password: ByteArray) -> Unit){
-        this.root_cipher_dir = root_cipher_dir
-        this.action_description = activityContext.getString(R.string.decrypt_action_description)
+        this.rootCipherDir = root_cipher_dir
+        this.actionDescription = activityContext.getString(R.string.decrypt_action_description)
         this.onPasswordDecrypted = onPasswordDecrypted
         if (!isPrepared){
             prepare()
@@ -136,8 +134,8 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
         cancellationSignal = CancellationSignal()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             val biometricPrompt = BiometricPrompt.Builder(activityContext)
-                    .setTitle(root_cipher_dir)
-                    .setSubtitle(action_description)
+                    .setTitle(rootCipherDir)
+                    .setSubtitle(actionDescription)
                     .setDescription(activityContext.getString(R.string.fingerprint_instruction))
                     .setNegativeButton(activityContext.getString(R.string.cancel), activityContext.mainExecutor, DialogInterface.OnClickListener{_, _ ->
                         cancellationSignal.cancel()
@@ -180,7 +178,7 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
         if (!authenticationFailed){
             if (fingerprintFragment.isAdded){
                 fingerprintFragment.image_fingerprint.setColorFilter(ContextCompat.getColor(activityContext, R.color.fingerprint_failed))
-                fingerprintFragment.text_instruction.setText(activityContext.getString(R.string.authentication_error))
+                fingerprintFragment.text_instruction.text = activityContext.getString(R.string.authentication_error)
                 handler.postDelayed({ fingerprintFragment.dismiss() }, 1000)
             }
             if (actionMode == Cipher.ENCRYPT_MODE){
@@ -215,8 +213,8 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
                     val cipherText = cipher.doFinal(dataToProcess)
                     val encodedCipherText = Base64.encodeToString(cipherText, 0)
                     val encodedIv = Base64.encodeToString(cipher.iv, 0)
-                    shared_prefs_editor.putString(root_cipher_dir, "$encodedIv:$encodedCipherText")
-                    shared_prefs_editor.apply()
+                    sharedPrefsEditor.putString(rootCipherDir, "$encodedIv:$encodedCipherText")
+                    sharedPrefsEditor.apply()
                     handler.postDelayed({
                         if (fingerprintFragment.isAdded){
                             fingerprintFragment.dismiss()
@@ -234,11 +232,11 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
                             onPasswordDecrypted(plainText)
                         }, SUCCESS_DISMISS_DIALOG_DELAY)
                     } catch (e: AEADBadTagException){
-                        ColoredAlertDialog(activityContext)
+                        ColoredAlertDialogBuilder(activityContext)
                                 .setTitle(R.string.error)
                                 .setMessage(activityContext.getString(R.string.MAC_verification_failed))
                                 .setPositiveButton(activityContext.getString(R.string.reset_hash_storage)) { _, _ ->
-                                    reset_hash_storage()
+                                    resetHashStorage()
                                 }
                                 .setNegativeButton(R.string.cancel, null)
                                 .show()
@@ -247,11 +245,11 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
             }
         } catch (e: IllegalBlockSizeException){
             stopListening()
-            ColoredAlertDialog(activityContext)
+            ColoredAlertDialogBuilder(activityContext)
                     .setTitle(R.string.authentication_error)
                     .setMessage(activityContext.getString(R.string.authentication_error_msg))
                     .setPositiveButton(activityContext.getString(R.string.reset_hash_storage)) { _, _ ->
-                        reset_hash_storage()
+                        resetHashStorage()
                     }
                     .setNegativeButton(R.string.cancel, null)
                     .show()

@@ -6,7 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
     override fun init() {
@@ -23,7 +23,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.explorer_menu_validate -> {
-                val alertDialog = ColoredAlertDialog(this)
+                val alertDialog = ColoredAlertDialogBuilder(this)
                 alertDialog.setCancelable(false)
                 alertDialog.setPositiveButton(R.string.ok) { _, _ -> finish() }
                 var error_msg: String? = null

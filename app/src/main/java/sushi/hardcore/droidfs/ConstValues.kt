@@ -8,9 +8,8 @@ class ConstValues {
         const val creator = "DroidFS"
         const val saved_volumes_key = "saved_volumes"
         const val sort_order_key = "sort_order"
-        val fakeUri = Uri.parse("fakeuri://droidfs")
+        val fakeUri: Uri = Uri.parse("fakeuri://droidfs")
         const val wipe_passes = 2
-        const val seek_bar_inc = 200
         private val fileExtensions = mapOf(
             Pair("image", listOf("png", "jpg", "jpeg")),
             Pair("video", listOf("mp4", "webm")),

@@ -30,7 +30,7 @@
     <string name="success_volume_create_msg">The volume has been successfully created.</string>
     <string name="create_volume_failed">The volume creation has failed.</string>
     <string name="open_volume_failed">Open failed</string>
-    <string name="open_volume_failed_msg">Failed to open the volume. Check the selected volume path and your password.</string>
+    <string name="open_volume_failed_msg">Failed to open the volume. Check the selected volume path and the entered password.</string>
     <string name="share_chooser">Share File</string>
     <string name="storage_unavailable">Storage unavailable</string>
     <string name="storage_unavailable_msg">DroidFS can\'t work without storage access.</string>
@@ -64,7 +64,7 @@
     <string name="new_password">New password:</string>
     <string name="success_change_password">Password successfully changed !</string>
     <string name="success_change_password_msg">The volume\'s password has been successfully changed.</string>
-    <string name="change_password_failed">Failed to change the volume\'s password. Check the selected volume path and your old password.</string>
+    <string name="change_password_failed">Failed to change the volume\'s password. Check the selected volume path and the entered old password.</string>
     <string name="share_menu_label">Encrypt with DroidFS</string>
     <string name="share_intent_parsing_failed">Failed to handle the share request.</string>
     <string name="listdir_null_error_msg">Unable to access this directory</string>
@@ -121,4 +121,9 @@
     <string name="new_file">New File</string>
     <string name="enter_file_name">File name:</string>
     <string name="file_creation_failed">Failed to create the file.</string>
+    <string name="loading">Loading...</string>
+    <string name="loading_msg_create">Creating volume...</string>
+    <string name="loading_msg_change_password">Changing password...</string>
+    <string name="new_password_confirmation">New Password (confirmation):</string>
+    <string name="loading_msg_open">Opening volume...</string>
 </resources>

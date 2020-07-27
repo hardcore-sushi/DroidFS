@@ -8,6 +8,7 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
+import android.widget.TextView
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_change_password.*
 import kotlinx.android.synthetic.main.activity_change_password.checkbox_remember_path
@@ -21,7 +22,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.util.*
 
 class ChangePasswordActivity : BaseActivity() {
@@ -29,7 +30,7 @@ class ChangePasswordActivity : BaseActivity() {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
     private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
-    private lateinit var root_cipher_dir: String
+    private lateinit var rootCipherDir: String
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,75 +88,93 @@ class ChangePasswordActivity : BaseActivity() {
     }
 
     fun onClickChangePassword(view: View?) {
-        root_cipher_dir = edit_volume_path.text.toString()
-        if (root_cipher_dir.isEmpty()) {
+        rootCipherDir = edit_volume_path.text.toString()
+        if (rootCipherDir.isEmpty()) {
             Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
         } else {
             changePassword(null)
         }
     }
 
-    fun changePassword(givenHash: ByteArray?){
-        val new_password = edit_new_password.text.toString().toCharArray()
-        val new_password_confirm = edit_new_password_confirm.text.toString().toCharArray()
-        if (!new_password.contentEquals(new_password_confirm)) {
-            Toast.makeText(applicationContext, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
-        } else {
-            val old_password = edit_old_password.text.toString().toCharArray()
-            var returnedHash: ByteArray? = null
-            if (usf_fingerprint && checkbox_save_password.isChecked){
-                returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-            }
-            var changePasswordImmediately = true
-            if (givenHash == null){
-                val cipherText = sharedPrefs.getString(root_cipher_dir, null)
-                if (cipherText != null){ //password hash saved
-                    fingerprintPasswordHashSaver.decrypt(cipherText, root_cipher_dir, ::changePassword)
-                    changePasswordImmediately = false
+    private fun changePassword(givenHash: ByteArray?){
+        val dialogLoadingView = layoutInflater.inflate(R.layout.dialog_loading, null)
+        val dialogTextMessage = dialogLoadingView.findViewById<TextView>(R.id.text_message)
+        dialogTextMessage.text = getString(R.string.loading_msg_change_password)
+        val dialogLoading = ColoredAlertDialogBuilder(this)
+            .setView(dialogLoadingView)
+            .setTitle(R.string.loading)
+            .setCancelable(false)
+            .create()
+        dialogLoading.show()
+        Thread {
+            val newPassword = edit_new_password.text.toString().toCharArray()
+            val newPasswordConfirm = edit_new_password_confirm.text.toString().toCharArray()
+            if (!newPassword.contentEquals(newPasswordConfirm)) {
+                dialogLoading.dismiss()
+                toastFromThread(R.string.passwords_mismatch)
+            } else {
+                val oldPassword = edit_old_password.text.toString().toCharArray()
+                var returnedHash: ByteArray? = null
+                if (usf_fingerprint && checkbox_save_password.isChecked){
+                    returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
-            }
-            if (changePasswordImmediately){
-                if (GocryptfsVolume.change_password(root_cipher_dir, old_password, givenHash, new_password, returnedHash)) {
-                    val editor = sharedPrefs.edit()
-                    if (sharedPrefs.getString(root_cipher_dir, null) != null){
-                        editor.remove(root_cipher_dir)
-                        editor.apply()
+                var changePasswordImmediately = true
+                if (givenHash == null){
+                    val cipherText = sharedPrefs.getString(rootCipherDir, null)
+                    if (cipherText != null){ //password hash saved
+                        dialogLoading.dismiss()
+                        fingerprintPasswordHashSaver.decrypt(cipherText, rootCipherDir, ::changePassword)
+                        changePasswordImmediately = false
                     }
-                    var continueImmediately = true
-                    if (checkbox_remember_path.isChecked) {
-                        val old_saved_volumes_paths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
-                        val new_saved_volumes_paths = old_saved_volumes_paths.toMutableList()
-                        if (!old_saved_volumes_paths.contains(root_cipher_dir)) {
-                            new_saved_volumes_paths.add(root_cipher_dir)
-                            editor.putStringSet(ConstValues.saved_volumes_key, new_saved_volumes_paths.toSet())
+                }
+                if (changePasswordImmediately){
+                    if (GocryptfsVolume.change_password(rootCipherDir, oldPassword, givenHash, newPassword, returnedHash)) {
+                        val editor = sharedPrefs.edit()
+                        if (sharedPrefs.getString(rootCipherDir, null) != null){
+                            editor.remove(rootCipherDir)
                             editor.apply()
                         }
-                        if (checkbox_save_password.isChecked && returnedHash != null){
-                            fingerprintPasswordHashSaver.encryptAndSave(returnedHash, root_cipher_dir){ _ ->
-                                onPasswordChanged()
+                        var continueImmediately = true
+                        if (checkbox_remember_path.isChecked) {
+                            val oldSavedVolumesPaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
+                            val newSavedVolumesPaths = oldSavedVolumesPaths.toMutableList()
+                            if (!oldSavedVolumesPaths.contains(rootCipherDir)) {
+                                newSavedVolumesPaths.add(rootCipherDir)
+                                editor.putStringSet(ConstValues.saved_volumes_key, newSavedVolumesPaths.toSet())
+                                editor.apply()
                             }
-                            continueImmediately = false
+                            if (checkbox_save_password.isChecked && returnedHash != null){
+                                dialogLoading.dismiss()
+                                fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
+                                    onPasswordChanged()
+                                }
+                                continueImmediately = false
+                            }
+                        }
+                        if (continueImmediately){
+                            dialogLoading.dismiss()
+                            runOnUiThread { onPasswordChanged() }
+                        }
+                    } else {
+                        dialogLoading.dismiss()
+                        runOnUiThread {
+                            ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.error)
+                                .setMessage(R.string.change_password_failed)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
                         }
                     }
-                    if (continueImmediately){
-                        onPasswordChanged()
-                    }
-                } else {
-                    ColoredAlertDialog(this)
-                            .setTitle(R.string.error)
-                            .setMessage(R.string.change_password_failed)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
                 }
+                Arrays.fill(oldPassword, 0.toChar())
             }
-            Arrays.fill(old_password, 0.toChar())
-        }
-        Arrays.fill(new_password, 0.toChar())
-        Arrays.fill(new_password_confirm, 0.toChar())
+            Arrays.fill(newPassword, 0.toChar())
+            Arrays.fill(newPasswordConfirm, 0.toChar())
+        }.start()
     }
 
-    fun onPasswordChanged(){
-        ColoredAlertDialog(this)
+    private fun onPasswordChanged(){
+        ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.success_change_password)
                 .setMessage(R.string.success_change_password_msg)
                 .setCancelable(false)

@@ -11,7 +11,7 @@ import android.widget.ListView
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
 
-class ColoredBorderListView: ListView {
+open class ColoredBorderListView: ListView {
     constructor(context: Context) : super(context) {
         applyColor()
     }
