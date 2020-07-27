@@ -14,7 +14,7 @@
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="18sp"
+        android:textSize="@dimen/adapter_text_size"
         android:layout_gravity="center"/>
 
 </LinearLayout>

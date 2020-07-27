@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
@@ -28,5 +29,9 @@ open class BaseActivity: CyaneaAppCompatActivity() {
                 //backgroundLight(backgroundColor)
             }
         }
+    }
+
+    protected fun toastFromThread(stringId: Int){
+        runOnUiThread { Toast.makeText(this, stringId, Toast.LENGTH_SHORT).show() }
     }
 }

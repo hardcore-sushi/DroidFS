@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.net.URLConnection
 import java.util.*
@@ -37,7 +37,7 @@ object ExternalProvider {
                 return Pair(tmpFileUri, getContentType(fileName, previous_content_type))
             }
         }
-        ColoredAlertDialog(context)
+        ColoredAlertDialogBuilder(context)
                 .setTitle(R.string.error)
                 .setMessage(context.getString(R.string.export_failed, file_path))
                 .setPositiveButton(R.string.ok, null)

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.widget.Toast
+import android.widget.TextView
 import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.activity_create.checkbox_remember_path
 import kotlinx.android.synthetic.main.activity_create.checkbox_save_password
@@ -18,7 +18,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
@@ -27,7 +27,7 @@ class CreateActivity : BaseActivity() {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
     private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
-    private lateinit var root_cipher_dir: String
+    private lateinit var rootCipherDir: String
     private var sessionID = -1
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,89 +64,110 @@ class CreateActivity : BaseActivity() {
     }
 
     fun onClickCreate(view: View?) {
-        val password = edit_password.text.toString().toCharArray()
-        val password_confirm = edit_password_confirm.text.toString().toCharArray()
-        if (!password.contentEquals(password_confirm)) {
-            Toast.makeText(applicationContext, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
-        } else {
-            root_cipher_dir = edit_volume_path.text.toString()
-            val volume_path_file = File(root_cipher_dir)
-            var good_directory = false
-            if (!volume_path_file.isDirectory) {
-                if (volume_path_file.mkdirs()) {
-                    good_directory = true
-                } else {
-                    Toast.makeText(applicationContext, R.string.error_mkdir, Toast.LENGTH_SHORT).show()
-                }
+        val dialogLoadingView = layoutInflater.inflate(R.layout.dialog_loading, null)
+        val dialogTextMessage = dialogLoadingView.findViewById<TextView>(R.id.text_message)
+        dialogTextMessage.text = getString(R.string.loading_msg_create)
+        val dialogLoading = ColoredAlertDialogBuilder(this)
+            .setView(dialogLoadingView)
+            .setTitle(R.string.loading)
+            .setCancelable(false)
+            .create()
+        dialogLoading.show()
+        Thread {
+            val password = edit_password.text.toString().toCharArray()
+            val passwordConfirm = edit_password_confirm.text.toString().toCharArray()
+            if (!password.contentEquals(passwordConfirm)) {
+                dialogLoading.dismiss()
+                toastFromThread(R.string.passwords_mismatch)
             } else {
-                val dir_content = volume_path_file.list()
-                if (dir_content != null){
-                    if (dir_content.isEmpty()) {
-                        good_directory = true
+                rootCipherDir = edit_volume_path.text.toString()
+                val volumePathFile = File(rootCipherDir)
+                var goodDirectory = false
+                if (!volumePathFile.isDirectory) {
+                    if (volumePathFile.mkdirs()) {
+                        goodDirectory = true
                     } else {
-                        Toast.makeText(applicationContext, R.string.dir_not_empty, Toast.LENGTH_SHORT).show()
+                        dialogLoading.dismiss()
+                        toastFromThread(R.string.error_mkdir)
                     }
                 } else {
-                    Toast.makeText(applicationContext, getString(R.string.listdir_null_error_msg), Toast.LENGTH_SHORT).show()
-                }
-            }
-            if (good_directory) {
-                if (GocryptfsVolume.create_volume(root_cipher_dir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
-                    var returnedHash: ByteArray? = null
-                    if (usf_fingerprint && checkbox_save_password.isChecked){
-                        returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                    }
-                    sessionID = GocryptfsVolume.init(root_cipher_dir, password, null, returnedHash)
-                    if (sessionID != -1) {
-                        var startExplorerImmediately = true
-                        if (checkbox_remember_path.isChecked) {
-                            val old_saved_volumes_paths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
-                            val editor = sharedPrefs.edit()
-                            val new_saved_volumes_paths = old_saved_volumes_paths.toMutableList()
-                            if (old_saved_volumes_paths.contains(root_cipher_dir)) {
-                                if (sharedPrefs.getString(root_cipher_dir, null) != null){
-                                    editor.remove(root_cipher_dir)
-                                }
-                            } else {
-                                new_saved_volumes_paths.add(root_cipher_dir)
-                                editor.putStringSet(ConstValues.saved_volumes_key, new_saved_volumes_paths.toSet())
-                            }
-                            editor.apply()
-                            if (checkbox_save_password.isChecked && returnedHash != null){
-                                fingerprintPasswordHashSaver.encryptAndSave(returnedHash, root_cipher_dir){ _ ->
-                                    startExplorer()
-                                }
-                                startExplorerImmediately = false
-                            }
-                        }
-                        if (startExplorerImmediately){
-                            startExplorer()
+                    val dirContent = volumePathFile.list()
+                    if (dirContent != null){
+                        if (dirContent.isEmpty()) {
+                            goodDirectory = true
+                        } else {
+                            dialogLoading.dismiss()
+                            toastFromThread(R.string.dir_not_empty)
                         }
                     } else {
-                        Toast.makeText(this, R.string.open_volume_failed, Toast.LENGTH_SHORT).show()
+                        dialogLoading.dismiss()
+                        toastFromThread(R.string.listdir_null_error_msg)
                     }
-                } else {
-                    ColoredAlertDialog(this)
-                            .setTitle(R.string.error)
-                            .setMessage(R.string.create_volume_failed)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
+                }
+                if (goodDirectory) {
+                    if (GocryptfsVolume.create_volume(rootCipherDir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
+                        var returnedHash: ByteArray? = null
+                        if (usf_fingerprint && checkbox_save_password.isChecked){
+                            returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+                        }
+                        sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
+                        if (sessionID != -1) {
+                            var startExplorerImmediately = true
+                            if (checkbox_remember_path.isChecked) {
+                                val oldSavedVolumesPaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
+                                val editor = sharedPrefs.edit()
+                                val newSavedVolumesPaths = oldSavedVolumesPaths.toMutableList()
+                                if (oldSavedVolumesPaths.contains(rootCipherDir)) {
+                                    if (sharedPrefs.getString(rootCipherDir, null) != null){
+                                        editor.remove(rootCipherDir)
+                                    }
+                                } else {
+                                    newSavedVolumesPaths.add(rootCipherDir)
+                                    editor.putStringSet(ConstValues.saved_volumes_key, newSavedVolumesPaths.toSet())
+                                }
+                                editor.apply()
+                                if (checkbox_save_password.isChecked && returnedHash != null){
+                                    dialogLoading.dismiss()
+                                    fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
+                                        runOnUiThread { startExplorer() }
+                                    }
+                                    startExplorerImmediately = false
+                                }
+                            }
+                            if (startExplorerImmediately){
+                                dialogLoading.dismiss()
+                                runOnUiThread { startExplorer() }
+                            }
+                        } else {
+                            dialogLoading.dismiss()
+                            toastFromThread(R.string.open_volume_failed)
+                        }
+                    } else {
+                        dialogLoading.dismiss()
+                        runOnUiThread {
+                            ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.error)
+                                .setMessage(R.string.create_volume_failed)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                    }
                 }
             }
-        }
-        Arrays.fill(password, 0.toChar())
-        Arrays.fill(password_confirm, 0.toChar())
+            Arrays.fill(password, 0.toChar())
+            Arrays.fill(passwordConfirm, 0.toChar())
+        }.start()
     }
 
-    fun startExplorer(){
-        ColoredAlertDialog(this)
+    private fun startExplorer(){
+        ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.success_volume_create)
                 .setMessage(R.string.success_volume_create_msg)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     val intent = Intent(applicationContext, ExplorerActivity::class.java)
                     intent.putExtra("sessionID", sessionID)
-                    intent.putExtra("volume_name", File(root_cipher_dir).name)
+                    intent.putExtra("volume_name", File(rootCipherDir).name)
                     startActivity(intent)
                     finish()
                 }

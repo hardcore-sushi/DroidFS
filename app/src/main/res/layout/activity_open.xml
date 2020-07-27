@@ -7,7 +7,6 @@
     <include layout="@layout/toolbar"/>
 
     <ScrollView
-        android:fillViewport="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -83,7 +82,7 @@
                 android:text="@string/fingerprint_save_checkbox_text"
                 android:onClick="onClickSavePasswordHash"/>
 
-            <sushi.hardcore.droidfs.widgets.ColoredBorderListView
+            <sushi.hardcore.droidfs.widgets.NonScrollableColoredBorderListView
                 android:id="@+id/saved_path_listview"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

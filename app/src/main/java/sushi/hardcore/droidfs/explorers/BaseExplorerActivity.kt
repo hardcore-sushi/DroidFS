@@ -9,7 +9,6 @@ import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.AdapterView.OnItemLongClickListener
 import android.widget.EditText
-import android.widget.ListView
 import android.widget.Toast
 import com.github.clans.fab.FloatingActionMenu
 import kotlinx.android.synthetic.main.activity_explorer_base.*
@@ -22,6 +21,7 @@ import sushi.hardcore.droidfs.ConstValues.Companion.isImage
 import sushi.hardcore.droidfs.ConstValues.Companion.isText
 import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.file_viewers.AudioPlayer
@@ -32,7 +32,7 @@ import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.util.*
 
 open class BaseExplorerActivity : BaseActivity() {
@@ -111,25 +111,21 @@ open class BaseExplorerActivity : BaseActivity() {
                         startFileViewer(AudioPlayer::class.java, fullPath)
                     }
                     else -> {
-                        val dialogListView = layoutInflater.inflate(R.layout.dialog_listview, null)
-                        val listView = dialogListView.findViewById<ListView>(R.id.listview)
                         val adapter = OpenAsDialogAdapter(this)
-                        listView.adapter = adapter
-                        val dialog = ColoredAlertDialog(this)
-                            .setView(dialogListView)
+                        ColoredAlertDialogBuilder(this)
+                            .setSingleChoiceItems(adapter, -1){ dialog, which ->
+                                when (adapter.getItem(which)){
+                                    "image" -> startFileViewer(ImageViewer::class.java, fullPath)
+                                    "video" -> startFileViewer(VideoPlayer::class.java, fullPath)
+                                    "audio" -> startFileViewer(AudioPlayer::class.java, fullPath)
+                                    "text" -> startFileViewer(TextEditor::class.java, fullPath)
+                                }
+                                dialog.dismiss()
+                            }
                             .setTitle(getString(R.string.open_as))
                             .setNegativeButton(R.string.cancel, null)
                             .create()
-                        listView.setOnItemClickListener{_, _, fileTypePosition, _ ->
-                            when (adapter.getItem(fileTypePosition)){
-                                "image" -> startFileViewer(ImageViewer::class.java, fullPath)
-                                "video" -> startFileViewer(VideoPlayer::class.java, fullPath)
-                                "audio" -> startFileViewer(AudioPlayer::class.java, fullPath)
-                                "text" -> startFileViewer(TextEditor::class.java, fullPath)
-                            }
-                            dialog.dismiss()
-                        }
-                        dialog.show()
+                            .show()
                     }
                 }
             }
@@ -177,7 +173,7 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     private fun askCloseVolume() {
-        ColoredAlertDialog(this)
+        ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_close_volume)
                 .setPositiveButton(R.string.ok) { _, _ -> closeVolumeOnUserExit() }
@@ -213,7 +209,7 @@ open class BaseExplorerActivity : BaseActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!gocryptfsVolume.mkdir(PathUtils.path_join(currentDirectoryPath, folder_name))) {
-                ColoredAlertDialog(this)
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
                         .setPositiveButton(R.string.ok, null)
@@ -229,7 +225,7 @@ open class BaseExplorerActivity : BaseActivity() {
         findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        val dialog = ColoredAlertDialog(this)
+        val dialog = ColoredAlertDialogBuilder(this)
                 .setView(dialogEditTextView)
                 .setTitle(R.string.enter_folder_name)
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -253,7 +249,7 @@ open class BaseExplorerActivity : BaseActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!gocryptfsVolume.rename(PathUtils.path_join(currentDirectoryPath, old_name), PathUtils.path_join(currentDirectoryPath, new_name))) {
-                ColoredAlertDialog(this)
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
                         .setPositiveButton(R.string.ok, null)
@@ -296,13 +292,15 @@ open class BaseExplorerActivity : BaseActivity() {
                 true
             }
             R.id.explorer_menu_sort -> {
-                ColoredAlertDialog(this)
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.sort_order)
-                        .setSingleChoiceItems(sortModesEntries, currentSortModeIndex) { dialog, which ->
+                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortModesEntries), currentSortModeIndex) { dialog, which ->
                             currentSortModeIndex = which
                             setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()
-                        }.show()
+                        }
+                        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                        .show()
                 true
             }
             R.id.explorer_menu_rename -> {
@@ -311,7 +309,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
                 dialogEditText.setText(oldName)
                 dialogEditText.selectAll()
-                val dialog = ColoredAlertDialog(this)
+                val dialog = ColoredAlertDialogBuilder(this)
                         .setView(dialogEditTextView)
                         .setTitle(R.string.rename_title)
                         .setPositiveButton(R.string.ok) { _, _ ->

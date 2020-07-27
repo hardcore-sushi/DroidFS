@@ -1,10 +1,8 @@
 package sushi.hardcore.droidfs.adapters
 
-import androidx.appcompat.app.AlertDialog
 import android.content.Context
 import android.content.SharedPreferences
 import android.content.SharedPreferences.Editor
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,7 +12,7 @@ import android.widget.TextView
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.WidgetUtil
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.util.*
 
 class SavedVolumesAdapter(val context: Context, val shared_prefs: SharedPreferences) : BaseAdapter() {
@@ -56,7 +54,7 @@ class SavedVolumesAdapter(val context: Context, val shared_prefs: SharedPreferen
         val delete_imageview = view.findViewById<ImageView>(R.id.delete_imageview)
         delete_imageview.setOnClickListener {
             val volume_path = saved_volumes_paths[position]
-            val dialog = ColoredAlertDialog(context)
+            val dialog = ColoredAlertDialogBuilder(context)
             dialog.setTitle(R.string.warning)
             if (shared_prefs.getString(volume_path, null) != null){
                 dialog.setMessage(context.getString(R.string.delete_hash_or_all))

@@ -9,11 +9,10 @@ import android.os.Environment
 import android.util.DisplayMetrics
 import android.view.*
 import androidx.core.content.ContextCompat
-import androidx.preference.PreferenceManager
 import com.bumptech.glide.Glide
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialog
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 class MainActivity : BaseActivity() {
     companion object {
@@ -33,14 +32,14 @@ class MainActivity : BaseActivity() {
         val state = Environment.getExternalStorageState()
         val storageAvailable = Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state
         if (!storageAvailable) {
-            ColoredAlertDialog(this)
+            ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.storage_unavailable)
                     .setMessage(R.string.storage_unavailable_msg)
                     .setPositiveButton(R.string.ok
                     ) { _, _ -> finish() }.show()
         }
         if (!sharedPrefs.getBoolean("alreadyLaunched", false)){
-            ColoredAlertDialog(this)
+            ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
                     .setMessage(R.string.usf_home_warning_msg)
                     .setCancelable(false)
@@ -63,7 +62,7 @@ class MainActivity : BaseActivity() {
         when (requestCode) {
             STORAGE_PERMISSIONS_REQUEST -> if (grantResults.size == 2) {
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
-                    ColoredAlertDialog(this)
+                    ColoredAlertDialogBuilder(this)
                             .setTitle(R.string.storage_perm_denied)
                             .setMessage(R.string.storage_perm_denied_msg)
                             .setPositiveButton(R.string.ok

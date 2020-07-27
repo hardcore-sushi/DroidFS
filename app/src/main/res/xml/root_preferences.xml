@@ -13,14 +13,13 @@
 
     <PreferenceCategory android:title="@string/explorer">
 
-        <ListPreference
+        <sushi.hardcore.droidfs.widgets.ColoredListPreference
             app:defaultValue="name"
             app:entries="@array/sort_orders_entries"
             app:entryValues="@array/sort_orders_values"
             app:key="sort_order"
             android:title="@string/settings_title_sort_order"
-            android:icon="@drawable/icon_sort"
-            app:useSimpleSummaryProvider="true"/>
+            android:icon="@drawable/icon_sort"/>
 
     </PreferenceCategory>
 
