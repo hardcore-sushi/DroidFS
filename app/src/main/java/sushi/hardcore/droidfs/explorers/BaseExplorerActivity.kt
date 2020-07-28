@@ -133,6 +133,11 @@ open class BaseExplorerActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
+    protected fun unselectAll(){
+        explorerAdapter.unSelectAll()
+        invalidateOptionsMenu()
+    }
+
     private fun sortExplorerElements() {
         when (sortModesValues[currentSortModeIndex]) {
             "name" -> {
@@ -199,8 +204,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
             }
         } else {
-            explorerAdapter.unSelectAll()
-            invalidateOptionsMenu()
+            unselectAll()
         }
     }
 
@@ -287,8 +291,7 @@ open class BaseExplorerActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                explorerAdapter.unSelectAll()
-                invalidateOptionsMenu()
+                unselectAll()
                 true
             }
             R.id.explorer_menu_sort -> {
@@ -331,8 +334,7 @@ open class BaseExplorerActivity : BaseActivity() {
             R.id.explorer_menu_external_open -> {
                 if (usf_open){
                     ExternalProvider.open(this, gocryptfsVolume, PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
-                    explorerAdapter.unSelectAll()
-                    invalidateOptionsMenu()
+                    unselectAll()
                 }
                 true
             }

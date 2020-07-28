@@ -15,7 +15,7 @@ android {
         minSdkVersion 21
         targetSdkVersion 29
         versionCode 1
-        versionName "1.1.0"
+        versionName "1.1.1"
 
         ndk {
             abiFilters 'x86_64', 'armeabi-v7a', 'arm64-v8a'

@@ -3,12 +3,14 @@ package sushi.hardcore.droidfs.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.net.URLConnection
 import java.util.*
+import kotlin.collections.ArrayList
 
 object ExternalProvider {
     private const val content_type_all = "*/*"
@@ -37,54 +39,77 @@ object ExternalProvider {
                 return Pair(tmpFileUri, getContentType(fileName, previous_content_type))
             }
         }
-        ColoredAlertDialogBuilder(context)
-                .setTitle(R.string.error)
-                .setMessage(context.getString(R.string.export_failed, file_path))
-                .setPositiveButton(R.string.ok, null)
-                .show()
         return Pair(null, null)
     }
 
-    fun share(context: Context, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
-        var contentType: String? = null
-        val uris = ArrayList<Uri>()
-        for (path in file_paths) {
-            val result = exportFile(context, gocryptfsVolume, path, contentType)
-            contentType = if (result.first != null) {
-                uris.add(result.first!!)
-                result.second
-            } else {
-                return
+    fun share(activity: AppCompatActivity, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
+        object : LoadingTask(activity, R.string.loading_msg_export){
+            override fun doTask(activity: AppCompatActivity) {
+                var contentType: String? = null
+                val uris = ArrayList<Uri>()
+                for (path in file_paths) {
+                    val result = exportFile(activity, gocryptfsVolume, path, contentType)
+                    contentType = if (result.first != null) {
+                        uris.add(result.first!!)
+                        result.second
+                    } else {
+                        stopTask {
+                            ColoredAlertDialogBuilder(activity)
+                                .setTitle(R.string.error)
+                                .setMessage(activity.getString(R.string.export_failed, path))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                        return
+                    }
+                }
+                val shareIntent = Intent()
+                shareIntent.type = contentType
+                if (uris.size == 1) {
+                    shareIntent.action = Intent.ACTION_SEND
+                    shareIntent.putExtra(Intent.EXTRA_STREAM, uris[0])
+                } else {
+                    shareIntent.action = Intent.ACTION_SEND_MULTIPLE
+                    shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+                }
+                stopTask {
+                    activity.startActivity(Intent.createChooser(shareIntent, activity.getString(R.string.share_chooser)))
+                }
             }
         }
-        val shareIntent = Intent()
-        shareIntent.type = contentType
-        if (uris.size == 1) {
-            shareIntent.action = Intent.ACTION_SEND
-            shareIntent.putExtra(Intent.EXTRA_STREAM, uris[0])
-        } else {
-            shareIntent.action = Intent.ACTION_SEND_MULTIPLE
-            shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
-        }
-        context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_chooser)))
     }
 
-    fun open(context: Context, gocryptfsVolume: GocryptfsVolume, file_path: String) {
-        val result = exportFile(context, gocryptfsVolume, file_path, null)
-        result.first?.let {
-            val openIntent = Intent()
-            openIntent.action = Intent.ACTION_VIEW
-            openIntent.setDataAndType(result.first, result.second)
-            context.startActivity(openIntent)
+    fun open(activity: AppCompatActivity, gocryptfsVolume: GocryptfsVolume, file_path: String) {
+        object : LoadingTask(activity, R.string.loading_msg_export) {
+            override fun doTask(activity: AppCompatActivity) {
+                val result = exportFile(activity, gocryptfsVolume, file_path, null)
+                if (result.first != null) {
+                    val openIntent = Intent(Intent.ACTION_VIEW)
+                    openIntent.setDataAndType(result.first, result.second)
+                    stopTask { activity.startActivity(openIntent) }
+                } else {
+                    stopTask {
+                        ColoredAlertDialogBuilder(activity)
+                            .setTitle(R.string.error)
+                            .setMessage(activity.getString(R.string.export_failed, file_path))
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
+                }
+            }
         }
     }
 
     fun removeFiles(context: Context) {
         Thread{
+            val wiped = ArrayList<Uri>()
             for (uri in storedFiles) {
-                if (Wiper.wipe(context, uri)){
-                    storedFiles.remove(uri)
+                if (Wiper.wipe(context, uri) == null){
+                    wiped.add(uri)
                 }
+            }
+            for (uri in wiped){
+                storedFiles.remove(uri)
             }
         }.start()
     }
