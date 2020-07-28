@@ -50,7 +50,7 @@
     <string name="yes">YES</string>
     <string name="no">NO</string>
     <string name="ask_for_wipe">Do you want to wipe the original files ?</string>
-    <string name="wipe_failed">Wiping of %1$s failed</string>
+    <string name="wipe_failed">Wiping failed: %1$s</string>
     <string name="wipe_successful">Files successfully wiped !</string>
     <string name="wipe_success_msg">The imported files have been successfully wiped from their original locations.</string>
     <string name="create_password_warning">Warning !\nThis password will be the only way to decrypt the volume and access the files inside.\nChoose a very strong password (not \"123456\" or \"password\"), do not lose it and keep it secure (preferably only in your mind).\n\nDroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.\nDo not type passwords in insecure environments.</string>
@@ -62,6 +62,7 @@
     <string name="sort_order">Sort order:</string>
     <string name="old_password">Old password:</string>
     <string name="new_password">New password:</string>
+    <string name="new_password_confirmation">New Password (confirmation):</string>
     <string name="success_change_password">Password successfully changed !</string>
     <string name="success_change_password_msg">The volume\'s password has been successfully changed.</string>
     <string name="change_password_failed">Failed to change the volume\'s password. Check the selected volume path and the entered old password.</string>
@@ -118,12 +119,15 @@
     <string name="discard">Discard</string>
     <string name="word_wrap">Word Wrap</string>
     <string name="outofmemoryerror_msg">OutOfMemoryError: This file is too large to be loaded in memory.</string>
-    <string name="new_file">New File</string>
+    <string name="new_file">Create New File</string>
     <string name="enter_file_name">File name:</string>
     <string name="file_creation_failed">Failed to create the file.</string>
-    <string name="loading">Loading...</string>
-    <string name="loading_msg_create">Creating volume...</string>
-    <string name="loading_msg_change_password">Changing password...</string>
-    <string name="new_password_confirmation">New Password (confirmation):</string>
-    <string name="loading_msg_open">Opening volume...</string>
+    <string name="loading">Loading…</string>
+    <string name="loading_msg_create">Creating volume…</string>
+    <string name="loading_msg_change_password">Changing password…</string>
+    <string name="loading_msg_open">Opening volume…</string>
+    <string name="loading_msg_import">Importing selected files…</string>
+    <string name="loading_msg_wipe">Wiping original files…</string>
+    <string name="loading_msg_export">Exporting files…</string>
+    <string name="query_cursor_null_error_msg">Unable to access this file</string>
 </resources>

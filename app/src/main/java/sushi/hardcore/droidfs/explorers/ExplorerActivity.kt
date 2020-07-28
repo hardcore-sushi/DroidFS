@@ -8,15 +8,14 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.github.clans.fab.FloatingActionMenu
 import kotlinx.android.synthetic.main.activity_explorer.*
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.ExternalProvider
-import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.Wiper
+import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -77,7 +76,7 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     fun onClickAddFile(view: View?) {
         fam_explorer.close(true)
-        val i = Intent(Intent.ACTION_GET_CONTENT)
+        val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
         i.type = "*/*"
         i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
         i.addCategory(Intent.CATEGORY_OPENABLE)
@@ -95,139 +94,175 @@ class ExplorerActivity : BaseExplorerActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_FILES_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                val uris: MutableList<Uri> = ArrayList()
-                val singleUri = data.data
-                if (singleUri == null) { //multiples choices
-                    val clipData = data.clipData
-                    if (clipData != null){
-                        for (i in 0 until clipData.itemCount) {
-                            uris.add(clipData.getItemAt(i).uri)
+                object : LoadingTask(this, R.string.loading_msg_import){
+                    override fun doTask(activity: AppCompatActivity) {
+                        val uris: MutableList<Uri> = ArrayList()
+                        val singleUri = data.data
+                        if (singleUri == null) { //multiples choices
+                            val clipData = data.clipData
+                            if (clipData != null){
+                                for (i in 0 until clipData.itemCount) {
+                                    uris.add(clipData.getItemAt(i).uri)
+                                }
+                            }
+                        } else {
+                            uris.add(singleUri)
                         }
-                    }
-                } else {
-                    uris.add(singleUri)
-                }
-                if (uris.isNotEmpty()){
-                    var success = true
-                    for (uri in uris) {
-                        val dstPath = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(this, uri))
-                        contentResolver.openInputStream(uri)?.let {
-                            success = gocryptfsVolume.import_file(it, dstPath)
+                        var success = true
+                        for (uri in uris) {
+                            val dstPath = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri))
+                            contentResolver.openInputStream(uri)?.let {
+                                success = gocryptfsVolume.import_file(it, dstPath)
+                            }
+                            if (!success) {
+                                stopTask {
+                                    ColoredAlertDialogBuilder(activity)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.import_failed, uri))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                                }
+                                break
+                            }
                         }
-                        if (!success) {
-                            ColoredAlertDialogBuilder(this)
-                                    .setTitle(R.string.error)
-                                    .setMessage(getString(R.string.import_failed, uri))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            break
-                        }
-                    }
-                    if (success) {
-                        ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.success_import)
-                                .setMessage("""
-                                    ${getString(R.string.success_import_msg)}
-                                    ${getString(R.string.ask_for_wipe)}
-                                    """.trimIndent())
-                                .setPositiveButton(R.string.yes) { _, _ ->
-                                    success = true
-                                    for (uri in uris) {
-                                        if (!Wiper.wipe(this, uri)) {
-                                            ColoredAlertDialogBuilder(this)
-                                                    .setTitle(R.string.error)
-                                                    .setMessage(getString(R.string.wipe_failed, uri))
-                                                    .setPositiveButton(R.string.ok, null)
-                                                    .show()
-                                            success = false
-                                            break
+                        if (success) {
+                            stopTask {
+                                ColoredAlertDialogBuilder(activity)
+                                    .setTitle(R.string.success_import)
+                                    .setMessage("""
+                                ${getString(R.string.success_import_msg)}
+                                ${getString(R.string.ask_for_wipe)}
+                                """.trimIndent())
+                                    .setPositiveButton(R.string.yes) { _, _ ->
+                                        object : LoadingTask(activity, R.string.loading_msg_wipe){
+                                            override fun doTask(activity: AppCompatActivity) {
+                                                success = true
+                                                for (uri in uris) {
+                                                    val errorMsg = Wiper.wipe(activity, uri)
+                                                    if (errorMsg != null) {
+                                                        stopTask {
+                                                            ColoredAlertDialogBuilder(activity)
+                                                                .setTitle(R.string.error)
+                                                                .setMessage(getString(R.string.wipe_failed, errorMsg))
+                                                                .setPositiveButton(R.string.ok, null)
+                                                                .show()
+                                                        }
+                                                        success = false
+                                                        break
+                                                    }
+                                                }
+                                                if (success) {
+                                                    stopTask {
+                                                        ColoredAlertDialogBuilder(activity)
+                                                            .setTitle(R.string.wipe_successful)
+                                                            .setMessage(R.string.wipe_success_msg)
+                                                            .setPositiveButton(R.string.ok, null)
+                                                            .show()
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
-                                    if (success) {
-                                        ColoredAlertDialogBuilder(this)
-                                                .setTitle(R.string.wipe_successful)
-                                                .setMessage(R.string.wipe_success_msg)
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
-                                    }
-                                }
-                                .setNegativeButton(getString(R.string.no), null)
-                                .show()
+                                    .setNegativeButton(getString(R.string.no), null)
+                                    .show()
+                            }
+                        }
                     }
-                    setCurrentPath(currentDirectoryPath)
+                    override fun doFinally(activity: AppCompatActivity){
+                        setCurrentPath(currentDirectoryPath)
+                    }
                 }
             }
         } else if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                val uri = data.data
-                val outputDir = PathUtils.getFullPathFromTreeUri(uri, this)
-                var failedItem: String? = null
-                for (i in explorerAdapter.selectedItems) {
-                    val element = explorerAdapter.getItem(i)
-                    val fullPath = PathUtils.path_join(currentDirectoryPath, element.name)
-                    failedItem = if (element.isDirectory) {
-                        recursiveExportDirectory(fullPath, outputDir)
-                    } else {
-                        if (gocryptfsVolume.export_file(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
-                    }
-                    if (failedItem != null) {
-                        ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.error)
-                                .setMessage(getString(R.string.export_failed, failedItem))
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        break
-                    }
-                }
-                if (failedItem == null) {
-                    ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.success_export)
-                            .setMessage(R.string.success_export_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                }
-            }
-            explorerAdapter.unSelectAll()
-            invalidateOptionsMenu()
-        } else if (requestCode == PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE) {
-            if (resultCode == Activity.RESULT_OK && data != null) {
-                val remoteSessionID = data.getIntExtra("sessionID", -1)
-                val remoteGocryptfsVolume = GocryptfsVolume(remoteSessionID)
-                val path = data.getStringExtra("path")
-                var failedItem: String? = null
-                if (path == null) {
-                    val paths = data.getStringArrayListExtra("paths")
-                    val types = data.getIntegerArrayListExtra("types")
-                    if (types != null && paths != null){
-                        for (i in paths.indices) {
-                            failedItem = if (types[i] == 0) { //directory
-                                recursiveImportDirectoryFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)
+                object : LoadingTask(this, R.string.loading_msg_export){
+                    override fun doTask(activity: AppCompatActivity) {
+                        val uri = data.data
+                        val outputDir = PathUtils.getFullPathFromTreeUri(uri, activity)
+                        var failedItem: String? = null
+                        for (i in explorerAdapter.selectedItems) {
+                            val element = explorerAdapter.getItem(i)
+                            val fullPath = PathUtils.path_join(currentDirectoryPath, element.name)
+                            failedItem = if (element.isDirectory) {
+                                recursiveExportDirectory(fullPath, outputDir)
                             } else {
-                                if (importFileFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)) null else paths[i]
+                                if (gocryptfsVolume.export_file(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
                             }
                             if (failedItem != null) {
+                                stopTask {
+                                    ColoredAlertDialogBuilder(activity)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.export_failed, failedItem))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                                }
                                 break
                             }
                         }
+                        if (failedItem == null) {
+                            stopTask {
+                                ColoredAlertDialogBuilder(activity)
+                                    .setTitle(R.string.success_export)
+                                    .setMessage(R.string.success_export_msg)
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        }
                     }
-                } else {
-                    failedItem = if (importFileFromOtherVolume(remoteGocryptfsVolume, path, currentDirectoryPath)) null else path
+                    override fun doFinally(activity: AppCompatActivity) {
+                        unselectAll()
+                    }
                 }
-                if (failedItem == null) {
-                    ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.success_import)
-                            .setMessage(R.string.success_import_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                } else {
-                    ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.error)
-                            .setMessage(getString(R.string.import_failed, failedItem))
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
+            }
+        } else if (requestCode == PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                object : LoadingTask(this, R.string.loading_msg_import){
+                    override fun doTask(activity: AppCompatActivity) {
+                        val remoteSessionID = data.getIntExtra("sessionID", -1)
+                        val remoteGocryptfsVolume = GocryptfsVolume(remoteSessionID)
+                        val path = data.getStringExtra("path")
+                        var failedItem: String? = null
+                        if (path == null) {
+                            val paths = data.getStringArrayListExtra("paths")
+                            val types = data.getIntegerArrayListExtra("types")
+                            if (types != null && paths != null){
+                                for (i in paths.indices) {
+                                    failedItem = if (types[i] == 0) { //directory
+                                        recursiveImportDirectoryFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)
+                                    } else {
+                                        if (importFileFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)) null else paths[i]
+                                    }
+                                    if (failedItem != null) {
+                                        break
+                                    }
+                                }
+                            }
+                        } else {
+                            failedItem = if (importFileFromOtherVolume(remoteGocryptfsVolume, path, currentDirectoryPath)) null else path
+                        }
+                        if (failedItem == null) {
+                            stopTask {
+                                ColoredAlertDialogBuilder(activity)
+                                    .setTitle(R.string.success_import)
+                                    .setMessage(R.string.success_import_msg)
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        } else {
+                            stopTask {
+                                ColoredAlertDialogBuilder(activity)
+                                    .setTitle(R.string.error)
+                                    .setMessage(getString(R.string.import_failed, failedItem))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        }
+                        remoteGocryptfsVolume.close()
+                    }
+                    override fun doFinally(activity: AppCompatActivity) {
+                        setCurrentPath(currentDirectoryPath)
+                    }
                 }
-                remoteGocryptfsVolume.close()
-                setCurrentPath(currentDirectoryPath)
             }
         }
     }
@@ -285,8 +320,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     paths.add(PathUtils.path_join(currentDirectoryPath, e.name))
                 }
                 ExternalProvider.share(this, gocryptfsVolume, paths)
-                explorerAdapter.unSelectAll()
-                invalidateOptionsMenu()
+                unselectAll()
                 true
             }
             R.id.explorer_menu_decrypt -> {
@@ -407,8 +441,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 break
             }
         }
-        explorerAdapter.unSelectAll()
-        invalidateOptionsMenu()
+        unselectAll()
         setCurrentPath(currentDirectoryPath) //refresh
     }
 }

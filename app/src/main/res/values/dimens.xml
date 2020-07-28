@@ -7,7 +7,11 @@
     <dimen name="edit_text_label_size">15sp</dimen>
     <dimen name="open_activity_label_width">90dp</dimen>
     <dimen name="change_password_activity_label_width">100dp</dimen>
-    <dimen name="action_activity_button_hor_margin">60dp</dimen>
+    <dimen name="action_activity_button_horizontal_margin">60dp</dimen>
     <dimen name="action_activity_button_height">60dp</dimen>
+    <dimen name="action_activity_listview_margin_horizontal">50dp</dimen>
+    <dimen name="action_activity_listview_margin_top">20dp</dimen>
+    <dimen name="warning_msg_padding">20dp</dimen>
+    <dimen name="action_activity_button_margin_bottom">20dp</dimen>
     <dimen name="adapter_text_size">18sp</dimen>
 </resources>

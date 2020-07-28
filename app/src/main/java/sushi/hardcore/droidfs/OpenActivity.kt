@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
 import kotlinx.android.synthetic.main.activity_open.checkbox_save_password
 import kotlinx.android.synthetic.main.activity_open.edit_password
@@ -18,10 +20,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
-import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.WidgetUtil
-import sushi.hardcore.droidfs.util.Wiper
+import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -83,72 +82,65 @@ class OpenActivity : BaseActivity() {
     }
 
     fun onClickOpen(view: View?) {
-        val dialogLoadingView = layoutInflater.inflate(R.layout.dialog_loading, null)
-        val dialogTextMessage = dialogLoadingView.findViewById<TextView>(R.id.text_message)
-        dialogTextMessage.text = getString(R.string.loading_msg_open)
-        val dialogLoading = ColoredAlertDialogBuilder(this)
-            .setView(dialogLoadingView)
-            .setTitle(R.string.loading)
-            .setCancelable(false)
-            .create()
-        dialogLoading.show()
-        Thread {
-            rootCipherDir = edit_volume_path.text.toString() //fresh get in case of manual rewrite
-            if (rootCipherDir.isEmpty()) {
-                dialogLoading.dismiss()
-                toastFromThread(R.string.enter_volume_path)
-            } else {
-                val password = edit_password.text.toString().toCharArray()
-                var returnedHash: ByteArray? = null
-                if (usf_fingerprint && checkbox_save_password.isChecked){
-                    returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                }
-                sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
-                if (sessionID != -1) {
-                    var startExplorerImmediately = true
-                    if (checkbox_remember_path.isChecked) {
-                        savedVolumesAdapter.addVolumePath(rootCipherDir)
-                        if (checkbox_save_password.isChecked && returnedHash != null){
-                            fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { success ->
-                                dialogLoading.dismiss()
-                                if (success){
-                                    startExplorer()
+        object : LoadingTask(this, R.string.loading_msg_open){
+            override fun doTask(activity: AppCompatActivity) {
+                rootCipherDir = edit_volume_path.text.toString() //fresh get in case of manual rewrite
+                if (rootCipherDir.isEmpty()) {
+                    stopTaskWithToast(R.string.enter_volume_path)
+                } else {
+                    val password = edit_password.text.toString().toCharArray()
+                    var returnedHash: ByteArray? = null
+                    if (usf_fingerprint && checkbox_save_password.isChecked){
+                        returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+                    }
+                    sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
+                    if (sessionID != -1) {
+                        var startExplorerImmediately = true
+                        if (checkbox_remember_path.isChecked) {
+                            savedVolumesAdapter.addVolumePath(rootCipherDir)
+                            if (checkbox_save_password.isChecked && returnedHash != null){
+                                fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
+                                    stopTask { startExplorer() }
                                 }
+                                startExplorerImmediately = false
                             }
-                            startExplorerImmediately = false
+                        }
+                        if (startExplorerImmediately){
+                            stopTask { startExplorer() }
+                        }
+                    } else {
+                        stopTask {
+                            ColoredAlertDialogBuilder(activity)
+                                .setTitle(R.string.open_volume_failed)
+                                .setMessage(R.string.open_volume_failed_msg)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
                         }
                     }
-                    if (startExplorerImmediately){
-                        dialogLoading.dismiss()
-                        startExplorer()
-                    }
+                    Arrays.fill(password, 0.toChar())
+                }
+            }
+        }
+    }
+
+    private fun openUsingPasswordHash(passwordHash: ByteArray){
+        object : LoadingTask(this, R.string.loading_msg_open){
+            override fun doTask(activity: AppCompatActivity) {
+                sessionID = GocryptfsVolume.init(rootCipherDir, null, passwordHash, null)
+                if (sessionID != -1){
+                    stopTask { startExplorer() }
                 } else {
-                    dialogLoading.dismiss()
-                    runOnUiThread {
-                        ColoredAlertDialogBuilder(this)
+                    stopTask {
+                        ColoredAlertDialogBuilder(activity)
                             .setTitle(R.string.open_volume_failed)
-                            .setMessage(R.string.open_volume_failed_msg)
+                            .setMessage(R.string.open_failed_hash_msg)
                             .setPositiveButton(R.string.ok, null)
                             .show()
                     }
                 }
-                Arrays.fill(password, 0.toChar())
+                Arrays.fill(passwordHash, 0)
             }
-        }.start()
-    }
-
-    private fun openUsingPasswordHash(passwordHash: ByteArray){
-        sessionID = GocryptfsVolume.init(rootCipherDir, null, passwordHash, null)
-        if (sessionID != -1){
-            startExplorer()
-        } else {
-            ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.open_volume_failed)
-                    .setMessage(R.string.open_failed_hash_msg)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
         }
-        Arrays.fill(passwordHash, 0)
     }
 
     private fun startExplorer() {
