@@ -45,12 +45,12 @@
             app:menu_labels_style="@style/fab_label">
 
             <sushi.hardcore.droidfs.widgets.ColoredFAB
-                android:id="@+id/fab_explorer_add_folder"
+                android:id="@+id/fab_add_folder"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:fab_size="mini"
                 app:fab_label="@string/mkdir"
-                android:src="@drawable/icon_add"
+                android:src="@drawable/icon_folder"
                 android:onClick="onClickAddFolder"/>
 
         </sushi.hardcore.droidfs.widgets.ColoredFAM>

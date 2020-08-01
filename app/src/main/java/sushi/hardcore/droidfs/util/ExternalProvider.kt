@@ -9,7 +9,6 @@ import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.net.URLConnection
-import java.util.*
 import kotlin.collections.ArrayList
 
 object ExternalProvider {
@@ -102,13 +101,13 @@ object ExternalProvider {
 
     fun removeFiles(context: Context) {
         Thread{
-            val wiped = ArrayList<Uri>()
-            for (uri in storedFiles) {
-                if (Wiper.wipe(context, uri) == null){
-                    wiped.add(uri)
+            val success = ArrayList<Uri>()
+            for (uri in storedFiles){
+                if (context.contentResolver.delete(uri, null, null) == 1){
+                    success.add(uri)
                 }
             }
-            for (uri in wiped){
+            for (uri in success){
                 storedFiles.remove(uri)
             }
         }.start()

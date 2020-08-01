@@ -12,7 +12,6 @@
     <color name="textColor">#FFFFFF</color>
     <color name="buttonBackgroundColor">#5B5A5C</color>
     <color name="item_selected">#66666666</color>
-    <color name="menuIcon">#FFFFFF</color>
     <color name="infoBarBackgroundColor">#111111</color>
     <color name="fingerprint_wait">#FFFFFF</color>
     <color name="fingerprint_success">#6CC341</color>

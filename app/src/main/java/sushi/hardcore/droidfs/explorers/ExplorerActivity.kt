@@ -8,9 +8,9 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.github.clans.fab.FloatingActionButton
 import com.github.clans.fab.FloatingActionMenu
 import kotlinx.android.synthetic.main.activity_explorer.*
 import sushi.hardcore.droidfs.OpenActivity
@@ -18,7 +18,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
-import java.util.*
+import kotlin.collections.ArrayList
 
 class ExplorerActivity : BaseExplorerActivity() {
     private val PICK_DIRECTORY_REQUEST_CODE = 1
@@ -26,10 +26,18 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE = 3
     private var usf_decrypt = false
     private var usf_share = false
+    private var modeSelectLocation = false
+    private val filesToCopy = ArrayList<ExplorerElement>()
     override fun init() {
         setContentView(R.layout.activity_explorer)
         usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
         usf_share = sharedPrefs.getBoolean("usf_share", false)
+    }
+
+    override fun onExplorerItemLongClick(position: Int) {
+        cancelCopy()
+        explorerAdapter.onItemLongClick(position)
+        invalidateOptionsMenu()
     }
 
     private fun createNewFile(fileName: String){
@@ -230,7 +238,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     failedItem = if (types[i] == 0) { //directory
                                         recursiveImportDirectoryFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)
                                     } else {
-                                        if (importFileFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)) null else paths[i]
+                                        if (importFileFromOtherVolume(remoteGocryptfsVolume, paths[i], PathUtils.path_join(currentDirectoryPath, File(paths[i]).name))) null else paths[i]
                                     }
                                     if (failedItem != null) {
                                         break
@@ -238,7 +246,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 }
                             }
                         } else {
-                            failedItem = if (importFileFromOtherVolume(remoteGocryptfsVolume, path, currentDirectoryPath)) null else path
+                            failedItem = if (importFileFromOtherVolume(remoteGocryptfsVolume, path, PathUtils.path_join(currentDirectoryPath, File(path).name))) null else path
                         }
                         if (failedItem == null) {
                             stopTask {
@@ -269,24 +277,30 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer, menu)
-        handleMenuItems(menu)
-        if (usf_share){
-            menu.findItem(R.id.explorer_menu_share).isVisible = false
-        }
-        val anyItemSelected = explorerAdapter.selectedItems.isNotEmpty()
-        menu.findItem(R.id.explorer_menu_select_all).isVisible = anyItemSelected
-        menu.findItem(R.id.explorer_menu_delete).isVisible = anyItemSelected
-        menu.findItem(R.id.explorer_menu_decrypt).isVisible = anyItemSelected && usf_decrypt
-        if (anyItemSelected && usf_share){
-            var containsDir = false
-            for (i in explorerAdapter.selectedItems) {
-                if (explorerElements[i].isDirectory) {
-                    containsDir = true
-                    break
-                }
+        if (modeSelectLocation) {
+            menu.findItem(R.id.validate).isVisible = true
+            menu.findItem(R.id.close).isVisible = false
+        } else {
+            handleMenuItems(menu)
+            if (usf_share){
+                menu.findItem(R.id.share).isVisible = false
             }
-            if (!containsDir) {
-                menu.findItem(R.id.explorer_menu_share).isVisible = true
+            val anyItemSelected = explorerAdapter.selectedItems.isNotEmpty()
+            menu.findItem(R.id.select_all).isVisible = anyItemSelected
+            menu.findItem(R.id.delete).isVisible = anyItemSelected
+            menu.findItem(R.id.copy).isVisible = anyItemSelected
+            menu.findItem(R.id.decrypt).isVisible = anyItemSelected && usf_decrypt
+            if (anyItemSelected && usf_share){
+                var containsDir = false
+                for (i in explorerAdapter.selectedItems) {
+                    if (explorerElements[i].isDirectory) {
+                        containsDir = true
+                        break
+                    }
+                }
+                if (!containsDir) {
+                    menu.findItem(R.id.share).isVisible = true
+                }
             }
         }
         return true
@@ -294,12 +308,67 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.explorer_menu_select_all -> {
+            android.R.id.home -> {
+                cancelCopy()
+                super.onOptionsItemSelected(item)
+            }
+            R.id.select_all -> {
                 explorerAdapter.selectAll()
                 invalidateOptionsMenu()
                 true
             }
-            R.id.explorer_menu_delete -> {
+            R.id.copy -> {
+                for (i in explorerAdapter.selectedItems){
+                    filesToCopy.add(explorerElements[i])
+                }
+                modeSelectLocation = true
+                unselectAll()
+                findViewById<FloatingActionButton>(R.id.fab_add_file).visibility = View.GONE
+                findViewById<FloatingActionButton>(R.id.fab_import_file).visibility = View.GONE
+                findViewById<FloatingActionButton>(R.id.fab_import_file_from_other_volume).visibility = View.GONE
+                true
+            }
+            R.id.validate -> {
+                object : LoadingTask(this, R.string.loading_msg_copy){
+                    override fun doTask(activity: AppCompatActivity) {
+                        var failedItem: String? = null
+                        for (element in filesToCopy) {
+                            val originalPath = element.getFullPath()
+                            failedItem = if (element.isDirectory) {
+                                recursiveCopyDirectory(originalPath, currentDirectoryPath)
+                            } else {
+                                if (copyFile(originalPath, PathUtils.path_join(currentDirectoryPath, element.name))) null else originalPath
+                            }
+                            if (failedItem != null) {
+                                stopTask {
+                                    ColoredAlertDialogBuilder(activity)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.copy_failed, failedItem))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                                }
+                                break
+                            }
+                        }
+                        if (failedItem == null) {
+                            stopTask {
+                                ColoredAlertDialogBuilder(activity)
+                                    .setTitle(getString(R.string.copy_success))
+                                    .setMessage(getString(R.string.copy_success_msg))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        }
+                    }
+                    override fun doFinally(activity: AppCompatActivity) {
+                        cancelCopy()
+                        unselectAll()
+                        setCurrentPath(currentDirectoryPath)
+                    }
+                }
+                true
+            }
+            R.id.delete -> {
                 val size = explorerAdapter.selectedItems.size
                 val dialog = ColoredAlertDialogBuilder(this)
                 dialog.setTitle(R.string.warning)
@@ -313,17 +382,16 @@ class ExplorerActivity : BaseExplorerActivity() {
                 dialog.show()
                 true
             }
-            R.id.explorer_menu_share -> {
+            R.id.share -> {
                 val paths: MutableList<String> = ArrayList()
                 for (i in explorerAdapter.selectedItems) {
-                    val e = explorerElements[i]
-                    paths.add(PathUtils.path_join(currentDirectoryPath, e.name))
+                    paths.add(explorerElements[i].getFullPath())
                 }
                 ExternalProvider.share(this, gocryptfsVolume, paths)
                 unselectAll()
                 true
             }
-            R.id.explorer_menu_decrypt -> {
+            R.id.decrypt -> {
                 val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
                 startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
                 true
@@ -332,12 +400,86 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun importFileFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, full_path: String, output_dir: String): Boolean {
-        val outputPath = PathUtils.path_join(output_dir, File(full_path).name)
+    private fun recursiveMapFiles(rootPath: String): MutableList<ExplorerElement> {
+        val result = mutableListOf<ExplorerElement>()
+        val explorerElements = gocryptfsVolume.list_dir(rootPath)
+        result.addAll(explorerElements)
+        for (e in explorerElements){
+            if (e.isDirectory){
+                result.addAll(recursiveMapFiles(e.getFullPath()))
+            }
+        }
+        return result
+    }
+
+    private fun cancelCopy() {
+        if (modeSelectLocation){
+            modeSelectLocation = false
+            findViewById<FloatingActionButton>(R.id.fab_add_file).visibility = View.VISIBLE
+            findViewById<FloatingActionButton>(R.id.fab_import_file).visibility = View.VISIBLE
+            findViewById<FloatingActionButton>(R.id.fab_import_file_from_other_volume).visibility = View.VISIBLE
+            filesToCopy.clear()
+        }
+    }
+
+    private fun copyFile(srcPath: String, dstPath: String): Boolean {
         var success = true
-        val srcHandleID = remote_gocryptfsVolume.open_read_mode(full_path)
+        val originalHandleId = gocryptfsVolume.open_read_mode(srcPath)
+        if (originalHandleId != -1){
+            val newHandleId = gocryptfsVolume.open_write_mode(dstPath)
+            if (newHandleId != -1){
+                var offset: Long = 0
+                val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+                var length: Int
+                while (gocryptfsVolume.read_file(originalHandleId, offset, ioBuffer).also { length = it } > 0) {
+                    val written = gocryptfsVolume.write_file(newHandleId, offset, ioBuffer, length).toLong()
+                    if (written == length.toLong()) {
+                        offset += written
+                    } else {
+                        success = false
+                        break
+                    }
+                }
+                gocryptfsVolume.close_file(newHandleId)
+            } else {
+                success = false
+            }
+            gocryptfsVolume.close_file(originalHandleId)
+        } else {
+            success = false
+        }
+        return success
+    }
+
+    private fun recursiveCopyDirectory(srcDirectoryPath: String, outputPath: String): String? {
+        val mappedElements = recursiveMapFiles(srcDirectoryPath)
+        val dstDirectoryPath = PathUtils.path_join(outputPath, File(srcDirectoryPath).name)
+        if (!gocryptfsVolume.path_exists(dstDirectoryPath)) {
+            if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
+                return dstDirectoryPath
+            }
+        }
+        for (e in mappedElements) {
+            val srcPath = e.getFullPath()
+            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, srcPath))
+            if (e.isDirectory) {
+                if (!gocryptfsVolume.mkdir(dstPath)){
+                    return srcPath
+                }
+            } else {
+                if (!copyFile(srcPath, dstPath)) {
+                    return srcPath
+                }
+            }
+        }
+        return null
+    }
+
+    private fun importFileFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, srcPath: String, dstPath: String): Boolean {
+        var success = true
+        val srcHandleID = remote_gocryptfsVolume.open_read_mode(srcPath)
         if (srcHandleID != -1) {
-            val dstHandleID = gocryptfsVolume.open_write_mode(outputPath)
+            val dstHandleID = gocryptfsVolume.open_write_mode(dstPath)
             if (dstHandleID != -1) {
                 var length: Int
                 val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
@@ -358,22 +500,24 @@ class ExplorerActivity : BaseExplorerActivity() {
         return success
     }
 
-    private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, output_dir: String): String? {
-        val directoryPath = PathUtils.path_join(output_dir, File(remote_directory_path).name)
-        if (!gocryptfsVolume.path_exists(directoryPath)) {
-            if (!gocryptfsVolume.mkdir(directoryPath)) {
-                return directoryPath
+    private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, outputPath: String): String? {
+        val mappedElements = recursiveMapFiles(remote_directory_path)
+        val dstDirectoryPath = PathUtils.path_join(outputPath, File(remote_directory_path).name)
+        if (!gocryptfsVolume.path_exists(dstDirectoryPath)) {
+            if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
+                return dstDirectoryPath
             }
         }
-        val explorerElements = remote_gocryptfsVolume.list_dir(remote_directory_path)
-        for (e in explorerElements) {
-            val fullPath = PathUtils.path_join(remote_directory_path, e.name)
+        for (e in mappedElements) {
+            val srcPath = e.getFullPath()
+            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, srcPath))
             if (e.isDirectory) {
-                val failedItem = recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume, fullPath, directoryPath)
-                failedItem?.let { return it }
+                if (!gocryptfsVolume.mkdir(dstPath)){
+                    return srcPath
+                }
             } else {
-                if (!importFileFromOtherVolume(remote_gocryptfsVolume, fullPath, directoryPath)) {
-                    return fullPath
+                if (!importFileFromOtherVolume(remote_gocryptfsVolume, srcPath, dstPath)) {
+                    return srcPath
                 }
             }
         }

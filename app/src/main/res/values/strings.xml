@@ -21,7 +21,7 @@
     <string name="success_import_msg">The selected files have been successfully imported.</string>
     <string name="import_failed">Import of %1$s failed.</string>
     <string name="export_failed">Export of %1$s failed.</string>
-    <string name="success_export">Export Successful !</string>
+    <string name="success_export">Export successful !</string>
     <string name="success_export_msg">The selected files have been successfully exported.</string>
     <string name="remove_failed">Deletion of %1$s failed</string>
     <string name="passwords_mismatch">Passwords don\'t match</string>
@@ -130,4 +130,13 @@
     <string name="loading_msg_wipe">Wiping original files…</string>
     <string name="loading_msg_export">Exporting files…</string>
     <string name="query_cursor_null_error_msg">Unable to access this file</string>
+    <string name="about">About</string>
+    <string name="github">GitHub</string>
+    <string name="github_summary">Want to read the documentation, request feature, report bug, read the source code… Check the DroidFS\'s repository !</string>
+    <string name="share">Share</string>
+    <string name="decrypt">Decrypt</string>
+    <string name="loading_msg_copy">Copying selected items...</string>
+    <string name="copy_failed">Copy of %1$s failed.</string>
+    <string name="copy_success_msg">The selected items have been successfully copied.</string>
+    <string name="copy_success">Copy successful !</string>
 </resources>

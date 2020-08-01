@@ -26,7 +26,6 @@ class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceSt
                 .beginTransaction()
                 .replace(R.id.settings, fragment)
                 .commit()
-        setTheme(R.style.AppTheme)
     }
 
     class SettingsFragment : PreferenceFragmentCompat() {

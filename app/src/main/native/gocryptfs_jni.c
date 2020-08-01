@@ -227,7 +227,7 @@ Java_sushi_hardcore_droidfs_util_GocryptfsVolume_native_1list_1dir(JNIEnv *env, 
     jmethodID java_util_ArrayList_add = (*env)->GetMethodID(env, java_util_ArrayList, "add", "(Ljava/lang/Object;)Z");
 
     jclass classExplorerElement = (*env)->NewGlobalRef(env, (*env)->FindClass(env, "sushi/hardcore/droidfs/explorers/ExplorerElement"));
-    jmethodID classExplorerElement_init = (*env)->GetMethodID(env, classExplorerElement, "<init>", "(Ljava/lang/String;SJJ)V");
+    jmethodID classExplorerElement_init = (*env)->GetMethodID(env, classExplorerElement, "<init>", "(Ljava/lang/String;SJJLjava/lang/String;)V");
 
     jobject element_list = (*env)->NewObject(env, java_util_ArrayList, java_util_ArrayList_init, elements.r2);
     unsigned int c = 0;
@@ -254,7 +254,7 @@ Java_sushi_hardcore_droidfs_util_GocryptfsVolume_native_1list_1dir(JNIEnv *env, 
             type = 1; //regular file
         }
         jstring jname = (*env)->NewStringUTF(env, name);
-        jobject explorerElement = (*env)->NewObject(env, classExplorerElement, classExplorerElement_init, jname, type, (long long)attrs.r0, attrs.r1);
+        jobject explorerElement = (*env)->NewObject(env, classExplorerElement, classExplorerElement_init, jname, type, (long long)attrs.r0, attrs.r1, jplain_dir);
         (*env)->CallBooleanMethod(env, element_list, java_util_ArrayList_add, explorerElement);
         c += name_len+1;
     }

@@ -14,7 +14,7 @@ import java.text.DecimalFormat;
 
 public class PathUtils {
 
-    public static String get_parent_path(String path){
+    public static String getParentPath(String path){
         if (path.endsWith("/")){
             String a = path.substring(0, path.length()-2);
             if (a.contains("/")){
@@ -44,16 +44,22 @@ public class PathUtils {
         return result.substring(0, result.length()-1);
     }
 
+    public static String getRelativePath(String parentPath, String childPath){
+        return childPath.substring(parentPath.length()+1);
+    }
+
     public static String getFilenameFromURI(Context context, Uri uri){
         String result = null;
         if (uri.getScheme().equals("content")){
             Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-            try {
-                if (cursor != null && cursor.moveToFirst()){
-                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+            if (cursor != null){
+                try {
+                    if (cursor.moveToFirst()){
+                        result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                    }
+                } finally {
+                    cursor.close();
                 }
-            } finally {
-                cursor.close();
             }
         }
         if (result == null){

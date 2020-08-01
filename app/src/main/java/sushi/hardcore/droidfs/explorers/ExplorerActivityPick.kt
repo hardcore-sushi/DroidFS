@@ -27,7 +27,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
                         setCurrentPath(full_path)
                     }
                     explorerElements[position].isParentFolder -> {
-                        setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
+                        setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     else -> {
                         result_intent.putExtra("path", full_path)
@@ -43,19 +43,19 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         menuInflater.inflate(R.menu.explorer_pick, menu)
         handleMenuItems(menu)
         val any_item_selected = explorerAdapter.selectedItems.isNotEmpty()
-        menu.findItem(R.id.explorer_menu_select_all).isVisible = any_item_selected
-        menu.findItem(R.id.explorer_menu_validate).isVisible = any_item_selected
+        menu.findItem(R.id.select_all).isVisible = any_item_selected
+        menu.findItem(R.id.validate).isVisible = any_item_selected
         return true
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.explorer_menu_select_all -> {
+            R.id.select_all -> {
                 explorerAdapter.selectAll()
                 invalidateOptionsMenu()
                 true
             }
-            R.id.explorer_menu_validate -> {
+            R.id.validate -> {
                 val paths = ArrayList<String>()
                 val types = ArrayList<Int>()
                 for (i in explorerAdapter.selectedItems) {
@@ -79,7 +79,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     override fun closeVolumeOnDestroy() {
         //don't close volume
-        RestrictedFileProvider.wipeAll()
+        RestrictedFileProvider.wipeAll(this)
     }
 
     override fun closeVolumeOnUserExit() {

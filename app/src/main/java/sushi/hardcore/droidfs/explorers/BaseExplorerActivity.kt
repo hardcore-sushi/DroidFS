@@ -63,11 +63,7 @@ open class BaseExplorerActivity : BaseActivity() {
         setCurrentPath(currentDirectoryPath)
         list_explorer.adapter = explorerAdapter
         list_explorer.onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
-        list_explorer.onItemLongClickListener = OnItemLongClickListener { _, _, position, _ ->
-            explorerAdapter.onItemLongClick(position)
-            invalidateOptionsMenu()
-            true
-        }
+        list_explorer.onItemLongClickListener = OnItemLongClickListener { _, _, position, _ -> onExplorerItemLongClick(position); true }
         refresher.setOnRefreshListener {
             setCurrentPath(currentDirectoryPath)
             refresher.isRefreshing = false
@@ -90,13 +86,13 @@ open class BaseExplorerActivity : BaseActivity() {
         explorerAdapter.onItemClick(position)
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
-                val fullPath = PathUtils.path_join(currentDirectoryPath, explorerElements[position].name)
+                val fullPath = explorerElements[position].getFullPath()
                 when {
                     explorerElements[position].isDirectory -> {
                         setCurrentPath(fullPath)
                     }
                     explorerElements[position].isParentFolder -> {
-                        setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
+                        setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     isImage(fullPath) -> {
                         startFileViewer(ImageViewer::class.java, fullPath)
@@ -128,8 +124,14 @@ open class BaseExplorerActivity : BaseActivity() {
                             .show()
                     }
                 }
+            } else {
+                invalidateOptionsMenu()
             }
         }
+    }
+
+    protected open fun onExplorerItemLongClick(position: Int) {
+        explorerAdapter.onItemLongClick(position)
         invalidateOptionsMenu()
     }
 
@@ -169,7 +171,7 @@ open class BaseExplorerActivity : BaseActivity() {
         text_dir_empty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
         sortExplorerElements()
         if (path.isNotEmpty()) { //not root
-            explorerElements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1))
+            explorerElements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1, currentDirectoryPath))
         }
         explorerAdapter.setExplorerElements(explorerElements)
         currentDirectoryPath = path
@@ -192,16 +194,16 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected open fun closeVolumeOnDestroy() {
         gocryptfsVolume.close()
-        RestrictedFileProvider.wipeAll() //additional security
+        RestrictedFileProvider.wipeAll(this) //additional security
     }
 
     override fun onBackPressed() {
         if (explorerAdapter.selectedItems.isEmpty()) {
-            val parentPath = PathUtils.get_parent_path(currentDirectoryPath)
+            val parentPath = PathUtils.getParentPath(currentDirectoryPath)
             if (parentPath == currentDirectoryPath) {
                 askCloseVolume()
             } else {
-                setCurrentPath(PathUtils.get_parent_path(currentDirectoryPath))
+                setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
             }
         } else {
             unselectAll()
@@ -266,23 +268,21 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     fun handleMenuItems(menu: Menu){
-        menu.findItem(R.id.explorer_menu_rename).isVisible = false
+        menu.findItem(R.id.rename).isVisible = false
         if (usf_open){
-            menu.findItem(R.id.explorer_menu_external_open)?.isVisible = false
+            menu.findItem(R.id.external_open)?.isVisible = false
         }
-        val selectedItems = explorerAdapter.selectedItems
-        if (selectedItems.isEmpty()){
+        val noItemSelected = explorerAdapter.selectedItems.isEmpty()
+        menu.findItem(R.id.sort).isVisible = noItemSelected
+        menu.findItem(R.id.close).isVisible = noItemSelected
+        if (noItemSelected){
             toolbar.navigationIcon = null
-            menu.findItem(R.id.explorer_menu_close).isVisible = true
-            menu.findItem(R.id.explorer_menu_sort).isVisible = true
         } else {
             toolbar.setNavigationIcon(R.drawable.icon_arrow_back)
-            menu.findItem(R.id.explorer_menu_close).isVisible = false
-            menu.findItem(R.id.explorer_menu_sort).isVisible = false
-            if (selectedItems.size == 1) {
-                menu.findItem(R.id.explorer_menu_rename).isVisible = true
-                if (usf_open && explorerElements[selectedItems[0]].isRegularFile) {
-                    menu.findItem(R.id.explorer_menu_external_open)?.isVisible = true
+            if (explorerAdapter.selectedItems.size == 1) {
+                menu.findItem(R.id.rename).isVisible = true
+                if (usf_open && explorerElements[explorerAdapter.selectedItems[0]].isRegularFile) {
+                    menu.findItem(R.id.external_open)?.isVisible = true
                 }
             }
         }
@@ -294,7 +294,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 unselectAll()
                 true
             }
-            R.id.explorer_menu_sort -> {
+            R.id.sort -> {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortModesEntries), currentSortModeIndex) { dialog, which ->
@@ -306,7 +306,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         .show()
                 true
             }
-            R.id.explorer_menu_rename -> {
+            R.id.rename -> {
                 val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
                 val oldName = explorerElements[explorerAdapter.selectedItems[0]].name
                 val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
@@ -331,14 +331,14 @@ open class BaseExplorerActivity : BaseActivity() {
                 dialog.show()
                 true
             }
-            R.id.explorer_menu_external_open -> {
+            R.id.external_open -> {
                 if (usf_open){
                     ExternalProvider.open(this, gocryptfsVolume, PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
                     unselectAll()
                 }
                 true
             }
-            R.id.explorer_menu_close -> {
+            R.id.close -> {
                 askCloseVolume()
                 true
             }

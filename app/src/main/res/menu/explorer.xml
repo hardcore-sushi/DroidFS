@@ -3,51 +3,62 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-        android:id="@+id/explorer_menu_select_all"
+        android:id="@+id/select_all"
         app:showAsAction="always"
         android:visible="false"
         android:icon="@drawable/icon_select_all"/>
 
     <item
-        android:id="@+id/explorer_menu_delete"
+        android:id="@+id/copy"
+        app:showAsAction="always"
+        android:visible="false"
+        android:icon="@drawable/icon_copy"/>
+
+    <item
+        android:id="@+id/delete"
         app:showAsAction="always"
         android:visible="false"
         android:icon="@drawable/icon_delete" />
 
     <item
-        android:id="@+id/explorer_menu_share"
-        app:showAsAction="always"
-        android:visible="false"
-        android:icon="@drawable/icon_share"
-        app:iconTint="@color/menuIcon"/>
-
-    <item
-        android:id="@+id/explorer_menu_decrypt"
-        app:showAsAction="always"
+        android:id="@+id/decrypt"
+        app:showAsAction="ifRoom"
         android:visible="false"
         android:icon="@drawable/icon_decrypt"
-        app:iconTint="@color/menuIcon"/>
+        android:title="@string/decrypt"/>
 
     <item
-        android:id="@+id/explorer_menu_external_open"
+        android:id="@+id/share"
+        app:showAsAction="ifRoom"
+        android:visible="false"
+        android:icon="@drawable/icon_share"
+        android:title="@string/share"/>
+
+    <item
+        android:id="@+id/external_open"
         app:showAsAction="never"
         android:visible="false"
         android:title="@string/external_open"/>
 
     <item
-        android:id="@+id/explorer_menu_rename"
+        android:id="@+id/rename"
         app:showAsAction="never"
         android:visible="false"
         android:title="@string/rename"/>
 
     <item
-        android:id="@+id/explorer_menu_sort"
-        app:showAsAction="always"
-        android:icon="@drawable/icon_sort"
-        app:iconTint="@color/menuIcon"/>
+        android:id="@+id/validate"
+        app:showAsAction="ifRoom"
+        android:visible="false"
+        android:icon="@drawable/icon_check"/>
 
     <item
-        android:id="@+id/explorer_menu_close"
+        android:id="@+id/sort"
+        app:showAsAction="always"
+        android:icon="@drawable/icon_sort"/>
+
+    <item
+        android:id="@+id/close"
         app:showAsAction="always"
         android:icon="@drawable/icon_close"/>
 

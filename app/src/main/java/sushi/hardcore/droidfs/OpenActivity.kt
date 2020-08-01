@@ -38,6 +38,7 @@ class OpenActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_open)
         setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
             fingerprintPasswordHashSaver = FingerprintPasswordHashSaver(this, sharedPrefs)

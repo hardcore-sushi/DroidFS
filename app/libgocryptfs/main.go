@@ -120,7 +120,9 @@ func openBackingDir(sessionID int, relPath string) (dirfd int, cName string, err
 		if i == len(parts)-1 {
       cache_dirfd, err := syscall.Dup(dirfd)
     	if err == nil {
-    		sessions[sessionID].dirCache[dirRelPath] = Directory{cache_dirfd, iv}
+    	    var dirRelPathCopy strings.Builder
+            dirRelPathCopy.WriteString(dirRelPath)
+    		sessions[sessionID].dirCache[dirRelPathCopy.String()] = Directory{cache_dirfd, iv}
     	}
 			break
 		}

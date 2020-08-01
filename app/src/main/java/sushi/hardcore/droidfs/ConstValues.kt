@@ -9,6 +9,7 @@ class ConstValues {
         const val saved_volumes_key = "saved_volumes"
         const val sort_order_key = "sort_order"
         val fakeUri: Uri = Uri.parse("fakeuri://droidfs")
+        const val MAX_KERNEL_WRITE = 128*1024
         const val wipe_passes = 2
         private val fileExtensions = mapOf(
             Pair("image", listOf("png", "jpg", "jpeg")),

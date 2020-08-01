@@ -1,8 +1,6 @@
 package sushi.hardcore.droidfs.widgets
 
 import android.content.Context
-import android.graphics.Color
-import android.graphics.drawable.Drawable
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.preference.Preference
@@ -20,9 +18,8 @@ object ThemeColor {
             for (i in 0 until preference.preferenceCount) {
                 tintPreferenceIcons(preference.getPreference(i), color)
             }
-        } else {
-            val icon: Drawable = preference.icon
-            DrawableCompat.setTint(icon, color)
+        } else if (preference.icon != null) {
+            DrawableCompat.setTint(preference.icon, color)
         }
     }
 }

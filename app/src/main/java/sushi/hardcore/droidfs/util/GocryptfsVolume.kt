@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.util
 
 import android.content.Context
 import android.net.Uri
-import android.util.Log
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import java.io.*
 
@@ -93,10 +92,10 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun export_file(handleID: Int, os: OutputStream): Boolean {
         var offset: Long = 0
-        val io_buffer = ByteArray(DefaultBS)
+        val ioBuffer = ByteArray(DefaultBS)
         var length: Int
-        while (native_read_file(sessionID, handleID, offset, io_buffer).also { length = it } > 0){
-            os.write(io_buffer, 0, length)
+        while (native_read_file(sessionID, handleID, offset, ioBuffer).also { length = it } > 0){
+            os.write(ioBuffer, 0, length)
             offset += length.toLong()
         }
         os.close()
@@ -105,10 +104,10 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun export_file(src_path: String, os: OutputStream): Boolean {
         var success = false
-        val src_handleID = open_read_mode(src_path)
-        if (src_handleID != -1) {
-            success = export_file(src_handleID, os)
-            close_file(src_handleID)
+        val srcHandleId = open_read_mode(src_path)
+        if (srcHandleId != -1) {
+            success = export_file(srcHandleId, os)
+            close_file(srcHandleId)
         }
         return success
     }
@@ -127,10 +126,10 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun import_file(inputStream: InputStream, handleID: Int): Boolean {
         var offset: Long = 0
-        val io_buffer = ByteArray(DefaultBS)
+        val ioBuffer = ByteArray(DefaultBS)
         var length: Int
-        while (inputStream.read(io_buffer).also { length = it } > 0) {
-            val written = native_write_file(sessionID, handleID, offset, io_buffer, length).toLong()
+        while (inputStream.read(ioBuffer).also { length = it } > 0) {
+            val written = native_write_file(sessionID, handleID, offset, ioBuffer, length).toLong()
             if (written == length.toLong()) {
                  offset += written
             } else {
@@ -145,10 +144,10 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun import_file(inputStream: InputStream, dst_path: String): Boolean {
         var success = false
-        val dst_handleID = open_write_mode(dst_path)
-        if (dst_handleID != -1) {
-            success = import_file(inputStream, dst_handleID)
-            close_file(dst_handleID)
+        val dstHandleId = open_write_mode(dst_path)
+        if (dstHandleId != -1) {
+            success = import_file(inputStream, dstHandleId)
+            close_file(dstHandleId)
         }
         return success
     }

@@ -24,11 +24,24 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/unsafe_features">
+
         <Preference
             android:title="@string/manage_unsafe_features"
             android:summary="@string/manage_unsafe_features_summary"
             android:icon="@drawable/icon_warning"
             android:fragment="sushi.hardcore.droidfs.SettingsActivity$UnsafeFeaturesSettingsFragment"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/about">
+
+        <Preference
+            android:title="@string/github"
+            android:summary="@string/github_summary"
+            android:icon="@drawable/icon_github">
+            <intent android:action="android.intent.action.VIEW" android:data="https://github.com/hardcore-sushi/DroidFS"/>
+        </Preference>
+
     </PreferenceCategory>
 
 </PreferenceScreen>
