@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.explorers
 
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
@@ -33,13 +32,13 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     if (intent.action == Intent.ACTION_SEND) {
                         val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
                         val outputPath = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(this, uri))
-                        errorMsg = if (gocryptfsVolume.import_file(this, uri, outputPath)) null else getString(R.string.import_failed, outputPath)
+                        errorMsg = if (gocryptfsVolume.importFile(this, uri, outputPath)) null else getString(R.string.import_failed, outputPath)
                     } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
                         val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                         if (uris != null){
                             for (uri in uris) {
                                 val outputPath = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(this, uri))
-                                if (!gocryptfsVolume.import_file(this, uri, outputPath)) {
+                                if (!gocryptfsVolume.importFile(this, uri, outputPath)) {
                                     errorMsg = getString(R.string.import_failed, outputPath)
                                     break
                                 }

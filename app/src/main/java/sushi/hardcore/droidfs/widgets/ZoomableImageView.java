@@ -112,8 +112,16 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
         });
     }
 
-    public void setMaxZoom(float x) {
-        maxScale = x;
+    public boolean isZoomed(){
+        return saveScale > minScale;
+    }
+
+    public void restoreZoomNormal(){
+        float origScale = saveScale;
+        saveScale = minScale;
+        float mScaleFactor = minScale / origScale;
+        matrix.postScale(mScaleFactor, mScaleFactor, viewWidth/2, viewHeight/2);
+        fixTrans();
     }
 
     @Override
@@ -124,20 +132,17 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
     @Override
     public boolean onDoubleTap(MotionEvent e) {
         // Double tap is detected
-        float origScale = saveScale;
-        float mScaleFactor;
 
         if (saveScale >= maxScale) {
-            saveScale = minScale;
-            mScaleFactor = minScale / origScale;
-            matrix.postScale(mScaleFactor, mScaleFactor, viewWidth/2, viewHeight/2);
+            restoreZoomNormal();
         } else {
+            float origScale = saveScale;
             saveScale *= 1.5;
-            mScaleFactor = saveScale / origScale;
+            float mScaleFactor = saveScale / origScale;
             matrix.postScale(mScaleFactor, mScaleFactor, e.getX(), e.getY());
+            fixTrans();
         }
 
-        fixTrans();
         return false;
     }
 

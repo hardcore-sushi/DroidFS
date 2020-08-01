@@ -25,9 +25,9 @@ class GocryptfsVolume(var sessionID: Int) {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
         const val DefaultBS = 4096
-        external fun create_volume(root_cipher_dir: String, password: CharArray, logN: Int, creator: String): Boolean
+        external fun createVolume(root_cipher_dir: String, password: CharArray, logN: Int, creator: String): Boolean
         external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
-        external fun change_password(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
+        external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
 
         init {
             System.loadLibrary("gocryptfs_jni")
@@ -38,7 +38,7 @@ class GocryptfsVolume(var sessionID: Int) {
         native_close(sessionID)
     }
 
-    fun list_dir(dir_path: String): MutableList<ExplorerElement> {
+    fun listDir(dir_path: String): MutableList<ExplorerElement> {
         return native_list_dir(sessionID, dir_path)
     }
 
@@ -50,35 +50,35 @@ class GocryptfsVolume(var sessionID: Int) {
         return native_rmdir(sessionID, dir_path)
     }
 
-    fun remove_file(file_path: String): Boolean {
+    fun removeFile(file_path: String): Boolean {
         return native_remove_file(sessionID, file_path)
     }
 
-    fun path_exists(file_path: String): Boolean {
+    fun pathExists(file_path: String): Boolean {
         return native_path_exists(sessionID, file_path)
     }
 
-    fun get_size(file_path: String): Long {
+    fun getSize(file_path: String): Long {
         return native_get_size(sessionID, file_path)
     }
 
-    fun close_file(handleID: Int) {
+    fun closeFile(handleID: Int) {
         native_close_file(sessionID, handleID)
     }
 
-    fun open_read_mode(file_path: String): Int {
+    fun openReadMode(file_path: String): Int {
         return native_open_read_mode(sessionID, file_path)
     }
 
-    fun open_write_mode(file_path: String): Int {
+    fun openWriteMode(file_path: String): Int {
         return native_open_write_mode(sessionID, file_path)
     }
 
-    fun read_file(handleID: Int, offset: Long, buff: ByteArray): Int {
+    fun readFile(handleID: Int, offset: Long, buff: ByteArray): Int {
         return native_read_file(sessionID, handleID, offset, buff)
     }
 
-    fun write_file(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
+    fun writeFile(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
         return native_write_file(sessionID, handleID, offset, buff, buff_size)
     }
 
@@ -90,7 +90,7 @@ class GocryptfsVolume(var sessionID: Int) {
         return native_rename(sessionID, old_path, new_path)
     }
 
-    fun export_file(handleID: Int, os: OutputStream): Boolean {
+    fun exportFile(handleID: Int, os: OutputStream): Boolean {
         var offset: Long = 0
         val ioBuffer = ByteArray(DefaultBS)
         var length: Int
@@ -102,29 +102,29 @@ class GocryptfsVolume(var sessionID: Int) {
         return true
     }
 
-    fun export_file(src_path: String, os: OutputStream): Boolean {
+    fun exportFile(src_path: String, os: OutputStream): Boolean {
         var success = false
-        val srcHandleId = open_read_mode(src_path)
+        val srcHandleId = openReadMode(src_path)
         if (srcHandleId != -1) {
-            success = export_file(srcHandleId, os)
-            close_file(srcHandleId)
+            success = exportFile(srcHandleId, os)
+            closeFile(srcHandleId)
         }
         return success
     }
 
-    fun export_file(src_path: String, dst_path: String): Boolean {
-        return export_file(src_path, FileOutputStream(dst_path))
+    fun exportFile(src_path: String, dst_path: String): Boolean {
+        return exportFile(src_path, FileOutputStream(dst_path))
     }
 
-    fun export_file(context: Context, src_path: String, output_path: Uri): Boolean {
+    fun exportFile(context: Context, src_path: String, output_path: Uri): Boolean {
         val os = context.contentResolver.openOutputStream(output_path)
         if (os != null){
-            return export_file(src_path, os)
+            return exportFile(src_path, os)
         }
         return false
     }
 
-    fun import_file(inputStream: InputStream, handleID: Int): Boolean {
+    fun importFile(inputStream: InputStream, handleID: Int): Boolean {
         var offset: Long = 0
         val ioBuffer = ByteArray(DefaultBS)
         var length: Int
@@ -142,22 +142,33 @@ class GocryptfsVolume(var sessionID: Int) {
         return true
     }
 
-    fun import_file(inputStream: InputStream, dst_path: String): Boolean {
+    fun importFile(inputStream: InputStream, dst_path: String): Boolean {
         var success = false
-        val dstHandleId = open_write_mode(dst_path)
+        val dstHandleId = openWriteMode(dst_path)
         if (dstHandleId != -1) {
-            success = import_file(inputStream, dstHandleId)
-            close_file(dstHandleId)
+            success = importFile(inputStream, dstHandleId)
+            closeFile(dstHandleId)
         }
         return success
     }
 
-    fun import_file(context: Context, src_uri: Uri, dst_path: String): Boolean {
+    fun importFile(context: Context, src_uri: Uri, dst_path: String): Boolean {
         val inputStream = context.contentResolver.openInputStream(src_uri)
         if (inputStream != null){
-            return import_file(inputStream, dst_path)
+            return importFile(inputStream, dst_path)
         }
         return false
     }
 
+    fun recursiveMapFiles(rootPath: String): MutableList<ExplorerElement> {
+        val result = mutableListOf<ExplorerElement>()
+        val explorerElements = listDir(rootPath)
+        result.addAll(explorerElements)
+        for (e in explorerElements){
+            if (e.isDirectory){
+                result.addAll(recursiveMapFiles(e.getFullPath()))
+            }
+        }
+        return result
+    }
 }

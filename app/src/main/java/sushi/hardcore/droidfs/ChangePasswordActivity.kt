@@ -121,7 +121,7 @@ class ChangePasswordActivity : BaseActivity() {
                         }
                     }
                     if (changePasswordImmediately){
-                        if (GocryptfsVolume.change_password(rootCipherDir, oldPassword, givenHash, newPassword, returnedHash)) {
+                        if (GocryptfsVolume.changePassword(rootCipherDir, oldPassword, givenHash, newPassword, returnedHash)) {
                             val editor = sharedPrefs.edit()
                             if (sharedPrefs.getString(rootCipherDir, null) != null){
                                 editor.remove(rootCipherDir)

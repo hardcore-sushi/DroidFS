@@ -34,7 +34,7 @@ object ExternalProvider {
         val tmpFileUri = RestrictedFileProvider.newFile(fileName)
         if (tmpFileUri != null){
             storedFiles.add(tmpFileUri)
-            if (gocryptfsVolume.export_file(context, file_path, tmpFileUri)) {
+            if (gocryptfsVolume.exportFile(context, file_path, tmpFileUri)) {
                 return Pair(tmpFileUri, getContentType(fileName, previous_content_type))
             }
         }

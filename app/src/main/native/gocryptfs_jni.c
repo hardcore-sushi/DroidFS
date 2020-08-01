@@ -31,10 +31,10 @@ void jbyteArray_to_unsignedCharArray(const jbyte* src, unsigned char* dst, const
 }
 
 JNIEXPORT jboolean JNICALL
-Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_create_1volume(JNIEnv *env, jclass clazz,
-                                                              jstring jroot_cipher_dir, jcharArray jpassword,
-                                                              jint logN,
-                                                              jstring jcreator) {
+Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
+                                                                             jstring jroot_cipher_dir, jcharArray jpassword,
+                                                                             jint logN,
+                                                                             jstring jcreator) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
     const char* creator = (*env)->GetStringUTFChars(env, jcreator, NULL);
     GoString gofilename = {root_cipher_dir, strlen(root_cipher_dir)}, gocreator = {creator, strlen(creator)};
@@ -127,12 +127,12 @@ Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_init(JNIEnv *env
 }
 
 JNIEXPORT jboolean JNICALL
-Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_change_1password(JNIEnv *env, jclass clazz,
-                                                                  jstring jroot_cipher_dir,
-                                                                  jcharArray jold_password,
-                                                                  jbyteArray jgiven_hash,
-                                                                  jcharArray jnew_password,
-                                                                  jbyteArray jreturned_hash) {
+Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_changePassword(JNIEnv *env, jclass clazz,
+                                                                               jstring jroot_cipher_dir,
+                                                                               jcharArray jold_password,
+                                                                               jbyteArray jgiven_hash,
+                                                                               jcharArray jnew_password,
+                                                                               jbyteArray jreturned_hash) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
     GoString go_root_cipher_dir = {root_cipher_dir, strlen(root_cipher_dir)};
 

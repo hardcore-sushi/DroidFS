@@ -44,7 +44,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (fileName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            val handleID = gocryptfsVolume.open_write_mode(PathUtils.path_join(currentDirectoryPath, fileName))
+            val handleID = gocryptfsVolume.openWriteMode(PathUtils.path_join(currentDirectoryPath, fileName))
             if (handleID == -1) {
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
@@ -52,7 +52,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     .setPositiveButton(R.string.ok, null)
                     .show()
             } else {
-                gocryptfsVolume.close_file(handleID)
+                gocryptfsVolume.closeFile(handleID)
                 setCurrentPath(currentDirectoryPath)
                 invalidateOptionsMenu()
             }
@@ -120,7 +120,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         for (uri in uris) {
                             val dstPath = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri))
                             contentResolver.openInputStream(uri)?.let {
-                                success = gocryptfsVolume.import_file(it, dstPath)
+                                success = gocryptfsVolume.importFile(it, dstPath)
                             }
                             if (!success) {
                                 stopTask {
@@ -194,7 +194,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             failedItem = if (element.isDirectory) {
                                 recursiveExportDirectory(fullPath, outputDir)
                             } else {
-                                if (gocryptfsVolume.export_file(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
+                                if (gocryptfsVolume.exportFile(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
                             }
                             if (failedItem != null) {
                                 stopTask {
@@ -400,18 +400,6 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun recursiveMapFiles(rootPath: String): MutableList<ExplorerElement> {
-        val result = mutableListOf<ExplorerElement>()
-        val explorerElements = gocryptfsVolume.list_dir(rootPath)
-        result.addAll(explorerElements)
-        for (e in explorerElements){
-            if (e.isDirectory){
-                result.addAll(recursiveMapFiles(e.getFullPath()))
-            }
-        }
-        return result
-    }
-
     private fun cancelCopy() {
         if (modeSelectLocation){
             modeSelectLocation = false
@@ -424,15 +412,15 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     private fun copyFile(srcPath: String, dstPath: String): Boolean {
         var success = true
-        val originalHandleId = gocryptfsVolume.open_read_mode(srcPath)
+        val originalHandleId = gocryptfsVolume.openReadMode(srcPath)
         if (originalHandleId != -1){
-            val newHandleId = gocryptfsVolume.open_write_mode(dstPath)
+            val newHandleId = gocryptfsVolume.openWriteMode(dstPath)
             if (newHandleId != -1){
                 var offset: Long = 0
                 val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
                 var length: Int
-                while (gocryptfsVolume.read_file(originalHandleId, offset, ioBuffer).also { length = it } > 0) {
-                    val written = gocryptfsVolume.write_file(newHandleId, offset, ioBuffer, length).toLong()
+                while (gocryptfsVolume.readFile(originalHandleId, offset, ioBuffer).also { length = it } > 0) {
+                    val written = gocryptfsVolume.writeFile(newHandleId, offset, ioBuffer, length).toLong()
                     if (written == length.toLong()) {
                         offset += written
                     } else {
@@ -440,11 +428,11 @@ class ExplorerActivity : BaseExplorerActivity() {
                         break
                     }
                 }
-                gocryptfsVolume.close_file(newHandleId)
+                gocryptfsVolume.closeFile(newHandleId)
             } else {
                 success = false
             }
-            gocryptfsVolume.close_file(originalHandleId)
+            gocryptfsVolume.closeFile(originalHandleId)
         } else {
             success = false
         }
@@ -452,9 +440,9 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun recursiveCopyDirectory(srcDirectoryPath: String, outputPath: String): String? {
-        val mappedElements = recursiveMapFiles(srcDirectoryPath)
+        val mappedElements = gocryptfsVolume.recursiveMapFiles(srcDirectoryPath)
         val dstDirectoryPath = PathUtils.path_join(outputPath, File(srcDirectoryPath).name)
-        if (!gocryptfsVolume.path_exists(dstDirectoryPath)) {
+        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
             if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
                 return dstDirectoryPath
             }
@@ -477,15 +465,15 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     private fun importFileFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, srcPath: String, dstPath: String): Boolean {
         var success = true
-        val srcHandleID = remote_gocryptfsVolume.open_read_mode(srcPath)
+        val srcHandleID = remote_gocryptfsVolume.openReadMode(srcPath)
         if (srcHandleID != -1) {
-            val dstHandleID = gocryptfsVolume.open_write_mode(dstPath)
+            val dstHandleID = gocryptfsVolume.openWriteMode(dstPath)
             if (dstHandleID != -1) {
                 var length: Int
                 val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
                 var offset: Long = 0
-                while (remote_gocryptfsVolume.read_file(srcHandleID, offset, ioBuffer).also { length = it } > 0){
-                    val written = gocryptfsVolume.write_file(dstHandleID, offset, ioBuffer, length).toLong()
+                while (remote_gocryptfsVolume.readFile(srcHandleID, offset, ioBuffer).also { length = it } > 0){
+                    val written = gocryptfsVolume.writeFile(dstHandleID, offset, ioBuffer, length).toLong()
                     if (written == length.toLong()) {
                         offset += length.toLong()
                     } else {
@@ -493,17 +481,17 @@ class ExplorerActivity : BaseExplorerActivity() {
                         break
                     }
                 }
-                gocryptfsVolume.close_file(dstHandleID)
+                gocryptfsVolume.closeFile(dstHandleID)
             }
-            remote_gocryptfsVolume.close_file(srcHandleID)
+            remote_gocryptfsVolume.closeFile(srcHandleID)
         }
         return success
     }
 
     private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, outputPath: String): String? {
-        val mappedElements = recursiveMapFiles(remote_directory_path)
+        val mappedElements = gocryptfsVolume.recursiveMapFiles(remote_directory_path)
         val dstDirectoryPath = PathUtils.path_join(outputPath, File(remote_directory_path).name)
-        if (!gocryptfsVolume.path_exists(dstDirectoryPath)) {
+        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
             if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
                 return dstDirectoryPath
             }
@@ -526,14 +514,14 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     private fun recursiveExportDirectory(plain_directory_path: String, output_dir: String?): String? {
         if (File(PathUtils.path_join(output_dir, plain_directory_path)).mkdir()) {
-            val explorerElements = gocryptfsVolume.list_dir(plain_directory_path)
+            val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
             for (e in explorerElements) {
                 val fullPath = PathUtils.path_join(plain_directory_path, e.name)
                 if (e.isDirectory) {
                     val failedItem = recursiveExportDirectory(fullPath, output_dir)
                     failedItem?.let { return it }
                 } else {
-                    if (!gocryptfsVolume.export_file(fullPath, PathUtils.path_join(output_dir, fullPath))) {
+                    if (!gocryptfsVolume.exportFile(fullPath, PathUtils.path_join(output_dir, fullPath))) {
                         return fullPath
                     }
                 }
@@ -544,14 +532,14 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun recursiveRemoveDirectory(plain_directory_path: String): String? {
-        val explorerElements = gocryptfsVolume.list_dir(plain_directory_path)
+        val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
         for (e in explorerElements) {
             val fullPath = PathUtils.path_join(plain_directory_path, e.name)
             if (e.isDirectory) {
                 val result = recursiveRemoveDirectory(fullPath)
                 result?.let { return it }
             } else {
-                if (!gocryptfsVolume.remove_file(fullPath)) {
+                if (!gocryptfsVolume.removeFile(fullPath)) {
                     return fullPath
                 }
             }
@@ -572,7 +560,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 val result = recursiveRemoveDirectory(fullPath)
                 result?.let{ failedItem = it }
             } else {
-                if (!gocryptfsVolume.remove_file(fullPath)) {
+                if (!gocryptfsVolume.removeFile(fullPath)) {
                     failedItem = fullPath
                 }
             }

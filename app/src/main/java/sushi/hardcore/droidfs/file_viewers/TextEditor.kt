@@ -68,14 +68,14 @@ class TextEditor: FileViewerActivity() {
     private fun save(): Boolean{
         var success = false
         val content = editor.text.toString().toByteArray()
-        val handleID = gocryptfsVolume.open_write_mode(filePath)
+        val handleID = gocryptfsVolume.openWriteMode(filePath)
         if (handleID != -1){
             val buff = ByteArrayInputStream(content)
             var offset: Long = 0
             val io_buffer = ByteArray(GocryptfsVolume.DefaultBS)
             var length: Int
             while (buff.read(io_buffer).also { length = it } > 0) {
-                val written = gocryptfsVolume.write_file(handleID, offset, io_buffer, length).toLong()
+                val written = gocryptfsVolume.writeFile(handleID, offset, io_buffer, length).toLong()
                 if (written == length.toLong()) {
                     offset += written
                 } else {
@@ -85,7 +85,7 @@ class TextEditor: FileViewerActivity() {
             if (offset == content.size.toLong()){
                 success = gocryptfsVolume.truncate(filePath, offset)
             }
-            gocryptfsVolume.close_file(handleID)
+            gocryptfsVolume.closeFile(handleID)
             buff.close()
         }
         if (success){

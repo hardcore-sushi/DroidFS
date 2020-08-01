@@ -167,7 +167,7 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     protected fun setCurrentPath(path: String) {
-        explorerElements = gocryptfsVolume.list_dir(path)
+        explorerElements = gocryptfsVolume.listDir(path)
         text_dir_empty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
         sortExplorerElements()
         if (path.isNotEmpty()) { //not root

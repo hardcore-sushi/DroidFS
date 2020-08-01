@@ -91,7 +91,7 @@ class CreateActivity : BaseActivity() {
                         }
                     }
                     if (goodDirectory) {
-                        if (GocryptfsVolume.create_volume(rootCipherDir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
+                        if (GocryptfsVolume.createVolume(rootCipherDir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                             var returnedHash: ByteArray? = null
                             if (usf_fingerprint && checkbox_save_password.isChecked){
                                 returnedHash = ByteArray(GocryptfsVolume.KeyLen)

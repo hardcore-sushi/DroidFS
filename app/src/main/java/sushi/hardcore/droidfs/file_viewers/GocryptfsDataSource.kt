@@ -15,8 +15,8 @@ class GocryptfsDataSource(private val gocryptfsVolume: GocryptfsVolume, private 
         dataSpec?.let {
             fileOffset = dataSpec.position
         }
-        handleID = gocryptfsVolume.open_read_mode(filePath)
-        fileSize = gocryptfsVolume.get_size(filePath)
+        handleID = gocryptfsVolume.openReadMode(filePath)
+        fileSize = gocryptfsVolume.getSize(filePath)
         return fileSize
     }
 
@@ -25,7 +25,7 @@ class GocryptfsDataSource(private val gocryptfsVolume: GocryptfsVolume, private 
     }
 
     override fun close() {
-        gocryptfsVolume.close_file(handleID)
+        gocryptfsVolume.closeFile(handleID)
     }
 
     override fun addTransferListener(transferListener: TransferListener?) {
@@ -44,7 +44,7 @@ class GocryptfsDataSource(private val gocryptfsVolume: GocryptfsVolume, private 
             } else {
                 ByteArray(tmpReadLength)
             }
-            val read =  gocryptfsVolume.read_file(handleID, fileOffset, tmpBuff)
+            val read =  gocryptfsVolume.readFile(handleID, fileOffset, tmpBuff)
             System.arraycopy(tmpBuff, 0, buffer, offset+totalRead, read)
             fileOffset += read
             totalRead += read

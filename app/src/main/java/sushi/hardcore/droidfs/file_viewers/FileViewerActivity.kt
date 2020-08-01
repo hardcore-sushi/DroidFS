@@ -29,21 +29,21 @@ abstract class FileViewerActivity: BaseActivity() {
     }
     abstract fun viewFile()
     fun loadWholeFile(path: String): ByteArray? {
-        val fileSize = gocryptfsVolume.get_size(path)
+        val fileSize = gocryptfsVolume.getSize(path)
         if (fileSize >= 0){
             try {
                 val fileBuff = ByteArray(fileSize.toInt())
                 var success = false
-                val handleID = gocryptfsVolume.open_read_mode(path)
+                val handleID = gocryptfsVolume.openReadMode(path)
                 if (handleID != -1) {
                     var offset: Long = 0
                     val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
                     var length: Int
-                    while (gocryptfsVolume.read_file(handleID, offset, ioBuffer).also { length = it } > 0){
+                    while (gocryptfsVolume.readFile(handleID, offset, ioBuffer).also { length = it } > 0){
                         System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
                         offset += length.toLong()
                     }
-                    gocryptfsVolume.close_file(handleID)
+                    gocryptfsVolume.closeFile(handleID)
                     success = offset == fileBuff.size.toLong()
                 }
                 if (success){
