@@ -10,7 +10,8 @@ import android.widget.AdapterView.OnItemClickListener
 import android.widget.AdapterView.OnItemLongClickListener
 import android.widget.EditText
 import android.widget.Toast
-import com.github.clans.fab.FloatingActionMenu
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import kotlinx.android.synthetic.main.activity_explorer_base.*
 import kotlinx.android.synthetic.main.explorer_info_bar.*
 import kotlinx.android.synthetic.main.toolbar.*
@@ -33,15 +34,19 @@ import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
-import java.util.*
 
 open class BaseExplorerActivity : BaseActivity() {
-    private lateinit var sortModesEntries: Array<String>
-    private lateinit var sortModesValues: Array<String>
-    private var currentSortModeIndex = 0
+    private lateinit var sortOrderEntries: Array<String>
+    private lateinit var sortOrderValues: Array<String>
+    private var currentSortOrderIndex = 0
     protected lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var volumeName: String
-    protected var currentDirectoryPath = ""
+    private lateinit var explorerViewModel: ExplorerViewModel
+    protected var currentDirectoryPath: String = ""
+        set(value) {
+            field = value
+            explorerViewModel.currentDirectoryPath = value
+        }
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     private var usf_open = false
@@ -52,14 +57,16 @@ open class BaseExplorerActivity : BaseActivity() {
         volumeName = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
-        sortModesEntries = resources.getStringArray(R.array.sort_orders_entries)
-        sortModesValues = resources.getStringArray(R.array.sort_orders_values)
-        currentSortModeIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
+        sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
+        sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
+        currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
         setSupportActionBar(toolbar)
         title = ""
         title_text.text = getString(R.string.volume, volumeName)
         explorerAdapter = ExplorerElementAdapter(this)
+        explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
+        currentDirectoryPath = explorerViewModel.currentDirectoryPath
         setCurrentPath(currentDirectoryPath)
         list_explorer.adapter = explorerAdapter
         list_explorer.onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
@@ -70,14 +77,21 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
+    class ExplorerViewModel: ViewModel() {
+        var currentDirectoryPath = ""
+    }
+
     protected open fun init() {
         setContentView(R.layout.activity_explorer_base)
     }
 
-    private fun startFileViewer(cls: Class<*>, filePath: String){
+    private fun startFileViewer(cls: Class<*>, filePath: String, sortOrder: String = ""){
         val intent = Intent(this, cls)
         intent.putExtra("path", filePath)
         intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+        if (sortOrder.isNotEmpty()){
+            intent.putExtra("sortOrder", sortOrder)
+        }
         startActivity(intent)
     }
 
@@ -95,7 +109,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     isImage(fullPath) -> {
-                        startFileViewer(ImageViewer::class.java, fullPath)
+                        startFileViewer(ImageViewer::class.java, fullPath, sortOrderValues[currentSortOrderIndex])
                     }
                     isVideo(fullPath) -> {
                         startFileViewer(VideoPlayer::class.java, fullPath)
@@ -141,28 +155,9 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     private fun sortExplorerElements() {
-        when (sortModesValues[currentSortModeIndex]) {
-            "name" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> o1.name.compareTo(o2.name) })
-            }
-            "size" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> (o1.size - o2.size).toInt() })
-            }
-            "date" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> o1.mTime.compareTo(o2.mTime) })
-            }
-            "name_desc" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> o2.name.compareTo(o1.name) })
-            }
-            "size_desc" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> (o2.size - o1.size).toInt() })
-            }
-            "date_desc" -> {
-                explorerElements.sortWith(Comparator { o1, o2 -> o2.mTime.compareTo(o1.mTime) })
-            }
-        }
+        ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], explorerElements)
         val sharedPrefsEditor = sharedPrefs.edit()
-        sharedPrefsEditor.putString(ConstValues.sort_order_key, sortModesValues[currentSortModeIndex])
+        sharedPrefsEditor.putString(ConstValues.sort_order_key, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
     }
 
@@ -297,8 +292,8 @@ open class BaseExplorerActivity : BaseActivity() {
             R.id.sort -> {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.sort_order)
-                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortModesEntries), currentSortModeIndex) { dialog, which ->
-                            currentSortModeIndex = which
+                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortOrderEntries), currentSortOrderIndex) { dialog, which ->
+                            currentSortOrderIndex = which
                             setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()
                         }

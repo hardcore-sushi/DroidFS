@@ -410,6 +410,15 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        if (modeSelectLocation) {
+            cancelCopy()
+            invalidateOptionsMenu()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
     private fun copyFile(srcPath: String, dstPath: String): Boolean {
         var success = true
         val originalHandleId = gocryptfsVolume.openReadMode(srcPath)

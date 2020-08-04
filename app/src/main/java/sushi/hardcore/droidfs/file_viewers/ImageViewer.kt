@@ -13,6 +13,11 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
+<<<<<<< HEAD
+=======
+import sushi.hardcore.droidfs.util.MiscUtils
+import sushi.hardcore.droidfs.explorers.ExplorerElement
+>>>>>>> ccc453a... Sorted image swipe & ExplorerViewModel
 import sushi.hardcore.droidfs.util.PathUtils
 import java.security.MessageDigest
 import kotlin.math.abs
@@ -25,7 +30,8 @@ class ImageViewer: FileViewerActivity() {
     private lateinit var glideImage: RequestBuilder<Drawable>
     private var x1 = 0F
     private var x2 = 0F
-    private val mappedImages = mutableListOf<String>()
+    private val mappedImages = mutableListOf<ExplorerElement>()
+    private lateinit var sortOrder: String
     private var wasMapped = false
     private var currentMappedImageIndex = -1
     private var rotationAngle: Float = 0F
@@ -54,11 +60,16 @@ class ImageViewer: FileViewerActivity() {
                         if (!wasMapped){
                             for (e in gocryptfsVolume.recursiveMapFiles(PathUtils.getParentPath(filePath))){
                                 if (e.isRegularFile && ConstValues.isImage(e.name)){
-                                    mappedImages.add(e.getFullPath())
+                                    mappedImages.add(e)
                                 }
                             }
-                            mappedImages.sortWith(Comparator { p1, p2 -> p1.compareTo(p2) })
-                            currentMappedImageIndex = mappedImages.indexOf(filePath)
+                            sortOrder = intent.getStringExtra("sortOrder") ?: "name"
+                            ExplorerElement.sortBy(sortOrder, mappedImages)
+                            for ((i, e) in mappedImages.withIndex()){
+                                if (filePath == e.getFullPath()){
+                                    currentMappedImageIndex = i
+                                }
+                            }
                             wasMapped = true
                         }
                         if (deltaX < 0){
@@ -74,7 +85,7 @@ class ImageViewer: FileViewerActivity() {
                                 currentMappedImageIndex -= 1
                             }
                         }
-                        loadWholeFile(mappedImages[currentMappedImageIndex])?.let {
+                        loadWholeFile(mappedImages[currentMappedImageIndex].getFullPath())?.let {
                             glideImage = Glide.with(this).load(it)
                             glideImage.into(image_viewer)
                         }
