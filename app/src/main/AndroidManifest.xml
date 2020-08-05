@@ -4,25 +4,27 @@
 
     <permission
         android:name="${applicationId}.WRITE_TEMPORARY_STORAGE"
-        android:protectionLevel="signature"/>
+        android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".ColoredApplication"
         android:allowBackup="false"
         android:icon="@mipmap/icon_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
-        android:requestLegacyExternalStorage="true">
+        android:theme="@style/AppTheme">
+        <activity android:name=".CameraActivity"/>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity"/>
+            android:parentActivityName=".MainActivity" />
         <activity android:name=".explorers.ExplorerActivity" />
         <activity android:name=".explorers.ExplorerActivityPick" />
         <activity android:name=".explorers.ExplorerActivityDrop" />
@@ -34,7 +36,9 @@
             <intent-filter android:label="@string/share_menu_label">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
+
                 <category android:name="android.intent.category.DEFAULT" />
+
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
@@ -52,19 +56,28 @@
             android:screenOrientation="nosensor">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".file_viewers.ImageViewer" android:configChanges="screenSize|orientation" /> <!-- don't reload content on configuration change -->
-        <activity android:name=".file_viewers.VideoPlayer" android:configChanges="screenSize|orientation" />
-        <activity android:name=".file_viewers.AudioPlayer" android:configChanges="screenSize|orientation" />
-        <activity android:name=".file_viewers.TextEditor" android:configChanges="screenSize|orientation" />
+        <activity
+            android:name=".file_viewers.ImageViewer"
+            android:configChanges="screenSize|orientation" /> <!-- don't reload content on configuration change -->
+        <activity
+            android:name=".file_viewers.VideoPlayer"
+            android:configChanges="screenSize|orientation" />
+        <activity
+            android:name=".file_viewers.AudioPlayer"
+            android:configChanges="screenSize|orientation" />
+        <activity
+            android:name=".file_viewers.TextEditor"
+            android:configChanges="screenSize|orientation" />
 
         <provider
             android:name=".provider.RestrictedFileProvider"
             android:authorities="${applicationId}.temporary_provider"
             android:exported="true"
-            android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE"/>
+            android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE" />
     </application>
 
 </manifest>

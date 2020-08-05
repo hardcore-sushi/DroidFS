@@ -13,11 +13,8 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-<<<<<<< HEAD
-=======
 import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.explorers.ExplorerElement
->>>>>>> ccc453a... Sorted image swipe & ExplorerViewModel
 import sushi.hardcore.droidfs.util.PathUtils
 import java.security.MessageDigest
 import kotlin.math.abs
@@ -66,26 +63,18 @@ class ImageViewer: FileViewerActivity() {
                             sortOrder = intent.getStringExtra("sortOrder") ?: "name"
                             ExplorerElement.sortBy(sortOrder, mappedImages)
                             for ((i, e) in mappedImages.withIndex()){
-                                if (filePath == e.getFullPath()){
+                                if (filePath == e.fullPath){
                                     currentMappedImageIndex = i
                                 }
                             }
                             wasMapped = true
                         }
-                        if (deltaX < 0){
-                            if (currentMappedImageIndex == mappedImages.size-1){
-                                currentMappedImageIndex = 0
-                            } else {
-                                currentMappedImageIndex += 1
-                            }
+                        currentMappedImageIndex = if (deltaX < 0){
+                            MiscUtils.incrementIndex(currentMappedImageIndex, mappedImages)
                         } else {
-                            if (currentMappedImageIndex == 0){
-                                currentMappedImageIndex = mappedImages.size-1
-                            } else {
-                                currentMappedImageIndex -= 1
-                            }
+                            MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
                         }
-                        loadWholeFile(mappedImages[currentMappedImageIndex].getFullPath())?.let {
+                        loadWholeFile(mappedImages[currentMappedImageIndex].fullPath)?.let {
                             glideImage = Glide.with(this).load(it)
                             glideImage.into(image_viewer)
                         }

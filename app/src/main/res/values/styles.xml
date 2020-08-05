@@ -4,14 +4,11 @@
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="android:colorBackground">@color/backgroundColor</item>
         <item name="android:textColor">@color/textColor</item>
-        <item name="checkboxStyle">@style/checkbox</item>
+        <!--<item name="checkboxStyle">@style/checkbox</item>-->
         <!--<item name="actionOverflowMenuStyle">@style/menu_overflow</item>-->
     </style>
-    <style name="fab_label">
-        <item name="android:background">@drawable/fab_label_background</item>
-    </style>
     <style name="button" parent="Widget.AppCompat.Button">
-        <item name="android:backgroundTint">@color/buttonBackgroundColor</item>
+        <item name="android:background">@drawable/button_background</item>
     </style>
     <style name="listViewNoDivider">
         <item name="android:divider">#000000</item>

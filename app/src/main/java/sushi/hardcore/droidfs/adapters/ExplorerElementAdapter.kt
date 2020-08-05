@@ -113,15 +113,4 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
         unSelectAll()
         this.explorerElements = explorer_elements
     }
-
-    val currentDirectoryTotalSize: Long
-        get() {
-            var totalSize: Long = 0
-            for (e in explorerElements) {
-                if (e.isRegularFile) {
-                    totalSize += e.size
-                }
-            }
-            return totalSize
-        }
 }

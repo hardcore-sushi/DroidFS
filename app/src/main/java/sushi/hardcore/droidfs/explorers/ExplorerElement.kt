@@ -5,6 +5,7 @@ import java.util.*
 
 class ExplorerElement(val name: String, val elementType: Short, val size: Long, mtime: Long, private val parentPath: String) {
     val mTime = Date((mtime * 1000).toString().toLong())
+    val fullPath: String = PathUtils.path_join(parentPath, name)
 
     val isDirectory: Boolean
         get() = elementType.toInt() == 0
@@ -15,15 +16,11 @@ class ExplorerElement(val name: String, val elementType: Short, val size: Long, 
     val isRegularFile: Boolean
         get() = elementType.toInt() == 1
 
-    fun getFullPath(): String {
-        return PathUtils.path_join(parentPath, name)
-    }
-
     companion object {
         fun sortBy(sortOrder: String, explorerElements: MutableList<ExplorerElement>) {
             when (sortOrder) {
                 "name" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o1.name.compareTo(o2.name) })
+                    explorerElements.sortWith(Comparator { o1, o2 -> o1.fullPath.compareTo(o2.fullPath) })
                 }
                 "size" -> {
                     explorerElements.sortWith(Comparator { o1, o2 -> (o1.size - o2.size).toInt() })
@@ -32,7 +29,7 @@ class ExplorerElement(val name: String, val elementType: Short, val size: Long, 
                     explorerElements.sortWith(Comparator { o1, o2 -> o1.mTime.compareTo(o2.mTime) })
                 }
                 "name_desc" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o2.name.compareTo(o1.name) })
+                    explorerElements.sortWith(Comparator { o1, o2 -> o2.fullPath.compareTo(o1.fullPath) })
                 }
                 "size_desc" -> {
                     explorerElements.sortWith(Comparator { o1, o2 -> (o2.size - o1.size).toInt() })

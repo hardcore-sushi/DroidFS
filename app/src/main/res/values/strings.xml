@@ -6,8 +6,8 @@
     <string name="password">Password:</string>
     <string name="password_confirm">Password (confirmation):</string>
     <string name="volume_path">Volume Path:</string>
-    <string name="import_files">Import/Encrypt Files</string>
-    <string name="mkdir">Create Folder</string>
+    <string name="import_files">Import/Encrypt files</string>
+    <string name="mkdir">Create folder</string>
     <string name="dir_empty">Directory Empty</string>
     <string name="warning">Warning !</string>
     <string name="ask_close_volume">Are you sure you want to close this volume ?</string>
@@ -17,7 +17,7 @@
     <string name="error">Error</string>
     <string name="error_filename_empty">Please enter a name</string>
     <string name="error_mkdir">Folder creation failed.</string>
-    <string name="success_import">Import Successful !</string>
+    <string name="success_import">Import successful !</string>
     <string name="success_import_msg">The selected files have been successfully imported.</string>
     <string name="import_failed">Import of %1$s failed.</string>
     <string name="export_failed">Export of %1$s failed.</string>
@@ -119,7 +119,7 @@
     <string name="discard">Discard</string>
     <string name="word_wrap">Word Wrap</string>
     <string name="outofmemoryerror_msg">OutOfMemoryError: This file is too large to be loaded in memory.</string>
-    <string name="new_file">Create New File</string>
+    <string name="new_file">Create new file</string>
     <string name="enter_file_name">File name:</string>
     <string name="file_creation_failed">Failed to create the file.</string>
     <string name="loading">Loading…</string>
@@ -139,4 +139,9 @@
     <string name="copy_failed">Copy of %1$s failed.</string>
     <string name="copy_success_msg">The selected items have been successfully copied.</string>
     <string name="copy_success">Copy successful !</string>
+    <string name="fab_dialog_title">Add</string>
+    <string name="take_photo">Take photo</string>
+    <string name="picture_save_success">Picture saved to %1$s</string>
+    <string name="picture_save_failed">Failed to save this picture.</string>
+    <string name="default_total_size">N//A</string>
 </resources>

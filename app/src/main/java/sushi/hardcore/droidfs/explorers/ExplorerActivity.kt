@@ -10,11 +10,10 @@ import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.github.clans.fab.FloatingActionButton
-import com.github.clans.fab.FloatingActionMenu
-import kotlinx.android.synthetic.main.activity_explorer.*
+import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
@@ -59,43 +58,71 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    fun onClickCreateFile(view: View) {
-        findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
-        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        val dialog = ColoredAlertDialogBuilder(this)
-            .setView(dialogEditTextView)
-            .setTitle(getString(R.string.enter_file_name))
-            .setPositiveButton(R.string.ok) { _, _ ->
-                val fileName = dialogEditText.text.toString()
-                createNewFile(fileName)
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .create()
-        dialogEditText.setOnEditorActionListener { _, _, _ ->
-            val fileName = dialogEditText.text.toString()
-            dialog.dismiss()
-            createNewFile(fileName)
-            true
+    fun onClickFAB(view: View) {
+        if (modeSelectLocation){
+            openDialogCreateFolder()
+        } else {
+            val adapter = IconTextDialogAdapter(this)
+            adapter.items = listOf(
+                listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfert),
+                listOf("importFiles", R.string.import_files, R.drawable.icon_encrypt),
+                listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
+                listOf("createFolder", R.string.mkdir, R.drawable.icon_folder),
+                listOf("takePhoto", R.string.take_photo, R.drawable.icon_camera)
+            )
+            ColoredAlertDialogBuilder(this)
+                .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
+                    when (adapter.getItem(which)){
+                        "importFromOtherVolumes" -> {
+                            val intent = Intent(this, OpenActivity::class.java)
+                            intent.action = "pick"
+                            startActivityForResult(intent, PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE)
+                        }
+                        "importFiles" -> {
+                            val intent = Intent(Intent.ACTION_OPEN_DOCUMENT)
+                            intent.type = "*/*"
+                            intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
+                            intent.addCategory(Intent.CATEGORY_OPENABLE)
+                            startActivityForResult(intent, PICK_FILES_REQUEST_CODE)
+                        }
+                        "createFile" -> {
+                            val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+                            val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+                            val dialog = ColoredAlertDialogBuilder(this)
+                                .setView(dialogEditTextView)
+                                .setTitle(getString(R.string.enter_file_name))
+                                .setPositiveButton(R.string.ok) { _, _ ->
+                                    val fileName = dialogEditText.text.toString()
+                                    createNewFile(fileName)
+                                }
+                                .setNegativeButton(R.string.cancel, null)
+                                .create()
+                            dialogEditText.setOnEditorActionListener { _, _, _ ->
+                                val fileName = dialogEditText.text.toString()
+                                dialog.dismiss()
+                                createNewFile(fileName)
+                                true
+                            }
+                            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                            dialog.show()
+                        }
+                        "createFolder" -> {
+                            openDialogCreateFolder()
+                        }
+                        "takePhoto" -> {
+                            val intent = Intent(this, CameraActivity::class.java)
+                            intent.putExtra("path", currentDirectoryPath)
+                            intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                            startActivity(intent)
+                        }
+                    }
+                    thisDialog.dismiss()
+                }
+                .setTitle(getString(R.string.fab_dialog_title))
+                .setNegativeButton(R.string.cancel, null)
+                .create()
+                .show()
         }
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        dialog.show()
-    }
-
-    fun onClickAddFile(view: View?) {
-        fam_explorer.close(true)
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT)
-        i.type = "*/*"
-        i.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
-        i.addCategory(Intent.CATEGORY_OPENABLE)
-        startActivityForResult(i, PICK_FILES_REQUEST_CODE)
-    }
-
-    fun onClickAddFileFromOtherVolume(view: View?) {
-        fam_explorer.close(true)
-        val intent = Intent(this, OpenActivity::class.java)
-        intent.action = "pick"
-        startActivityForResult(intent, PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -323,9 +350,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
                 modeSelectLocation = true
                 unselectAll()
-                findViewById<FloatingActionButton>(R.id.fab_add_file).visibility = View.GONE
-                findViewById<FloatingActionButton>(R.id.fab_import_file).visibility = View.GONE
-                findViewById<FloatingActionButton>(R.id.fab_import_file_from_other_volume).visibility = View.GONE
                 true
             }
             R.id.validate -> {
@@ -333,11 +357,10 @@ class ExplorerActivity : BaseExplorerActivity() {
                     override fun doTask(activity: AppCompatActivity) {
                         var failedItem: String? = null
                         for (element in filesToCopy) {
-                            val originalPath = element.getFullPath()
                             failedItem = if (element.isDirectory) {
-                                recursiveCopyDirectory(originalPath, currentDirectoryPath)
+                                recursiveCopyDirectory(element.fullPath, currentDirectoryPath)
                             } else {
-                                if (copyFile(originalPath, PathUtils.path_join(currentDirectoryPath, element.name))) null else originalPath
+                                if (copyFile(element.fullPath, PathUtils.path_join(currentDirectoryPath, element.name))) null else element.fullPath
                             }
                             if (failedItem != null) {
                                 stopTask {
@@ -385,7 +408,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             R.id.share -> {
                 val paths: MutableList<String> = ArrayList()
                 for (i in explorerAdapter.selectedItems) {
-                    paths.add(explorerElements[i].getFullPath())
+                    paths.add(explorerElements[i].fullPath)
                 }
                 ExternalProvider.share(this, gocryptfsVolume, paths)
                 unselectAll()
@@ -403,9 +426,6 @@ class ExplorerActivity : BaseExplorerActivity() {
     private fun cancelCopy() {
         if (modeSelectLocation){
             modeSelectLocation = false
-            findViewById<FloatingActionButton>(R.id.fab_add_file).visibility = View.VISIBLE
-            findViewById<FloatingActionButton>(R.id.fab_import_file).visibility = View.VISIBLE
-            findViewById<FloatingActionButton>(R.id.fab_import_file_from_other_volume).visibility = View.VISIBLE
             filesToCopy.clear()
         }
     }
@@ -457,15 +477,14 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
         }
         for (e in mappedElements) {
-            val srcPath = e.getFullPath()
-            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, srcPath))
+            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, e.fullPath))
             if (e.isDirectory) {
                 if (!gocryptfsVolume.mkdir(dstPath)){
-                    return srcPath
+                    return e.fullPath
                 }
             } else {
-                if (!copyFile(srcPath, dstPath)) {
-                    return srcPath
+                if (!copyFile(e.fullPath, dstPath)) {
+                    return e.fullPath
                 }
             }
         }
@@ -506,15 +525,14 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
         }
         for (e in mappedElements) {
-            val srcPath = e.getFullPath()
-            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, srcPath))
+            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, e.fullPath))
             if (e.isDirectory) {
                 if (!gocryptfsVolume.mkdir(dstPath)){
-                    return srcPath
+                    return e.fullPath
                 }
             } else {
-                if (!importFileFromOtherVolume(remote_gocryptfsVolume, srcPath, dstPath)) {
-                    return srcPath
+                if (!importFileFromOtherVolume(remote_gocryptfsVolume, e.fullPath, dstPath)) {
+                    return e.fullPath
                 }
             }
         }

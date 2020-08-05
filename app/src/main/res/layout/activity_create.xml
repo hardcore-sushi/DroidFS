@@ -25,7 +25,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center_vertical"
                     android:text="@string/volume_path"
-                    android:textSize="@dimen/edit_text_label_size" />
+                    android:textSize="@dimen/edit_text_label_text_size" />
 
                 <sushi.hardcore.droidfs.widgets.ColoredEditText
                     android:id="@+id/edit_volume_path"
@@ -54,7 +54,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center_vertical"
                     android:text="@string/password"
-                    android:textSize="@dimen/edit_text_label_size" />
+                    android:textSize="@dimen/edit_text_label_text_size" />
 
                 <sushi.hardcore.droidfs.widgets.ColoredEditText
                     android:id="@+id/edit_password"
@@ -74,7 +74,7 @@
                     android:layout_height="match_parent"
                     android:gravity="center_vertical"
                     android:text="@string/password_confirm"
-                    android:textSize="@dimen/edit_text_label_size" />
+                    android:textSize="@dimen/edit_text_label_text_size" />
 
                 <sushi.hardcore.droidfs.widgets.ColoredEditText
                     android:id="@+id/edit_password_confirm"
@@ -109,7 +109,7 @@
                 android:gravity="center"
                 android:text="@string/create_password_warning"/>
 
-            <Button
+            <androidx.appcompat.widget.AppCompatButton
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/action_activity_button_height"
                 android:layout_marginHorizontal="@dimen/action_activity_button_horizontal_margin"

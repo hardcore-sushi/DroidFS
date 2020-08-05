@@ -166,7 +166,7 @@ class GocryptfsVolume(var sessionID: Int) {
         result.addAll(explorerElements)
         for (e in explorerElements){
             if (e.isDirectory){
-                result.addAll(recursiveMapFiles(e.getFullPath()))
+                result.addAll(recursiveMapFiles(e.fullPath))
             }
         }
         return result

@@ -23,16 +23,16 @@ import sushi.hardcore.droidfs.ConstValues.Companion.isText
 import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
-import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
+import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.file_viewers.AudioPlayer
 import sushi.hardcore.droidfs.file_viewers.ImageViewer
 import sushi.hardcore.droidfs.file_viewers.TextEditor
 import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.ExternalProvider
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 open class BaseExplorerActivity : BaseActivity() {
@@ -49,6 +49,7 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
+    private var isCreating = true
     private var usf_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,7 +101,7 @@ open class BaseExplorerActivity : BaseActivity() {
         explorerAdapter.onItemClick(position)
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
-                val fullPath = explorerElements[position].getFullPath()
+                val fullPath = explorerElements[position].fullPath
                 when {
                     explorerElements[position].isDirectory -> {
                         setCurrentPath(fullPath)
@@ -171,7 +172,15 @@ open class BaseExplorerActivity : BaseActivity() {
         explorerAdapter.setExplorerElements(explorerElements)
         currentDirectoryPath = path
         current_path_text.text = getString(R.string.location, currentDirectoryPath)
-        total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(explorerAdapter.currentDirectoryTotalSize))
+        Thread{
+            var totalSize: Long = 0
+            for (e in gocryptfsVolume.recursiveMapFiles(currentDirectoryPath)){
+                if (e.isRegularFile){
+                    totalSize += e.size
+                }
+            }
+            total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+        }.start()
     }
 
     private fun askCloseVolume() {
@@ -222,8 +231,7 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
-    fun onClickAddFolder(view: View?) {
-        findViewById<FloatingActionMenu>(R.id.fam_explorer).close(true)
+    protected fun openDialogCreateFolder() {
         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
         val dialog = ColoredAlertDialogBuilder(this)
@@ -245,7 +253,7 @@ open class BaseExplorerActivity : BaseActivity() {
         dialog.show()
     }
 
-    fun rename(old_name: String, new_name: String){
+    protected fun rename(old_name: String, new_name: String){
         if (new_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
@@ -262,7 +270,7 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
-    fun handleMenuItems(menu: Menu){
+    protected fun handleMenuItems(menu: Menu){
         menu.findItem(R.id.rename).isVisible = false
         if (usf_open){
             menu.findItem(R.id.external_open)?.isVisible = false
@@ -350,6 +358,10 @@ open class BaseExplorerActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
-        ExternalProvider.removeFiles(this)
+        if (isCreating){
+            isCreating = false
+        } else {
+            ExternalProvider.removeFiles(this)
+        }
     }
 }

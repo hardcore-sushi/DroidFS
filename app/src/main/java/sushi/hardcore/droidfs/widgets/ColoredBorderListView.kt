@@ -12,12 +12,9 @@ import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
 
 open class ColoredBorderListView: ListView {
-    constructor(context: Context) : super(context) {
-        applyColor()
-    }
-    constructor(context: Context, attrs: AttributeSet): super(context, attrs){
-        applyColor()
-    }
+    constructor(context: Context) : super(context) { applyColor() }
+    constructor(context: Context, attrs: AttributeSet): super(context, attrs) { applyColor() }
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr) { applyColor() }
     private fun applyColor(){
         val background = ContextCompat.getDrawable(context, R.drawable.listview_border) as StateListDrawable
         val dcs = background.constantState as DrawableContainer.DrawableContainerState

@@ -84,6 +84,7 @@ class RestrictedFileProvider: ContentProvider() {
                     Wiper.wipe(file)
                 }
             }
+            dbHelper?.close()
             context.deleteDatabase(DB_NAME)
         }
 
@@ -134,28 +135,26 @@ class RestrictedFileProvider: ContentProvider() {
     }
 
     override fun query(uri: Uri, projection: Array<String>?, selection: String?, selectionArgs: Array<String>?, sortOrder: String?): Cursor? {
+        var resultCursor: MatrixCursor? = null
         val temporaryFile = getFileFromUri(uri)
         temporaryFile?.let{
-            val fileName =
-                dbHelper?.readableDatabase?.query(TABLE_FILES, arrayOf(TemporaryFileColumns.COLUMN_NAME), TemporaryFileColumns.COLUMN_UUID + "=?", arrayOf(uri.lastPathSegment), null, null, null)
+            val fileName = dbHelper?.readableDatabase?.query(TABLE_FILES, arrayOf(TemporaryFileColumns.COLUMN_NAME), TemporaryFileColumns.COLUMN_UUID + "=?", arrayOf(uri.lastPathSegment), null, null, null)
             fileName?.let{
                 if (fileName.moveToNext()) {
-                    val cursor = MatrixCursor(
+                    resultCursor = MatrixCursor(
                         arrayOf(
                             MediaStore.MediaColumns.DISPLAY_NAME,
                             MediaStore.MediaColumns.SIZE
                         )
                     )
-                    cursor.newRow()
+                    resultCursor!!.newRow()
                         .add(fileName.getString(0))
                         .add(temporaryFile.length())
-                    fileName.close()
-                    return cursor
                 }
                 fileName.close()
             }
         }
-        return null
+        return resultCursor
     }
 
     override fun delete(uri: Uri, givenSelection: String?, givenSelectionArgs: Array<String>?): Int {
