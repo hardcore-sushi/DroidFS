@@ -18,15 +18,19 @@ open class BaseActivity: CyaneaAppCompatActivity() {
         }
         val themeColor = ThemeColor.getThemeColor(this)
         if (cyanea.accent != themeColor){
-            val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
-            cyanea.edit{
-                accent(themeColor)
-                //accentDark(themeColor)
-                //accentLight(themeColor)
-                background(backgroundColor)
-                //backgroundDark(backgroundColor)
-                //backgroundLight(backgroundColor)
-            }
+            changeThemeColor(themeColor)
         }
+    }
+    fun changeThemeColor(themeColor: Int? = null){
+        val accentColor = themeColor ?: ThemeColor.getThemeColor(this)
+        val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
+        cyanea.edit{
+            accent(accentColor)
+            //accentDark(themeColor)
+            //accentLight(themeColor)
+            background(backgroundColor)
+            //backgroundDark(backgroundColor)
+            //backgroundLight(backgroundColor)
+        }.recreate(this)
     }
 }

@@ -1,10 +1,7 @@
 <resources>
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.Cyanea.Dark.NoActionBar">
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="android:colorBackground">@color/backgroundColor</item>
         <item name="android:textColor">@color/textColor</item>
-        <!--<item name="checkboxStyle">@style/checkbox</item>-->
         <!--<item name="actionOverflowMenuStyle">@style/menu_overflow</item>-->
     </style>
     <style name="button" parent="Widget.AppCompat.Button">
@@ -13,9 +10,6 @@
     <style name="listViewNoDivider">
         <item name="android:divider">#000000</item>
         <item name="android:dividerHeight">0dp</item>
-    </style>
-    <style name="checkbox" parent="Widget.AppCompat.CompoundButton.CheckBox">
-        <item name="android:textColor">@color/textColor</item>
     </style>
     <!--<style name="menu_overflow" parent="Widget.AppCompat.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/popupmenu_overflow</item>
