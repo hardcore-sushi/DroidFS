@@ -14,6 +14,7 @@ abstract class LoadingTask(private val activity: AppCompatActivity, private val 
         .setTitle(R.string.loading)
         .setCancelable(false)
         .create()
+    private var isStopped = false
     init {
         dialogLoadingView.findViewById<TextView>(R.id.text_message).text = activity.getString(loadingMessageResId)
         startTask()
@@ -24,13 +25,19 @@ abstract class LoadingTask(private val activity: AppCompatActivity, private val 
         dialogLoading.show()
         Thread {
             doTask(activity)
+            if (!isStopped){
+                dialogLoading.dismiss()
+            }
             activity.runOnUiThread { doFinally(activity) }
         }.start()
     }
-    protected fun stopTask(onUiThread: () -> Unit){
+    protected fun stopTask(onUiThread: (() -> Unit)?){
+        isStopped = true
         dialogLoading.dismiss()
-        activity.runOnUiThread {
-            onUiThread()
+        onUiThread?.let {
+            activity.runOnUiThread {
+                onUiThread()
+            }
         }
     }
     protected fun stopTaskWithToast(stringId: Int){

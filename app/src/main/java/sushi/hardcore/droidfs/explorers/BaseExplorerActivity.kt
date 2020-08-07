@@ -2,6 +2,9 @@ package sushi.hardcore.droidfs.explorers
 
 import android.content.Intent
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
+import android.os.Message
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -34,6 +37,7 @@ import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import java.io.File
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -251,6 +255,53 @@ open class BaseExplorerActivity : BaseActivity() {
         }
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         dialog.show()
+    }
+
+    protected fun checkFileOverwrite(path: String): String? {
+        var outputPath: String? = null
+        if (gocryptfsVolume.pathExists(path)){
+            val fileName = File(path).name
+            val handler = Handler{ msg ->
+                outputPath = msg.obj as String?
+                throw RuntimeException()
+            }
+            runOnUiThread {
+                val dialog = ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.warning)
+                    .setMessage(getString(R.string.file_overwrite_question, fileName))
+                    .setNegativeButton(R.string.no) { _, _ ->
+                        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+                        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+                        dialogEditText.setText(fileName)
+                        dialogEditText.selectAll()
+                        val dialog = ColoredAlertDialogBuilder(this)
+                            .setView(dialogEditTextView)
+                            .setTitle(getString(R.string.enter_new_filename))
+                            .setPositiveButton(R.string.ok) { _, _ ->
+                                handler.sendMessage(Message().apply { obj = checkFileOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString())) })
+                            }
+                            .setNegativeButton(R.string.cancel) { _, _ -> handler.sendMessage(Message().apply { obj = null }) }
+                            .create()
+                        dialogEditText.setOnEditorActionListener { _, _, _ ->
+                            dialog.dismiss()
+                            handler.sendMessage(Message().apply { obj = checkFileOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString())) })
+                            true
+                        }
+                        dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
+                        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                        dialog.show()
+                    }
+                    .setPositiveButton(R.string.yes) {_, _ -> handler.sendMessage(Message().apply { obj = path }) }
+                    .create()
+                dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
+                dialog.show()
+            }
+            try { Looper.loop() }
+            catch (e: RuntimeException) {}
+        } else {
+            outputPath = path
+        }
+        return outputPath
     }
 
     protected fun rename(old_name: String, new_name: String){

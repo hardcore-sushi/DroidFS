@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
@@ -54,6 +55,14 @@ abstract class MediaPlayer: FileViewerActivity() {
             override fun onPlayerError(error: ExoPlaybackException) {
                 if (error.type == ExoPlaybackException.TYPE_SOURCE){
                     errorDialog.show()
+                }
+            }
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                if (isPlaying){
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
         })

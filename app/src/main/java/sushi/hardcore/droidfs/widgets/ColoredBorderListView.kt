@@ -6,7 +6,6 @@ import android.graphics.drawable.DrawableContainer
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.StateListDrawable
 import android.util.AttributeSet
-import android.util.Log
 import android.widget.ListView
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
