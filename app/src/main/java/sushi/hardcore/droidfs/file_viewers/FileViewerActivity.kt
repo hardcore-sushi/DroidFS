@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.view.View
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
+    private var isGoingBackToExplorer = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
@@ -28,6 +30,12 @@ abstract class FileViewerActivity: BaseActivity() {
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION*/
     }
     abstract fun viewFile()
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        if (window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0){
+            hideSystemUi()
+        }
+    }
     fun loadWholeFile(path: String): ByteArray? {
         val fileSize = gocryptfsVolume.getSize(path)
         if (fileSize >= 0){
@@ -53,7 +61,7 @@ abstract class FileViewerActivity: BaseActivity() {
                         .setTitle(R.string.error)
                         .setMessage(R.string.read_file_failed)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ -> finish() }
+                        .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
                         .show()
                 }
             } catch (e: OutOfMemoryError){
@@ -61,7 +69,7 @@ abstract class FileViewerActivity: BaseActivity() {
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
+                    .setPositiveButton(getString(R.string.ok)) { _, _ -> goBackToExplorer() }
                     .show()
             }
 
@@ -70,9 +78,32 @@ abstract class FileViewerActivity: BaseActivity() {
                 .setTitle(R.string.error)
                 .setMessage(R.string.get_size_failed)
                 .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ -> finish() }
+                .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
                 .show()
         }
         return null
+    }
+
+    protected fun goBackToExplorer(){
+        isGoingBackToExplorer = true
+        finish()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (!isGoingBackToExplorer) {
+            gocryptfsVolume.close()
+            RestrictedFileProvider.wipeAll(this)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        finish()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        isGoingBackToExplorer = true
     }
 }

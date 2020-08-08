@@ -552,6 +552,12 @@ func gcf_close(sessionID int){
   delete(sessions, sessionID)
 }
 
+//export gcf_is_closed
+func gcf_is_closed(sessionID int) bool {
+  _, ok := sessions[sessionID]
+  return !ok
+}
+
 //export gcf_create_volume
 func gcf_create_volume(root_cipher_dir string, password []byte, logN int, creator string) bool {
   err := configfile.Create(filepath.Join(root_cipher_dir, configfile.ConfDefaultName), password, false, logN, creator, false, false)

@@ -7,8 +7,8 @@ import java.io.File
 
 class AudioPlayer: MediaPlayer(){
     override fun viewFile() {
-        super.viewFile()
         setContentView(R.layout.activity_audio_player)
+        super.viewFile()
         val filename = File(filePath).name
         val pos = filename.lastIndexOf('.')
         music_title.text = if (pos != -1){

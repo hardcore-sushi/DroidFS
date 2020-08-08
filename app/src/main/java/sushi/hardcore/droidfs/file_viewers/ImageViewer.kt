@@ -113,10 +113,14 @@ class ImageViewer: FileViewerActivity() {
 
     override fun onUserInteraction() {
         super.onUserInteraction()
-        if (action_buttons.visibility == View.GONE){
-            action_buttons.visibility = View.VISIBLE
+        action_buttons?.let {
             handler.removeCallbacks(hideActionButtons)
-            handler.postDelayed(hideActionButtons, hideDelay)
+            if (it.visibility == View.GONE){
+                it.visibility = View.VISIBLE
+                handler.postDelayed(hideActionButtons, hideDelay)
+            } else {
+                it.visibility = View.GONE
+            }
         }
     }
 }

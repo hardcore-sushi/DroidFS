@@ -34,7 +34,7 @@ class TextEditor: FileViewerActivity() {
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.ok)) { _, _ -> finish() }
+                    .setPositiveButton(getString(R.string.ok)) { _, _ -> goBackToExplorer()}
                     .show()
             }
         }
@@ -103,13 +103,13 @@ class TextEditor: FileViewerActivity() {
                 .setMessage(R.string.ask_save)
                 .setPositiveButton(getString(R.string.save)) { _, _ ->
                     if (save()){
-                        finish()
+                        goBackToExplorer()
                     }
                 }
-                .setNegativeButton(getString(R.string.discard)){ _, _ -> finish() }
+                .setNegativeButton(getString(R.string.discard)){ _, _ -> goBackToExplorer()}
                 .show()
         } else {
-            finish()
+            goBackToExplorer()
         }
     }
 

@@ -6,8 +6,8 @@ import sushi.hardcore.droidfs.R
 
 class VideoPlayer: MediaPlayer() {
     override fun viewFile() {
-        super.viewFile()
         setContentView(R.layout.activity_video_player)
+        super.viewFile()
     }
 
     override fun bindPlayer(player: SimpleExoPlayer) {

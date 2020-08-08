@@ -127,6 +127,12 @@ Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_init(JNIEnv *env
 }
 
 JNIEXPORT jboolean JNICALL
+Java_sushi_hardcore_droidfs_util_GocryptfsVolume_native_1is_1closed(JNIEnv *env, jobject thiz,
+                                                                    jint sessionID) {
+    return gcf_is_closed(sessionID);
+}
+
+JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_util_GocryptfsVolume_00024Companion_changePassword(JNIEnv *env, jclass clazz,
                                                                                jstring jroot_cipher_dir,
                                                                                jcharArray jold_password,

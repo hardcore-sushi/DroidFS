@@ -7,6 +7,7 @@ import java.io.*
 
 class GocryptfsVolume(var sessionID: Int) {
     private external fun native_close(sessionID: Int)
+    private external fun native_is_closed(sessionID: Int): Boolean
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>
     private external fun native_open_read_mode(sessionID: Int, file_path: String): Int
     private external fun native_open_write_mode(sessionID: Int, file_path: String): Int
@@ -36,6 +37,10 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun close() {
         native_close(sessionID)
+    }
+
+    fun isClosed(): Boolean {
+        return native_is_closed(sessionID)
     }
 
     fun listDir(dir_path: String): MutableList<ExplorerElement> {

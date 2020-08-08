@@ -29,8 +29,10 @@ abstract class MediaPlayer: FileViewerActivity() {
             .setTitle(R.string.error)
             .setMessage(R.string.playing_failed)
             .setCancelable(false)
-            .setPositiveButton(R.string.ok) { _, _ -> finish() }
+            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
             .create()
+        hideSystemUi()
+        initializePlayer()
     }
 
     abstract fun bindPlayer(player: SimpleExoPlayer)
@@ -77,14 +79,8 @@ abstract class MediaPlayer: FileViewerActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        hideSystemUi()
-        initializePlayer()
-    }
-
-    override fun onPause() {
-        super.onPause()
+    override fun onDestroy() {
+        super.onDestroy()
         releasePlayer()
     }
 }

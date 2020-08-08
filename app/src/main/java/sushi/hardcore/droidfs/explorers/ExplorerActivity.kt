@@ -79,6 +79,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         "importFromOtherVolumes" -> {
                             val intent = Intent(this, OpenActivity::class.java)
                             intent.action = "pick"
+                            isStartingActivity = true
                             startActivityForResult(intent, PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE)
                         }
                         "importFiles" -> {
@@ -86,6 +87,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             intent.type = "*/*"
                             intent.putExtra(Intent.EXTRA_ALLOW_MULTIPLE, true)
                             intent.addCategory(Intent.CATEGORY_OPENABLE)
+                            isStartingActivity = true
                             startActivityForResult(intent, PICK_FILES_REQUEST_CODE)
                         }
                         "createFile" -> {
@@ -116,6 +118,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             val intent = Intent(this, CameraActivity::class.java)
                             intent.putExtra("path", currentDirectoryPath)
                             intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                            isStartingActivity = true
                             startActivity(intent)
                         }
                     }
@@ -425,12 +428,14 @@ class ExplorerActivity : BaseExplorerActivity() {
                 for (i in explorerAdapter.selectedItems) {
                     paths.add(explorerElements[i].fullPath)
                 }
+                isStartingActivity = true
                 ExternalProvider.share(this, gocryptfsVolume, paths)
                 unselectAll()
                 true
             }
             R.id.decrypt -> {
                 val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+                isStartingActivity = true
                 startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
                 true
             }

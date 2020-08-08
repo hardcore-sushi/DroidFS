@@ -10,10 +10,10 @@ import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
 class ExplorerActivityPick : BaseExplorerActivity() {
-    private var result_intent = Intent()
+    private var resultIntent = Intent()
     override fun init() {
         super.init()
-        result_intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+        resultIntent.putExtra("sessionID", gocryptfsVolume.sessionID)
     }
 
     override fun onExplorerItemClick(position: Int) {
@@ -30,7 +30,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
                         setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     else -> {
-                        result_intent.putExtra("path", full_path)
+                        resultIntent.putExtra("path", full_path)
                         returnActivityResult()
                     }
                 }
@@ -42,9 +42,9 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer_pick, menu)
         handleMenuItems(menu)
-        val any_item_selected = explorerAdapter.selectedItems.isNotEmpty()
-        menu.findItem(R.id.select_all).isVisible = any_item_selected
-        menu.findItem(R.id.validate).isVisible = any_item_selected
+        val anyItemSelected = explorerAdapter.selectedItems.isNotEmpty()
+        menu.findItem(R.id.select_all).isVisible = anyItemSelected
+        menu.findItem(R.id.validate).isVisible = anyItemSelected
         return true
     }
 
@@ -63,8 +63,8 @@ class ExplorerActivityPick : BaseExplorerActivity() {
                     paths.add(PathUtils.path_join(currentDirectoryPath, e.name))
                     types.add(e.elementType.toInt())
                 }
-                result_intent.putStringArrayListExtra("paths", paths)
-                result_intent.putIntegerArrayListExtra("types", types)
+                resultIntent.putStringArrayListExtra("paths", paths)
+                resultIntent.putIntegerArrayListExtra("types", types)
                 returnActivityResult()
                 true
             }
@@ -73,7 +73,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     }
 
     private fun returnActivityResult() {
-        setResult(Activity.RESULT_OK, result_intent)
+        setResult(Activity.RESULT_OK, resultIntent)
         finish()
     }
 

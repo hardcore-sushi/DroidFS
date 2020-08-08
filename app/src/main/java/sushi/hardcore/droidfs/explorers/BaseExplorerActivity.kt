@@ -54,6 +54,7 @@ open class BaseExplorerActivity : BaseActivity() {
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     private var isCreating = true
+    protected var isStartingActivity = false
     private var usf_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +98,7 @@ open class BaseExplorerActivity : BaseActivity() {
         if (sortOrder.isNotEmpty()){
             intent.putExtra("sortOrder", sortOrder)
         }
+        isStartingActivity = true
         startActivity(intent)
     }
 
@@ -194,15 +196,6 @@ open class BaseExplorerActivity : BaseActivity() {
                 .setPositiveButton(R.string.ok) { _, _ -> closeVolumeOnUserExit() }
                 .setNegativeButton(R.string.cancel, null)
                 .show()
-    }
-
-    protected open fun closeVolumeOnUserExit() {
-        finish()
-    }
-
-    protected open fun closeVolumeOnDestroy() {
-        gocryptfsVolume.close()
-        RestrictedFileProvider.wipeAll(this) //additional security
     }
 
     override fun onBackPressed() {
@@ -387,6 +380,7 @@ open class BaseExplorerActivity : BaseActivity() {
             }
             R.id.external_open -> {
                 if (usf_open){
+                    isStartingActivity = true
                     ExternalProvider.open(this, gocryptfsVolume, PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
                     unselectAll()
                 }
@@ -400,10 +394,28 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
+    protected open fun closeVolumeOnUserExit() {
+        finish()
+    }
+
+    protected open fun closeVolumeOnDestroy() {
+        if (!gocryptfsVolume.isClosed()){
+            gocryptfsVolume.close()
+        }
+        RestrictedFileProvider.wipeAll(this) //additional security
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (!isChangingConfigurations) { //activity won't be recreated
             closeVolumeOnDestroy()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!isChangingConfigurations && !isStartingActivity){
+            finish()
         }
     }
 
@@ -412,7 +424,12 @@ open class BaseExplorerActivity : BaseActivity() {
         if (isCreating){
             isCreating = false
         } else {
-            ExternalProvider.removeFiles(this)
+            if (gocryptfsVolume.isClosed()){
+                finish()
+            } else {
+                isStartingActivity = false
+                ExternalProvider.removeFiles(this)
+            }
         }
     }
 }
