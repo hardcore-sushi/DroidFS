@@ -1,8 +1,12 @@
 package sushi.hardcore.droidfs
 
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.text.InputType
 import android.view.View
+import android.view.WindowManager
+import android.widget.EditText
 import android.widget.Toast
 import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.PictureResult
@@ -13,6 +17,7 @@ import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.ThemeColor
 import java.io.ByteArrayInputStream
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -28,6 +33,15 @@ class CameraActivity : AppCompatActivity() {
         private val random = Random()
     }
     private var currentFlashModeIndex = 0
+    private var timerDuration = 0
+        set(value) {
+            field = value
+            if (value > 0){
+                image_timer.setColorFilter(Color.GREEN)
+            } else {
+                image_timer.clearColorFilter()
+            }
+        }
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
@@ -61,7 +75,21 @@ class CameraActivity : AppCompatActivity() {
         do {
             fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+".jpg"
         } while (gocryptfsVolume.pathExists(fileName))
-        camera.takePicture()
+        if (timerDuration > 0){
+            text_timer.visibility = View.VISIBLE
+            Thread{
+                for (i in timerDuration downTo 1){
+                    runOnUiThread { text_timer.text = i.toString() }
+                    Thread.sleep(1000)
+                }
+                runOnUiThread {
+                    camera.takePicture()
+                    text_timer.visibility = View.GONE
+                }
+            }.start()
+        } else {
+            camera.takePicture()
+        }
     }
 
     fun onClickFlash(view: View) {
@@ -85,5 +113,26 @@ class CameraActivity : AppCompatActivity() {
                 camera.flash = flashModes[currentFlashModeIndex] //refresh flash mode after switching camera
             }.start()
         }
+    }
+
+    fun onClickTimer(view: View) {
+        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+        dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
+        val dialog = ColoredAlertDialogBuilder(this)
+            .setView(dialogEditTextView)
+            .setTitle("Enter the timer duration (in s)")
+            .setPositiveButton(R.string.ok) { _, _ ->
+                timerDuration = dialogEditText.text.toString().toInt()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        dialogEditText.setOnEditorActionListener { _, _, _ ->
+            timerDuration = dialogEditText.text.toString().toInt()
+            dialog.dismiss()
+            true
+        }
+        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+        dialog.show()
     }
 }

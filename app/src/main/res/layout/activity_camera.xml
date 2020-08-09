@@ -16,6 +16,30 @@
 
     <RelativeLayout
         android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="20dp">
+
+        <ImageView
+            android:id="@+id/image_timer"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/icon_timer"
+            android:layout_centerInParent="true"
+            android:onClick="onClickTimer"/>
+
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/text_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="100sp"
+        android:layout_centerInParent="true"
+        android:visibility="gone"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="30dp">
