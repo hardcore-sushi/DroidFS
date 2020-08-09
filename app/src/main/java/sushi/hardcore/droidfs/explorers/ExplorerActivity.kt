@@ -18,16 +18,18 @@ import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
-import kotlin.collections.ArrayList
 
 class ExplorerActivity : BaseExplorerActivity() {
-    private val PICK_DIRECTORY_REQUEST_CODE = 1
-    private val PICK_FILES_REQUEST_CODE = 2
-    private val PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE = 3
+    companion object {
+        private const val PICK_DIRECTORY_REQUEST_CODE = 1
+        private const val PICK_FILES_REQUEST_CODE = 2
+        private const val PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE = 3
+        private enum class ItemsActions {NONE, COPY, MOVE}
+    }
     private var usf_decrypt = false
     private var usf_share = false
-    private var modeSelectLocation = false
-    private val filesToCopy = ArrayList<ExplorerElement>()
+    private var currentItemAction = ItemsActions.NONE
+    private val itemsToProcess = ArrayList<ExplorerElement>()
     override fun init() {
         setContentView(R.layout.activity_explorer)
         usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
@@ -35,7 +37,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     override fun onExplorerItemLongClick(position: Int) {
-        cancelCopy()
+        cancelItemAction()
         explorerAdapter.onItemLongClick(position)
         invalidateOptionsMenu()
     }
@@ -44,7 +46,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (fileName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            checkFileOverwrite(PathUtils.path_join(currentDirectoryPath, fileName))?.let {
+            checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, fileName), false)?.let {
                 val handleID = gocryptfsVolume.openWriteMode(it)
                 if (handleID == -1) {
                     ColoredAlertDialogBuilder(this)
@@ -62,7 +64,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     fun onClickFAB(view: View) {
-        if (modeSelectLocation){
+        if (currentItemAction != ItemsActions.NONE){
             openDialogCreateFolder()
         } else {
             val adapter = IconTextDialogAdapter(this)
@@ -152,7 +154,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         Looper.prepare()
                         var success = false
                         for (uri in uris) {
-                            val dstPath = checkFileOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)))
+                            val dstPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)), false)
                             if (dstPath == null){
                                 break
                             } else {
@@ -316,7 +318,7 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer, menu)
-        if (modeSelectLocation) {
+        if (currentItemAction != ItemsActions.NONE) {
             menu.findItem(R.id.validate).isVisible = true
             menu.findItem(R.id.close).isVisible = false
         } else {
@@ -328,6 +330,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             menu.findItem(R.id.select_all).isVisible = anyItemSelected
             menu.findItem(R.id.delete).isVisible = anyItemSelected
             menu.findItem(R.id.copy).isVisible = anyItemSelected
+            menu.findItem(R.id.cut).isVisible = anyItemSelected
             menu.findItem(R.id.decrypt).isVisible = anyItemSelected && usf_decrypt
             if (anyItemSelected && usf_share){
                 var containsDir = false
@@ -348,7 +351,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                cancelCopy()
+                cancelItemAction()
                 super.onOptionsItemSelected(item)
             }
             R.id.select_all -> {
@@ -356,55 +359,99 @@ class ExplorerActivity : BaseExplorerActivity() {
                 invalidateOptionsMenu()
                 true
             }
+            R.id.cut -> {
+                for (i in explorerAdapter.selectedItems){
+                    itemsToProcess.add(explorerElements[i])
+                }
+                currentItemAction = ItemsActions.MOVE
+                unselectAll()
+                true
+            }
             R.id.copy -> {
                 for (i in explorerAdapter.selectedItems){
-                    filesToCopy.add(explorerElements[i])
+                    itemsToProcess.add(explorerElements[i])
                 }
-                modeSelectLocation = true
+                currentItemAction = ItemsActions.COPY
                 unselectAll()
                 true
             }
             R.id.validate -> {
-                object : LoadingTask(this, R.string.loading_msg_copy){
-                    override fun doTask(activity: AppCompatActivity) {
-                        var failedItem: String? = null
-                        Looper.prepare()
-                        for (element in filesToCopy) {
-                            failedItem = if (element.isDirectory) {
-                                recursiveCopyDirectory(element.fullPath, currentDirectoryPath)
-                            } else {
-                                val dstPath = checkFileOverwrite(PathUtils.path_join(currentDirectoryPath, element.name))
-                                if (dstPath == null){
+                if (currentItemAction == ItemsActions.COPY){
+                    object : LoadingTask(this, R.string.loading_msg_copy){
+                        override fun doTask(activity: AppCompatActivity) {
+                            var failedItem: String? = null
+                            Looper.prepare()
+                            for (element in itemsToProcess) {
+                                val dstPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, element.name), element.isDirectory)
+                                failedItem = if (dstPath == null){
                                     ""
                                 } else {
-                                    if (copyFile(element.fullPath, dstPath)) null else element.fullPath
+                                    if (element.isDirectory) {
+                                        recursiveCopyDirectory(element.fullPath, dstPath)
+                                    } else {
+                                        if (copyFile(element.fullPath, dstPath)) null else element.fullPath
+                                    }
+                                }
+                                if (failedItem != null){
+                                    if (failedItem.isNotEmpty()) {
+                                        stopTask {
+                                            ColoredAlertDialogBuilder(activity)
+                                                .setTitle(R.string.error)
+                                                .setMessage(getString(
+                                                        R.string.copy_failed,
+                                                        failedItem
+                                                    ))
+                                                .setPositiveButton(R.string.ok, null)
+                                                .show()
+                                        }
+                                    }
+                                    break
                                 }
                             }
-                            if (failedItem != null && failedItem.isNotEmpty()) {
+                            if (failedItem == null) {
                                 stopTask {
                                     ColoredAlertDialogBuilder(activity)
-                                        .setTitle(R.string.error)
-                                        .setMessage(getString(R.string.copy_failed, failedItem))
+                                        .setTitle(getString(R.string.copy_success))
+                                        .setMessage(getString(R.string.copy_success_msg))
                                         .setPositiveButton(R.string.ok, null)
                                         .show()
                                 }
-                                break
                             }
                         }
-                        if (failedItem == null) {
-                            stopTask {
-                                ColoredAlertDialogBuilder(activity)
-                                    .setTitle(getString(R.string.copy_success))
-                                    .setMessage(getString(R.string.copy_success_msg))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
+                        override fun doFinally(activity: AppCompatActivity) {
+                            cancelItemAction()
+                            unselectAll()
+                            setCurrentPath(currentDirectoryPath)
                         }
                     }
-                    override fun doFinally(activity: AppCompatActivity) {
-                        cancelCopy()
-                        unselectAll()
-                        setCurrentPath(currentDirectoryPath)
+                } else if (currentItemAction == ItemsActions.MOVE){
+                    object : LoadingTask(this, R.string.loading_msg_move){
+                        override fun doTask(activity: AppCompatActivity) {
+                            Looper.prepare()
+                            val failedItem = moveElements(itemsToProcess, currentDirectoryPath)
+                            if (failedItem == null) {
+                                stopTask {
+                                    ColoredAlertDialogBuilder(activity)
+                                        .setTitle(getString(R.string.move_success))
+                                        .setMessage(getString(R.string.move_success_msg))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                                }
+                            } else if (failedItem.isNotEmpty()){
+                                stopTask {
+                                    ColoredAlertDialogBuilder(activity)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.move_failed, failedItem))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                                }
+                            }
+                        }
+                        override fun doFinally(activity: AppCompatActivity) {
+                            cancelItemAction()
+                            unselectAll()
+                            setCurrentPath(currentDirectoryPath)
+                        }
                     }
                 }
                 true
@@ -443,16 +490,16 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun cancelCopy() {
-        if (modeSelectLocation){
-            modeSelectLocation = false
-            filesToCopy.clear()
+    private fun cancelItemAction() {
+        if (currentItemAction != ItemsActions.NONE){
+            currentItemAction = ItemsActions.NONE
+            itemsToProcess.clear()
         }
     }
 
     override fun onBackPressed() {
-        if (modeSelectLocation) {
-            cancelCopy()
+        if (currentItemAction != ItemsActions.NONE) {
+            cancelItemAction()
             invalidateOptionsMenu()
         } else {
             super.onBackPressed()
@@ -488,27 +535,59 @@ class ExplorerActivity : BaseExplorerActivity() {
         return success
     }
 
-    private fun recursiveCopyDirectory(srcDirectoryPath: String, outputPath: String): String? {
+    private fun recursiveCopyDirectory(srcDirectoryPath: String, dstDirectoryPath: String): String? {
         val mappedElements = gocryptfsVolume.recursiveMapFiles(srcDirectoryPath)
-        val dstDirectoryPath = PathUtils.path_join(outputPath, File(srcDirectoryPath).name)
-        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
+        if (!gocryptfsVolume.pathExists(dstDirectoryPath)){
             if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
-                return dstDirectoryPath
+                return srcDirectoryPath
             }
         }
         for (e in mappedElements) {
-            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, e.fullPath))
-            if (e.isDirectory) {
-                if (!gocryptfsVolume.mkdir(dstPath)){
-                    return e.fullPath
-                }
+            val dstPath = checkPathOverwrite(PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, e.fullPath)), e.isDirectory)
+            if (dstPath == null){
+                return ""
             } else {
-                val checkedDstPath = checkFileOverwrite(dstPath)
-                if (checkedDstPath == null){
-                    return ""
+                if (e.isDirectory) {
+                    if (!gocryptfsVolume.pathExists(dstPath)){
+                        if (!gocryptfsVolume.mkdir(dstPath)){
+                            return e.fullPath
+                        }
+                    }
                 } else {
                     if (!copyFile(e.fullPath, dstPath)) {
                         return e.fullPath
+                    }
+                }
+            }
+        }
+        return null
+    }
+
+    private fun moveDirectory(srcDirectoryPath: String, dstDirectoryPath: String): String? {
+        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
+            if (!gocryptfsVolume.rename(srcDirectoryPath, dstDirectoryPath)) {
+                return srcDirectoryPath
+            }
+        } else {
+            moveElements(gocryptfsVolume.listDir(srcDirectoryPath), dstDirectoryPath)
+            gocryptfsVolume.rmdir(srcDirectoryPath)
+        }
+        return null
+    }
+
+    private fun moveElements(elements: List<ExplorerElement>, dstDirectoryPath: String): String? {
+        for (element in elements){
+            val dstPath = checkPathOverwrite(PathUtils.path_join(dstDirectoryPath, element.name), element.isDirectory)
+            if (dstPath == null){
+                return ""
+            } else {
+                if (element.isDirectory){
+                    moveDirectory(element.fullPath, dstPath)?.let{
+                        return it
+                    }
+                } else {
+                    if (!gocryptfsVolume.rename(element.fullPath, dstPath)){
+                        return element.fullPath
                     }
                 }
             }
@@ -525,9 +604,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 var length: Int
                 val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
                 var offset: Long = 0
-                while (remoteGocryptfsVolume.readFile(srcHandleID, offset, ioBuffer)
-                        .also { length = it } > 0
-                ) {
+                while (remoteGocryptfsVolume.readFile(srcHandleID, offset, ioBuffer).also { length = it } > 0) {
                     val written =
                         gocryptfsVolume.writeFile(dstHandleID, offset, ioBuffer, length).toLong()
                     if (written == length.toLong()) {
@@ -545,35 +622,40 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun safeImportFileFromOtherVolume(remoteGocryptfsVolume: GocryptfsVolume, srcPath: String, dstPath: String): String? {
-        val checkedDstPath = checkFileOverwrite(PathUtils.path_join(currentDirectoryPath, File(dstPath).name))
+        val checkedDstPath = checkPathOverwrite(dstPath, false)
         return if (checkedDstPath == null){
             ""
         } else {
-            if (importFileFromOtherVolume(remoteGocryptfsVolume, srcPath, checkedDstPath)) null else dstPath
+            if (importFileFromOtherVolume(remoteGocryptfsVolume, srcPath, checkedDstPath)) null else srcPath
         }
     }
 
     private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, outputPath: String): String? {
         val mappedElements = gocryptfsVolume.recursiveMapFiles(remote_directory_path)
-        val dstDirectoryPath = PathUtils.path_join(outputPath, File(remote_directory_path).name)
-        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
-            if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
-                return dstDirectoryPath
-            }
-        }
-        for (e in mappedElements) {
-            val dstPath = PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, e.fullPath))
-            if (e.isDirectory) {
-                if (!gocryptfsVolume.mkdir(dstPath)){
-                    return e.fullPath
+        val dstDirectoryPath = checkPathOverwrite(PathUtils.path_join(outputPath, File(remote_directory_path).name), true)
+        if (dstDirectoryPath == null){
+            return ""
+        } else {
+            if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
+                if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
+                    return remote_directory_path
                 }
-            } else {
-                val checkedDstPath = checkFileOverwrite(dstPath)
-                if (checkedDstPath == null){
+            }
+            for (e in mappedElements) {
+                val dstPath = checkPathOverwrite(PathUtils.path_join(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, e.fullPath)), e.isDirectory)
+                if (dstPath == null){
                     return ""
                 } else {
-                    if (!importFileFromOtherVolume(remote_gocryptfsVolume, e.fullPath, checkedDstPath)) {
-                        return e.fullPath
+                    if (e.isDirectory) {
+                        if (!gocryptfsVolume.pathExists(dstPath)){
+                            if (!gocryptfsVolume.mkdir(dstPath)){
+                                return e.fullPath
+                            }
+                        }
+                    } else {
+                        if (!importFileFromOtherVolume(remote_gocryptfsVolume, e.fullPath, dstPath)) {
+                            return e.fullPath
+                        }
                     }
                 }
             }

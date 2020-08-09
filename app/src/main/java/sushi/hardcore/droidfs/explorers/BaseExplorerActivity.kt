@@ -250,7 +250,7 @@ open class BaseExplorerActivity : BaseActivity() {
         dialog.show()
     }
 
-    protected fun checkFileOverwrite(path: String): String? {
+    protected fun checkPathOverwrite(path: String, isDirectory: Boolean): String? {
         var outputPath: String? = null
         if (gocryptfsVolume.pathExists(path)){
             val fileName = File(path).name
@@ -261,7 +261,7 @@ open class BaseExplorerActivity : BaseActivity() {
             runOnUiThread {
                 val dialog = ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
-                    .setMessage(getString(R.string.file_overwrite_question, fileName))
+                    .setMessage(getString(if (isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, path))
                     .setNegativeButton(R.string.no) { _, _ ->
                         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
                         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
@@ -269,15 +269,15 @@ open class BaseExplorerActivity : BaseActivity() {
                         dialogEditText.selectAll()
                         val dialog = ColoredAlertDialogBuilder(this)
                             .setView(dialogEditTextView)
-                            .setTitle(getString(R.string.enter_new_filename))
+                            .setTitle(getString(R.string.enter_new_name))
                             .setPositiveButton(R.string.ok) { _, _ ->
-                                handler.sendMessage(Message().apply { obj = checkFileOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString())) })
+                                handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
                             }
                             .setNegativeButton(R.string.cancel) { _, _ -> handler.sendMessage(Message().apply { obj = null }) }
                             .create()
                         dialogEditText.setOnEditorActionListener { _, _, _ ->
                             dialog.dismiss()
-                            handler.sendMessage(Message().apply { obj = checkFileOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString())) })
+                            handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
                             true
                         }
                         dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }

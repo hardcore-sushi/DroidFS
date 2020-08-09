@@ -45,25 +45,24 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                                 errorMsg = if (uri == null){
                                     getString(R.string.share_intent_parsing_failed)
                                 } else {
-                                    val outputPathTest = PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri))
-                                    val outputPath = checkFileOverwrite(outputPathTest)
+                                    val outputPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)), false)
                                     if (outputPath == null) {
                                         ""
                                     } else {
-                                        if (gocryptfsVolume.importFile(activity, uri, outputPath)) null else getString(R.string.import_failed, outputPath)
+                                        if (gocryptfsVolume.importFile(activity, uri, outputPath)) null else getString(R.string.import_failed, uri)
                                     }
                                 }
                             } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
                                 val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
                                 if (uris != null){
                                     for (uri in uris) {
-                                        val outputPath = checkFileOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)))
+                                        val outputPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)), false)
                                         if (outputPath == null){
                                             errorMsg = ""
                                             break
                                         } else {
                                             if (!gocryptfsVolume.importFile(activity, uri, outputPath)) {
-                                                errorMsg = getString(R.string.import_failed, outputPath)
+                                                errorMsg = getString(R.string.import_failed, uri)
                                                 break
                                             }
                                         }
