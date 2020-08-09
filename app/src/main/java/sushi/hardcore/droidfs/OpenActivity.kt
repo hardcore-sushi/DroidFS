@@ -4,22 +4,18 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
-import kotlinx.android.synthetic.main.activity_open.checkbox_save_password
-import kotlinx.android.synthetic.main.activity_open.edit_password
-import kotlinx.android.synthetic.main.activity_open.edit_volume_path
-import kotlinx.android.synthetic.main.activity_open.saved_path_listview
+import kotlinx.android.synthetic.main.activity_open.*
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
+import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
@@ -33,6 +29,7 @@ class OpenActivity : BaseActivity() {
     private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
     private lateinit var rootCipherDir: String
     private var sessionID = -1
+    private var isFinishingIntentionally = false
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,6 +59,17 @@ class OpenActivity : BaseActivity() {
         edit_password.setOnEditorActionListener { v, _, _ ->
             onClickOpen(v)
             true
+        }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId){
+            android.R.id.home -> {
+                isFinishingIntentionally = true
+                finish()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
         }
     }
 
@@ -154,6 +162,7 @@ class OpenActivity : BaseActivity() {
                 explorerIntent.putExtras(intent.extras!!) //forward extras
             } else if (currentIntentAction == "pick") { //pick items to import
                 explorerIntent = Intent(this, ExplorerActivityPick::class.java)
+                explorerIntent.putExtra("originalSessionID", intent.getIntExtra("sessionID", -1))
                 explorerIntent.flags = Intent.FLAG_ACTIVITY_FORWARD_RESULT
             }
         }
@@ -163,6 +172,7 @@ class OpenActivity : BaseActivity() {
         explorerIntent.putExtra("sessionID", sessionID)
         explorerIntent.putExtra("volume_name", File(rootCipherDir).name)
         startActivity(explorerIntent)
+        isFinishingIntentionally = true
         finish()
     }
 
@@ -182,8 +192,16 @@ class OpenActivity : BaseActivity() {
         }
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        isFinishingIntentionally = true
+    }
+
     override fun onPause() {
         super.onPause()
+        if (intent.action == "pick"){
+            finish()
+        }
         if (::fingerprintPasswordHashSaver.isInitialized && fingerprintPasswordHashSaver.isListening){
             fingerprintPasswordHashSaver.stopListening()
             if (fingerprintPasswordHashSaver.fingerprintFragment.isAdded){
@@ -195,5 +213,12 @@ class OpenActivity : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Wiper.wipeEditText(edit_password)
+        if (intent.action == "pick" && !isFinishingIntentionally){
+            val sessionID = intent.getIntExtra("sessionID", -1)
+            if (sessionID != -1){
+                GocryptfsVolume(sessionID).close()
+                RestrictedFileProvider.wipeAll(this)
+            }
+        }
     }
 }

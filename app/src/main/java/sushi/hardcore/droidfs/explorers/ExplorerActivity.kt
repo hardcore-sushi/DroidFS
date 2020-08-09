@@ -81,6 +81,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         "importFromOtherVolumes" -> {
                             val intent = Intent(this, OpenActivity::class.java)
                             intent.action = "pick"
+                            intent.putExtra("sessionID", gocryptfsVolume.sessionID)
                             isStartingActivity = true
                             startActivityForResult(intent, PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE)
                         }

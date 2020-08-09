@@ -11,7 +11,7 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 abstract class FileViewerActivity: BaseActivity() {
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
-    private var isGoingBackToExplorer = false
+    private var isFinishingIntentionally = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
@@ -85,13 +85,13 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     protected fun goBackToExplorer(){
-        isGoingBackToExplorer = true
+        isFinishingIntentionally = true
         finish()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (!isGoingBackToExplorer) {
+        if (!isFinishingIntentionally) {
             gocryptfsVolume.close()
             RestrictedFileProvider.wipeAll(this)
         }
@@ -104,6 +104,6 @@ abstract class FileViewerActivity: BaseActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
-        isGoingBackToExplorer = true
+        isFinishingIntentionally = true
     }
 }

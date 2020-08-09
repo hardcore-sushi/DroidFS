@@ -5,12 +5,13 @@ import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.provider.RestrictedFileProvider
+import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
 class ExplorerActivityPick : BaseExplorerActivity() {
     private var resultIntent = Intent()
+    private var isFinishingIntentionally = false
     override fun init() {
         super.init()
         resultIntent.putExtra("sessionID", gocryptfsVolume.sessionID)
@@ -21,16 +22,16 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         explorerAdapter.onItemClick(position)
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
-                val full_path = PathUtils.path_join(currentDirectoryPath, explorerElements[position].name)
+                val fullPath = PathUtils.path_join(currentDirectoryPath, explorerElements[position].name)
                 when {
                     explorerElements[position].isDirectory -> {
-                        setCurrentPath(full_path)
+                        setCurrentPath(fullPath)
                     }
                     explorerElements[position].isParentFolder -> {
                         setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     else -> {
-                        resultIntent.putExtra("path", full_path)
+                        resultIntent.putExtra("path", fullPath)
                         returnActivityResult()
                     }
                 }
@@ -74,15 +75,23 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     private fun returnActivityResult() {
         setResult(Activity.RESULT_OK, resultIntent)
+        isFinishingIntentionally = true
         finish()
     }
 
     override fun closeVolumeOnDestroy() {
-        //don't close volume
-        RestrictedFileProvider.wipeAll(this)
+        if (!isFinishingIntentionally){
+            val sessionID = intent.getIntExtra("originalSessionID", -1)
+            if (sessionID != -1){
+                val v = GocryptfsVolume(sessionID)
+                v.close()
+            }
+            super.closeVolumeOnDestroy()
+        }
     }
 
     override fun closeVolumeOnUserExit() {
+        isFinishingIntentionally = true
         super.closeVolumeOnUserExit()
         super.closeVolumeOnDestroy()
     }

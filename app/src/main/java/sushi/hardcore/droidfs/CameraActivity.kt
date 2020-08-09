@@ -1,7 +1,6 @@
 package sushi.hardcore.droidfs
 
 import android.graphics.Color
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
@@ -13,18 +12,16 @@ import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.controls.Flash
 import kotlinx.android.synthetic.main.activity_camera.*
+import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
 import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
-import sushi.hardcore.droidfs.widgets.ThemeColor
 import java.io.ByteArrayInputStream
-import java.io.FileOutputStream
-import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CameraActivity : AppCompatActivity() {
+class CameraActivity : BaseActivity() {
     companion object {
         private val flashModes = listOf(Flash.AUTO, Flash.ON, Flash.OFF)
         private const val fileNameRandomMin = 100000
@@ -45,6 +42,7 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
+    private var isFinishingIntentionally = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
@@ -134,5 +132,23 @@ class CameraActivity : AppCompatActivity() {
         }
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         dialog.show()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (!isFinishingIntentionally) {
+            gocryptfsVolume.close()
+            RestrictedFileProvider.wipeAll(this)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        finish()
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        isFinishingIntentionally = true
     }
 }
