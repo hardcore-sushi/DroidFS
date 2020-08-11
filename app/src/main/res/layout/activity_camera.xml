@@ -11,24 +11,62 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         app:cameraGesturePinch="zoom"
+        app:cameraGestureTap="autoFocus"
+        app:cameraAutoFocusMarker="@string/cameraview_default_autofocus_marker"
+        app:cameraHdr="on"
         app:cameraPictureFormat="jpeg"
         app:cameraAudio="off"/>
 
-    <RelativeLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:layout_alignParentTop="true"
         android:layout_marginTop="20dp">
+
+        <ImageView
+            android:id="@+id/image_hdr"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:onClick="onClickHDR"
+            android:src="@drawable/icon_hdr_on"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/image_timer"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/image_timer"
             android:layout_width="30dp"
             android:layout_height="30dp"
+            android:onClick="onClickTimer"
             android:src="@drawable/icon_timer"
-            android:layout_centerInParent="true"
-            android:onClick="onClickTimer"/>
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/image_grid"
+            app:layout_constraintStart_toEndOf="@id/image_hdr"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    </RelativeLayout>
+        <ImageView
+            android:id="@+id/image_grid"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:onClick="onClickGrid"
+            android:src="@drawable/icon_grid_on"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/image_filter"
+            app:layout_constraintStart_toEndOf="@+id/image_timer"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/image_filter"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:onClick="onClickFilter"
+            android:src="@drawable/icon_photo_filter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/image_grid"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
     <TextView
         android:id="@+id/text_timer"

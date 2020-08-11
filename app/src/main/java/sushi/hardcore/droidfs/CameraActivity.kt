@@ -11,6 +11,9 @@ import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.controls.Flash
+import com.otaliastudios.cameraview.controls.Grid
+import com.otaliastudios.cameraview.controls.Hdr
+import com.otaliastudios.cameraview.filter.Filters
 import kotlinx.android.synthetic.main.activity_camera.*
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
@@ -24,12 +27,16 @@ import java.util.*
 class CameraActivity : BaseActivity() {
     companion object {
         private val flashModes = listOf(Flash.AUTO, Flash.ON, Flash.OFF)
+        private val gridTitles = listOf(R.string.grid_none, R.string.grid_3x3, R.string.grid_4x4)
+        private val gridValues = listOf(Grid.OFF, Grid.DRAW_3X3, Grid.DRAW_4X4)
+        private val filterNames = Filters.values().map { it.toString().toLowerCase(Locale.ROOT).replace("_", " ").capitalize() as CharSequence }.toTypedArray()
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
         private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss")
         private val random = Random()
     }
     private var currentFlashModeIndex = 0
+    private var currentFilterIndex = 0
     private var timerDuration = 0
         set(value) {
             field = value
@@ -68,6 +75,14 @@ class CameraActivity : BaseActivity() {
         take_photo_button.onClick = ::onClickTakePhoto
     }
 
+    private fun takePhoto() {
+        if (currentFilterIndex != 0){
+            camera.takePictureSnapshot()
+        } else {
+            camera.takePicture()
+        }
+    }
+
     private fun onClickTakePhoto() {
         val baseName = "IMG_"+dateFormat.format(Date())+"_"
         do {
@@ -81,12 +96,12 @@ class CameraActivity : BaseActivity() {
                     Thread.sleep(1000)
                 }
                 runOnUiThread {
-                    camera.takePicture()
+                    takePhoto()
                     text_timer.visibility = View.GONE
                 }
             }.start()
         } else {
-            camera.takePicture()
+            takePhoto()
         }
     }
 
@@ -113,13 +128,26 @@ class CameraActivity : BaseActivity() {
         }
     }
 
+    fun onClickHDR(view: View) {
+        camera.hdr = when (camera.hdr){
+            Hdr.ON -> {
+                image_hdr.setImageResource(R.drawable.icon_hdr_off)
+                Hdr.OFF
+            }
+            Hdr.OFF -> {
+                image_hdr.setImageResource(R.drawable.icon_hdr_on)
+                Hdr.ON
+            }
+        }
+    }
+
     fun onClickTimer(view: View) {
         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
         dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
         val dialog = ColoredAlertDialogBuilder(this)
             .setView(dialogEditTextView)
-            .setTitle("Enter the timer duration (in s)")
+            .setTitle(getString(R.string.enter_timer_duration))
             .setPositiveButton(R.string.ok) { _, _ ->
                 timerDuration = dialogEditText.text.toString().toInt()
             }
@@ -132,6 +160,29 @@ class CameraActivity : BaseActivity() {
         }
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         dialog.show()
+    }
+
+    fun onClickGrid(view: View) {
+        ColoredAlertDialogBuilder(this)
+            .setTitle(getString(R.string.choose_grid))
+            .setSingleChoiceItems(gridTitles.map { getString(it) as CharSequence }.toTypedArray(), gridValues.indexOf(camera.grid)){ dialog, which ->
+                camera.grid = gridValues[which]
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
+    fun onClickFilter(view: View) {
+        ColoredAlertDialogBuilder(this)
+            .setTitle(getString(R.string.choose_filter))
+            .setSingleChoiceItems(filterNames, currentFilterIndex){ dialog, which ->
+                camera.filter = Filters.values()[which].newInstance()
+                currentFilterIndex = which
+                dialog.dismiss()
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
     }
 
     override fun onDestroy() {

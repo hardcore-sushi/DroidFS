@@ -10,7 +10,7 @@ object MiscUtils {
     }
     fun decrementIndex(index: Int, list: List<Any>): Int {
         var i = index-1
-        if (i <= 0){
+        if (i < 0){
             i = list.size-1
         }
         return i

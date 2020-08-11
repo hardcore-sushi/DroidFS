@@ -20,7 +20,7 @@
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CameraActivity"/>
+        <activity android:name=".CameraActivity" android:screenOrientation="nosensor"/>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"

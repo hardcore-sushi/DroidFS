@@ -65,6 +65,7 @@ class ImageViewer: FileViewerActivity() {
                             for ((i, e) in mappedImages.withIndex()){
                                 if (filePath == e.fullPath){
                                     currentMappedImageIndex = i
+                                    break
                                 }
                             }
                             wasMapped = true

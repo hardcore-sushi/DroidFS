@@ -155,4 +155,10 @@
     <string name="move_failed">Move of %s failed.</string>
     <string name="move_success_msg">The selected items have been successfully moved.</string>
     <string name="move_success">Move successful !</string>
+    <string name="enter_timer_duration">Enter the timer duration (in s)</string>
+    <string name="grid_none">None</string>
+    <string name="grid_3x3">3x3</string>
+    <string name="grid_4x4">4x4</string>
+    <string name="choose_grid">Choose grid</string>
+    <string name="choose_filter">Choose filter</string>
 </resources>

@@ -141,7 +141,6 @@ open class BaseExplorerActivity : BaseActivity() {
                             }
                             .setTitle(getString(R.string.open_as))
                             .setNegativeButton(R.string.cancel, null)
-                            .create()
                             .show()
                     }
                 }
@@ -180,9 +179,18 @@ open class BaseExplorerActivity : BaseActivity() {
         current_path_text.text = getString(R.string.location, currentDirectoryPath)
         Thread{
             var totalSize: Long = 0
-            for (e in gocryptfsVolume.recursiveMapFiles(currentDirectoryPath)){
-                if (e.isRegularFile){
-                    totalSize += e.size
+            for (element in explorerElements){
+                if (element.isDirectory){
+                    var dirSize: Long = 0
+                    for (subFile in gocryptfsVolume.recursiveMapFiles(element.fullPath)){
+                        if (subFile.isRegularFile){
+                            dirSize += subFile.size
+                        }
+                    }
+                    element.size = dirSize
+                    totalSize += dirSize
+                } else if (element.isRegularFile) {
+                    totalSize += element.size
                 }
             }
             total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))

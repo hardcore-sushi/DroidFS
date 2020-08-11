@@ -12,15 +12,15 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.ConstValues.Companion.getAssociatedDrawable
-import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ThemeColor
 import java.text.DateFormat
 import java.util.*
 
 class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
-    private val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, context.resources.configuration.locale)
+    private val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     private lateinit var explorerElements: List<ExplorerElement>
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     val selectedItems: MutableList<Int> = ArrayList()
@@ -44,7 +44,11 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
         textElementName.text = currentElement.name
         val textElementMtime = view.findViewById<TextView>(R.id.text_element_mtime)
         val textElementSize = view.findViewById<TextView>(R.id.text_element_size)
-        textElementSize.text = ""
+        if (!currentElement.isParentFolder){
+            textElementSize.text = PathUtils.formatSize(currentElement.size)
+        } else {
+            textElementSize.text = ""
+        }
         var drawableId = R.drawable.icon_folder
         when {
             currentElement.isDirectory -> {
@@ -55,12 +59,11 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
             }
             else -> {
                 textElementMtime.text = dateFormat.format(currentElement.mTime)
-                textElementSize.text = PathUtils.formatSize(currentElement.size)
                 drawableId = getAssociatedDrawable(currentElement.name)
             }
         }
         val elementIcon = view.findViewById<ImageView>(R.id.icon_element)
-        val icon = context.getDrawable(drawableId)
+        val icon = ContextCompat.getDrawable(context, drawableId)
         icon?.colorFilter = PorterDuffColorFilter(themeColor, PorterDuff.Mode.SRC_IN)
         elementIcon.setImageDrawable(icon)
         if (selectedItems.contains(position)) {

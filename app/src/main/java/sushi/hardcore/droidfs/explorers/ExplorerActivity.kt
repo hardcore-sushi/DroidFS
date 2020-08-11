@@ -129,7 +129,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
                 .setTitle(getString(R.string.fab_dialog_title))
                 .setNegativeButton(R.string.cancel, null)
-                .create()
                 .show()
         }
     }
