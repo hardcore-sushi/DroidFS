@@ -36,10 +36,22 @@ Decrypt and share file with other apps. This require writing the plain file to d
 #### Allow saving password hash using fingerprint:
 Generate an AES-256 GCM key in the Android Keystore (protected by fingerprint authentication), then use it to encrypt the volume password hash and store it to the DroidFS internal storage. This require Android v6.0+
 
+# Permissions
+DroidFS need some permissions to work properly. Here is why:
+
+#### Read & write access to shared storage:
+Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
+
+#### Biometric/Fingerprint hardware:
+Required to encrypt/decrypt password hashes using a fingerprint protected key.
+
+#### Camera:
+Needed to take photos directly from DroidFS to import them securely.
+
 # Download
 You can download the latest version [here](https://github.com/hardcore-sushi/DroidFS/releases).
 
-# Build 
+# Build
 Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
 
 #### Install Requirements
