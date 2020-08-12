@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs
 
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.text.InputType
@@ -41,9 +42,9 @@ class CameraActivity : BaseActivity() {
         set(value) {
             field = value
             if (value > 0){
-                image_timer.setColorFilter(Color.GREEN)
+                image_timer.setImageResource(R.drawable.icon_timer_on)
             } else {
-                image_timer.clearColorFilter()
+                image_timer.setImageResource(R.drawable.icon_timer_off)
             }
         }
     private lateinit var gocryptfsVolume: GocryptfsVolume
@@ -149,7 +150,12 @@ class CameraActivity : BaseActivity() {
             .setView(dialogEditTextView)
             .setTitle(getString(R.string.enter_timer_duration))
             .setPositiveButton(R.string.ok) { _, _ ->
-                timerDuration = dialogEditText.text.toString().toInt()
+                val enteredValue = dialogEditText.text.toString()
+                if (enteredValue.isEmpty()){
+                    Toast.makeText(this, getString(R.string.timer_empty_error_msg), Toast.LENGTH_SHORT).show()
+                } else {
+                    timerDuration = enteredValue.toInt()
+                }
             }
             .setNegativeButton(R.string.cancel, null)
             .create()
@@ -167,13 +173,14 @@ class CameraActivity : BaseActivity() {
             .setTitle(getString(R.string.choose_grid))
             .setSingleChoiceItems(gridTitles.map { getString(it) as CharSequence }.toTypedArray(), gridValues.indexOf(camera.grid)){ dialog, which ->
                 camera.grid = gridValues[which]
+                image_grid.setImageResource(if (camera.grid == Grid.OFF){ R.drawable.icon_grid_off } else { R.drawable.icon_grid_on })
                 dialog.dismiss()
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
-    fun onClickFilter(view: View) {
+    private fun openFilterDialog(){
         ColoredAlertDialogBuilder(this)
             .setTitle(getString(R.string.choose_filter))
             .setSingleChoiceItems(filterNames, currentFilterIndex){ dialog, which ->
@@ -183,6 +190,22 @@ class CameraActivity : BaseActivity() {
             }
             .setNegativeButton(R.string.cancel, null)
             .show()
+    }
+
+    fun onClickFilter(view: View) {
+        if (sharedPrefs.getBoolean("filtersFirstOpening", true)){
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.filters_warning)
+                .setPositiveButton(R.string.ok){ _, _ ->
+                    sharedPrefs.edit().putBoolean("filtersFirstOpening", false).apply()
+                    openFilterDialog()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        } else {
+            openFilterDialog()
+        }
     }
 
     override fun onDestroy() {

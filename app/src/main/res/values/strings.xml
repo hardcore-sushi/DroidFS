@@ -161,4 +161,6 @@
     <string name="grid_4x4">4x4</string>
     <string name="choose_grid">Choose grid</string>
     <string name="choose_filter">Choose filter</string>
+    <string name="filters_warning">Filters can only be applied to reduced quality images. If you want to take high definition photos, do not apply any filters.</string>
+    <string name="timer_empty_error_msg">Please enter a numeric value</string>
 </resources>

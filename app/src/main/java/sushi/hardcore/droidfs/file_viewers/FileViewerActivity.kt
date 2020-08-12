@@ -69,7 +69,7 @@ abstract class FileViewerActivity: BaseActivity() {
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.ok)) { _, _ -> goBackToExplorer() }
+                    .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
                     .show()
             }
 

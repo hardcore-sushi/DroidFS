@@ -194,6 +194,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 }
             }
             total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+            explorerAdapter.notifyDataSetChanged()
         }.start()
     }
 

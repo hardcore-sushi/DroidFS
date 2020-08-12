@@ -211,7 +211,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                             }
                                         }
                                     }
-                                    .setNegativeButton(getString(R.string.no), null)
+                                    .setNegativeButton(R.string.no, null)
                                     .show()
                             }
                         }

@@ -34,7 +34,7 @@ class TextEditor: FileViewerActivity() {
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.ok)) { _, _ -> goBackToExplorer()}
+                    .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
                     .show()
             }
         }
@@ -101,12 +101,12 @@ class TextEditor: FileViewerActivity() {
             ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save)
-                .setPositiveButton(getString(R.string.save)) { _, _ ->
+                .setPositiveButton(R.string.save) { _, _ ->
                     if (save()){
                         goBackToExplorer()
                     }
                 }
-                .setNegativeButton(getString(R.string.discard)){ _, _ -> goBackToExplorer()}
+                .setNegativeButton(R.string.discard){ _, _ -> goBackToExplorer()}
                 .show()
         } else {
             goBackToExplorer()

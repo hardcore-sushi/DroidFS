@@ -43,7 +43,7 @@ class MainActivity : BaseActivity() {
                     .setTitle(R.string.warning)
                     .setMessage(R.string.usf_home_warning_msg)
                     .setCancelable(false)
-                    .setPositiveButton(getString(R.string.see_unsafe_features)){ _, _ ->
+                    .setPositiveButton(R.string.see_unsafe_features){ _, _ ->
                         val intent = Intent(this, SettingsActivity::class.java)
                         intent.putExtra("screen", "UnsafeFeaturesSettingsFragment")
                         startActivity(intent)
