@@ -27,30 +27,11 @@ class MainActivity : BaseActivity() {
                     ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
+            } else {
+                if (checkStorageAvailability()){
+                    checkFirstOpening()
+                }
             }
-        }
-        val state = Environment.getExternalStorageState()
-        val storageAvailable = Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state
-        if (!storageAvailable) {
-            ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.storage_unavailable)
-                    .setMessage(R.string.storage_unavailable_msg)
-                    .setPositiveButton(R.string.ok
-                    ) { _, _ -> finish() }.show()
-        }
-        if (!sharedPrefs.getBoolean("alreadyLaunched", false)){
-            ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.usf_home_warning_msg)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.see_unsafe_features){ _, _ ->
-                        val intent = Intent(this, SettingsActivity::class.java)
-                        intent.putExtra("screen", "UnsafeFeaturesSettingsFragment")
-                        startActivity(intent)
-                    }
-                    .setNegativeButton(R.string.ok, null)
-                    .setOnDismissListener { sharedPrefs.edit().putBoolean("alreadyLaunched", true).apply() }
-                    .show()
         }
         val metrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(metrics)
@@ -58,15 +39,50 @@ class MainActivity : BaseActivity() {
         Glide.with(this).load(R.drawable.logo).into(image_logo)
     }
 
+    private fun checkStorageAvailability(): Boolean {
+        val state = Environment.getExternalStorageState()
+        val storageAvailable = Environment.MEDIA_MOUNTED == state || Environment.MEDIA_MOUNTED_READ_ONLY == state
+        return if (!storageAvailable) {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.storage_unavailable)
+                .setMessage(R.string.storage_unavailable_msg)
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
+            false
+        } else {
+            true
+        }
+    }
+
+    private fun checkFirstOpening() {
+        if (sharedPrefs.getBoolean("applicationFirstOpening", true)){
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.usf_home_warning_msg)
+                .setCancelable(false)
+                .setPositiveButton(R.string.see_unsafe_features){ _, _ ->
+                    val intent = Intent(this, SettingsActivity::class.java)
+                    intent.putExtra("screen", "UnsafeFeaturesSettingsFragment")
+                    startActivity(intent)
+                }
+                .setNegativeButton(R.string.ok, null)
+                .setOnDismissListener { sharedPrefs.edit().putBoolean("applicationFirstOpening", false).apply() }
+                .show()
+        }
+    }
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         when (requestCode) {
             STORAGE_PERMISSIONS_REQUEST -> if (grantResults.size == 2) {
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
                     ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.storage_perm_denied)
-                            .setMessage(R.string.storage_perm_denied_msg)
-                            .setPositiveButton(R.string.ok
-                            ) { _, _ -> finish() }.show()
+                         .setTitle(R.string.storage_perm_denied)
+                         .setMessage(R.string.storage_perm_denied_msg)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
+                } else {
+                    checkStorageAvailability()
+                    checkFirstOpening()
                 }
             }
         }

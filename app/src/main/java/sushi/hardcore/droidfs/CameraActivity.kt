@@ -1,13 +1,14 @@
 package sushi.hardcore.droidfs
 
-import android.content.Intent
-import android.graphics.Color
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import com.otaliastudios.cameraview.CameraListener
 import com.otaliastudios.cameraview.PictureResult
 import com.otaliastudios.cameraview.controls.Facing
@@ -216,9 +217,18 @@ class CameraActivity : BaseActivity() {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        if (!isFinishing){
+            finish()
+        }
+    }
+
     override fun onPause() {
         super.onPause()
-        finish()
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){ //if not asking for permission
+            finish()
+        }
     }
 
     override fun onBackPressed() {
