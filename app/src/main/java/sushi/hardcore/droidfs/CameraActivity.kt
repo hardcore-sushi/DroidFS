@@ -15,7 +15,6 @@ import com.otaliastudios.cameraview.controls.Facing
 import com.otaliastudios.cameraview.controls.Flash
 import com.otaliastudios.cameraview.controls.Grid
 import com.otaliastudios.cameraview.controls.Hdr
-import com.otaliastudios.cameraview.filter.Filters
 import kotlinx.android.synthetic.main.activity_camera.*
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
@@ -31,14 +30,12 @@ class CameraActivity : BaseActivity() {
         private val flashModes = listOf(Flash.AUTO, Flash.ON, Flash.OFF)
         private val gridTitles = listOf(R.string.grid_none, R.string.grid_3x3, R.string.grid_4x4)
         private val gridValues = listOf(Grid.OFF, Grid.DRAW_3X3, Grid.DRAW_4X4)
-        private val filterNames = Filters.values().map { it.toString().toLowerCase(Locale.ROOT).replace("_", " ").capitalize() as CharSequence }.toTypedArray()
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
         private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss")
         private val random = Random()
     }
     private var currentFlashModeIndex = 0
-    private var currentFilterIndex = 0
     private var timerDuration = 0
         set(value) {
             field = value
@@ -77,14 +74,6 @@ class CameraActivity : BaseActivity() {
         take_photo_button.onClick = ::onClickTakePhoto
     }
 
-    private fun takePhoto() {
-        if (currentFilterIndex != 0){
-            camera.takePictureSnapshot()
-        } else {
-            camera.takePicture()
-        }
-    }
-
     private fun onClickTakePhoto() {
         val baseName = "IMG_"+dateFormat.format(Date())+"_"
         do {
@@ -98,12 +87,12 @@ class CameraActivity : BaseActivity() {
                     Thread.sleep(1000)
                 }
                 runOnUiThread {
-                    takePhoto()
+                    camera.takePicture()
                     text_timer.visibility = View.GONE
                 }
             }.start()
         } else {
-            takePhoto()
+            camera.takePicture()
         }
     }
 
@@ -181,32 +170,9 @@ class CameraActivity : BaseActivity() {
             .show()
     }
 
-    private fun openFilterDialog(){
-        ColoredAlertDialogBuilder(this)
-            .setTitle(getString(R.string.choose_filter))
-            .setSingleChoiceItems(filterNames, currentFilterIndex){ dialog, which ->
-                camera.filter = Filters.values()[which].newInstance()
-                currentFilterIndex = which
-                dialog.dismiss()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
-    }
-
-    fun onClickFilter(view: View) {
-        if (sharedPrefs.getBoolean("filtersFirstOpening", true)){
-            ColoredAlertDialogBuilder(this)
-                .setTitle(R.string.warning)
-                .setMessage(R.string.filters_warning)
-                .setPositiveButton(R.string.ok){ _, _ ->
-                    sharedPrefs.edit().putBoolean("filtersFirstOpening", false).apply()
-                    openFilterDialog()
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        } else {
-            openFilterDialog()
-        }
+    fun onClickClose(view: View) {
+        isFinishingIntentionally = true
+        finish()
     }
 
     override fun onDestroy() {

@@ -51,16 +51,16 @@
             android:onClick="onClickGrid"
             android:src="@drawable/icon_grid_off"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/image_filter"
+            app:layout_constraintEnd_toStartOf="@+id/image_close"
             app:layout_constraintStart_toEndOf="@+id/image_timer"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/image_filter"
+            android:id="@+id/image_close"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:onClick="onClickFilter"
-            android:src="@drawable/icon_photo_filter"
+            android:onClick="onClickClose"
+            android:src="@drawable/icon_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/image_grid"

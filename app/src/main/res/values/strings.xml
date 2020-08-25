@@ -163,8 +163,6 @@
     <string name="grid_3x3">3x3</string>
     <string name="grid_4x4">4x4</string>
     <string name="choose_grid">Choose grid</string>
-    <string name="choose_filter">Choose filter</string>
-    <string name="filters_warning">Filters can only be applied to reduced quality images. If you want to take high definition photos, do not apply any filters.</string>
     <string name="timer_empty_error_msg">Please enter a numeric value</string>
     <string name="path_from_uri_null_error_msg">Failed to retrieve the selected path.</string>
     <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
