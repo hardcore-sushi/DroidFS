@@ -173,4 +173,5 @@
     <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. You will only have read-only access to this volume.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
     <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
+    <string name="slideshow_stopped">Slideshow stopped</string>
 </resources>

@@ -35,6 +35,13 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
 
     ScaleGestureDetector mScaleDetector;
 
+    public interface OnInteractionListener {
+        void onTouch(MotionEvent event);
+        void onSingleTap(MotionEvent event);
+    }
+
+    OnInteractionListener onInteractionListener = null;
+
     Context context;
 
     public ZoomableImageView(Context context) {
@@ -124,15 +131,28 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
         fixTrans();
     }
 
+    public void setOnInteractionListener(OnInteractionListener listener){
+        onInteractionListener = listener;
+    }
+
     @Override
     public boolean onSingleTapConfirmed(MotionEvent e) {
+        if (onInteractionListener != null){
+            onInteractionListener.onSingleTap(e);
+        }
         return false;
     }
 
     @Override
-    public boolean onDoubleTap(MotionEvent e) {
-        // Double tap is detected
+    public boolean dispatchTouchEvent(MotionEvent event) {
+        if (onInteractionListener != null){
+            onInteractionListener.onTouch(event);
+        }
+        return super.dispatchTouchEvent(event);
+    }
 
+    @Override
+    public boolean onDoubleTap(MotionEvent e) {
         if (saveScale >= maxScale) {
             restoreZoomNormal();
         } else {

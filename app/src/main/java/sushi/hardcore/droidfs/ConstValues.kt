@@ -11,6 +11,7 @@ class ConstValues {
         val fakeUri: Uri = Uri.parse("fakeuri://droidfs")
         const val MAX_KERNEL_WRITE = 128*1024
         const val wipe_passes = 2
+        const val slideshow_delay: Long = 4000
         private val fileExtensions = mapOf(
             Pair("image", listOf("png", "jpg", "jpeg")),
             Pair("video", listOf("mp4", "webm")),
