@@ -193,8 +193,8 @@ open class BaseExplorerActivity : BaseActivity() {
                     totalSize += element.size
                 }
             }
-            total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
             runOnUiThread {
+                total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
                 explorerAdapter.notifyDataSetChanged()
             }
         }.start()
