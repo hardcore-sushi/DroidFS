@@ -1,8 +1,11 @@
 <resources>
     <string name="app_name">DroidFS</string>
-    <string name="open_volume">OPEN A VOLUME</string>
-    <string name="create_volume">CREATE A VOLUME</string>
-    <string name="change_volume_password">CHANGE VOLUME PASSWORD</string>
+    <string name="open_volume">Open a volume</string>
+    <string name="create_volume">Create a volume</string>
+    <string name="change_volume_password">Change a volume\'s password</string>
+    <string name="open">Open</string>
+    <string name="create">Create</string>
+    <string name="change_password">Change password</string>
     <string name="password">Password:</string>
     <string name="password_confirm">Password (confirmation):</string>
     <string name="volume_path">Volume Path:</string>
@@ -163,4 +166,11 @@
     <string name="choose_filter">Choose filter</string>
     <string name="filters_warning">Filters can only be applied to reduced quality images. If you want to take high definition photos, do not apply any filters.</string>
     <string name="timer_empty_error_msg">Please enter a numeric value</string>
+    <string name="path_from_uri_null_error_msg">Failed to retrieve the selected path.</string>
+    <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
+    <string name="create_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please select a path on internal storage.</string>
+    <string name="open_on_sdcard_warning">DroidFS can\'t write on removable SD cards. You will only have read-only access to the volumes therein.</string>
+    <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. You will only have read-only access to this volume.</string>
+    <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
+    <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
 </resources>

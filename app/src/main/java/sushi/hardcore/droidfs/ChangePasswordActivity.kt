@@ -20,6 +20,7 @@ import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import java.io.File
 import java.util.*
 
 class ChangePasswordActivity : BaseActivity() {
@@ -80,9 +81,25 @@ class ChangePasswordActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data != null) {
-                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                    edit_volume_path.setText(path)
+                if (data?.data != null) {
+                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data)){
+                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
+                        if (path != null){
+                            edit_volume_path.setText(path)
+                        } else {
+                            ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.error)
+                                .setMessage(R.string.path_from_uri_null_error_msg)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                    } else {
+                        ColoredAlertDialogBuilder(this)
+                            .setTitle(R.string.warning)
+                            .setMessage(R.string.change_pwd_on_sdcard_error_msg)
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
                 }
             }
         }
@@ -93,37 +110,52 @@ class ChangePasswordActivity : BaseActivity() {
         if (rootCipherDir.isEmpty()) {
             Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
         } else {
-            changePassword(null)
+            if (!File(rootCipherDir).canWrite()){
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.warning)
+                    .setMessage(R.string.change_pwd_cant_write_error_msg)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else {
+                changePassword(null)
+            }
         }
     }
 
     private fun changePassword(givenHash: ByteArray?){
-        object : LoadingTask(this, R.string.loading_msg_change_password){
-            override fun doTask(activity: AppCompatActivity) {
-                val newPassword = edit_new_password.text.toString().toCharArray()
-                val newPasswordConfirm = edit_new_password_confirm.text.toString().toCharArray()
-                if (!newPassword.contentEquals(newPasswordConfirm)) {
-                    stopTaskWithToast(R.string.passwords_mismatch)
-                } else {
+        val newPassword = edit_new_password.text.toString().toCharArray()
+        val newPasswordConfirm = edit_new_password_confirm.text.toString().toCharArray()
+        if (!newPassword.contentEquals(newPasswordConfirm)) {
+            Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
+        } else {
+            object : LoadingTask(this, R.string.loading_msg_change_password) {
+                override fun doTask(activity: AppCompatActivity) {
                     val oldPassword = edit_old_password.text.toString().toCharArray()
                     var returnedHash: ByteArray? = null
-                    if (usf_fingerprint && checkbox_save_password.isChecked){
+                    if (usf_fingerprint && checkbox_save_password.isChecked) {
                         returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                     }
                     var changePasswordImmediately = true
-                    if (givenHash == null){
+                    if (givenHash == null) {
                         val cipherText = sharedPrefs.getString(rootCipherDir, null)
-                        if (cipherText != null){ //password hash saved
+                        if (cipherText != null) { //password hash saved
                             stopTask {
                                 fingerprintPasswordHashSaver.decrypt(cipherText, rootCipherDir, ::changePassword)
                             }
                             changePasswordImmediately = false
                         }
                     }
-                    if (changePasswordImmediately){
-                        if (GocryptfsVolume.changePassword(rootCipherDir, oldPassword, givenHash, newPassword, returnedHash)) {
+                    if (changePasswordImmediately) {
+                        if (GocryptfsVolume.changePassword(
+                                rootCipherDir,
+                                oldPassword,
+                                givenHash,
+                                newPassword,
+                                returnedHash
+                            )
+                        ) {
                             val editor = sharedPrefs.edit()
-                            if (sharedPrefs.getString(rootCipherDir, null) != null){
+                            if (sharedPrefs.getString(rootCipherDir, null) != null) {
                                 editor.remove(rootCipherDir)
                                 editor.apply()
                             }
@@ -133,17 +165,20 @@ class ChangePasswordActivity : BaseActivity() {
                                 val newSavedVolumesPaths = oldSavedVolumesPaths.toMutableList()
                                 if (!oldSavedVolumesPaths.contains(rootCipherDir)) {
                                     newSavedVolumesPaths.add(rootCipherDir)
-                                    editor.putStringSet(ConstValues.saved_volumes_key, newSavedVolumesPaths.toSet())
+                                    editor.putStringSet(
+                                        ConstValues.saved_volumes_key,
+                                        newSavedVolumesPaths.toSet()
+                                    )
                                     editor.apply()
                                 }
-                                if (checkbox_save_password.isChecked && returnedHash != null){
-                                    fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
+                                if (checkbox_save_password.isChecked && returnedHash != null) {
+                                    fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
                                         stopTask { onPasswordChanged() }
                                     }
                                     continueImmediately = false
                                 }
                             }
-                            if (continueImmediately){
+                            if (continueImmediately) {
                                 stopTask { onPasswordChanged() }
                             }
                         } else {
@@ -158,8 +193,10 @@ class ChangePasswordActivity : BaseActivity() {
                     }
                     Arrays.fill(oldPassword, 0.toChar())
                 }
-                Arrays.fill(newPassword, 0.toChar())
-                Arrays.fill(newPasswordConfirm, 0.toChar())
+                override fun doFinally(activity: AppCompatActivity) {
+                    Arrays.fill(newPassword, 0.toChar())
+                    Arrays.fill(newPasswordConfirm, 0.toChar())
+                }
             }
         }
     }

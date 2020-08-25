@@ -114,7 +114,7 @@
                 android:layout_height="@dimen/action_activity_button_height"
                 android:layout_marginHorizontal="@dimen/action_activity_button_horizontal_margin"
                 android:onClick="onClickCreate"
-                android:text="@string/create_volume"
+                android:text="@string/create"
                 style="@style/button"/>
 
         </LinearLayout>

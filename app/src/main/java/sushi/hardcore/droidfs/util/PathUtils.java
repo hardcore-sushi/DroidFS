@@ -6,7 +6,9 @@ import android.net.Uri;
 import android.os.storage.StorageManager;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
+
 import androidx.annotation.Nullable;
+
 import java.io.File;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -81,24 +83,35 @@ public class PathUtils {
         return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups))+" "+units[digitGroups];
     }
 
+    public static Boolean isTreeUriOnPrimaryStorage(Uri treeUri){
+        String volumeId = getVolumeIdFromTreeUri(treeUri);
+        if (volumeId != null) {
+            return volumeId.equals(PRIMARY_VOLUME_NAME) || volumeId.equals("home") || volumeId.equals("downloads");
+        } else {
+            return false;
+        }
+    }
+
     private static final String PRIMARY_VOLUME_NAME = "primary";
     @Nullable
-    public static String getFullPathFromTreeUri(@Nullable final Uri treeUri, Context con) {
+    public static String getFullPathFromTreeUri(@Nullable Uri treeUri, Context context) {
         if (treeUri == null) return null;
-        String volumePath = getVolumePath(getVolumeIdFromTreeUri(treeUri),con);
-        if (volumePath == null) return File.separator;
-        if (volumePath.endsWith(File.separator))
-            volumePath = volumePath.substring(0, volumePath.length() - 1);
-        String documentPath = getDocumentPathFromTreeUri(treeUri);
-        if (documentPath.endsWith(File.separator))
-            documentPath = documentPath.substring(0, documentPath.length() - 1);
-        if (documentPath.length() > 0) {
-            if (documentPath.startsWith(File.separator))
-                return volumePath + documentPath;
-            else
-                return volumePath + File.separator + documentPath;
+        if ("content".equalsIgnoreCase(treeUri.getScheme())) {
+            String volumePath = getVolumePath(getVolumeIdFromTreeUri(treeUri),context);
+            if (volumePath == null) return null;
+            if (volumePath.endsWith(File.separator))
+                volumePath = volumePath.substring(0, volumePath.length() - 1);
+            String documentPath = getDocumentPathFromTreeUri(treeUri);
+            if (documentPath.endsWith(File.separator))
+                documentPath = documentPath.substring(0, documentPath.length() - 1);
+            if (documentPath.length() > 0) {
+                return path_join(volumePath, documentPath);
+            }
+            else return volumePath;
+        } else if ("file".equalsIgnoreCase(treeUri.getScheme())) {
+            return treeUri.getPath();
         }
-        else return volumePath;
+        return null;
     }
 
     private static String getVolumePath(final String volumeId, Context context) {
@@ -117,7 +130,6 @@ public class PathUtils {
                 Object storageVolumeElement = Array.get(result, i);
                 String uuid = (String) getUuid.invoke(storageVolumeElement);
                 Boolean primary = (Boolean) isPrimary.invoke(storageVolumeElement);
-
                 if (primary && PRIMARY_VOLUME_NAME.equals(volumeId))
                     return (String) getPath.invoke(storageVolumeElement);
                 if (uuid != null && uuid.equals(volumeId))

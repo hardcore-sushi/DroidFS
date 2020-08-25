@@ -7,8 +7,16 @@ import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_change_password.*
+import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.activity_open.*
+import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
+import kotlinx.android.synthetic.main.activity_open.checkbox_save_password
+import kotlinx.android.synthetic.main.activity_open.edit_password
+import kotlinx.android.synthetic.main.activity_open.edit_volume_path
+import kotlinx.android.synthetic.main.activity_open.saved_path_listview
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
@@ -82,52 +90,81 @@ class OpenActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data != null) {
-                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                    edit_volume_path.setText(path)
+                if (data?.data != null) {
+                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data)){
+                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
+                        if (path != null){
+                            edit_volume_path.setText(path)
+                        } else {
+                            ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.error)
+                                .setMessage(R.string.path_from_uri_null_error_msg)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                    } else {
+                        ColoredAlertDialogBuilder(this)
+                            .setTitle(R.string.warning)
+                            .setMessage(R.string.open_on_sdcard_warning)
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
                 }
             }
         }
     }
 
     fun onClickOpen(view: View?) {
+        rootCipherDir = edit_volume_path.text.toString()
+        if (rootCipherDir.isEmpty()) {
+            Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
+        } else {
+            if (!File(rootCipherDir).canWrite()){
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.warning)
+                    .setMessage(R.string.open_cant_write_warning)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
+                    .show()
+            } else {
+                openVolume()
+            }
+        }
+    }
+
+    private fun openVolume(){
         object : LoadingTask(this, R.string.loading_msg_open){
             override fun doTask(activity: AppCompatActivity) {
-                rootCipherDir = edit_volume_path.text.toString() //fresh get in case of manual rewrite
-                if (rootCipherDir.isEmpty()) {
-                    stopTaskWithToast(R.string.enter_volume_path)
-                } else {
-                    val password = edit_password.text.toString().toCharArray()
-                    var returnedHash: ByteArray? = null
-                    if (usf_fingerprint && checkbox_save_password.isChecked){
-                        returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                    }
-                    sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
-                    if (sessionID != -1) {
-                        var startExplorerImmediately = true
-                        if (checkbox_remember_path.isChecked) {
-                            savedVolumesAdapter.addVolumePath(rootCipherDir)
-                            if (checkbox_save_password.isChecked && returnedHash != null){
-                                fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
-                                    stopTask { startExplorer() }
-                                }
-                                startExplorerImmediately = false
-                            }
-                        }
-                        if (startExplorerImmediately){
-                            stopTask { startExplorer() }
-                        }
-                    } else {
-                        stopTask {
-                            ColoredAlertDialogBuilder(activity)
-                                .setTitle(R.string.open_volume_failed)
-                                .setMessage(R.string.open_volume_failed_msg)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                    }
-                    Arrays.fill(password, 0.toChar())
+                val password = edit_password.text.toString().toCharArray()
+                var returnedHash: ByteArray? = null
+                if (usf_fingerprint && checkbox_save_password.isChecked){
+                    returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
+                sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
+                if (sessionID != -1) {
+                    var startExplorerImmediately = true
+                    if (checkbox_remember_path.isChecked) {
+                        savedVolumesAdapter.addVolumePath(rootCipherDir)
+                        if (checkbox_save_password.isChecked && returnedHash != null){
+                            fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
+                                stopTask { startExplorer() }
+                            }
+                            startExplorerImmediately = false
+                        }
+                    }
+                    if (startExplorerImmediately){
+                        stopTask { startExplorer() }
+                    }
+                } else {
+                    stopTask {
+                        ColoredAlertDialogBuilder(activity)
+                            .setTitle(R.string.open_volume_failed)
+                            .setMessage(R.string.open_volume_failed_msg)
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
+                }
+                Arrays.fill(password, 0.toChar())
             }
         }
     }

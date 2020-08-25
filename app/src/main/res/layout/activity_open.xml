@@ -102,7 +102,7 @@
                 android:layout_marginHorizontal="@dimen/action_activity_button_horizontal_margin"
                 android:layout_marginBottom="@dimen/action_activity_button_margin_bottom"
                 android:onClick="onClickOpen"
-                android:text="@string/open_volume"
+                android:text="@string/open"
                 style="@style/button"/>
 
         </LinearLayout>
