@@ -15,6 +15,7 @@
         app:cameraAutoFocusMarker="@string/cameraview_default_autofocus_marker"
         app:cameraHdr="on"
         app:cameraPictureFormat="jpeg"
+        app:cameraPlaySounds="false"
         app:cameraAudio="off"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout

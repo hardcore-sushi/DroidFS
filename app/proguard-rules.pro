@@ -19,3 +19,10 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-keepattributes InnerClasses
+-keep class sushi.hardcore.droidfs.SettingsActivity$** {
+    *;
+}
+-keep class sushi.hardcore.droidfs.explorers.ExplorerElement
+-keep class com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
