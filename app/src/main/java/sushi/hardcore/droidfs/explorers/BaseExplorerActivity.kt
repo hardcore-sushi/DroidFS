@@ -144,10 +144,9 @@ open class BaseExplorerActivity : BaseActivity() {
                             .show()
                     }
                 }
-            } else {
-                invalidateOptionsMenu()
             }
         }
+        invalidateOptionsMenu()
     }
 
     protected open fun onExplorerItemLongClick(position: Int) {
@@ -425,8 +424,12 @@ open class BaseExplorerActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
-        if (!isChangingConfigurations && !isStartingActivity){
-            finish()
+        if (!isChangingConfigurations){
+            if (isStartingActivity){
+                isStartingActivity = false
+            } else {
+                finish()
+            }
         }
     }
 

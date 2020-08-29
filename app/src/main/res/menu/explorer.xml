@@ -32,7 +32,7 @@
         app:showAsAction="ifRoom"
         android:visible="false"
         android:icon="@drawable/icon_decrypt"
-        android:title="@string/decrypt"/>
+        android:title="@string/decrypt_files"/>
 
     <item
         android:id="@+id/share"

@@ -37,6 +37,7 @@ class OpenActivity : BaseActivity() {
     private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
     private lateinit var rootCipherDir: String
     private var sessionID = -1
+    private var isStartingActivity = false
     private var isFinishingIntentionally = false
     private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,6 +84,7 @@ class OpenActivity : BaseActivity() {
 
     fun pickDirectory(view: View?) {
         val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+        isStartingActivity = true
         startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
     }
 
@@ -237,7 +239,11 @@ class OpenActivity : BaseActivity() {
     override fun onPause() {
         super.onPause()
         if (intent.action == "pick"){
-            finish()
+            if (isStartingActivity){
+                isStartingActivity = false
+            } else {
+                finish()
+            }
         }
         if (::fingerprintPasswordHashSaver.isInitialized && fingerprintPasswordHashSaver.isListening){
             fingerprintPasswordHashSaver.stopListening()

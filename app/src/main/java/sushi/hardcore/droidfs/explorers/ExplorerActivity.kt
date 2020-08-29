@@ -11,6 +11,7 @@ import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
@@ -225,35 +226,38 @@ class ExplorerActivity : BaseExplorerActivity() {
             if (resultCode == Activity.RESULT_OK && data != null) {
                 object : LoadingTask(this, R.string.loading_msg_export){
                     override fun doTask(activity: AppCompatActivity) {
-                        val uri = data.data
-                        val outputDir = PathUtils.getFullPathFromTreeUri(uri, activity)
-                        var failedItem: String? = null
-                        for (i in explorerAdapter.selectedItems) {
-                            val element = explorerAdapter.getItem(i)
-                            val fullPath = PathUtils.path_join(currentDirectoryPath, element.name)
-                            failedItem = if (element.isDirectory) {
-                                recursiveExportDirectory(fullPath, outputDir)
-                            } else {
-                                if (gocryptfsVolume.exportFile(fullPath, PathUtils.path_join(outputDir, element.name))) null else fullPath
-                            }
-                            if (failedItem != null) {
-                                stopTask {
-                                    ColoredAlertDialogBuilder(activity)
-                                        .setTitle(R.string.error)
-                                        .setMessage(getString(R.string.export_failed, failedItem))
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
+                        data.data?.let {uri ->
+                            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                            DocumentFile.fromTreeUri(activity, uri)?.let { treeDocumentFile ->
+                                var failedItem: String? = null
+                                for (i in explorerAdapter.selectedItems) {
+                                    val element = explorerAdapter.getItem(i)
+                                    val fullPath = PathUtils.path_join(currentDirectoryPath, element.name)
+                                    failedItem = if (element.isDirectory) {
+                                        recursiveExportDirectory(fullPath, treeDocumentFile)
+                                    } else {
+                                        if (exportFileInto(fullPath, treeDocumentFile)) null else fullPath
+                                    }
+                                    if (failedItem != null) {
+                                        stopTask {
+                                            ColoredAlertDialogBuilder(activity)
+                                                .setTitle(R.string.error)
+                                                .setMessage(getString(R.string.export_failed, failedItem))
+                                                .setPositiveButton(R.string.ok, null)
+                                                .show()
+                                        }
+                                        break
+                                    }
                                 }
-                                break
-                            }
-                        }
-                        if (failedItem == null) {
-                            stopTask {
-                                ColoredAlertDialogBuilder(activity)
-                                    .setTitle(R.string.success_export)
-                                    .setMessage(R.string.success_export_msg)
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
+                                if (failedItem == null) {
+                                    stopTask {
+                                        ColoredAlertDialogBuilder(activity)
+                                            .setTitle(R.string.success_export)
+                                            .setMessage(R.string.success_export_msg)
+                                            .setPositiveButton(R.string.ok, null)
+                                            .show()
+                                    }
+                                }
                             }
                         }
                     }
@@ -631,7 +635,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, outputPath: String): String? {
-        val mappedElements = gocryptfsVolume.recursiveMapFiles(remote_directory_path)
+        val mappedElements = remote_gocryptfsVolume.recursiveMapFiles(remote_directory_path)
         val dstDirectoryPath = checkPathOverwrite(PathUtils.path_join(outputPath, File(remote_directory_path).name), true)
         if (dstDirectoryPath == null){
             return ""
@@ -663,23 +667,34 @@ class ExplorerActivity : BaseExplorerActivity() {
         return null
     }
 
-    private fun recursiveExportDirectory(plain_directory_path: String, output_dir: String?): String? {
-        if (File(PathUtils.path_join(output_dir, plain_directory_path)).mkdir()) {
+    private fun exportFileInto(srcPath: String, treeDocumentFile: DocumentFile): Boolean {
+        val outputStream = treeDocumentFile.createFile("*/*", File(srcPath).name)?.uri?.let {
+            contentResolver.openOutputStream(it)
+        }
+        return if (outputStream != null){
+            gocryptfsVolume.exportFile(srcPath, outputStream)
+        } else {
+            false
+        }
+    }
+
+    private fun recursiveExportDirectory(plain_directory_path: String, treeDocumentFile: DocumentFile): String? {
+        treeDocumentFile.createDirectory(plain_directory_path)?.let {childTree ->
             val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
             for (e in explorerElements) {
                 val fullPath = PathUtils.path_join(plain_directory_path, e.name)
                 if (e.isDirectory) {
-                    val failedItem = recursiveExportDirectory(fullPath, output_dir)
+                    val failedItem = recursiveExportDirectory(fullPath, childTree)
                     failedItem?.let { return it }
                 } else {
-                    if (!gocryptfsVolume.exportFile(fullPath, PathUtils.path_join(output_dir, fullPath))) {
+                    if (!exportFileInto(fullPath, childTree)){
                         return fullPath
                     }
                 }
             }
             return null
         }
-        return output_dir
+        return treeDocumentFile.name
     }
 
     private fun recursiveRemoveDirectory(plain_directory_path: String): String? {
