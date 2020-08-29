@@ -1,16 +1,14 @@
 package sushi.hardcore.droidfs
 
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.view.MenuItem
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.jaredrummler.android.colorpicker.ColorPreferenceCompat
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.widgets.SimpleActionPreference
 import sushi.hardcore.droidfs.widgets.ThemeColor
-
 
 class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
 
@@ -20,11 +18,10 @@ class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceSt
         setSupportActionBar(toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val screen = intent.extras?.getString("screen") ?: "main"
-        val fragment: Fragment
-        fragment = if (screen == "UnsafeFeaturesSettingsFragment") {
+        val fragment = if (screen == "UnsafeFeaturesSettingsFragment") {
             UnsafeFeaturesSettingsFragment()
         } else {
-            SettingsFragment()
+            MainSettingsFragment()
         }
         supportFragmentManager
                 .beginTransaction()
@@ -32,7 +29,17 @@ class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceSt
                 .commit()
     }
 
-    class SettingsFragment : PreferenceFragmentCompat() {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId){
+            android.R.id.home -> {
+                onBackPressed() //return to the previous fragment rather than the activity
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    class MainSettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             ThemeColor.tintPreferenceIcons(preferenceScreen, ThemeColor.getThemeColor(requireContext()))
