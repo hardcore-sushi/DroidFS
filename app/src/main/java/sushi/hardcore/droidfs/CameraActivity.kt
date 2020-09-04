@@ -6,7 +6,11 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.View
 import android.view.WindowManager
+import android.view.animation.Animation
+import android.view.animation.LinearInterpolator
+import android.view.animation.RotateAnimation
 import android.widget.EditText
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import com.otaliastudios.cameraview.CameraListener
@@ -25,7 +29,7 @@ import java.io.ByteArrayInputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CameraActivity : BaseActivity() {
+class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     companion object {
         private val flashModes = listOf(Flash.AUTO, Flash.ON, Flash.OFF)
         private val gridTitles = listOf(R.string.grid_none, R.string.grid_3x3, R.string.grid_4x4)
@@ -45,6 +49,9 @@ class CameraActivity : BaseActivity() {
                 image_timer.setImageResource(R.drawable.icon_timer_off)
             }
         }
+    private lateinit var sensorOrientationListener: SensorOrientationListener
+    private var previousOrientation: Float = 0f
+    private lateinit var orientedIcons: List<ImageView>
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
@@ -72,6 +79,8 @@ class CameraActivity : BaseActivity() {
             }
         })
         take_photo_button.onClick = ::onClickTakePhoto
+        orientedIcons = listOf(image_hdr, image_timer, image_grid, image_close, image_flash, image_camera_switch)
+        sensorOrientationListener = SensorOrientationListener(this)
     }
 
     private fun onClickTakePhoto() {
@@ -192,13 +201,37 @@ class CameraActivity : BaseActivity() {
 
     override fun onPause() {
         super.onPause()
+        sensorOrientationListener.remove(this)
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){ //if not asking for permission
             finish()
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        sensorOrientationListener.addListener(this)
+    }
+
     override fun onBackPressed() {
         super.onBackPressed()
         isFinishingIntentionally = true
+    }
+
+    override fun onOrientationChange(newOrientation: Int) {
+        val reversedOrientation = when (newOrientation){
+            90 -> 270
+            270 -> 90
+            else -> newOrientation
+        }.toFloat()
+        val rotateAnimation = RotateAnimation(previousOrientation, when {
+            reversedOrientation - previousOrientation > 180 -> reversedOrientation - 360
+            reversedOrientation - previousOrientation < -180 -> reversedOrientation + 360
+            else -> reversedOrientation
+        }, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
+        rotateAnimation.duration = 300
+        rotateAnimation.interpolator = LinearInterpolator()
+        rotateAnimation.fillAfter = true
+        orientedIcons.map { it.startAnimation(rotateAnimation) }
+        previousOrientation = reversedOrientation
     }
 }
