@@ -15,9 +15,10 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.File
 import java.security.MessageDigest
@@ -28,6 +29,7 @@ class ImageViewer: FileViewerActivity() {
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150
     }
+    private lateinit var fileName: String
     private lateinit var glideImage: RequestBuilder<Drawable>
     private var x1 = 0F
     private var x2 = 0F
@@ -43,42 +45,54 @@ class ImageViewer: FileViewerActivity() {
         action_bar.visibility = View.GONE
     }
     override fun viewFile() {
-        val imageBuff = loadWholeFile(filePath)
-        if (imageBuff != null){
-            setContentView(R.layout.activity_image_viewer)
-            image_viewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener{
-                override fun onSingleTap(event: MotionEvent?) {
-                    handler.removeCallbacks(hideUI)
-                    if (action_buttons.visibility == View.GONE){
-                        action_buttons.visibility = View.VISIBLE
-                        action_bar.visibility = View.VISIBLE
-                        handler.postDelayed(hideUI, hideDelay)
-                    } else {
-                        hideUI.run()
-                    }
+        setContentView(R.layout.activity_image_viewer)
+        image_viewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
+            override fun onSingleTap(event: MotionEvent?) {
+                handler.removeCallbacks(hideUI)
+                if (action_buttons.visibility == View.GONE) {
+                    action_buttons.visibility = View.VISIBLE
+                    action_bar.visibility = View.VISIBLE
+                    handler.postDelayed(hideUI, hideDelay)
+                } else {
+                    hideUI.run()
                 }
-                override fun onTouch(event: MotionEvent?) {
-                    if (!image_viewer.isZoomed){
-                        when(event?.action){
-                            MotionEvent.ACTION_DOWN -> {
-                                x1 = event.x
-                            }
-                            MotionEvent.ACTION_UP -> {
-                                x2 = event.x
-                                val deltaX = x2 - x1
-                                if (abs(deltaX) > MIN_SWIPE_DISTANCE){
-                                    swipeImage(deltaX)
-                                }
+            }
+
+            override fun onTouch(event: MotionEvent?) {
+                if (!image_viewer.isZoomed) {
+                    when (event?.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            x1 = event.x
+                        }
+                        MotionEvent.ACTION_UP -> {
+                            x2 = event.x
+                            val deltaX = x2 - x1
+                            if (abs(deltaX) > MIN_SWIPE_DISTANCE) {
+                                swipeImage(deltaX)
                             }
                         }
                     }
                 }
-            })
-            glideImage = Glide.with(this).load(imageBuff)
+            }
+        })
+        loadImage()
+        handler.postDelayed(hideUI, hideDelay)
+    }
+
+    private fun loadImage(){
+        loadWholeFile(filePath)?.let {
+            glideImage = Glide.with(this).load(it)
             glideImage.into(image_viewer)
-            text_filename.text = File(filePath).name
-            handler.postDelayed(hideUI, hideDelay)
+            fileName = File(filePath).name
+            text_filename.text = fileName
+            rotationAngle = 0F
         }
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        handler.removeCallbacks(hideUI)
+        handler.postDelayed(hideUI, hideDelay)
     }
 
     private fun swipeImage(deltaX: Float){
@@ -103,26 +117,61 @@ class ImageViewer: FileViewerActivity() {
         } else {
             MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
         }
-        loadWholeFile(mappedImages[currentMappedImageIndex].fullPath)?.let {
-            glideImage = Glide.with(applicationContext).load(it)
-            glideImage.into(image_viewer)
-            text_filename.text = File(mappedImages[currentMappedImageIndex].fullPath).name
-            rotationAngle = 0F
-        }
+        filePath = mappedImages[currentMappedImageIndex].fullPath
+        loadImage()
+    }
+
+    fun onClickDelete(view: View) {
+        ColoredAlertDialogBuilder(this)
+            .keepFullScreen()
+            .setTitle(R.string.warning)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                if (gocryptfsVolume.removeFile(filePath)){
+                    currentMappedImageIndex = MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
+                    mappedImages.clear()
+                    wasMapped = false
+                    swipeImage(-1F)
+                } else {
+                    ColoredAlertDialogBuilder(this)
+                        .keepFullScreen()
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.remove_failed, fileName))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .setMessage(getString(R.string.single_delete_confirm, fileName))
+            .show()
     }
 
     fun onClickSlideshow(view: View) {
         if (!slideshowActive){
             slideshowActive = true
             Thread {
+                Thread.sleep(ConstValues.slideshow_delay)
                 while (slideshowActive){
                     runOnUiThread { swipeImage(-1F) }
                     Thread.sleep(ConstValues.slideshow_delay)
                 }
             }.start()
+            hideUI.run()
+            Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
         } else {
-            slideshowActive = false
-            Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
+            stopSlideshow()
+        }
+    }
+
+    private fun stopSlideshow(){
+        slideshowActive = false
+        Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onBackPressed() {
+        if (slideshowActive){
+            stopSlideshow()
+        } else {
+            super.onBackPressed()
         }
     }
 

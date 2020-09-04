@@ -136,7 +136,7 @@
     <string name="query_cursor_null_error_msg">Unable to access this file</string>
     <string name="about">About</string>
     <string name="github">GitHub</string>
-    <string name="github_summary">Want to read the documentation, request feature, report bug, read the source code… Check the DroidFS\'s repository !</string>
+    <string name="github_summary">Want to read the documentation, review the source code, request feature, report bug… Check the DroidFS\'s repository !</string>
     <string name="share">Share</string>
     <string name="decrypt_files">Export/Decrypt</string>
     <string name="loading_msg_copy">Copying selected items…</string>
@@ -172,4 +172,5 @@
     <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
     <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
+    <string name="slideshow_started">Slideshow started</string>
 </resources>
