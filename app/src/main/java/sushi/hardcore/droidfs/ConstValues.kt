@@ -13,10 +13,10 @@ class ConstValues {
         const val wipe_passes = 2
         const val slideshow_delay: Long = 4000
         private val fileExtensions = mapOf(
-            Pair("image", listOf("png", "jpg", "jpeg")),
-            Pair("video", listOf("mp4", "webm")),
-            Pair("audio", listOf("mp3", "ogg")),
-            Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "go", "c", "h", "cpp", "hpp", "sh", "js", "html", "css", "php"))
+            Pair("image", listOf("png", "jpg", "jpeg", "gif", "bmp")),
+            Pair("video", listOf("mp4", "webm", "mkv", "mov")),
+            Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac")),
+            Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "ini", "md"))
         )
 
         fun isImage(path: String): Boolean {

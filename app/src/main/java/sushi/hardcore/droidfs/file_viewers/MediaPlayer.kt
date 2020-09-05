@@ -6,7 +6,7 @@ import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.extractor.ExtractorsFactory
-import com.google.android.exoplayer2.extractor.flv.FlvExtractor
+import com.google.android.exoplayer2.extractor.flac.FlacExtractor
 import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor
 import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
 import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
@@ -46,9 +46,9 @@ abstract class MediaPlayer: FileViewerActivity() {
                 MatroskaExtractor(),
                 Mp4Extractor(),
                 Mp3Extractor(),
-                FlvExtractor(),
                 OggExtractor(),
-                WavExtractor()
+                WavExtractor(),
+                FlacExtractor()
             )
         }).createMediaSource(ConstValues.fakeUri)
         player.seekTo(currentWindow, playbackPosition)
