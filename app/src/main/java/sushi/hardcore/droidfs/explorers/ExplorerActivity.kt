@@ -679,7 +679,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun recursiveExportDirectory(plain_directory_path: String, treeDocumentFile: DocumentFile): String? {
-        treeDocumentFile.createDirectory(plain_directory_path)?.let {childTree ->
+        treeDocumentFile.createDirectory(File(plain_directory_path).name)?.let {childTree ->
             val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
             for (e in explorerElements) {
                 val fullPath = PathUtils.path_join(plain_directory_path, e.name)

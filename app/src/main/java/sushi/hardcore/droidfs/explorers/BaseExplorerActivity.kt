@@ -102,6 +102,11 @@ open class BaseExplorerActivity : BaseActivity() {
         startActivity(intent)
     }
 
+    private fun openWithExternalApp(fullPath: String){
+        isStartingActivity = true
+        ExternalProvider.open(this, gocryptfsVolume, fullPath)
+    }
+
     protected open fun onExplorerItemClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         explorerAdapter.onItemClick(position)
@@ -128,7 +133,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         startFileViewer(AudioPlayer::class.java, fullPath)
                     }
                     else -> {
-                        val adapter = OpenAsDialogAdapter(this)
+                        val adapter = OpenAsDialogAdapter(this, usf_open)
                         ColoredAlertDialogBuilder(this)
                             .setSingleChoiceItems(adapter, -1){ dialog, which ->
                                 when (adapter.getItem(which)){
@@ -136,6 +141,9 @@ open class BaseExplorerActivity : BaseActivity() {
                                     "video" -> startFileViewer(VideoPlayer::class.java, fullPath)
                                     "audio" -> startFileViewer(AudioPlayer::class.java, fullPath)
                                     "text" -> startFileViewer(TextEditor::class.java, fullPath)
+                                    "external" -> if (usf_open){
+                                        openWithExternalApp(fullPath)
+                                    }
                                 }
                                 dialog.dismiss()
                             }
@@ -390,8 +398,7 @@ open class BaseExplorerActivity : BaseActivity() {
             }
             R.id.external_open -> {
                 if (usf_open){
-                    isStartingActivity = true
-                    ExternalProvider.open(this, gocryptfsVolume, PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
+                    openWithExternalApp(PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
                     unselectAll()
                 }
                 true

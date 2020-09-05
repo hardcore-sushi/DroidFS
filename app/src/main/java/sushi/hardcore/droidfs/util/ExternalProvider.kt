@@ -3,20 +3,19 @@ package sushi.hardcore.droidfs.util
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
-import java.net.URLConnection
-import kotlin.collections.ArrayList
 
 object ExternalProvider {
     private const val content_type_all = "*/*"
     private var storedFiles: MutableList<Uri> = ArrayList()
     private fun getContentType(filename: String, previous_content_type: String?): String? {
         if (content_type_all != previous_content_type) {
-            var contentType = URLConnection.guessContentTypeFromName(filename)
+            var contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(filename).extension)
             if (contentType == null) {
                 contentType = content_type_all
             }
