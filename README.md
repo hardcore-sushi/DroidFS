@@ -1,7 +1,6 @@
 # DroidFS
-DroidFS is an implementation of encrypted overlay filesystems for Android.
-It allows you to store files and folder in encrypted virtual volumes so that you can share them, store them in the cloud or simply access them more securely.
-It currently only supports [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) is expected to be added soon.<br>
+DroidFS is an alternative way to use encrypted overlay filesystems on Android that uses its own internal file explorer instead of mounting virtual volumes.
+It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) is expected to be added soon.
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/1.jpg" height="500">
@@ -11,9 +10,24 @@ It currently only supports [gocryptfs](https://github.com/rfjakob/gocryptfs) but
 
 # Disclamer
 DroidFS is provided "as is", without any warranty of any kind.
-It shouldn't be considered an absolute safe way to store files.
+It shouldn't be considered as an absolute safe way to store files.
 DroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.
 Do not use this app with volumes containing sensitive data unless you know exactly what you are doing.
+
+# Permissions
+DroidFS need some permissions to work properly. Here is why:
+
+<ul>
+  <li><h4>Read & write access to shared storage:</h4>
+  Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
+  </li>
+  <li><h4>Biometric/Fingerprint hardware:</h4>
+  Required to encrypt/decrypt password hashes using a fingerprint protected key.
+  </li>
+  <li><h4>Camera:</h4>
+  Needed to take photos directly from DroidFS to import them securely.
+  </li>
+</ul>
 
 # Unsafe features
 DroidFS allows you to enable/disable unsafe features to fit your needs between security and comfort.
@@ -35,21 +49,6 @@ It is strongly recommended to read the documentation of a feature before enablin
   </li>
   <li><h4>Allow saving password hash using fingerprint:</h4>
   Generate an AES-256 GCM key in the Android Keystore (protected by fingerprint authentication), then use it to encrypt the volume password hash and store it to the DroidFS internal storage. This require Android v6.0+.
-  </li>
-</ul>
-
-# Permissions
-DroidFS need some permissions to work properly. Here is why:
-
-<ul>
-  <li><h4>Read & write access to shared storage:</h4>
-  Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
-  </li>
-  <li><h4>Biometric/Fingerprint hardware:</h4>
-  Required to encrypt/decrypt password hashes using a fingerprint protected key.
-  </li>
-  <li><h4>Camera:</h4>
-  Needed to take photos directly from DroidFS to import them securely.
   </li>
 </ul>
 
