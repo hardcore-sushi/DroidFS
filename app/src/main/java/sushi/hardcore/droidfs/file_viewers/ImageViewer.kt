@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
 import android.widget.Toast
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
@@ -155,6 +156,7 @@ class ImageViewer: FileViewerActivity() {
                     Thread.sleep(ConstValues.slideshow_delay)
                 }
             }.start()
+            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             hideUI.run()
             Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
         } else {
@@ -164,6 +166,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun stopSlideshow(){
         slideshowActive = false
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
     }
 
