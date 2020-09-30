@@ -9,15 +9,9 @@ import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_change_password.*
-import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.activity_open.*
-import kotlinx.android.synthetic.main.activity_open.checkbox_remember_path
-import kotlinx.android.synthetic.main.activity_open.checkbox_save_password
-import kotlinx.android.synthetic.main.activity_open.edit_password
-import kotlinx.android.synthetic.main.activity_open.edit_volume_path
-import kotlinx.android.synthetic.main.activity_open.saved_path_listview
 import kotlinx.android.synthetic.main.toolbar.*
+import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop

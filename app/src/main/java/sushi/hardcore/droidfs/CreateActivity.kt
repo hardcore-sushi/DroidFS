@@ -9,13 +9,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.toolbar.*
+import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
-
 
 class CreateActivity : BaseActivity() {
     companion object {

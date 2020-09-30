@@ -287,7 +287,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         dialogEditText.selectAll()
                         val dialog = ColoredAlertDialogBuilder(this)
                             .setView(dialogEditTextView)
-                            .setTitle(getString(R.string.enter_new_name))
+                            .setTitle(R.string.enter_new_name)
                             .setPositiveButton(R.string.ok) { _, _ ->
                                 handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
                             }
@@ -302,7 +302,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
                         dialog.show()
                     }
-                    .setPositiveButton(R.string.yes) {_, _ -> handler.sendMessage(Message().apply { obj = path }) }
+                    .setPositiveButton(R.string.yes) { _, _ -> handler.sendMessage(Message().apply { obj = path }) }
                     .create()
                 dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
                 dialog.show()

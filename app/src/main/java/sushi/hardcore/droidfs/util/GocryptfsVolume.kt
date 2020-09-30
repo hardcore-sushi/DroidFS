@@ -3,7 +3,9 @@ package sushi.hardcore.droidfs.util
 import android.content.Context
 import android.net.Uri
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import java.io.*
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.io.OutputStream
 
 class GocryptfsVolume(var sessionID: Int) {
     private external fun native_close(sessionID: Int)

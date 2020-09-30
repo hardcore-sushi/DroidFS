@@ -21,6 +21,8 @@ import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.security.MessageDigest
 import kotlin.math.abs
@@ -40,10 +42,19 @@ class ImageViewer: FileViewerActivity() {
     private var slideshowActive = false
     private var currentMappedImageIndex = -1
     private var rotationAngle: Float = 0F
+    private var rotatedBitmap: Bitmap? = null
     private val handler = Handler()
     private val hideUI = Runnable {
         action_buttons.visibility = View.GONE
         action_bar.visibility = View.GONE
+    }
+    private val slideshowLoop = object : Runnable {
+        override fun run() {
+            if (slideshowActive){
+                swipeImage(-1F)
+                handler.postDelayed(this, ConstValues.slideshow_delay)
+            }
+        }
     }
     override fun viewFile() {
         setContentView(R.layout.activity_image_viewer)
@@ -69,7 +80,7 @@ class ImageViewer: FileViewerActivity() {
                             x2 = event.x
                             val deltaX = x2 - x1
                             if (abs(deltaX) > MIN_SWIPE_DISTANCE) {
-                                swipeImage(deltaX)
+                                askSaveRotation { swipeImage(deltaX) }
                             }
                         }
                     }
@@ -149,13 +160,7 @@ class ImageViewer: FileViewerActivity() {
     fun onClickSlideshow(view: View) {
         if (!slideshowActive){
             slideshowActive = true
-            Thread {
-                Thread.sleep(ConstValues.slideshow_delay)
-                while (slideshowActive){
-                    runOnUiThread { swipeImage(-1F) }
-                    Thread.sleep(ConstValues.slideshow_delay)
-                }
-            }.start()
+            handler.postDelayed(slideshowLoop, ConstValues.slideshow_delay)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             hideUI.run()
             Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
@@ -174,26 +179,27 @@ class ImageViewer: FileViewerActivity() {
         if (slideshowActive){
             stopSlideshow()
         } else {
-            super.onBackPressed()
+            askSaveRotation { super.onBackPressed() }
         }
     }
 
-    class RotateTransformation(private val rotationAngle: Float): BitmapTransformation() {
+    class RotateTransformation(private val imageViewer: ImageViewer): BitmapTransformation() {
 
-        override fun transform(pool: BitmapPool, toTransform: Bitmap, outWidth: Int, outHeight: Int): Bitmap {
+        override fun transform(pool: BitmapPool, toTransform: Bitmap, outWidth: Int, outHeight: Int): Bitmap? {
             val matrix = Matrix()
-            matrix.postRotate(rotationAngle)
-            return Bitmap.createBitmap(toTransform, 0, 0, toTransform.width, toTransform.height, matrix, true)
+            matrix.postRotate(imageViewer.rotationAngle)
+            imageViewer.rotatedBitmap = Bitmap.createBitmap(toTransform, 0, 0, toTransform.width, toTransform.height, matrix, true)
+            return imageViewer.rotatedBitmap
         }
 
         override fun updateDiskCacheKey(messageDigest: MessageDigest) {
-            messageDigest.update("rotate$rotationAngle".toByteArray())
+            messageDigest.update("rotate${imageViewer.rotationAngle}".toByteArray())
         }
     }
 
     private fun rotateImage(){
         image_viewer.restoreZoomNormal()
-        glideImage.transform(RotateTransformation(rotationAngle)).into(image_viewer)
+        glideImage.transform(RotateTransformation(this)).into(image_viewer)
     }
     fun onCLickRotateRight(view: View){
         rotationAngle += 90
@@ -202,6 +208,55 @@ class ImageViewer: FileViewerActivity() {
     fun onClickRotateLeft(view: View){
         rotationAngle -= 90
         rotateImage()
+    }
+
+    fun onClickPrevious(view: View){
+        askSaveRotation { swipeImage(1F) }
+    }
+    fun onClickNext(view: View){
+        askSaveRotation { swipeImage(-1F) }
+    }
+
+    private fun askSaveRotation(callback: () -> Unit){
+        if (rotationAngle%360 != 0f){
+            ColoredAlertDialogBuilder(this)
+                .keepFullScreen()
+                .setTitle(R.string.warning)
+                .setMessage(R.string.ask_save_img_rotated)
+                .setNegativeButton(R.string.no) { _, _ -> callback() }
+                .setPositiveButton(R.string.yes) { _, _ ->
+                        val outputStream = ByteArrayOutputStream()
+                        if (rotatedBitmap?.compress(
+                                if (fileName.endsWith("png", true)){
+                                    Bitmap.CompressFormat.PNG
+                                } else {
+                                    Bitmap.CompressFormat.JPEG
+                                }, 100, outputStream) == true
+                        ){
+                            if (gocryptfsVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)){
+                                Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
+                                callback()
+                            } else {
+                                ColoredAlertDialogBuilder(this)
+                                    .keepFullScreen()
+                                    .setTitle(R.string.error)
+                                    .setMessage(R.string.file_write_failed)
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        } else {
+                            ColoredAlertDialogBuilder(this)
+                                .keepFullScreen()
+                                .setTitle(R.string.error)
+                                .setMessage(R.string.bitmap_compress_failed)
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                }
+                .show()
+        } else {
+            callback()
+        }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

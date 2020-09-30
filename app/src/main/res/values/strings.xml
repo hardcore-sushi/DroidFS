@@ -173,4 +173,8 @@
     <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
     <string name="slideshow_started">Slideshow started</string>
+    <string name="ask_save_img_rotated">The image has been rotated. Do you want to save these changes and overwrite the original image ?</string>
+    <string name="image_saved_successfully">Image changes successfully saved.</string>
+    <string name="bitmap_compress_failed">Failed to compress the bitmap.</string>
+    <string name="file_write_failed">Failed to write the file.</string>
 </resources>

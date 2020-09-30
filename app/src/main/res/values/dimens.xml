@@ -14,4 +14,5 @@
     <dimen name="warning_msg_padding">20dp</dimen>
     <dimen name="action_activity_button_margin_bottom">20dp</dimen>
     <dimen name="adapter_text_size">18sp</dimen>
+    <dimen name="image_button_size">40dp</dimen>
 </resources>

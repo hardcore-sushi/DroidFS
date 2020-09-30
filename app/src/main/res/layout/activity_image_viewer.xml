@@ -65,8 +65,17 @@
         android:gravity="center">
 
         <ImageButton
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/image_button_size"
+            android:layout_height="@dimen/image_button_size"
+            android:layout_margin="10dp"
+            android:scaleType="fitCenter"
+            android:background="#00000000"
+            android:src="@drawable/exo_icon_previous"
+            android:onClick="onClickPrevious"/>
+
+        <ImageButton
+            android:layout_width="@dimen/image_button_size"
+            android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
@@ -74,13 +83,22 @@
             android:onClick="onClickRotateLeft"/>
 
         <ImageButton
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="@dimen/image_button_size"
+            android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
             android:src="@drawable/icon_rotate_right"
             android:onClick="onCLickRotateRight"/>
+
+        <ImageButton
+            android:layout_width="@dimen/image_button_size"
+            android:layout_height="@dimen/image_button_size"
+            android:layout_margin="10dp"
+            android:scaleType="fitCenter"
+            android:background="#00000000"
+            android:src="@drawable/exo_icon_next"
+            android:onClick="onClickNext"/>
 
     </LinearLayout>
 
