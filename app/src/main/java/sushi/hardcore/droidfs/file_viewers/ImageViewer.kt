@@ -211,10 +211,16 @@ class ImageViewer: FileViewerActivity() {
     }
 
     fun onClickPrevious(view: View){
-        askSaveRotation { swipeImage(1F) }
+        askSaveRotation {
+            image_viewer.resetZoomFactor()
+            swipeImage(1F)
+        }
     }
     fun onClickNext(view: View){
-        askSaveRotation { swipeImage(-1F) }
+        askSaveRotation {
+            image_viewer.resetZoomFactor()
+            swipeImage(-1F)
+        }
     }
 
     private fun askSaveRotation(callback: () -> Unit){

@@ -23,8 +23,8 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
     // Remember some things for zooming
     PointF last = new PointF();
     PointF start = new PointF();
-    float minScale = 1f;
-    float maxScale = 3f;
+    static final float minScale = 1f;
+    static final float maxScale = 3f;
     float[] m;
 
     int viewWidth, viewHeight;
@@ -123,9 +123,13 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
         return saveScale > minScale;
     }
 
+    public void resetZoomFactor(){
+        saveScale = minScale;
+    }
+
     public void restoreZoomNormal(){
         float origScale = saveScale;
-        saveScale = minScale;
+        resetZoomFactor();
         float mScaleFactor = minScale / origScale;
         matrix.postScale(mScaleFactor, mScaleFactor, viewWidth/2, viewHeight/2);
         fixTrans();
