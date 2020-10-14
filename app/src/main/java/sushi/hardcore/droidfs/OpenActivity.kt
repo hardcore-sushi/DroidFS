@@ -115,7 +115,14 @@ class OpenActivity : BaseActivity() {
         if (rootCipherDir.isEmpty()) {
             Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
         } else {
-            if (!File(rootCipherDir).canWrite()){
+            val rootCipherDirFile = File(rootCipherDir)
+            if (!GocryptfsVolume.isGocryptfsVolume(rootCipherDirFile)){
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.error_not_a_volume)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else if (!rootCipherDirFile.canWrite()) {
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
                     .setMessage(R.string.open_cant_write_warning)

@@ -33,7 +33,7 @@
     <string name="success_volume_create_msg">The volume has been successfully created.</string>
     <string name="create_volume_failed">The volume creation has failed.</string>
     <string name="open_volume_failed">Open failed</string>
-    <string name="open_volume_failed_msg">Failed to open the volume. Check the selected volume path and the entered password.</string>
+    <string name="open_volume_failed_msg">Failed to open the volume. Please check your password.</string>
     <string name="share_chooser">Share File</string>
     <string name="storage_unavailable">Storage unavailable</string>
     <string name="storage_unavailable_msg">DroidFS can\'t work without storage access.</string>
@@ -68,7 +68,7 @@
     <string name="new_password_confirmation">New Password (confirmation):</string>
     <string name="success_change_password">Password successfully changed !</string>
     <string name="success_change_password_msg">The volume\'s password has been successfully changed.</string>
-    <string name="change_password_failed">Failed to change the volume\'s password. Check the selected volume path and the entered old password.</string>
+    <string name="change_password_failed">Operation failed. Please check your old password.</string>
     <string name="share_menu_label">Encrypt with DroidFS</string>
     <string name="share_intent_parsing_failed">Failed to handle the share request.</string>
     <string name="listdir_null_error_msg">Unable to access this directory</string>
@@ -177,4 +177,5 @@
     <string name="image_saved_successfully">Image changes successfully saved.</string>
     <string name="bitmap_compress_failed">Failed to compress the bitmap.</string>
     <string name="file_write_failed">Failed to write the file.</string>
+    <string name="error_not_a_volume">Gocryptfs volume not recognized. Please check the selected path.</string>
 </resources>

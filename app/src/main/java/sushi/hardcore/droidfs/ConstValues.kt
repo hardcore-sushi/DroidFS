@@ -6,6 +6,7 @@ import java.io.File
 class ConstValues {
     companion object {
         const val creator = "DroidFS"
+        const val gocryptfsConfFilename = "gocryptfs.conf"
         const val saved_volumes_key = "saved_volumes"
         const val sort_order_key = "sort_order"
         val fakeUri: Uri = Uri.parse("fakeuri://droidfs")

@@ -2,7 +2,9 @@ package sushi.hardcore.droidfs.util
 
 import android.content.Context
 import android.net.Uri
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
@@ -31,6 +33,13 @@ class GocryptfsVolume(var sessionID: Int) {
         external fun createVolume(root_cipher_dir: String, password: CharArray, logN: Int, creator: String): Boolean
         external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
+
+        fun isGocryptfsVolume(path: File): Boolean {
+            if (path.isDirectory){
+                return File(path, ConstValues.gocryptfsConfFilename).isFile
+            }
+            return false
+        }
 
         init {
             System.loadLibrary("gocryptfs_jni")
