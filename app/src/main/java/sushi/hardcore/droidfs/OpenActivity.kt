@@ -4,12 +4,16 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.*
+import kotlinx.android.synthetic.main.activity_open.saved_path_listview
+import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
@@ -59,6 +63,27 @@ class OpenActivity : BaseActivity() {
         } else {
             WidgetUtil.hide(saved_path_listview)
         }
+        edit_volume_path.addTextChangedListener(object: TextWatcher {
+            override fun afterTextChanged(s: Editable?) {
+            }
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+            }
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                if (savedVolumesAdapter.isPathSaved(s.toString())){
+                    checkbox_remember_path.isEnabled = false
+                    checkbox_remember_path.isChecked = false
+                    if (sharedPrefs.getString(s.toString(), null) != null){
+                        checkbox_save_password.isEnabled = false
+                        checkbox_save_password.isChecked = false
+                    } else {
+                        checkbox_save_password.isEnabled = true
+                    }
+                } else {
+                    checkbox_remember_path.isEnabled = true
+                    checkbox_save_password.isEnabled = true
+                }
+            }
+        })
         edit_password.setOnEditorActionListener { v, _, _ ->
             onClickOpen(v)
             true
@@ -145,17 +170,14 @@ class OpenActivity : BaseActivity() {
                 }
                 sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
                 if (sessionID != -1) {
-                    var startExplorerImmediately = true
                     if (checkbox_remember_path.isChecked) {
                         savedVolumesAdapter.addVolumePath(rootCipherDir)
-                        if (checkbox_save_password.isChecked && returnedHash != null){
-                            fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
-                                stopTask { startExplorer() }
-                            }
-                            startExplorerImmediately = false
-                        }
                     }
-                    if (startExplorerImmediately){
+                    if (checkbox_save_password.isChecked && returnedHash != null){
+                        fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
+                            stopTask { startExplorer() }
+                        }
+                    } else {
                         stopTask { startExplorer() }
                     }
                 } else {
@@ -221,7 +243,7 @@ class OpenActivity : BaseActivity() {
             if (!fingerprintPasswordHashSaver.canAuthenticate()){
                 checkbox_save_password.isChecked = false
             } else {
-                checkbox_remember_path.isChecked = true
+                checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
             }
         }
     }

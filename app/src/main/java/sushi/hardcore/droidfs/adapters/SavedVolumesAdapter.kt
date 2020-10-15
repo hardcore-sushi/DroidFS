@@ -96,8 +96,12 @@ class SavedVolumesAdapter(val context: Context, private val sharedPrefs: SharedP
         }
     }
 
+    fun isPathSaved(volume_path: String): Boolean {
+        return savedVolumesPaths.contains(volume_path)
+    }
+
     fun addVolumePath(volume_path: String) {
-        if (!savedVolumesPaths.contains(volume_path)) {
+        if (!isPathSaved(volume_path)) {
             savedVolumesPaths.add(volume_path)
             updateSharedPrefs()
         }

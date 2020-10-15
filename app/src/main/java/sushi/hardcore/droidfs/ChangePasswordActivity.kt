@@ -11,9 +11,8 @@ import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_change_password.*
-import kotlinx.android.synthetic.main.activity_change_password.checkbox_remember_path
-import kotlinx.android.synthetic.main.activity_change_password.checkbox_save_password
 import kotlinx.android.synthetic.main.activity_change_password.saved_path_listview
+import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
@@ -27,6 +26,7 @@ class ChangePasswordActivity : BaseActivity() {
     companion object {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
+    private lateinit var savedVolumesAdapter: SavedVolumesAdapter
     private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
     private lateinit var rootCipherDir: String
     private var usf_fingerprint = false
@@ -41,7 +41,7 @@ class ChangePasswordActivity : BaseActivity() {
         } else {
             WidgetUtil.hide(checkbox_save_password)
         }
-        val savedVolumesAdapter = SavedVolumesAdapter(this, sharedPrefs)
+        savedVolumesAdapter = SavedVolumesAdapter(this, sharedPrefs)
         if (savedVolumesAdapter.count > 0){
             saved_path_listview.adapter = savedVolumesAdapter
             saved_path_listview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
@@ -56,13 +56,21 @@ class ChangePasswordActivity : BaseActivity() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (sharedPrefs.getString(s.toString(), null) == null) {
+                if (savedVolumesAdapter.isPathSaved(s.toString())){
+                    checkbox_remember_path.isEnabled = false
+                    checkbox_remember_path.isChecked = false
+                    if (sharedPrefs.getString(s.toString(), null) != null){
+                        edit_old_password.text = null
+                        edit_old_password.hint = getString(R.string.hash_saved_hint)
+                        edit_old_password.isEnabled = false
+                    } else {
+                        edit_old_password.hint = null
+                        edit_old_password.isEnabled = true
+                    }
+                } else {
+                    checkbox_remember_path.isEnabled = true
                     edit_old_password.hint = null
                     edit_old_password.isEnabled = true
-                } else {
-                    edit_old_password.text = null
-                    edit_old_password.hint = getString(R.string.hash_saved_hint)
-                    edit_old_password.isEnabled = false
                 }
             }
         })
@@ -161,31 +169,19 @@ class ChangePasswordActivity : BaseActivity() {
                                 returnedHash
                             )
                         ) {
-                            val editor = sharedPrefs.edit()
                             if (sharedPrefs.getString(rootCipherDir, null) != null) {
+                                val editor = sharedPrefs.edit()
                                 editor.remove(rootCipherDir)
                                 editor.apply()
                             }
-                            var continueImmediately = true
                             if (checkbox_remember_path.isChecked) {
-                                val oldSavedVolumesPaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
-                                val newSavedVolumesPaths = oldSavedVolumesPaths.toMutableList()
-                                if (!oldSavedVolumesPaths.contains(rootCipherDir)) {
-                                    newSavedVolumesPaths.add(rootCipherDir)
-                                    editor.putStringSet(
-                                        ConstValues.saved_volumes_key,
-                                        newSavedVolumesPaths.toSet()
-                                    )
-                                    editor.apply()
-                                }
-                                if (checkbox_save_password.isChecked && returnedHash != null) {
-                                    fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
-                                        stopTask { onPasswordChanged() }
-                                    }
-                                    continueImmediately = false
-                                }
+                                savedVolumesAdapter.addVolumePath(rootCipherDir)
                             }
-                            if (continueImmediately) {
+                            if (checkbox_save_password.isChecked && returnedHash != null) {
+                                fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
+                                    stopTask { onPasswordChanged() }
+                                }
+                            } else {
                                 stopTask { onPasswordChanged() }
                             }
                         } else {
@@ -222,7 +218,7 @@ class ChangePasswordActivity : BaseActivity() {
             if (!fingerprintPasswordHashSaver.canAuthenticate()){
                 checkbox_save_password.isChecked = false
             } else {
-                checkbox_remember_path.isChecked = true
+                checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
             }
         }
     }

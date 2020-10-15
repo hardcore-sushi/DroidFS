@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_create.*
+import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
@@ -131,7 +132,6 @@ class CreateActivity : BaseActivity() {
                                 }
                                 sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
                                 if (sessionID != -1) {
-                                    var startExplorerImmediately = true
                                     if (checkbox_remember_path.isChecked) {
                                         val oldSavedVolumesPaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
                                         val editor = sharedPrefs.edit()
@@ -145,14 +145,12 @@ class CreateActivity : BaseActivity() {
                                             editor.putStringSet(ConstValues.saved_volumes_key, newSavedVolumesPaths.toSet())
                                         }
                                         editor.apply()
-                                        if (checkbox_save_password.isChecked && returnedHash != null){
-                                            fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
-                                                stopTask { startExplorer() }
-                                            }
-                                            startExplorerImmediately = false
-                                        }
                                     }
-                                    if (startExplorerImmediately){
+                                    if (checkbox_save_password.isChecked && returnedHash != null){
+                                        fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
+                                            stopTask { startExplorer() }
+                                        }
+                                    } else {
                                         stopTask { startExplorer() }
                                     }
                                 } else {

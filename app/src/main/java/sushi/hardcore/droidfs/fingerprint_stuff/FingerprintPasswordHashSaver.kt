@@ -101,18 +101,16 @@ class FingerprintPasswordHashSaver(private val activityContext: AppCompatActivit
         isPrepared = true
     }
     fun encryptAndSave(plainText: ByteArray, root_cipher_dir: String, onAuthenticationResult: (success: Boolean) -> Unit){
-        if (shared_prefs.getString(root_cipher_dir, null) == null){
-            this.rootCipherDir = root_cipher_dir
-            this.actionDescription = activityContext.getString(R.string.encrypt_action_description)
-            this.onAuthenticationResult = onAuthenticationResult
-            if (!isPrepared){
-                prepare()
-            }
-            dataToProcess = plainText
-            actionMode = Cipher.ENCRYPT_MODE
-            cipher.init(Cipher.ENCRYPT_MODE, key)
-            startListening()
+        this.rootCipherDir = root_cipher_dir
+        this.actionDescription = activityContext.getString(R.string.encrypt_action_description)
+        this.onAuthenticationResult = onAuthenticationResult
+        if (!isPrepared){
+            prepare()
         }
+        dataToProcess = plainText
+        actionMode = Cipher.ENCRYPT_MODE
+        cipher.init(Cipher.ENCRYPT_MODE, key)
+        startListening()
     }
     fun decrypt(cipherText: String, root_cipher_dir: String, onPasswordDecrypted: (password: ByteArray) -> Unit){
         this.rootCipherDir = root_cipher_dir

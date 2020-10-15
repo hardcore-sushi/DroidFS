@@ -39,21 +39,7 @@
 
             </LinearLayout>
 
-            <sushi.hardcore.droidfs.widgets.ColoredCheckBox
-                android:id="@+id/checkbox_remember_path"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/remember_volume_path"
-                android:onClick="onClickRememberPath"/>
-
-            <sushi.hardcore.droidfs.widgets.ColoredCheckBox
-                android:id="@+id/checkbox_save_password"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:text="@string/fingerprint_save_checkbox_text"
-                android:onClick="onClickSavePasswordHash"/>
+            <include layout="@layout/checkboxes_section"/>
 
             <sushi.hardcore.droidfs.widgets.NonScrollableColoredBorderListView
                 android:id="@+id/saved_path_listview"

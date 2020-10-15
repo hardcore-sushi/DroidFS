@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+        android:id="@+id/checkbox_remember_path"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/remember_volume_path"
+        android:onClick="onClickRememberPath"/>
+
+    <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+        android:id="@+id/checkbox_save_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/fingerprint_save_checkbox_text"
+        android:onClick="onClickSavePasswordHash"/>
+
+</LinearLayout>
