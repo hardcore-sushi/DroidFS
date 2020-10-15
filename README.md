@@ -70,15 +70,15 @@ $ git clone https://github.com/hardcore-sushi/DroidFS.git
 Gocryptfs need openssl to work:
 ```
 $ cd DroidFS/app/libgocryptfs
-$ wget -qO - https://www.openssl.org/source/openssl-1.1.1g.tar.gz | tar -xvzf -
+$ wget -qO - https://www.openssl.org/source/openssl-1.1.1h.tar.gz | tar -xvzf -
 ```
 
 #### Build
 First, we need to build libgocryptfs.<br>
-Retrieve your Android NDK installation path, usually someting like "\<Android SDK path\>/ndk/\<NDK version\>".
+Retrieve your Android NDK installation path, usually someting like "/home/\<user\>/AndroidSDK/ndk/\<NDK version\>".
 ```
 $ cd DroidFS/app/libgocryptfs
-$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1g" ./build.sh
+$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1h" ./build.sh
  ```
 Then, open the DroidFS project with Android Studio.<br>
 If a device (virtual or physical) is connected, just click on "Run".<br>
