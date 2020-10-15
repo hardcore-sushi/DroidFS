@@ -49,6 +49,12 @@
             <intent android:action="android.intent.action.VIEW" android:data="https://github.com/hardcore-sushi/DroidFS"/>
         </Preference>
 
+        <Preference
+            android:key="version"
+            android:icon="@drawable/icon_info"
+            android:title="@string/version"
+            android:summary="@string/versionName"/> <!--added by gradle at build time-->
+
     </PreferenceCategory>
 
 </PreferenceScreen>
