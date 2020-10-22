@@ -12,43 +12,31 @@ import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.*
-import kotlinx.android.synthetic.main.activity_open.saved_path_listview
 import kotlinx.android.synthetic.main.checkboxes_section.*
-import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
-import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
-class OpenActivity : BaseActivity() {
+class OpenActivity : VolumeActionActivity() {
     companion object {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
     private lateinit var savedVolumesAdapter: SavedVolumesAdapter
-    private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
-    private lateinit var rootCipherDir: String
     private var sessionID = -1
     private var isStartingActivity = false
     private var isFinishingIntentionally = false
-    private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_open)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
-            fingerprintPasswordHashSaver = FingerprintPasswordHashSaver(this, sharedPrefs)
-        } else {
-            WidgetUtil.hide(checkbox_save_password)
-        }
+        setupActionBar()
+        setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, sharedPrefs)
         if (savedVolumesAdapter.count > 0){
             saved_path_listview.adapter = savedVolumesAdapter
@@ -56,8 +44,8 @@ class OpenActivity : BaseActivity() {
                 rootCipherDir = savedVolumesAdapter.getItem(position)
                 edit_volume_path.setText(rootCipherDir)
                 val cipherText = sharedPrefs.getString(rootCipherDir, null)
-                if (cipherText != null){ //password hash saved
-                    fingerprintPasswordHashSaver.decrypt(cipherText, rootCipherDir, ::openUsingPasswordHash)
+                if (cipherText != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){ //password hash saved
+                    loadPasswordHash(cipherText, ::openUsingPasswordHash)
                 }
             }
         } else {
@@ -165,7 +153,7 @@ class OpenActivity : BaseActivity() {
             override fun doTask(activity: AppCompatActivity) {
                 val password = edit_password.text.toString().toCharArray()
                 var returnedHash: ByteArray? = null
-                if (usf_fingerprint && checkbox_save_password.isChecked){
+                if (checkbox_save_password.isChecked){
                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
                 sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
@@ -173,10 +161,12 @@ class OpenActivity : BaseActivity() {
                     if (checkbox_remember_path.isChecked) {
                         savedVolumesAdapter.addVolumePath(rootCipherDir)
                     }
-                    if (checkbox_save_password.isChecked && returnedHash != null){
-                        fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir) { _ ->
-                            stopTask { startExplorer() }
-                        }
+                    if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                            stopTask {
+                                savePasswordHash(returnedHash) {
+                                    startExplorer()
+                                }
+                            }
                     } else {
                         stopTask { startExplorer() }
                     }
@@ -238,16 +228,6 @@ class OpenActivity : BaseActivity() {
         finish()
     }
 
-    fun onClickSavePasswordHash(view: View) {
-        if (checkbox_save_password.isChecked){
-            if (!fingerprintPasswordHashSaver.canAuthenticate()){
-                checkbox_save_password.isChecked = false
-            } else {
-                checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
-            }
-        }
-    }
-
     fun onClickRememberPath(view: View) {
         if (!checkbox_remember_path.isChecked){
             checkbox_save_password.isChecked = false
@@ -266,12 +246,6 @@ class OpenActivity : BaseActivity() {
                 isStartingActivity = false
             } else {
                 finish()
-            }
-        }
-        if (::fingerprintPasswordHashSaver.isInitialized && fingerprintPasswordHashSaver.isListening){
-            fingerprintPasswordHashSaver.stopListening()
-            if (fingerprintPasswordHashSaver.fingerprintFragment.isAdded){
-                fingerprintPasswordHashSaver.fingerprintFragment.dismiss()
             }
         }
     }

@@ -9,12 +9,18 @@
         android:protectionLevel="signature" />
 
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.USE_FINGERPRINT" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
-    <uses-feature android:name="android.hardware.camera.any" android:required="false"/>
-    <uses-feature android:name="android.hardware.fingerprint" android:required="false"/>
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove"/> <!--removing this permission automatically added by exoplayer-->
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="false" />
+    <uses-feature
+        android:name="android.hardware.fingerprint"
+        android:required="false" />
+
+    <uses-permission
+        android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" /> <!--removing this permission automatically added by exoplayer-->
 
     <application
         android:name=".ColoredApplication"
@@ -24,7 +30,9 @@
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CameraActivity" android:screenOrientation="nosensor"/>
+        <activity
+            android:name=".CameraActivity"
+            android:screenOrientation="nosensor" />
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"

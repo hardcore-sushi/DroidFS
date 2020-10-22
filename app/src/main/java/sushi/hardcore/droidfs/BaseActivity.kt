@@ -10,6 +10,7 @@ import sushi.hardcore.droidfs.widgets.ThemeColor
 
 open class BaseActivity: CyaneaAppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
+    protected var isRecreating = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
@@ -24,6 +25,7 @@ open class BaseActivity: CyaneaAppCompatActivity() {
     fun changeThemeColor(themeColor: Int? = null){
         val accentColor = themeColor ?: ThemeColor.getThemeColor(this)
         val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
+        isRecreating = true
         cyanea.edit{
             accent(accentColor)
             //accentDark(themeColor)

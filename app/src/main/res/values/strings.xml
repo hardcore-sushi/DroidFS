@@ -75,19 +75,15 @@
     <string name="fingerprint_save_checkbox_text">Save password hash using fingerprint</string>
     <string name="fingerprint_instruction">Please touch the fingerprint sensor</string>
     <string name="open_failed_hash_msg">Failed to open the volume. The password may have changed.</string>
-    <string name="authenticated">Authenticated !</string>
-    <string name="authentication_error">Authentication error</string>
     <string name="authentication_failed">Authentication failed</string>
     <string name="delete_hash_or_all">Delete only password hash or all saved volume data ? (This won\'t delete the volume itself)</string>
     <string name="delete_all">Delete all</string>
     <string name="delete_hash">Delete password hash</string>
     <string name="ask_delete_volume_path">Are you sure you want to forget this volume path ? (This won\'t delete the volume itself)</string>
-    <string name="fingerprint_perm_denied">Fingerprint permission denied</string>
-    <string name="no_fingerprint_sensor">No fingerprint sensor detected</string>
-    <string name="no_fingerprint_configured">No fingerprint configured</string>
-    <string name="authentication_error_msg">This can happen if you have added a new fingerprint. The only solution is to reset the hash storage.</string>
+    <string name="illegal_block_size_exception">IllegalBlockSizeException</string>
+    <string name="illegal_block_size_exception_msg">This can happen if you have added a new fingerprint. Resetting hash storage can solve this problem.</string>
     <string name="reset_hash_storage">Reset hash storage</string>
-    <string name="MAC_verification_failed">Signature/MAC verification failed. Either Android KeyStore or the saved hash has been modified. Reseting hash storage can solve this problem.</string>
+    <string name="MAC_verification_failed">Signature/MAC verification failed. Either Android KeyStore or the saved hash has been modified. Resetting hash storage can solve this problem.</string>
     <string name="hash_storage_reset">Hash storage successfully reset</string>
     <string name="encrypt_action_description">Encrypting and saving password hash.</string>
     <string name="decrypt_action_description">Decrypting password hash.</string>
@@ -179,4 +175,7 @@
     <string name="file_write_failed">Failed to write the file.</string>
     <string name="error_not_a_volume">Gocryptfs volume not recognized. Please check the selected path.</string>
     <string name="version">Version</string>
+    <string name="error_cipher_null">Error cipher is null</string>
+    <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
+    <string name="key_permanently_invalidated_exception_msg">It looks like you have added a new fingerprint. Saved passwords hash have become unusable.</string>
 </resources>

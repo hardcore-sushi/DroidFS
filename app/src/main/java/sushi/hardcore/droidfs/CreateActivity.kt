@@ -9,34 +9,26 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
-import kotlinx.android.synthetic.main.toolbar.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
-import sushi.hardcore.droidfs.fingerprint_stuff.FingerprintPasswordHashSaver
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.util.LoadingTask
+import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
-class CreateActivity : BaseActivity() {
+class CreateActivity : VolumeActionActivity() {
     companion object {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
-    private lateinit var fingerprintPasswordHashSaver: FingerprintPasswordHashSaver
-    private lateinit var rootCipherDir: String
     private var sessionID = -1
-    private var usf_fingerprint = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
-            fingerprintPasswordHashSaver = FingerprintPasswordHashSaver(this, sharedPrefs)
-        } else {
-            WidgetUtil.hide(checkbox_save_password)
-        }
+        setupActionBar()
+        setupFingerprintStuff()
         edit_password_confirm.setOnEditorActionListener { v, _, _ ->
             onClickCreate(v)
             true
@@ -127,7 +119,7 @@ class CreateActivity : BaseActivity() {
                         if (goodDirectory) {
                             if (GocryptfsVolume.createVolume(rootCipherDir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                                 var returnedHash: ByteArray? = null
-                                if (usf_fingerprint && checkbox_save_password.isChecked){
+                                if (checkbox_save_password.isChecked){
                                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                                 }
                                 sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
@@ -146,9 +138,11 @@ class CreateActivity : BaseActivity() {
                                         }
                                         editor.apply()
                                     }
-                                    if (checkbox_save_password.isChecked && returnedHash != null){
-                                        fingerprintPasswordHashSaver.encryptAndSave(returnedHash, rootCipherDir){ _ ->
-                                            stopTask { startExplorer() }
+                                    if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                                        stopTask {
+                                            savePasswordHash(returnedHash) {
+                                                startExplorer()
+                                            }
                                         }
                                     } else {
                                         stopTask { startExplorer() }
@@ -191,29 +185,9 @@ class CreateActivity : BaseActivity() {
                 .show()
     }
 
-    fun onClickSavePasswordHash(view: View) {
-        if (checkbox_save_password.isChecked){
-            if (!fingerprintPasswordHashSaver.canAuthenticate()){
-                checkbox_save_password.isChecked = false
-            } else {
-                checkbox_remember_path.isChecked = true
-            }
-        }
-    }
-
     fun onClickRememberPath(view: View) {
         if (!checkbox_remember_path.isChecked){
             checkbox_save_password.isChecked = false
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (::fingerprintPasswordHashSaver.isInitialized && fingerprintPasswordHashSaver.isListening){
-            fingerprintPasswordHashSaver.stopListening()
-            if (fingerprintPasswordHashSaver.fingerprintFragment.isAdded){
-                fingerprintPasswordHashSaver.fingerprintFragment.dismiss()
-            }
         }
     }
 

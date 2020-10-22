@@ -22,21 +22,29 @@ class MainActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
-                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
-            } else {
-                if (checkStorageAvailability()){
-                    checkFirstOpening()
-                }
-            }
-        }
         val metrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(metrics)
         image_logo.layoutParams.height = (metrics.heightPixels/2.2).toInt()
         Glide.with(this).load(R.drawable.logo).into(image_logo)
+        if (!isRecreating){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
+                } else {
+                    onStoragePermissionGranted()
+                }
+            } else {
+                onStoragePermissionGranted()
+            }
+        }
+    }
+
+    private fun onStoragePermissionGranted(){
+        if (checkStorageAvailability()){
+            checkFirstOpening()
+        }
     }
 
     private fun checkStorageAvailability(): Boolean {
@@ -78,11 +86,10 @@ class MainActivity : BaseActivity() {
                     ColoredAlertDialogBuilder(this)
                          .setTitle(R.string.storage_perm_denied)
                          .setMessage(R.string.storage_perm_denied_msg)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
+                         .setCancelable(false)
+                         .setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
                 } else {
-                    checkStorageAvailability()
-                    checkFirstOpening()
+                    onStoragePermissionGranted()
                 }
             }
         }
