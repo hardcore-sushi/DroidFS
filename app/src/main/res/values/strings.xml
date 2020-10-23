@@ -97,6 +97,7 @@
     <string name="usf_screenshot">Allow screenshots</string>
     <string name="usf_fingerprint">Allow saving password hash using fingerprint</string>
     <string name="usf_volume_management">Volume Management</string>
+    <string name="usf_keep_open">Keep volume open when the app goes in background</string>
     <string name="unsafe_features">Unsafe Features</string>
     <string name="manage_unsafe_features">Manage unsafe features</string>
     <string name="manage_unsafe_features_summary">Enable/Disable unsafe features</string>

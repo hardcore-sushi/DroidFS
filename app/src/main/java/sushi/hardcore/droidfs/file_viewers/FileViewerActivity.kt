@@ -12,11 +12,13 @@ abstract class FileViewerActivity: BaseActivity() {
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
     private var isFinishingIntentionally = false
+    protected var usf_keep_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
+        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         hideSystemUi()
         viewFile()
     }
@@ -99,7 +101,9 @@ abstract class FileViewerActivity: BaseActivity() {
 
     override fun onPause() {
         super.onPause()
-        finish()
+        if (!usf_keep_open) {
+            finish()
+        }
     }
 
     override fun onBackPressed() {

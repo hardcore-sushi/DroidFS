@@ -56,9 +56,11 @@ open class BaseExplorerActivity : BaseActivity() {
     private var isCreating = true
     protected var isStartingActivity = false
     private var usf_open = false
+    protected var usf_keep_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         usf_open = sharedPrefs.getBoolean("usf_open", false)
+        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         val intent = intent
         volumeName = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
@@ -434,7 +436,7 @@ open class BaseExplorerActivity : BaseActivity() {
         if (!isChangingConfigurations){
             if (isStartingActivity){
                 isStartingActivity = false
-            } else {
+            } else if (!usf_keep_open){
                 finish()
             }
         }

@@ -163,8 +163,12 @@ class OpenActivity : VolumeActionActivity() {
                     }
                     if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                             stopTask {
-                                savePasswordHash(returnedHash) {
-                                    startExplorer()
+                                savePasswordHash(returnedHash) { success ->
+                                    if (success){
+                                        startExplorer()
+                                    } else {
+                                        GocryptfsVolume(sessionID).close()
+                                    }
                                 }
                             }
                     } else {

@@ -80,7 +80,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     }
 
     override fun closeVolumeOnDestroy() {
-        if (!isFinishingIntentionally){
+        if (!isFinishingIntentionally && !usf_keep_open){
             val sessionID = intent.getIntExtra("originalSessionID", -1)
             if (sessionID != -1){
                 val v = GocryptfsVolume(sessionID)

@@ -31,6 +31,12 @@
             android:title="@string/usf_share"
             android:defaultValue="false"/>
 
+        <SwitchPreference
+            android:icon="@drawable/icon_decrypt"
+            android:key="usf_keep_open"
+            android:title="@string/usf_keep_open"
+            android:defaultValue="false"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory

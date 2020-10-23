@@ -191,6 +191,15 @@ class CreateActivity : VolumeActionActivity() {
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        //Closing volume if leaving activity while showing dialog
+        if (sessionID != -1){
+            GocryptfsVolume(sessionID).close()
+            finish()
+        }
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Wiper.wipeEditText(edit_password)

@@ -3,7 +3,6 @@ package sushi.hardcore.droidfs
 import android.app.KeyguardManager
 import android.content.Context
 import android.os.Build
-import android.os.Bundle
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -54,13 +53,20 @@ open class VolumeActionActivity : BaseActivity() {
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                         super.onAuthenticationError(errorCode, errString)
                         Toast.makeText(applicationContext, errString, Toast.LENGTH_SHORT).show()
+                        if (actionMode == Cipher.ENCRYPT_MODE){
+                            onAuthenticationResult(false)
+                        }
                     }
                     override fun onAuthenticationFailed() {
                         super.onAuthenticationFailed()
                         Toast.makeText(applicationContext, R.string.authentication_failed, Toast.LENGTH_SHORT).show()
+                        if (actionMode == Cipher.ENCRYPT_MODE){
+                            onAuthenticationResult(false)
+                        }
                     }
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         super.onAuthenticationSucceeded(result)
+                        var success = false
                         val cipherObject = result.cryptoObject?.cipher
                         if (cipherObject != null){
                             try {
@@ -72,7 +78,7 @@ open class VolumeActionActivity : BaseActivity() {
                                         val sharedPrefsEditor = sharedPrefs.edit()
                                         sharedPrefsEditor.putString(rootCipherDir, "$encodedIv:$encodedCipherText")
                                         sharedPrefsEditor.apply()
-                                        onAuthenticationResult(true)
+                                        success = true
                                     }
                                     Cipher.DECRYPT_MODE -> {
                                         try {
@@ -102,6 +108,9 @@ open class VolumeActionActivity : BaseActivity() {
                             }
                         } else {
                             Toast.makeText(applicationContext, R.string.error_cipher_null, Toast.LENGTH_SHORT).show()
+                        }
+                        if (actionMode == Cipher.ENCRYPT_MODE){
+                            onAuthenticationResult(success)
                         }
                     }
                 }
