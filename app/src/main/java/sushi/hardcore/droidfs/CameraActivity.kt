@@ -170,7 +170,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     fun onClickGrid(view: View) {
         ColoredAlertDialogBuilder(this)
             .setTitle(getString(R.string.choose_grid))
-            .setSingleChoiceItems(gridTitles.map { getString(it) as CharSequence }.toTypedArray(), gridValues.indexOf(camera.grid)){ dialog, which ->
+            .setSingleChoiceItems(gridTitles.map { getString(it) }.toTypedArray(), gridValues.indexOf(camera.grid)){ dialog, which ->
                 camera.grid = gridValues[which]
                 image_grid.setImageResource(if (camera.grid == Grid.OFF){ R.drawable.icon_grid_off } else { R.drawable.icon_grid_on })
                 dialog.dismiss()
