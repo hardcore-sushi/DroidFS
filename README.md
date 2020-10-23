@@ -38,19 +38,23 @@ It is strongly recommended to read the documentation of a feature before enablin
   Disable the secure flag of DroidFS activities. This will allow you to take screenshots from the app, but will also allow other apps to record the screen while using DroidFS.
   Note: apps with root access don't care about this flag: they can take screenshots or record the screen of any app without any permissions.
   </li>
-  <li><h4>Allow opening files with other applications:</h4>
-  Decrypt and open file using external apps. This require writing the plain file to disk (DroidFS internal storage).
+  <li><h4>Allow opening files with other applications *:</h4>
+  Decrypt and open file using external apps. These apps could save and send the files thus opened.
   </li>
   <li><h4>Allow exporting files:</h4>
-  Decrypt and write file to disk (external storage). Any app with storage permissions can access exported files.
+  Decrypt and write file to disk (external storage). Any app with storage permissions could access exported files.
   </li>
-  <li><h4>Allow sharing files via the android share menu:</h4>
-  Decrypt and share file with other apps. This require writing the plain file to disk (DroidFS internal storage).
+  <li><h4>Allow sharing files via the android share menu *:</h4>
+  Decrypt and share file with other apps. These apps could save and send the files thus shared.
+  </li>
+  <li><h4>Keep volume open when the app goes in background:</h4>
+  Don't close the volume when you leave the app but keep running it in the background. Anyone going back to the activity could have access to the volume.
   </li>
   <li><h4>Allow saving password hash using fingerprint:</h4>
-  Generate an AES-256 GCM key in the Android Keystore (protected by fingerprint authentication), then use it to encrypt the volume password hash and store it to the DroidFS internal storage. This require Android v6.0+.
+  Generate an AES-256 GCM key in the Android Keystore (protected by fingerprint authentication), then use it to encrypt the volume password hash and store it to the DroidFS internal storage. This require Android v6.0+. If your device is not encrypted, extracting the encryption key with physical access may be possible.
   </li>
 </ul>
+* Features requiring temporary writing of the plain file to disk (DroidFS internal storage). This file could be read by apps with root access or by physical access if your device is not encrypted.
 
 # Download
 You can download the latest version [here](https://github.com/hardcore-sushi/DroidFS/releases).
