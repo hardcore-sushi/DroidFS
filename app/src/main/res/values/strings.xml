@@ -179,4 +179,5 @@
     <string name="error_cipher_null">Error cipher is null</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
     <string name="key_permanently_invalidated_exception_msg">It looks like you have added a new fingerprint. Saved passwords hash have become unusable.</string>
+    <string name="no_more_images">No more images found.</string>
 </resources>

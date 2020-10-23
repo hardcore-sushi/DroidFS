@@ -124,13 +124,25 @@ class ImageViewer: FileViewerActivity() {
             }
             wasMapped = true
         }
-        currentMappedImageIndex = if (deltaX < 0){
-            MiscUtils.incrementIndex(currentMappedImageIndex, mappedImages)
+        if (mappedImages.size == 0){ //can happen on deleting images
+            ColoredAlertDialogBuilder(this)
+                .keepFullScreen()
+                .setTitle(R.string.error)
+                .setCancelable(false)
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    goBackToExplorer()
+                }
+                .setMessage(R.string.no_more_images)
+                .show()
         } else {
-            MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
+            currentMappedImageIndex = if (deltaX < 0){
+                MiscUtils.incrementIndex(currentMappedImageIndex, mappedImages)
+            } else {
+                MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
+            }
+            filePath = mappedImages[currentMappedImageIndex].fullPath
+            loadImage()
         }
-        filePath = mappedImages[currentMappedImageIndex].fullPath
-        loadImage()
     }
 
     fun onClickDelete(view: View) {
