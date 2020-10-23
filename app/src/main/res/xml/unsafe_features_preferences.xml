@@ -50,4 +50,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/about">
+
+        <Preference
+            android:title="@string/usf_doc"
+            android:summary="@string/usf_read_doc"
+            android:icon="@drawable/icon_notes">
+            <intent android:action="android.intent.action.VIEW" android:data="https://github.com/hardcore-sushi/DroidFS#unsafe-features"/>
+        </Preference>
+
+    </PreferenceCategory>
+
 </PreferenceScreen>
