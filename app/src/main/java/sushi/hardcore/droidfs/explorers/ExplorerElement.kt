@@ -5,7 +5,7 @@ import java.util.*
 
 class ExplorerElement(val name: String, val elementType: Short, var size: Long, mtime: Long, parentPath: String) {
     val mTime = Date((mtime * 1000).toString().toLong())
-    val fullPath: String = PathUtils.path_join(parentPath, name)
+    val fullPath: String = PathUtils.pathJoin(parentPath, name)
 
     val isDirectory: Boolean
         get() = elementType.toInt() == 0

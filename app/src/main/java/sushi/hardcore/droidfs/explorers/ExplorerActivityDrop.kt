@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.explorers
 
+import android.content.DialogInterface
 import android.content.Intent
 import android.net.Uri
 import android.os.Looper
@@ -9,7 +10,6 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.LoadingTask
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
@@ -36,42 +36,30 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                         val alertDialog = ColoredAlertDialogBuilder(activity)
                         alertDialog.setCancelable(false)
                         alertDialog.setPositiveButton(R.string.ok) { _, _ -> finish() }
-                        var errorMsg: String? = null
+                        val errorMsg: String?
                         val extras = intent.extras
                         if (extras != null && extras.containsKey(Intent.EXTRA_STREAM)){
                             Looper.prepare()
-                            if (intent.action == Intent.ACTION_SEND) {
-                                val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-                                errorMsg = if (uri == null){
-                                    getString(R.string.share_intent_parsing_failed)
-                                } else {
-                                    val outputPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)), false)
-                                    if (outputPath == null) {
-                                        ""
+                            when (intent.action) {
+                                Intent.ACTION_SEND -> {
+                                    val uri = intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
+                                    errorMsg = if (uri == null){
+                                        getString(R.string.share_intent_parsing_failed)
                                     } else {
-                                        if (gocryptfsVolume.importFile(activity, uri, outputPath)) null else getString(R.string.import_failed, uri)
+                                        if (importFilesFromUris(listOf(uri), this){ _, _ -> finish() }) null else ""
                                     }
                                 }
-                            } else if (intent.action == Intent.ACTION_SEND_MULTIPLE) {
-                                val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
-                                if (uris != null){
-                                    for (uri in uris) {
-                                        val outputPath = checkPathOverwrite(PathUtils.path_join(currentDirectoryPath, PathUtils.getFilenameFromURI(activity, uri)), false)
-                                        if (outputPath == null){
-                                            errorMsg = ""
-                                            break
-                                        } else {
-                                            if (!gocryptfsVolume.importFile(activity, uri, outputPath)) {
-                                                errorMsg = getString(R.string.import_failed, uri)
-                                                break
-                                            }
-                                        }
+                                Intent.ACTION_SEND_MULTIPLE -> {
+                                    val uris = intent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)
+                                    errorMsg = if (uris != null){
+                                        if (importFilesFromUris(uris, this){ _, _ -> finish() }) null else ""
+                                    } else {
+                                        getString(R.string.share_intent_parsing_failed)
                                     }
-                                } else {
+                                }
+                                else -> {
                                     errorMsg = getString(R.string.share_intent_parsing_failed)
                                 }
-                            } else {
-                                errorMsg = getString(R.string.share_intent_parsing_failed)
                             }
                         } else {
                             errorMsg = getString(R.string.share_intent_parsing_failed)

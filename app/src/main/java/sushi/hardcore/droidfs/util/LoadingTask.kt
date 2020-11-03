@@ -7,7 +7,7 @@ import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
-abstract class LoadingTask(private val activity: AppCompatActivity, private val loadingMessageResId: Int) {
+abstract class LoadingTask(val activity: AppCompatActivity, loadingMessageResId: Int) {
     private val dialogLoadingView = activity.layoutInflater.inflate(R.layout.dialog_loading, null)
     private val dialogLoading: AlertDialog = ColoredAlertDialogBuilder(activity)
         .setView(dialogLoadingView)
@@ -31,7 +31,7 @@ abstract class LoadingTask(private val activity: AppCompatActivity, private val 
             activity.runOnUiThread { doFinally(activity) }
         }.start()
     }
-    protected fun stopTask(onUiThread: (() -> Unit)?){
+    fun stopTask(onUiThread: (() -> Unit)?){
         isStopped = true
         dialogLoading.dismiss()
         onUiThread?.let {

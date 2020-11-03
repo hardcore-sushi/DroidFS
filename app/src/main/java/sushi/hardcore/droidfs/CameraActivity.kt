@@ -66,7 +66,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             override fun onPictureTaken(result: PictureResult) {
                 take_photo_button.onPhotoTaken()
                 val inputStream = ByteArrayInputStream(result.data)
-                if (gocryptfsVolume.importFile(inputStream, PathUtils.path_join(outputDirectory, fileName))){
+                if (gocryptfsVolume.importFile(inputStream, PathUtils.pathJoin(outputDirectory, fileName))){
                     Toast.makeText(applicationContext, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
                 } else {
                     ColoredAlertDialogBuilder(applicationContext)

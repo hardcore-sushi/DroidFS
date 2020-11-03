@@ -1,6 +1,8 @@
 package sushi.hardcore.droidfs.explorers
 
+import android.content.DialogInterface
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,9 +37,11 @@ import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.util.LoadingTask
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
+import java.io.FileNotFoundException
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -235,7 +239,7 @@ open class BaseExplorerActivity : BaseActivity() {
         if (folder_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.mkdir(PathUtils.path_join(currentDirectoryPath, folder_name))) {
+            if (!gocryptfsVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folder_name))) {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
@@ -291,13 +295,13 @@ open class BaseExplorerActivity : BaseActivity() {
                             .setView(dialogEditTextView)
                             .setTitle(R.string.enter_new_name)
                             .setPositiveButton(R.string.ok) { _, _ ->
-                                handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
+                                handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.pathJoin(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
                             }
                             .setNegativeButton(R.string.cancel) { _, _ -> handler.sendMessage(Message().apply { obj = null }) }
                             .create()
                         dialogEditText.setOnEditorActionListener { _, _, _ ->
                             dialog.dismiss()
-                            handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.path_join(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
+                            handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.pathJoin(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
                             true
                         }
                         dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
@@ -317,11 +321,57 @@ open class BaseExplorerActivity : BaseActivity() {
         return outputPath
     }
 
+    protected fun importFilesFromUris(uris: List<Uri>, task: LoadingTask, callback: (DialogInterface.OnClickListener)? = null): Boolean {
+        var success = false
+        for (uri in uris) {
+            val fileName = PathUtils.getFilenameFromURI(task.activity, uri)
+            if (fileName == null){
+                task.stopTask {
+                    ColoredAlertDialogBuilder(task.activity)
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.error_retrieving_filename, uri))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+                success = false
+                break
+            } else {
+                val dstPath = checkPathOverwrite(PathUtils.pathJoin(currentDirectoryPath, fileName), false)
+                if (dstPath == null){
+                    break
+                } else {
+                    var message: String? = null
+                    try {
+                        success = gocryptfsVolume.importFile(task.activity, uri, dstPath)
+                    } catch (e: FileNotFoundException){
+                        message = if (e.message != null){
+                            e.message!!+"\n"
+                        } else {
+                            ""
+                        }
+                    }
+                    if (!success || message != null) {
+                        task.stopTask {
+                            ColoredAlertDialogBuilder(task.activity)
+                                .setTitle(R.string.error)
+                                .setMessage((message ?: "")+getString(R.string.import_failed, uri))
+                                .setCancelable(callback == null)
+                                .setPositiveButton(R.string.ok, callback)
+                                .show()
+                        }
+                        break
+                    }
+                }
+            }
+        }
+        return success
+    }
+
     protected fun rename(old_name: String, new_name: String){
         if (new_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.rename(PathUtils.path_join(currentDirectoryPath, old_name), PathUtils.path_join(currentDirectoryPath, new_name))) {
+            if (!gocryptfsVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
@@ -400,7 +450,7 @@ open class BaseExplorerActivity : BaseActivity() {
             }
             R.id.external_open -> {
                 if (usf_open){
-                    openWithExternalApp(PathUtils.path_join(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
+                    openWithExternalApp(PathUtils.pathJoin(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
                     unselectAll()
                 }
                 true

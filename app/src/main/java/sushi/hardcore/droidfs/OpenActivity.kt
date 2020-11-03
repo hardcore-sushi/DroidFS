@@ -100,21 +100,13 @@ class OpenActivity : VolumeActionActivity() {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
                 if (data?.data != null) {
-                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data)){
-                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                        if (path != null){
-                            edit_volume_path.setText(path)
-                        } else {
-                            ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.error)
-                                .setMessage(R.string.path_from_uri_null_error_msg)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
+                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
+                    if (path != null){
+                        edit_volume_path.setText(path)
                     } else {
                         ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.open_on_sdcard_warning)
+                            .setTitle(R.string.error)
+                            .setMessage(R.string.path_from_uri_null_error_msg)
                             .setPositiveButton(R.string.ok, null)
                             .show()
                     }
@@ -129,19 +121,37 @@ class OpenActivity : VolumeActionActivity() {
             Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
         } else {
             val rootCipherDirFile = File(rootCipherDir)
-            if (!GocryptfsVolume.isGocryptfsVolume(rootCipherDirFile)){
+            if (!rootCipherDirFile.canRead()) {
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.open_cant_read_error)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else if (!GocryptfsVolume.isGocryptfsVolume(rootCipherDirFile)){
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.error_not_a_volume)
                     .setPositiveButton(R.string.ok, null)
                     .show()
             } else if (!rootCipherDirFile.canWrite()) {
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.open_cant_write_warning)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
-                    .show()
+                if ((intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) && intent.extras != null) { //import via android share menu
+                    ColoredAlertDialogBuilder(this)
+                        .setTitle(R.string.error)
+                        .setMessage(R.string.open_cant_write_error_msg)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                } else {
+                    val dialog = ColoredAlertDialogBuilder(this)
+                        .setTitle(R.string.warning)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
+                    if (PathUtils.isPathOnExternalStorage(rootCipherDir, this)){
+                        dialog.setMessage(R.string.open_on_sdcard_warning)
+                    } else {
+                        dialog.setMessage(R.string.open_cant_write_warning)
+                    }
+                    dialog.show()
+                }
             } else {
                 openVolume()
             }

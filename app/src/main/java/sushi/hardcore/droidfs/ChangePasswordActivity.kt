@@ -78,7 +78,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
         if (resultCode == Activity.RESULT_OK) {
             if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
                 if (data?.data != null) {
-                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data)){
+                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data!!)){
                         val path = PathUtils.getFullPathFromTreeUri(data.data, this)
                         if (path != null){
                             edit_volume_path.setText(path)

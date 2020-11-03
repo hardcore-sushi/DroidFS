@@ -26,7 +26,7 @@
     <string name="export_failed">Export of %s failed.</string>
     <string name="success_export">Export successful !</string>
     <string name="success_export_msg">The selected files have been successfully exported.</string>
-    <string name="remove_failed">Deletion of %s failed</string>
+    <string name="remove_failed">Deletion of %s failed.</string>
     <string name="passwords_mismatch">Passwords don\'t match</string>
     <string name="dir_not_empty">The selected directory isn\'t empty</string>
     <string name="success_volume_create">Volume successfully created !</string>
@@ -164,8 +164,10 @@
     <string name="path_from_uri_null_error_msg">Failed to retrieve the selected path.</string>
     <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
     <string name="create_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please select a path on internal storage.</string>
-    <string name="open_on_sdcard_warning">DroidFS can\'t write on removable SD cards. You will only have read-only access to the volumes therein.</string>
-    <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. You will only have read-only access to this volume.</string>
+    <string name="open_on_sdcard_warning">DroidFS can\'t write on removable SD cards. Opening volume with read-only access.</string>
+    <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. Opening volume with read-only access.</string>
+    <string name="open_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another volume.</string>
+    <string name="open_cant_read_error">DroidFS doesn\'t have read access to this path. You can try to move the volume to a readable location.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
     <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
@@ -182,4 +184,5 @@
     <string name="no_more_images">No more images found.</string>
     <string name="usf_read_doc">You should read it carefully before enabling any of these options.</string>
     <string name="usf_doc">Unsafe features documentation</string>
+    <string name="error_retrieving_filename">Unable to retrieve file name for URI: %s</string>
 </resources>

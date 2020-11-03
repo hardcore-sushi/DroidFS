@@ -1,0 +1,163 @@
+package sushi.hardcore.droidfs.util
+
+import android.content.Context
+import android.net.Uri
+import android.os.storage.StorageManager
+import android.provider.DocumentsContract
+import android.provider.OpenableColumns
+import androidx.core.content.ContextCompat
+import java.io.File
+import java.text.DecimalFormat
+import kotlin.math.log10
+import kotlin.math.pow
+
+object PathUtils {
+    fun getParentPath(path: String): String {
+        return if (path.endsWith("/")) {
+            val a = path.substring(0, path.length - 2)
+            if (a.contains("/")) {
+                a.substring(0, a.lastIndexOf("/"))
+            } else {
+                ""
+            }
+        } else {
+            if (path.contains("/")) {
+                path.substring(0, path.lastIndexOf("/"))
+            } else {
+                ""
+            }
+        }
+    }
+
+    fun pathJoin(vararg strings: String): String {
+        val result = StringBuilder()
+        for (element in strings) {
+            if (element.isNotEmpty()) {
+                result.append(element)
+                if (!element.endsWith("/")) {
+                    result.append("/")
+                }
+            }
+        }
+        return result.substring(0, result.length - 1)
+    }
+
+    fun getRelativePath(parentPath: String, childPath: String): String {
+        return childPath.substring(parentPath.length + 1)
+    }
+
+    fun getFilenameFromURI(context: Context, uri: Uri): String? {
+        var result: String? = null
+        if (uri.scheme == "content") {
+            context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME))
+                }
+            }
+        }
+        if (result == null) {
+            result = uri.path
+            result?.let {
+                val cut = it.lastIndexOf('/')
+                if (cut != -1) {
+                    result = it.substring(cut + 1)
+                }
+            }
+        }
+        return result
+    }
+
+    private val units = arrayOf("B", "kB", "MB", "GB", "TB")
+    fun formatSize(size: Long): String {
+        if (size <= 0) {
+            return "0 B"
+        }
+        val digitGroups = (log10(size.toDouble()) / log10(1024.0)).toInt()
+        return DecimalFormat("#,##0.#").format(size / 1024.0.pow(digitGroups.toDouble())
+        ) + " " + units[digitGroups]
+    }
+
+    fun isTreeUriOnPrimaryStorage(treeUri: Uri): Boolean {
+        val volumeId = getVolumeIdFromTreeUri(treeUri)
+        return if (volumeId != null) {
+            volumeId == PRIMARY_VOLUME_NAME || volumeId == "home" || volumeId == "downloads"
+        } else {
+            false
+        }
+    }
+
+    private fun getExternalStoragePath(context: Context): List<String> {
+        val externalPaths: MutableList<String> = ArrayList()
+        ContextCompat.getExternalFilesDirs(context, null).forEach {
+            val rootPath = it.path.substring(0, it.path.indexOf(pathJoin("Android/data/", context.packageName, "files")))
+            if (!rootPath.endsWith("/0/")){ //not primary storage
+                externalPaths.add(rootPath)
+            }
+        }
+        return externalPaths
+    }
+
+    fun isPathOnExternalStorage(path: String, context: Context): Boolean {
+        getExternalStoragePath(context).forEach {
+            if (path.startsWith(it)){
+                return true
+            }
+        }
+        return false
+    }
+
+    private const val PRIMARY_VOLUME_NAME = "primary"
+    fun getFullPathFromTreeUri(treeUri: Uri?, context: Context): String? {
+        if (treeUri == null) return null
+        if ("content".equals(treeUri.scheme, ignoreCase = true)) {
+            val vId = getVolumeIdFromTreeUri(treeUri)
+            var volumePath = getVolumePath(vId, context) ?: return null
+            if (volumePath.endsWith(File.separator))
+                volumePath = volumePath.substring(0, volumePath.length - 1)
+            var documentPath = getDocumentPathFromTreeUri(treeUri)
+            if (documentPath!!.endsWith(File.separator))
+                documentPath = documentPath.substring(0, documentPath.length - 1)
+            return if (documentPath.isNotEmpty()) {
+                pathJoin(volumePath, documentPath)
+            } else volumePath
+        } else if ("file".equals(treeUri.scheme, ignoreCase = true)) {
+            return treeUri.path
+        }
+        return null
+    }
+
+    private fun getVolumePath(volumeId: String?, context: Context): String? {
+        return try {
+            val mStorageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
+            val storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
+            val getVolumeList = mStorageManager.javaClass.getMethod("getVolumeList")
+            val getUuid = storageVolumeClazz.getMethod("getUuid")
+            val getPath = storageVolumeClazz.getMethod("getPath")
+            val isPrimary = storageVolumeClazz.getMethod("isPrimary")
+            val result = getVolumeList.invoke(mStorageManager)
+            val length = java.lang.reflect.Array.getLength(result!!)
+            for (i in 0 until length) {
+                val storageVolumeElement = java.lang.reflect.Array.get(result, i)
+                val uuid = getUuid.invoke(storageVolumeElement)
+                val primary = isPrimary.invoke(storageVolumeElement) as Boolean
+                if (primary && PRIMARY_VOLUME_NAME == volumeId) return getPath.invoke(storageVolumeElement) as String
+                if (uuid == volumeId) return getPath.invoke(storageVolumeElement) as String
+            }
+            null
+        } catch (ex: Exception) {
+            null
+        }
+    }
+
+    private fun getVolumeIdFromTreeUri(treeUri: Uri): String? {
+        val docId = DocumentsContract.getTreeDocumentId(treeUri)
+        val split = docId.split(":").toTypedArray()
+        return if (split.isNotEmpty()) split[0] else null
+    }
+
+    private fun getDocumentPathFromTreeUri(treeUri: Uri): String? {
+        val docId = DocumentsContract.getTreeDocumentId(treeUri)
+        val split: Array<String?> = docId.split(":").toTypedArray()
+        return if (split.size >= 2 && split[1] != null) split[1] else File.separator
+    }
+}
