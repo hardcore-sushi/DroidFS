@@ -48,12 +48,10 @@ class ImageViewer: FileViewerActivity() {
         action_buttons.visibility = View.GONE
         action_bar.visibility = View.GONE
     }
-    private val slideshowLoop = object : Runnable {
-        override fun run() {
-            if (slideshowActive){
-                swipeImage(-1F)
-                handler.postDelayed(this, ConstValues.slideshow_delay)
-            }
+    private val slideshowNext = Runnable {
+        if (slideshowActive){
+            image_viewer.resetZoomFactor()
+            swipeImage(-1F, true)
         }
     }
     override fun viewFile() {
@@ -107,7 +105,7 @@ class ImageViewer: FileViewerActivity() {
         handler.postDelayed(hideUI, hideDelay)
     }
 
-    private fun swipeImage(deltaX: Float){
+    private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false){
         if (!wasMapped){
             for (e in gocryptfsVolume.recursiveMapFiles(PathUtils.getParentPath(filePath))){
                 if (e.isRegularFile && ConstValues.isImage(e.name)){
@@ -142,6 +140,12 @@ class ImageViewer: FileViewerActivity() {
             }
             filePath = mappedImages[currentMappedImageIndex].fullPath
             loadImage()
+            if (slideshowActive){
+                if (!slideshowSwipe) { //reset slideshow delay if user swipes
+                    handler.removeCallbacks(slideshowNext)
+                }
+                handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
+            }
         }
     }
 
@@ -172,7 +176,7 @@ class ImageViewer: FileViewerActivity() {
     fun onClickSlideshow(view: View) {
         if (!slideshowActive){
             slideshowActive = true
-            handler.postDelayed(slideshowLoop, ConstValues.slideshow_delay)
+            handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
             hideUI.run()
             Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
@@ -236,12 +240,13 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun askSaveRotation(callback: () -> Unit){
-        if (rotationAngle%360 != 0f){
+        if (rotationAngle%360 != 0f && !slideshowActive){
             ColoredAlertDialogBuilder(this)
                 .keepFullScreen()
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save_img_rotated)
                 .setNegativeButton(R.string.no) { _, _ -> callback() }
+                .setNeutralButton(R.string.cancel, null)
                 .setPositiveButton(R.string.yes) { _, _ ->
                         val outputStream = ByteArrayOutputStream()
                         if (rotatedBitmap?.compress(
