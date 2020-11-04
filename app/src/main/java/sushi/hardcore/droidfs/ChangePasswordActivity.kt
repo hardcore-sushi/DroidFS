@@ -29,25 +29,34 @@ class ChangePasswordActivity : VolumeActionActivity() {
         setContentView(R.layout.activity_change_password)
         setupActionBar()
         setupFingerprintStuff()
-        savedVolumesAdapter = SavedVolumesAdapter(this, sharedPrefs)
+        savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
             saved_path_listview.adapter = savedVolumesAdapter
             saved_path_listview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
-                edit_volume_path.setText(savedVolumesAdapter.getItem(position))
+                val volume = savedVolumesAdapter.getItem(position)
+                currentVolumeName = volume.name
+                if (volume.isHidden){
+                    switch_hidden_volume.isChecked = true
+                    edit_volume_name.setText(currentVolumeName)
+                } else {
+                    switch_hidden_volume.isChecked = false
+                    edit_volume_path.setText(currentVolumeName)
+                }
+                onClickSwitchHiddenVolume(switch_hidden_volume)
             }
         } else {
-            WidgetUtil.hide(saved_path_listview)
+            WidgetUtil.hideWithPadding(saved_path_listview)
         }
-        edit_volume_path.addTextChangedListener(object: TextWatcher{
+        val textWatcher = object: TextWatcher{
             override fun afterTextChanged(s: Editable?) {
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (savedVolumesAdapter.isPathSaved(s.toString())){
+                if (volumeDatabase.isVolumeSaved(s.toString())){
                     checkbox_remember_path.isEnabled = false
                     checkbox_remember_path.isChecked = false
-                    if (sharedPrefs.getString(s.toString(), null) != null){
+                    if (volumeDatabase.isHashSaved(s.toString())){
                         edit_old_password.text = null
                         edit_old_password.hint = getString(R.string.hash_saved_hint)
                         edit_old_password.isEnabled = false
@@ -61,7 +70,9 @@ class ChangePasswordActivity : VolumeActionActivity() {
                     edit_old_password.isEnabled = true
                 }
             }
-        })
+        }
+        edit_volume_path.addTextChangedListener(textWatcher)
+        edit_volume_name.addTextChangedListener(textWatcher)
         edit_new_password_confirm.setOnEditorActionListener { v, _, _ ->
             onClickChangePassword(v)
             true
@@ -102,30 +113,27 @@ class ChangePasswordActivity : VolumeActionActivity() {
     }
 
     fun onClickChangePassword(view: View?) {
-        rootCipherDir = edit_volume_path.text.toString()
-        if (rootCipherDir.isEmpty()) {
-            Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
-        } else {
-            val rootCipherDirFile = File(rootCipherDir)
-            if (!GocryptfsVolume.isGocryptfsVolume(rootCipherDirFile)){
+        loadVolumePath {
+            val volumeFile = File(currentVolumePath)
+            if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.error_not_a_volume)
                     .setPositiveButton(R.string.ok, null)
                     .show()
-            } else if (!rootCipherDirFile.canWrite()){
+            } else if (!volumeFile.canWrite()){
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
                     .setMessage(R.string.change_pwd_cant_write_error_msg)
                     .setPositiveButton(R.string.ok, null)
                     .show()
             } else {
-                changePassword(null)
+                changePassword()
             }
         }
     }
 
-    private fun changePassword(givenHash: ByteArray?){
+    private fun changePassword(givenHash: ByteArray? = null){
         val newPassword = edit_new_password.text.toString().toCharArray()
         val newPasswordConfirm = edit_new_password_confirm.text.toString().toCharArray()
         if (!newPassword.contentEquals(newPasswordConfirm)) {
@@ -140,30 +148,38 @@ class ChangePasswordActivity : VolumeActionActivity() {
                     }
                     var changePasswordImmediately = true
                     if (givenHash == null) {
-                        val cipherText = sharedPrefs.getString(rootCipherDir, null)
-                        if (cipherText != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) { //password hash saved
-                            stopTask {
-                                loadPasswordHash(cipherText, ::changePassword)
+                        var volume: Volume? = null
+                        volumeDatabase.getVolumes().forEach { testVolume ->
+                            if (testVolume.name == currentVolumeName){
+                                volume = testVolume
                             }
-                            changePasswordImmediately = false
+                        }
+                        volume?.let {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                                it.hash?.let { hash ->
+                                    it.iv?.let { iv ->
+                                        currentVolumePath = if (it.isHidden){
+                                            PathUtils.pathJoin(filesDir.path, it.name)
+                                        } else {
+                                            it.name
+                                        }
+                                        stopTask {
+                                            loadPasswordHash(hash, iv, ::changePassword)
+                                        }
+                                        changePasswordImmediately = false
+                                    }
+                                }
+                            }
                         }
                     }
                     if (changePasswordImmediately) {
-                        if (GocryptfsVolume.changePassword(
-                                rootCipherDir,
-                                oldPassword,
-                                givenHash,
-                                newPassword,
-                                returnedHash
-                            )
-                        ) {
-                            if (sharedPrefs.getString(rootCipherDir, null) != null) {
-                                val editor = sharedPrefs.edit()
-                                editor.remove(rootCipherDir)
-                                editor.apply()
+                        if (GocryptfsVolume.changePassword(currentVolumePath, oldPassword, givenHash, newPassword, returnedHash)) {
+                            val volume = Volume(currentVolumeName, switch_hidden_volume.isChecked)
+                            if (volumeDatabase.isHashSaved(currentVolumeName)) {
+                                volumeDatabase.removeHash(volume)
                             }
                             if (checkbox_remember_path.isChecked) {
-                                savedVolumesAdapter.addVolumePath(rootCipherDir)
+                                volumeDatabase.saveVolume(volume)
                             }
                             if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                                 stopTask {

@@ -9,7 +9,6 @@ import android.text.TextWatcher
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView.OnItemClickListener
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
@@ -37,30 +36,46 @@ class OpenActivity : VolumeActionActivity() {
         setContentView(R.layout.activity_open)
         setupActionBar()
         setupFingerprintStuff()
-        savedVolumesAdapter = SavedVolumesAdapter(this, sharedPrefs)
+        savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
             saved_path_listview.adapter = savedVolumesAdapter
             saved_path_listview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
-                rootCipherDir = savedVolumesAdapter.getItem(position)
-                edit_volume_path.setText(rootCipherDir)
-                val cipherText = sharedPrefs.getString(rootCipherDir, null)
-                if (cipherText != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){ //password hash saved
-                    loadPasswordHash(cipherText, ::openUsingPasswordHash)
+                val volume = savedVolumesAdapter.getItem(position)
+                currentVolumeName = volume.name
+                if (volume.isHidden){
+                    switch_hidden_volume.isChecked = true
+                    edit_volume_name.setText(currentVolumeName)
+                } else {
+                    switch_hidden_volume.isChecked = false
+                    edit_volume_path.setText(currentVolumeName)
+                }
+                onClickSwitchHiddenVolume(switch_hidden_volume)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                    volume.hash?.let { hash ->
+                        volume.iv?.let { iv ->
+                            currentVolumePath = if (volume.isHidden){
+                                PathUtils.pathJoin(filesDir.path, volume.name)
+                            } else {
+                                volume.name
+                            }
+                            loadPasswordHash(hash, iv, ::openUsingPasswordHash)
+                        }
+                    }
                 }
             }
         } else {
-            WidgetUtil.hide(saved_path_listview)
+            WidgetUtil.hideWithPadding(saved_path_listview)
         }
-        edit_volume_path.addTextChangedListener(object: TextWatcher {
+        val textWatcher = object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {
             }
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (savedVolumesAdapter.isPathSaved(s.toString())){
+                if (volumeDatabase.isVolumeSaved(s.toString())){
                     checkbox_remember_path.isEnabled = false
                     checkbox_remember_path.isChecked = false
-                    if (sharedPrefs.getString(s.toString(), null) != null){
+                    if (volumeDatabase.isHashSaved(s.toString())){
                         checkbox_save_password.isEnabled = false
                         checkbox_save_password.isChecked = false
                     } else {
@@ -71,7 +86,9 @@ class OpenActivity : VolumeActionActivity() {
                     checkbox_save_password.isEnabled = true
                 }
             }
-        })
+        }
+        edit_volume_path.addTextChangedListener(textWatcher)
+        edit_volume_name.addTextChangedListener(textWatcher)
         edit_password.setOnEditorActionListener { v, _, _ ->
             onClickOpen(v)
             true
@@ -116,24 +133,15 @@ class OpenActivity : VolumeActionActivity() {
     }
 
     fun onClickOpen(view: View?) {
-        rootCipherDir = edit_volume_path.text.toString()
-        if (rootCipherDir.isEmpty()) {
-            Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
-        } else {
-            val rootCipherDirFile = File(rootCipherDir)
-            if (!rootCipherDirFile.canRead()) {
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.open_cant_read_error)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-            } else if (!GocryptfsVolume.isGocryptfsVolume(rootCipherDirFile)){
+        loadVolumePath {
+            val volumeFile = File(currentVolumePath)
+            if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.error_not_a_volume)
                     .setPositiveButton(R.string.ok, null)
                     .show()
-            } else if (!rootCipherDirFile.canWrite()) {
+            } else if (!volumeFile.canWrite()) {
                 if ((intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) && intent.extras != null) { //import via android share menu
                     ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
@@ -145,7 +153,7 @@ class OpenActivity : VolumeActionActivity() {
                         .setTitle(R.string.warning)
                         .setCancelable(false)
                         .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
-                    if (PathUtils.isPathOnExternalStorage(rootCipherDir, this)){
+                    if (PathUtils.isPathOnExternalStorage(currentVolumeName, this)){
                         dialog.setMessage(R.string.open_on_sdcard_warning)
                     } else {
                         dialog.setMessage(R.string.open_cant_write_warning)
@@ -166,10 +174,10 @@ class OpenActivity : VolumeActionActivity() {
                 if (checkbox_save_password.isChecked){
                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
-                sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
+                sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)
                 if (sessionID != -1) {
                     if (checkbox_remember_path.isChecked) {
-                        savedVolumesAdapter.addVolumePath(rootCipherDir)
+                        volumeDatabase.saveVolume(Volume(currentVolumeName, switch_hidden_volume.isChecked))
                     }
                     if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                             stopTask {
@@ -201,7 +209,7 @@ class OpenActivity : VolumeActionActivity() {
     private fun openUsingPasswordHash(passwordHash: ByteArray){
         object : LoadingTask(this, R.string.loading_msg_open){
             override fun doTask(activity: AppCompatActivity) {
-                sessionID = GocryptfsVolume.init(rootCipherDir, null, passwordHash, null)
+                sessionID = GocryptfsVolume.init(currentVolumePath, null, passwordHash, null)
                 if (sessionID != -1){
                     stopTask { startExplorer() }
                 } else {
@@ -236,7 +244,7 @@ class OpenActivity : VolumeActionActivity() {
             explorerIntent = Intent(this, ExplorerActivity::class.java) //default opening
         }
         explorerIntent.putExtra("sessionID", sessionID)
-        explorerIntent.putExtra("volume_name", File(rootCipherDir).name)
+        explorerIntent.putExtra("volume_name", File(currentVolumeName).name)
         startActivity(explorerIntent)
         isFinishingIntentionally = true
         finish()

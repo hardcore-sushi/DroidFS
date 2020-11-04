@@ -160,4 +160,19 @@ object PathUtils {
         val split: Array<String?> = docId.split(":").toTypedArray()
         return if (split.size >= 2 && split[1] != null) split[1] else File.separator
     }
+
+    fun recursiveRemoveDirectory(rootDirectory: File): Boolean {
+        rootDirectory.listFiles()?.forEach { item ->
+            if (item.isDirectory) {
+                if (!recursiveRemoveDirectory(item)){
+                    return false
+                }
+            } else {
+                if (!item.delete()) {
+                    return false
+                }
+            }
+        }
+        return rootDirectory.delete()
+    }
 }

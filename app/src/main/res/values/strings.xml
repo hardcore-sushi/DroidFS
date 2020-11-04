@@ -9,6 +9,7 @@
     <string name="password">Password:</string>
     <string name="password_confirm">Password (confirmation):</string>
     <string name="volume_path">Volume Path:</string>
+    <string name="volume_name">Volume Name:</string>
     <string name="import_files">Import/Encrypt files</string>
     <string name="mkdir">Create folder</string>
     <string name="dir_empty">Directory Empty</string>
@@ -42,6 +43,7 @@
     <string name="get_size_failed">Failed to retrieve file size.</string>
     <string name="parent_folder">Parent Folder</string>
     <string name="enter_volume_path">Please enter the volume path</string>
+    <string name="enter_volume_name">Please enter the volume name</string>
     <string name="external_open">Open with external app</string>
     <string name="single_delete_confirm">Are you sure you want to delete %s ?</string>
     <string name="multiple_delete_confirm">Are you sure you want to delete these %s items ?</string>
@@ -76,10 +78,14 @@
     <string name="fingerprint_instruction">Please touch the fingerprint sensor</string>
     <string name="open_failed_hash_msg">Failed to open the volume. The password may have changed.</string>
     <string name="authentication_failed">Authentication failed</string>
-    <string name="delete_hash_or_all">Delete only password hash or all saved volume data ? (This won\'t delete the volume itself)</string>
-    <string name="delete_all">Delete all</string>
-    <string name="delete_hash">Delete password hash</string>
+    <string name="delete_hash_or_all">Delete only the password hash or the password hash and the saved path ? (This won\'t delete the volume itself)</string>
+    <string name="password_hash_and_path">Password hash and path</string>
+    <string name="password_hash">Password hash</string>
     <string name="ask_delete_volume_path">Are you sure you want to forget this volume path ? (This won\'t delete the volume itself)</string>
+    <string name="hidden_volume_delete_question_hash">Delete only the password hash, the password hash and the saved path, or the WHOLE volume (including its content) ?</string>
+    <string name="whole_volume">Whole volume</string>
+    <string name="hidden_volume_delete_question">Delete only the path or the whole volume ITSELF (including its content) ?</string>
+    <string name="path_only">Path only</string>
     <string name="illegal_block_size_exception">IllegalBlockSizeException</string>
     <string name="illegal_block_size_exception_msg">This can happen if you have added a new fingerprint. Resetting hash storage can solve this problem.</string>
     <string name="reset_hash_storage">Reset hash storage</string>
@@ -167,7 +173,6 @@
     <string name="open_on_sdcard_warning">DroidFS can\'t write on removable SD cards. Opening volume with read-only access.</string>
     <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. Opening volume with read-only access.</string>
     <string name="open_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another volume.</string>
-    <string name="open_cant_read_error">DroidFS doesn\'t have read access to this path. You can try to move the volume to a readable location.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
     <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
@@ -185,4 +190,6 @@
     <string name="usf_read_doc">You should read it carefully before enabling any of these options.</string>
     <string name="usf_doc">Unsafe features documentation</string>
     <string name="error_retrieving_filename">Unable to retrieve file name for URI: %s</string>
+    <string name="hidden_volume">Hidden Volume</string>
+    <string name="error_slash_in_name">Volume name cannot contain slashes</string>
 </resources>

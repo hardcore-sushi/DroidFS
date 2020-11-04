@@ -56,6 +56,6 @@ dependencies {
     implementation "com.github.bumptech.glide:glide:4.11.0"
     implementation "com.google.android.exoplayer:exoplayer-core:2.11.7"
     implementation "com.google.android.exoplayer:exoplayer-ui:2.11.7"
-    implementation "com.otaliastudios:cameraview:2.6.3"
+    implementation "com.otaliastudios:cameraview:2.6.4"
     implementation "androidx.biometric:biometric:1.0.1"
 }

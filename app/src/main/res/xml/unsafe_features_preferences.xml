@@ -1,63 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory
-        android:title="@string/ui">
+    <PreferenceCategory android:title="@string/ui">
 
         <SwitchPreference
+            android:defaultValue="false"
             android:icon="@drawable/icon_screenshot"
             android:key="usf_screenshot"
-            android:title="@string/usf_screenshot"
-            android:defaultValue="false"/>
+            android:title="@string/usf_screenshot" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/explorer">
+    <PreferenceCategory android:title="@string/explorer">
 
         <SwitchPreference
-            android:icon="@drawable/icon_open_in_new"
-            android:key="usf_open"
-            android:title="@string/usf_open"
-            android:defaultValue="false"/>
-        <SwitchPreference
+            android:defaultValue="false"
             android:icon="@drawable/icon_decrypt"
             android:key="usf_decrypt"
-            android:title="@string/usf_decrypt"
-            android:defaultValue="false"/>
+            android:title="@string/usf_decrypt" />
         <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_open_in_new"
+            android:key="usf_open"
+            android:title="@string/usf_open" />
+        <SwitchPreference
+            android:defaultValue="false"
             android:icon="@drawable/icon_share"
             android:key="usf_share"
-            android:title="@string/usf_share"
-            android:defaultValue="false"/>
+            android:title="@string/usf_share" />
 
         <SwitchPreference
+            android:defaultValue="false"
             android:icon="@drawable/icon_decrypt"
             android:key="usf_keep_open"
-            android:title="@string/usf_keep_open"
-            android:defaultValue="false"/>
+            android:title="@string/usf_keep_open" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/usf_volume_management">
+    <PreferenceCategory android:title="@string/usf_volume_management">
 
         <SwitchPreference
+            android:defaultValue="false"
             android:icon="@drawable/icon_fingerprint"
             android:key="usf_fingerprint"
-            android:title="@string/usf_fingerprint"
-            android:defaultValue="false"/>
+            android:title="@string/usf_fingerprint" />
 
     </PreferenceCategory>
 
-    <PreferenceCategory
-        android:title="@string/about">
+    <PreferenceCategory android:title="@string/about">
 
         <Preference
-            android:title="@string/usf_doc"
+            android:icon="@drawable/icon_notes"
             android:summary="@string/usf_read_doc"
-            android:icon="@drawable/icon_notes">
-            <intent android:action="android.intent.action.VIEW" android:data="https://github.com/hardcore-sushi/DroidFS#unsafe-features"/>
+            android:title="@string/usf_doc">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://github.com/hardcore-sushi/DroidFS#unsafe-features" />
         </Preference>
 
     </PreferenceCategory>

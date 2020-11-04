@@ -6,8 +6,8 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import android.util.Base64
 import android.view.View
+import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
@@ -15,6 +15,8 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.toolbar.*
+import kotlinx.android.synthetic.main.volume_path_section.*
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.security.KeyStore
@@ -22,7 +24,9 @@ import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
 
 open class VolumeActionActivity : BaseActivity() {
-    protected lateinit var rootCipherDir: String
+    protected lateinit var currentVolumeName: String
+    protected lateinit var currentVolumePath: String
+    protected lateinit var volumeDatabase: VolumeDatabase
     private var usf_fingerprint = false
     private var biometricCanAuthenticateCode: Int = -1
     private lateinit var biometricManager: BiometricManager
@@ -30,10 +34,13 @@ open class VolumeActionActivity : BaseActivity() {
     private lateinit var keyStore: KeyStore
     private lateinit var key: SecretKey
     private lateinit var cipher: Cipher
+    private var isCipherReady = false
     private var actionMode: Int? = null
     private lateinit var onAuthenticationResult: (success: Boolean) -> Unit
     private lateinit var onPasswordDecrypted: (password: ByteArray) -> Unit
     private lateinit var dataToProcess: ByteArray
+    private lateinit var originalHiddenVolumeSectionLayoutParams: LinearLayout.LayoutParams
+    private lateinit var originalNormalVolumeSectionLayoutParams: LinearLayout.LayoutParams
     companion object {
         private const val ANDROID_KEY_STORE = "AndroidKeyStore"
         private const val KEY_ALIAS = "Hash Key"
@@ -42,6 +49,10 @@ open class VolumeActionActivity : BaseActivity() {
     }
 
     protected fun setupFingerprintStuff(){
+        originalHiddenVolumeSectionLayoutParams = hidden_volume_section.layoutParams as LinearLayout.LayoutParams
+        originalNormalVolumeSectionLayoutParams = normal_volume_section.layoutParams as LinearLayout.LayoutParams
+        WidgetUtil.hide(hidden_volume_section)
+        volumeDatabase = VolumeDatabase(this)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
             biometricManager = BiometricManager.from(this)
@@ -73,12 +84,7 @@ open class VolumeActionActivity : BaseActivity() {
                                 when (actionMode) {
                                     Cipher.ENCRYPT_MODE -> {
                                         val cipherText = cipherObject.doFinal(dataToProcess)
-                                        val encodedCipherText = Base64.encodeToString(cipherText, 0)
-                                        val encodedIv = Base64.encodeToString(cipherObject.iv, 0)
-                                        val sharedPrefsEditor = sharedPrefs.edit()
-                                        sharedPrefsEditor.putString(rootCipherDir, "$encodedIv:$encodedCipherText")
-                                        sharedPrefsEditor.apply()
-                                        success = true
+                                        success = volumeDatabase.addHash(Volume(currentVolumeName, switch_hidden_volume.isChecked, cipherText, cipherObject.iv))
                                     }
                                     Cipher.DECRYPT_MODE -> {
                                         try {
@@ -117,7 +123,7 @@ open class VolumeActionActivity : BaseActivity() {
                 biometricPrompt = BiometricPrompt(this, executor, callback)
             }
         } else {
-            WidgetUtil.hide(checkbox_save_password)
+            WidgetUtil.hideWithPadding(checkbox_save_password)
         }
     }
 
@@ -182,6 +188,7 @@ open class VolumeActionActivity : BaseActivity() {
             keyGenerator.generateKey()
         }
         cipher = Cipher.getInstance(KeyProperties.KEY_ALGORITHM_AES+"/"+KeyProperties.BLOCK_MODE_GCM+"/"+KeyProperties.ENCRYPTION_PADDING_NONE)
+        isCipherReady = true
     }
 
     private fun alertKeyPermanentlyInvalidatedException(){
@@ -198,14 +205,14 @@ open class VolumeActionActivity : BaseActivity() {
     @RequiresApi(Build.VERSION_CODES.M)
     protected fun savePasswordHash(plainText: ByteArray, onAuthenticationResult: (success: Boolean) -> Unit){
         val biometricPromptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(rootCipherDir)
+            .setTitle(currentVolumeName)
             .setSubtitle(getString(R.string.encrypt_action_description))
             .setDescription(getString(R.string.fingerprint_instruction))
             .setNegativeButtonText(getString(R.string.cancel))
             .setDeviceCredentialAllowed(false)
             .setConfirmationRequired(false)
             .build()
-        if (!::cipher.isInitialized){
+        if (!isCipherReady){
             prepareCipher()
         }
         actionMode = Cipher.ENCRYPT_MODE
@@ -220,9 +227,9 @@ open class VolumeActionActivity : BaseActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
-    protected fun loadPasswordHash(cipherText: String, onPasswordDecrypted: (password: ByteArray) -> Unit){
+    protected fun loadPasswordHash(cipherText: ByteArray, iv: ByteArray, onPasswordDecrypted: (password: ByteArray) -> Unit){
         val biometricPromptInfo = BiometricPrompt.PromptInfo.Builder()
-            .setTitle(rootCipherDir)
+            .setTitle(currentVolumeName)
             .setSubtitle(getString(R.string.decrypt_action_description))
             .setDescription(getString(R.string.fingerprint_instruction))
             .setNegativeButtonText(getString(R.string.cancel))
@@ -231,12 +238,10 @@ open class VolumeActionActivity : BaseActivity() {
             .build()
         this.onPasswordDecrypted = onPasswordDecrypted
         actionMode = Cipher.DECRYPT_MODE
-        if (!::cipher.isInitialized){
+        if (!isCipherReady){
             prepareCipher()
         }
-        val encodedElements = cipherText.split(":")
-        dataToProcess = Base64.decode(encodedElements[1], 0)
-        val iv = Base64.decode(encodedElements[0], 0)
+        dataToProcess = cipherText
         val gcmSpec = GCMParameterSpec(GCM_TAG_LEN, iv)
         try {
             cipher.init(Cipher.DECRYPT_MODE, key, gcmSpec)
@@ -248,15 +253,40 @@ open class VolumeActionActivity : BaseActivity() {
 
     private fun resetHashStorage() {
         keyStore.deleteEntry(KEY_ALIAS)
-        val savedVolumePaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet<String>()) as Set<String>
-        val sharedPrefsEditor = sharedPrefs.edit()
-        for (path in savedVolumePaths){
-            val savedHash = sharedPrefs.getString(path, null)
-            if (savedHash != null){
-                sharedPrefsEditor.remove(path)
-            }
+        volumeDatabase.getVolumes().forEach { volume ->
+            volumeDatabase.removeHash(volume)
         }
-        sharedPrefsEditor.apply()
+        isCipherReady = false
         Toast.makeText(this, R.string.hash_storage_reset, Toast.LENGTH_SHORT).show()
+    }
+
+    protected fun loadVolumePath(callback: () -> Unit){
+        currentVolumeName = if (switch_hidden_volume.isChecked){
+            edit_volume_name.text.toString()
+        } else {
+            edit_volume_path.text.toString()
+        }
+        if (currentVolumeName.isEmpty()) {
+            Toast.makeText(this, if (switch_hidden_volume.isChecked) {R.string.enter_volume_name} else {R.string.enter_volume_path}, Toast.LENGTH_SHORT).show()
+        } else if (switch_hidden_volume.isChecked && currentVolumeName.contains("/")){
+            Toast.makeText(this, R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
+        } else {
+            currentVolumePath = if (switch_hidden_volume.isChecked) {
+                PathUtils.pathJoin(filesDir.path, currentVolumeName)
+            } else {
+                currentVolumeName
+            }
+            callback()
+        }
+    }
+
+    fun onClickSwitchHiddenVolume(view: View){
+        if (switch_hidden_volume.isChecked){
+            WidgetUtil.show(hidden_volume_section, originalHiddenVolumeSectionLayoutParams)
+            WidgetUtil.hide(normal_volume_section)
+        } else {
+            WidgetUtil.show(normal_volume_section, originalNormalVolumeSectionLayoutParams)
+            WidgetUtil.hide(hidden_volume_section)
+        }
     }
 }

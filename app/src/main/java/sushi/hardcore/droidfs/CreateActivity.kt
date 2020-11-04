@@ -11,10 +11,7 @@ import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
-import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.LoadingTask
-import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.Wiper
+import sushi.hardcore.droidfs.util.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -69,10 +66,7 @@ class CreateActivity : VolumeActionActivity() {
     }
 
     fun onClickCreate(view: View?) {
-        rootCipherDir = edit_volume_path.text.toString()
-        if (rootCipherDir.isEmpty()) {
-            Toast.makeText(this, R.string.enter_volume_path, Toast.LENGTH_SHORT).show()
-        } else {
+        loadVolumePath {
             val password = edit_password.text.toString().toCharArray()
             val passwordConfirm = edit_password_confirm.text.toString().toCharArray()
             if (!password.contentEquals(passwordConfirm)) {
@@ -80,10 +74,10 @@ class CreateActivity : VolumeActionActivity() {
             } else {
                 object: LoadingTask(this, R.string.loading_msg_create){
                     override fun doTask(activity: AppCompatActivity) {
-                        val volumePathFile = File(rootCipherDir)
+                        val volumeFile = File(currentVolumePath)
                         var goodDirectory = false
-                        if (!volumePathFile.isDirectory) {
-                            if (volumePathFile.mkdirs()) {
+                        if (!volumeFile.isDirectory) {
+                            if (volumeFile.mkdirs()) {
                                 goodDirectory = true
                             } else {
                                 stopTask {
@@ -95,10 +89,10 @@ class CreateActivity : VolumeActionActivity() {
                                 }
                             }
                         } else {
-                            val dirContent = volumePathFile.list()
+                            val dirContent = volumeFile.list()
                             if (dirContent != null){
                                 if (dirContent.isEmpty()) {
-                                    if (volumePathFile.canWrite()){
+                                    if (volumeFile.canWrite()){
                                         goodDirectory = true
                                     } else {
                                         stopTask {
@@ -117,26 +111,18 @@ class CreateActivity : VolumeActionActivity() {
                             }
                         }
                         if (goodDirectory) {
-                            if (GocryptfsVolume.createVolume(rootCipherDir, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
+                            if (GocryptfsVolume.createVolume(currentVolumePath, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                                 var returnedHash: ByteArray? = null
                                 if (checkbox_save_password.isChecked){
                                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                                 }
-                                sessionID = GocryptfsVolume.init(rootCipherDir, password, null, returnedHash)
+                                sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)
                                 if (sessionID != -1) {
                                     if (checkbox_remember_path.isChecked) {
-                                        val oldSavedVolumesPaths = sharedPrefs.getStringSet(ConstValues.saved_volumes_key, HashSet()) as Set<String>
-                                        val editor = sharedPrefs.edit()
-                                        val newSavedVolumesPaths = oldSavedVolumesPaths.toMutableList()
-                                        if (oldSavedVolumesPaths.contains(rootCipherDir)) {
-                                            if (sharedPrefs.getString(rootCipherDir, null) != null){
-                                                editor.remove(rootCipherDir)
-                                            }
-                                        } else {
-                                            newSavedVolumesPaths.add(rootCipherDir)
-                                            editor.putStringSet(ConstValues.saved_volumes_key, newSavedVolumesPaths.toSet())
+                                        if (volumeDatabase.isVolumeSaved(currentVolumeName)) {
+                                            volumeDatabase.removeVolume(Volume(currentVolumeName))
                                         }
-                                        editor.apply()
+                                        volumeDatabase.saveVolume(Volume(currentVolumeName, switch_hidden_volume.isChecked))
                                     }
                                     if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                                         stopTask {
@@ -178,7 +164,7 @@ class CreateActivity : VolumeActionActivity() {
                 .setPositiveButton(R.string.ok) { _, _ ->
                     val intent = Intent(applicationContext, ExplorerActivity::class.java)
                     intent.putExtra("sessionID", sessionID)
-                    intent.putExtra("volume_name", File(rootCipherDir).name)
+                    intent.putExtra("volume_name", File(currentVolumeName).name)
                     startActivity(intent)
                     finish()
                 }

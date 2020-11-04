@@ -1,29 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
 
-    <TextView
-        android:layout_width="@dimen/create_activity_label_width"
-        android:layout_height="match_parent"
-        android:gravity="center_vertical"
-        android:text="@string/volume_path"
-        android:textSize="@dimen/edit_text_label_text_size" />
-
-    <sushi.hardcore.droidfs.widgets.ColoredEditText
-        android:id="@+id/edit_volume_path"
-        android:layout_width="0dp"
-        android:layout_weight="0.5"
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_hidden_volume"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:inputType="text"
-        android:maxLines="1"/>
+        android:text="@string/hidden_volume"
+        app:switchPadding="10dp"
+        android:layout_gravity="center_horizontal"
+        android:onClick="onClickSwitchHiddenVolume"/>
 
-    <sushi.hardcore.droidfs.widgets.ColoredImageButton
-        android:layout_width="@dimen/image_button_size"
-        android:layout_height="@dimen/image_button_size"
-        android:onClick="pickDirectory"
-        android:scaleType="fitCenter"
-        android:background="#00000000"
-        android:src="@drawable/icon_folder" />
+    <LinearLayout
+        android:id="@+id/normal_volume_section"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="@dimen/create_activity_label_width"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/volume_path"
+            android:textSize="@dimen/edit_text_label_text_size" />
+
+        <sushi.hardcore.droidfs.widgets.ColoredEditText
+            android:id="@+id/edit_volume_path"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1"/>
+
+        <sushi.hardcore.droidfs.widgets.ColoredImageButton
+            android:layout_width="@dimen/image_button_size"
+            android:layout_height="@dimen/image_button_size"
+            android:onClick="pickDirectory"
+            android:scaleType="fitCenter"
+            android:background="#00000000"
+            android:src="@drawable/icon_folder" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/hidden_volume_section"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:layout_width="@dimen/create_activity_label_width"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:text="@string/volume_name"
+            android:textSize="@dimen/edit_text_label_text_size" />
+
+        <sushi.hardcore.droidfs.widgets.ColoredEditText
+            android:id="@+id/edit_volume_name"
+            android:layout_width="0dp"
+            android:layout_weight="0.5"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:maxLines="1"/>
+
+    </LinearLayout>
 
 </LinearLayout>
