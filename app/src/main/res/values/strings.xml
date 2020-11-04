@@ -192,4 +192,5 @@
     <string name="error_retrieving_filename">Unable to retrieve file name for URI: %s</string>
     <string name="hidden_volume">Hidden Volume</string>
     <string name="error_slash_in_name">Volume name cannot contain slashes</string>
+    <string name="hidden_volume_warning">Hidden volumes are stored in the app\'s internal storage. Other apps can\'t see these volumes without root access. However, if you uninstall DroidFS or clear data of the app, all your hidden volumes will be LOST. Be sure to make backups !</string>
 </resources>

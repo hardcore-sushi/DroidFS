@@ -30,6 +30,16 @@ class CreateActivity : VolumeActionActivity() {
             onClickCreate(v)
             true
         }
+        switch_hidden_volume.setOnClickListener {
+            onClickSwitchHiddenVolume(it)
+            if (switch_hidden_volume.isChecked){
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.warning)
+                    .setMessage(R.string.hidden_volume_warning)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            }
+        }
     }
 
     fun pickDirectory(view: View?) {
