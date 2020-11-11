@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.text.InputType
@@ -56,24 +57,29 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
     private var isFinishingIntentionally = false
+    private lateinit var context: Context
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
         gocryptfsVolume = GocryptfsVolume(intent.getIntExtra("sessionID", -1))
         outputDirectory = intent.getStringExtra("path")!!
+        context = this
         camera.setLifecycleOwner(this)
         camera.addCameraListener(object: CameraListener(){
             override fun onPictureTaken(result: PictureResult) {
                 take_photo_button.onPhotoTaken()
                 val inputStream = ByteArrayInputStream(result.data)
                 if (gocryptfsVolume.importFile(inputStream, PathUtils.pathJoin(outputDirectory, fileName))){
-                    Toast.makeText(applicationContext, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
                 } else {
-                    ColoredAlertDialogBuilder(applicationContext)
+                    ColoredAlertDialogBuilder(context)
                         .setTitle(R.string.error)
                         .setMessage(R.string.picture_save_failed)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ -> finish() }
+                        .setPositiveButton(R.string.ok) { _, _ ->
+                            isFinishingIntentionally = true
+                            finish()
+                        }
                         .show()
                 }
             }
