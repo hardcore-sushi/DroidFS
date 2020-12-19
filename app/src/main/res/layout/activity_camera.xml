@@ -6,17 +6,11 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".CameraActivity">
 
-    <com.otaliastudios.cameraview.CameraView
-        android:id="@+id/camera"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cameraGesturePinch="zoom"
-        app:cameraGestureTap="autoFocus"
-        app:cameraAutoFocusMarker="@string/cameraview_default_autofocus_marker"
-        app:cameraHdr="on"
-        app:cameraPictureFormat="jpeg"
-        app:cameraPlaySounds="false"
-        app:cameraAudio="off"/>
+    <androidx.camera.view.PreviewView
+        android:id="@+id/camera_preview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_centerInParent="true"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -24,11 +18,11 @@
         android:layout_marginTop="20dp">
 
         <ImageView
-            android:id="@+id/image_hdr"
+            android:id="@+id/image_ratio"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:onClick="onClickHDR"
-            android:src="@drawable/icon_hdr_on"
+            android:onClick="onClickRatio"
+            android:src="@drawable/icon_aspect_ratio"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_timer"
             app:layout_constraintStart_toStartOf="parent"
@@ -41,19 +35,8 @@
             android:onClick="onClickTimer"
             android:src="@drawable/icon_timer_off"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/image_grid"
-            app:layout_constraintStart_toEndOf="@id/image_hdr"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <ImageView
-            android:id="@+id/image_grid"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:onClick="onClickGrid"
-            android:src="@drawable/icon_grid_off"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@+id/image_close"
-            app:layout_constraintStart_toEndOf="@+id/image_timer"
+            app:layout_constraintEnd_toStartOf="@id/image_close"
+            app:layout_constraintStart_toEndOf="@id/image_ratio"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
@@ -64,7 +47,7 @@
             android:src="@drawable/icon_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/image_grid"
+            app:layout_constraintStart_toEndOf="@id/image_timer"
             app:layout_constraintTop_toTopOf="parent" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

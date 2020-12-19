@@ -419,7 +419,7 @@ open class BaseExplorerActivity : BaseActivity() {
                             setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()
                         }
-                        .setNegativeButton(R.string.cancel) { dialog, _ -> dialog.dismiss() }
+                        .setNegativeButton(R.string.cancel, null)
                         .show()
                 true
             }

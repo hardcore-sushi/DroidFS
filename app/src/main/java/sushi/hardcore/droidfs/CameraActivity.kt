@@ -3,8 +3,15 @@ package sushi.hardcore.droidfs
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.hardware.camera2.CameraCharacteristics
+import android.hardware.camera2.CameraManager
+import android.os.Build
 import android.os.Bundle
 import android.text.InputType
+import android.util.DisplayMetrics
+import android.util.Size
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
 import android.view.View
 import android.view.WindowManager
 import android.view.animation.Animation
@@ -12,35 +19,34 @@ import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.camera.camera2.interop.Camera2CameraInfo
+import androidx.camera.core.*
+import androidx.camera.extensions.HdrImageCaptureExtender
+import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import com.otaliastudios.cameraview.CameraListener
-import com.otaliastudios.cameraview.PictureResult
-import com.otaliastudios.cameraview.controls.Facing
-import com.otaliastudios.cameraview.controls.Flash
-import com.otaliastudios.cameraview.controls.Grid
-import com.otaliastudios.cameraview.controls.Hdr
 import kotlinx.android.synthetic.main.activity_camera.*
+import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.MiscUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     companion object {
-        private val flashModes = listOf(Flash.AUTO, Flash.ON, Flash.OFF)
-        private val gridTitles = listOf(R.string.grid_none, R.string.grid_3x3, R.string.grid_4x4)
-        private val gridValues = listOf(Grid.OFF, Grid.DRAW_3X3, Grid.DRAW_4X4)
+        private const val CAMERA_PERMISSION_REQUEST_CODE = 1
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
         private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss")
         private val random = Random()
     }
-    private var currentFlashModeIndex = 0
     private var timerDuration = 0
         set(value) {
             field = value
@@ -57,22 +63,140 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
     private var isFinishingIntentionally = false
-    private lateinit var context: Context
+    private lateinit var cameraExecutor: ExecutorService
+    private var imageCapture: ImageCapture? = null
+    private var resolutions: Array<Size>? = null
+    private var currentResolutionIndex: Int = 0
+    private var isBackCamera = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_camera)
         gocryptfsVolume = GocryptfsVolume(intent.getIntExtra("sessionID", -1))
         outputDirectory = intent.getStringExtra("path")!!
-        context = this
-        camera.setLifecycleOwner(this)
-        camera.addCameraListener(object: CameraListener(){
-            override fun onPictureTaken(result: PictureResult) {
-                take_photo_button.onPhotoTaken()
-                val inputStream = ByteArrayInputStream(result.data)
-                if (gocryptfsVolume.importFile(inputStream, PathUtils.pathJoin(outputDirectory, fileName))){
-                    Toast.makeText(context, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
+                setupCamera()
+            } else {
+                requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
+            }
+        } else {
+            setupCamera()
+        }
+
+        cameraExecutor = Executors.newSingleThreadExecutor()
+
+        take_photo_button.onClick = ::onClickTakePhoto
+        orientedIcons = listOf(image_ratio, image_timer, image_close, image_flash, image_camera_switch)
+        sensorOrientationListener = SensorOrientationListener(this)
+
+        val scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener(){
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val currentZoomRatio = imageCapture?.camera?.cameraInfo?.zoomState?.value?.zoomRatio ?: 0F
+                imageCapture?.camera?.cameraControl?.setZoomRatio(currentZoomRatio*detector.scaleFactor)
+                return true
+            }
+        })
+        camera_preview.setOnTouchListener { _, motionEvent: MotionEvent ->
+            when (motionEvent.action) {
+                MotionEvent.ACTION_DOWN -> true
+                MotionEvent.ACTION_UP -> {
+                    val factory = camera_preview.meteringPointFactory
+                    val point = factory.createPoint(motionEvent.x, motionEvent.y)
+                    val action = FocusMeteringAction.Builder(point).build()
+                    imageCapture?.camera?.cameraControl?.startFocusAndMetering(action)
+                    true
+                }
+                MotionEvent.ACTION_MOVE -> scaleGestureDetector.onTouchEvent(motionEvent)
+                else -> false
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        when (requestCode) {
+            CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults.size == 1) {
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                    ColoredAlertDialogBuilder(this)
+                        .setTitle(R.string.error)
+                        .setMessage(R.string.camera_perm_needed)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.ok) { _, _ ->
+                            isFinishingIntentionally = true
+                            finish()
+                        }.show()
                 } else {
-                    ColoredAlertDialogBuilder(context)
+                    setupCamera()
+                }
+            }
+        }
+    }
+
+    private fun adaptPreviewSize(resolution: Size){
+        val metrics = DisplayMetrics()
+        windowManager.defaultDisplay.getMetrics(metrics)
+        //resolution.width and resolution.height seem to be inverted
+        val width = resolution.height
+        val height = resolution.width
+        camera_preview.layoutParams = if (metrics.widthPixels < width){
+            RelativeLayout.LayoutParams(
+                metrics.widthPixels,
+                (height * (metrics.widthPixels.toFloat() / width)).toInt()
+            )
+        } else {
+            RelativeLayout.LayoutParams(width, height)
+        }
+        (camera_preview.layoutParams as RelativeLayout.LayoutParams).addRule(RelativeLayout.CENTER_IN_PARENT)
+    }
+
+    private fun setupCamera(resolution: Size? = null){
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
+        cameraProviderFuture.addListener({
+            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
+            val preview = Preview.Builder()
+                .build()
+                .also {
+                    it.setSurfaceProvider(camera_preview.surfaceProvider)
+                }
+            val builder = ImageCapture.Builder()
+                .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
+            resolution?.let {
+                builder.setTargetResolution(it)
+            }
+            val hdrImageCapture = HdrImageCaptureExtender.create(builder)
+            val cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
+
+            if (hdrImageCapture.isExtensionAvailable(cameraSelector)){
+                hdrImageCapture.enableExtension(cameraSelector)
+            }
+
+            imageCapture = builder.build()
+
+            cameraProvider.unbindAll()
+            val camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+
+            adaptPreviewSize(imageCapture!!.attachedSurfaceResolution!!)
+
+            val info = Camera2CameraInfo.from(camera.cameraInfo)
+            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+            val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
+            characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
+                resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat)
+            }
+        }, ContextCompat.getMainExecutor(this))
+    }
+
+    private fun takePhoto() {
+        val imageCapture = imageCapture ?: return
+        val outputBuff = ByteArrayOutputStream()
+        val outputOptions = ImageCapture.OutputFileOptions.Builder(outputBuff).build()
+        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageSavedCallback {
+            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                take_photo_button.onPhotoTaken()
+                if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), PathUtils.pathJoin(outputDirectory, fileName))){
+                    Toast.makeText(applicationContext, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
+                } else {
+                    ColoredAlertDialogBuilder(applicationContext)
                         .setTitle(R.string.error)
                         .setMessage(R.string.picture_save_failed)
                         .setCancelable(false)
@@ -83,10 +207,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         .show()
                 }
             }
+            override fun onError(exception: ImageCaptureException) {
+                take_photo_button.onPhotoTaken()
+                Toast.makeText(applicationContext, exception.message, Toast.LENGTH_SHORT).show()
+            }
         })
-        take_photo_button.onClick = ::onClickTakePhoto
-        orientedIcons = listOf(image_hdr, image_timer, image_grid, image_close, image_flash, image_camera_switch)
-        sensorOrientationListener = SensorOrientationListener(this)
     }
 
     private fun onClickTakePhoto() {
@@ -102,49 +227,41 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     Thread.sleep(1000)
                 }
                 runOnUiThread {
-                    camera.takePicture()
+                    takePhoto()
                     text_timer.visibility = View.GONE
                 }
             }.start()
         } else {
-            camera.takePicture()
+            takePhoto()
         }
     }
 
     fun onClickFlash(view: View) {
-        currentFlashModeIndex = MiscUtils.incrementIndex(currentFlashModeIndex, flashModes)
-        camera.flash = flashModes[currentFlashModeIndex]
-        image_flash.setImageResource(when (camera.flash) {
-            Flash.AUTO -> R.drawable.icon_flash_auto
-            Flash.ON -> R.drawable.icon_flash_on
-            else -> R.drawable.icon_flash_off
+        image_flash.setImageResource(when (imageCapture?.flashMode) {
+            ImageCapture.FLASH_MODE_AUTO -> {
+                imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
+                R.drawable.icon_flash_on
+            }
+            ImageCapture.FLASH_MODE_ON -> {
+                imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                R.drawable.icon_flash_off
+            }
+            else -> {
+                imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
+                R.drawable.icon_flash_auto
+            }
         })
     }
 
     fun onClickCameraSwitch(view: View) {
-        camera.toggleFacing()
-        if (camera.facing == Facing.FRONT){
-            image_camera_switch.setImageResource(R.drawable.icon_camera_back)
-        } else {
+        isBackCamera = if (isBackCamera) {
             image_camera_switch.setImageResource(R.drawable.icon_camera_front)
-            Thread {
-                Thread.sleep(25)
-                camera.flash = flashModes[currentFlashModeIndex] //refresh flash mode after switching camera
-            }.start()
+            false
+        } else {
+            image_camera_switch.setImageResource(R.drawable.icon_camera_back)
+            true
         }
-    }
-
-    fun onClickHDR(view: View) {
-        camera.hdr = when (camera.hdr){
-            Hdr.ON -> {
-                image_hdr.setImageResource(R.drawable.icon_hdr_off)
-                Hdr.OFF
-            }
-            Hdr.OFF -> {
-                image_hdr.setImageResource(R.drawable.icon_hdr_on)
-                Hdr.ON
-            }
-        }
+        setupCamera()
     }
 
     fun onClickTimer(view: View) {
@@ -173,16 +290,18 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         dialog.show()
     }
 
-    fun onClickGrid(view: View) {
-        ColoredAlertDialogBuilder(this)
-            .setTitle(getString(R.string.choose_grid))
-            .setSingleChoiceItems(gridTitles.map { getString(it) }.toTypedArray(), gridValues.indexOf(camera.grid)){ dialog, which ->
-                camera.grid = gridValues[which]
-                image_grid.setImageResource(if (camera.grid == Grid.OFF){ R.drawable.icon_grid_off } else { R.drawable.icon_grid_on })
-                dialog.dismiss()
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .show()
+    fun onClickRatio(view: View) {
+        resolutions?.let {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.choose_resolution)
+                .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }.toTypedArray()), currentResolutionIndex) { dialog, which ->
+                    setupCamera(resolutions!![which])
+                    dialog.dismiss()
+                    currentResolutionIndex = which
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
     }
 
     fun onClickClose(view: View) {
@@ -192,6 +311,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
+        cameraExecutor.shutdown()
         if (!isFinishingIntentionally) {
             gocryptfsVolume.close()
             RestrictedFileProvider.wipeAll(this)

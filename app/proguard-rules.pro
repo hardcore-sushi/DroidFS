@@ -25,4 +25,3 @@
     *;
 }
 -keep class sushi.hardcore.droidfs.explorers.ExplorerElement
--keep class com.otaliastudios.cameraview.markers.DefaultAutoFocusMarker
