@@ -1,11 +1,11 @@
 # DroidFS
 DroidFS is an alternative way to use encrypted overlay filesystems on Android that uses its own internal file explorer instead of mounting virtual volumes.
-It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) is expected to be added soon.
+It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) could be added in the future.
 
 <p align="center">
-<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/1.jpg" height="500">
-<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/2.jpg" height="500">
-<img src="https://raw.githubusercontent.com/hardcore-sushi/DroidFS/master/Screenshots/3.jpg" height="500">
+<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" height="500">
+<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" height="500">
+<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" height="500">
 </p>
 
 # Disclamer
@@ -13,21 +13,6 @@ DroidFS is provided "as is", without any warranty of any kind.
 It shouldn't be considered as an absolute safe way to store files.
 DroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.
 Do not use this app with volumes containing sensitive data unless you know exactly what you are doing.
-
-# Permissions
-DroidFS need some permissions to work properly. Here is why:
-
-<ul>
-  <li><h4>Read & write access to shared storage:</h4>
-  Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
-  </li>
-  <li><h4>Biometric/Fingerprint hardware:</h4>
-  Required to encrypt/decrypt password hashes using a fingerprint protected key.
-  </li>
-  <li><h4>Camera:</h4>
-  Needed to take photos directly from DroidFS to import them securely.
-  </li>
-</ul>
 
 # Unsafe features
 DroidFS allows you to enable/disable unsafe features to fit your needs between security and comfort.
@@ -57,7 +42,28 @@ It is strongly recommended to read the documentation of a feature before enablin
 * Features requiring temporary writing of the plain file to disk (DroidFS internal storage). This file could be read by apps with root access or by physical access if your device is not encrypted.
 
 # Download
-You can download the latest version [here](https://github.com/hardcore-sushi/DroidFS/releases).
+You can download the latest version in the Releases section. All APKs from v1.3.0 are signed with my PGP key available on keyservers:
+
+`gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 007F84120107191E` \
+Fingerprint: `BD5621479E7B74D36A405BE8007F84120107191E` \
+Email: `Hardcore Sushi <hardcore.sushi@disroot.org>`
+
+To verify APKs: `gpg --verify <ASC file> <APK file>`
+
+# Permissions
+DroidFS need some permissions to work properly. Here is why:
+
+<ul>
+  <li><h4>Read & write access to shared storage:</h4>
+  Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
+  </li>
+  <li><h4>Biometric/Fingerprint hardware:</h4>
+  Required to encrypt/decrypt password hashes using a fingerprint protected key.
+  </li>
+  <li><h4>Camera:</h4>
+  Needed to take photos directly from DroidFS to import them securely.
+  </li>
+</ul>
 
 # Build
 Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
@@ -97,4 +103,3 @@ Thanks to these open source projects that DroidFS uses:
 - [Cyanea](https://github.com/jaredrummler/Cyanea) to customize UI
 - [Glide](https://github.com/bumptech/glide/) to display pictures
 - [ExoPlayer](https://github.com/google/ExoPlayer) to play media files
-- [CameraView](https://github.com/natario1/CameraView) to take photos
