@@ -50,6 +50,13 @@
         </Preference>
 
         <Preference
+            android:title="@string/gitea"
+            android:summary="@string/gitea_summary"
+            android:icon="@drawable/icon_gitea">
+            <intent android:action="android.intent.action.VIEW" android:data="https://git.drycat.fr/hardcore-sushi/DroidFS"/>
+        </Preference>
+
+        <Preference
             android:key="version"
             android:icon="@drawable/icon_info"
             android:title="@string/version"

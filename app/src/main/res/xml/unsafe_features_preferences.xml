@@ -55,7 +55,7 @@
             android:title="@string/usf_doc">
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="https://github.com/hardcore-sushi/DroidFS#unsafe-features" />
+                android:data="https://git.drycat.fr/hardcore-sushi/DroidFS#unsafe-features" />
         </Preference>
 
     </PreferenceCategory>
