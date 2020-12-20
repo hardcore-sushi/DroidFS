@@ -123,15 +123,7 @@ class ImageViewer: FileViewerActivity() {
             wasMapped = true
         }
         if (mappedImages.size == 0){ //can happen on deleting images
-            ColoredAlertDialogBuilder(this)
-                .keepFullScreen()
-                .setTitle(R.string.error)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ ->
-                    goBackToExplorer()
-                }
-                .setMessage(R.string.no_more_images)
-                .show()
+            goBackToExplorer()
         } else {
             currentMappedImageIndex = if (deltaX < 0){
                 MiscUtils.incrementIndex(currentMappedImageIndex, mappedImages)

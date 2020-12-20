@@ -502,6 +502,7 @@ open class BaseExplorerActivity : BaseActivity() {
             } else {
                 isStartingActivity = false
                 ExternalProvider.removeFiles(this)
+                setCurrentPath(currentDirectoryPath)
             }
         }
     }

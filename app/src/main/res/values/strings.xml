@@ -182,7 +182,6 @@
     <string name="error_cipher_null">Error cipher is null</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
     <string name="key_permanently_invalidated_exception_msg">It looks like you have added a new fingerprint. Saved passwords hash have become unusable.</string>
-    <string name="no_more_images">No more images found.</string>
     <string name="usf_read_doc">You should read it carefully before enabling any of these options.</string>
     <string name="usf_doc">Unsafe features documentation</string>
     <string name="error_retrieving_filename">Unable to retrieve file name for URI: %s</string>
