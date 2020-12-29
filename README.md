@@ -85,7 +85,15 @@ $ wget -qO - https://www.openssl.org/source/openssl-1.1.1h.tar.gz | tar -xvzf -
 
 #### Build
 First, we need to build libgocryptfs.<br>
-Retrieve your Android NDK installation path, usually someting like "/home/\<user\>/AndroidSDK/ndk/\<NDK version\>".
+For this, we will need to install some dependencies:
+```
+sudo apt-get install libcrypto++-dev libssl-dev pkg-config
+```
+And also Go dependencies:
+```
+go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf
+```
+Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/AndroidSDK/ndk/\<NDK version\>". We can now start the build process: 
 ```
 $ cd DroidFS/app/libgocryptfs
 $ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1h" ./build.sh
