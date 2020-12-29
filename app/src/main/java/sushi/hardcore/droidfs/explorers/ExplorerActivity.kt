@@ -185,6 +185,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 .setPositiveButton(R.string.ok, null)
                                 .show()
                     }
+                    setCurrentPath(currentDirectoryPath)
                 }
             }
         } else if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
@@ -260,6 +261,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                                 .setPositiveButton(R.string.ok, null)
                                                 .show()
                                     }
+                                    setCurrentPath(currentDirectoryPath)
                                 }
                                 remoteGocryptfsVolume.close()
                             }
@@ -351,6 +353,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     } else {
                                         Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
                                     }
+                                    setCurrentPath(currentDirectoryPath)
                                 }
                             }
                         }
@@ -372,6 +375,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     } else {
                                         Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
                                     }
+                                    setCurrentPath(currentDirectoryPath)
                                 }
                             }
                         }

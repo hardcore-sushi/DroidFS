@@ -327,6 +327,13 @@ open class BaseExplorerActivity : BaseActivity() {
                                 .setTitle(R.string.enter_new_name)
                                 .setPositiveButton(R.string.ok) { _, _ ->
                                     items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), dialogEditText.text.toString())
+                                    if (items[i].explorerElement.isDirectory){
+                                        for (j in 0 until items.size){
+                                            if (PathUtils.isChildOf(items[j].explorerElement.fullPath, items[i].explorerElement.fullPath)){
+                                                items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].explorerElement.fullPath, items[j].explorerElement.fullPath))
+                                            }
+                                        }
+                                    }
                                     checkPathOverwrite(items, dstDirectoryPath, callback)
                                 }
                                 .setOnCancelListener{

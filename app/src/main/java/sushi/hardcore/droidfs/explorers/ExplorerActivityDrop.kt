@@ -67,6 +67,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     }
 
     private fun onImported(failedItem: String?){
+        setCurrentPath(currentDirectoryPath)
         if (failedItem == null) {
             ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.success_import)

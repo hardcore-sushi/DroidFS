@@ -56,6 +56,13 @@ object PathUtils {
         }
     }
 
+    fun isChildOf(childPath: String, parentPath: String): Boolean {
+        if (parentPath.length > childPath.length){
+            return false
+        }
+        return childPath.substring(0, parentPath.length) == parentPath
+    }
+
     fun getFilenameFromURI(context: Context, uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {
