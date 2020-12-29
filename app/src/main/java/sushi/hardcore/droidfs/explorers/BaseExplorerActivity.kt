@@ -1,12 +1,12 @@
 package sushi.hardcore.droidfs.explorers
 
-import android.content.DialogInterface
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.os.Message
+import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -26,10 +26,12 @@ import sushi.hardcore.droidfs.ConstValues.Companion.isAudio
 import sushi.hardcore.droidfs.ConstValues.Companion.isImage
 import sushi.hardcore.droidfs.ConstValues.Companion.isText
 import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
+import sushi.hardcore.droidfs.FileOperationService
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
+import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_viewers.AudioPlayer
 import sushi.hardcore.droidfs.file_viewers.ImageViewer
 import sushi.hardcore.droidfs.file_viewers.TextEditor
@@ -37,11 +39,8 @@ import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.ExternalProvider
 import sushi.hardcore.droidfs.util.GocryptfsVolume
-import sushi.hardcore.droidfs.util.LoadingTask
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
-import java.io.File
-import java.io.FileNotFoundException
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -55,6 +54,7 @@ open class BaseExplorerActivity : BaseActivity() {
             field = value
             explorerViewModel.currentDirectoryPath = value
         }
+    protected lateinit var fileOperationService: FileOperationService
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     private var isCreating = true
@@ -87,6 +87,7 @@ open class BaseExplorerActivity : BaseActivity() {
             setCurrentPath(currentDirectoryPath)
             refresher.isRefreshing = false
         }
+        bindFileOperationService()
     }
 
     class ExplorerViewModel: ViewModel() {
@@ -95,6 +96,21 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected open fun init() {
         setContentView(R.layout.activity_explorer_base)
+    }
+
+    protected open fun bindFileOperationService(){
+        Intent(this, FileOperationService::class.java).also {
+            bindService(it, object : ServiceConnection {
+                override fun onServiceConnected(className: ComponentName, service: IBinder) {
+                    val binder = service as FileOperationService.LocalBinder
+                    fileOperationService = binder.getService()
+                    binder.setGocryptfsVolume(gocryptfsVolume)
+                }
+                override fun onServiceDisconnected(arg0: ComponentName) {
+
+                }
+            }, Context.BIND_AUTO_CREATE)
+        }
     }
 
     private fun startFileViewer(cls: Class<*>, filePath: String, sortOrder: String = ""){
@@ -274,97 +290,97 @@ open class BaseExplorerActivity : BaseActivity() {
         dialog.show()
     }
 
-    protected fun checkPathOverwrite(path: String, isDirectory: Boolean): String? {
-        var outputPath: String? = null
-        if (gocryptfsVolume.pathExists(path)){
-            val fileName = File(path).name
-            val handler = Handler{ msg ->
-                outputPath = msg.obj as String?
-                throw RuntimeException()
+    protected fun checkPathOverwrite(items: ArrayList<OperationFile>, dstDirectoryPath: String, callback: (ArrayList<OperationFile>?) -> Unit) {
+        val srcDirectoryPath = items[0].explorerElement.parentPath
+        var ready = true
+        for (i in 0 until items.size) {
+            val testDstPath: String
+            if (items[i].dstPath == null){
+                testDstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.fullPath))
+                if (gocryptfsVolume.pathExists(testDstPath)){
+                    ready = false
+                } else {
+                    items[i].dstPath = testDstPath
+                }
+            } else {
+                testDstPath = items[i].dstPath!!
+                if (gocryptfsVolume.pathExists(testDstPath) && !items[i].overwriteConfirmed){
+                    ready = false
+                }
             }
-            runOnUiThread {
-                val dialog = ColoredAlertDialogBuilder(this)
+            if (!ready){
+                ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
-                    .setMessage(getString(if (isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, path))
+                    .setMessage(getString(if (items[i].explorerElement.isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, testDstPath))
+                    .setPositiveButton(R.string.yes) {_, _ ->
+                        items[i].dstPath = testDstPath
+                        items[i].overwriteConfirmed = true
+                        checkPathOverwrite(items, dstDirectoryPath, callback)
+                    }
                     .setNegativeButton(R.string.no) { _, _ ->
                         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
                         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                        dialogEditText.setText(fileName)
+                        dialogEditText.setText(items[i].explorerElement.name)
                         dialogEditText.selectAll()
                         val dialog = ColoredAlertDialogBuilder(this)
-                            .setView(dialogEditTextView)
-                            .setTitle(R.string.enter_new_name)
-                            .setPositiveButton(R.string.ok) { _, _ ->
-                                handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.pathJoin(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
-                            }
-                            .setNegativeButton(R.string.cancel) { _, _ -> handler.sendMessage(Message().apply { obj = null }) }
-                            .create()
+                                .setView(dialogEditTextView)
+                                .setTitle(R.string.enter_new_name)
+                                .setPositiveButton(R.string.ok) { _, _ ->
+                                    items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), dialogEditText.text.toString())
+                                    checkPathOverwrite(items, dstDirectoryPath, callback)
+                                }
+                                .setOnCancelListener{
+                                    callback(null)
+                                }
+                                .create()
                         dialogEditText.setOnEditorActionListener { _, _, _ ->
                             dialog.dismiss()
-                            handler.sendMessage(Message().apply { obj = checkPathOverwrite(PathUtils.pathJoin(PathUtils.getParentPath(path), dialogEditText.text.toString()), isDirectory) })
+                            items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), dialogEditText.text.toString())
+                            checkPathOverwrite(items, dstDirectoryPath, callback)
                             true
                         }
-                        dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
                         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
                         dialog.show()
                     }
-                    .setPositiveButton(R.string.yes) { _, _ -> handler.sendMessage(Message().apply { obj = path }) }
-                    .create()
-                dialog.setOnCancelListener { handler.sendMessage(Message().apply { obj = null }) }
-                dialog.show()
+                    .setOnCancelListener{
+                        callback(null)
+                    }
+                    .show()
+                break
             }
-            try { Looper.loop() }
-            catch (e: RuntimeException) {}
-        } else {
-            outputPath = path
         }
-        return outputPath
+        if (ready){
+            callback(items)
+        }
     }
 
-    protected fun importFilesFromUris(uris: List<Uri>, task: LoadingTask, callback: (DialogInterface.OnClickListener)? = null): Boolean {
-        var success = false
+    protected fun importFilesFromUris(uris: List<Uri>, callback: (String?) -> Unit) {
+        val items = ArrayList<OperationFile>()
         for (uri in uris) {
-            val fileName = PathUtils.getFilenameFromURI(task.activity, uri)
-            if (fileName == null){
-                task.stopTask {
-                    ColoredAlertDialogBuilder(task.activity)
+            val fileName = PathUtils.getFilenameFromURI(this, uri)
+            if (fileName == null) {
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.error_retrieving_filename, uri))
                         .setPositiveButton(R.string.ok, null)
                         .show()
-                }
-                success = false
+                items.clear()
                 break
             } else {
-                val dstPath = checkPathOverwrite(PathUtils.pathJoin(currentDirectoryPath, fileName), false)
-                if (dstPath == null){
-                    break
-                } else {
-                    var message: String? = null
-                    try {
-                        success = gocryptfsVolume.importFile(task.activity, uri, dstPath)
-                    } catch (e: FileNotFoundException){
-                        message = if (e.message != null){
-                            e.message!!+"\n"
-                        } else {
-                            ""
+                items.add(OperationFile.fromExplorerElement(ExplorerElement(fileName, 1, -1, -1, currentDirectoryPath)))
+            }
+        }
+        if (items.size > 0) {
+            checkPathOverwrite(items, currentDirectoryPath) { checkedItems ->
+                checkedItems?.let {
+                    fileOperationService.importFilesFromUris(checkedItems, uris){ failedItem ->
+                        runOnUiThread {
+                            callback(failedItem)
                         }
-                    }
-                    if (!success || message != null) {
-                        task.stopTask {
-                            ColoredAlertDialogBuilder(task.activity)
-                                .setTitle(R.string.error)
-                                .setMessage((message ?: "")+getString(R.string.import_failed, uri))
-                                .setCancelable(callback == null)
-                                .setPositiveButton(R.string.ok, callback)
-                                .show()
-                        }
-                        break
                     }
                 }
             }
         }
-        return success
     }
 
     protected fun rename(old_name: String, new_name: String){

@@ -133,8 +133,6 @@
     <string name="loading_msg_create">Creating volume…</string>
     <string name="loading_msg_change_password">Changing password…</string>
     <string name="loading_msg_open">Opening volume…</string>
-    <string name="loading_msg_import">Importing selected files…</string>
-    <string name="loading_msg_wipe">Wiping original files…</string>
     <string name="loading_msg_export">Exporting files…</string>
     <string name="query_cursor_null_error_msg">Unable to access this file</string>
     <string name="about">About</string>
@@ -144,9 +142,7 @@
     <string name="gitea_summary">The DroidFS repository on the DryCat Gitea instance. Gitea is fully free and self-hosted. Source code, documentation, bug tracker…</string>
     <string name="share">Share</string>
     <string name="decrypt_files">Export/Decrypt</string>
-    <string name="loading_msg_copy">Copying selected items…</string>
     <string name="copy_failed">Copy of %s failed.</string>
-    <string name="copy_success_msg">The selected items have been successfully copied.</string>
     <string name="copy_success">Copy successful !</string>
     <string name="fab_dialog_title">Add</string>
     <string name="take_photo">Take photo</string>
@@ -159,9 +155,7 @@
     <string name="reset_theme_color">Reset theme color</string>
     <string name="reset_theme_color_summary">Reset theme color to the default one</string>
     <string name="copy_menu_title">Copy</string>
-    <string name="loading_msg_move">Moving selected items…</string>
     <string name="move_failed">Move of %s failed.</string>
-    <string name="move_success_msg">The selected items have been successfully moved.</string>
     <string name="move_success">Move successful !</string>
     <string name="enter_timer_duration">Enter the timer duration (in s)</string>
     <string name="timer_empty_error_msg">Please enter a numeric value</string>

@@ -3,7 +3,7 @@ package sushi.hardcore.droidfs.explorers
 import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
-class ExplorerElement(val name: String, val elementType: Short, var size: Long, mtime: Long, parentPath: String) {
+class ExplorerElement(val name: String, val elementType: Short, var size: Long, val mtime: Long, val parentPath: String) {
     val mTime = Date((mtime * 1000).toString().toLong())
     val fullPath: String = PathUtils.pathJoin(parentPath, name)
 

@@ -86,6 +86,8 @@
             android:name=".file_viewers.TextEditor"
             android:configChanges="screenSize|orientation" />
 
+        <service android:name=".FileOperationService" android:exported="false"/>
+
         <provider
             android:name=".provider.RestrictedFileProvider"
             android:authorities="${applicationId}.temporary_provider"

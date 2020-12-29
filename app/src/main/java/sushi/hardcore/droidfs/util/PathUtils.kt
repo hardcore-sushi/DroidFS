@@ -43,7 +43,17 @@ object PathUtils {
     }
 
     fun getRelativePath(parentPath: String, childPath: String): String {
-        return childPath.substring(parentPath.length + 1)
+        return when {
+            parentPath.isEmpty() -> {
+                childPath
+            }
+            parentPath.length == childPath.length -> {
+                ""
+            }
+            else -> {
+                childPath.substring(parentPath.length + 1)
+            }
+        }
     }
 
     fun getFilenameFromURI(context: Context, uri: Uri): String? {

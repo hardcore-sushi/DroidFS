@@ -187,4 +187,24 @@ class GocryptfsVolume(var sessionID: Int) {
         }
         return result
     }
+
+    fun recursiveRemoveDirectory(plain_directory_path: String): String? {
+        val explorerElements = listDir(plain_directory_path)
+        for (e in explorerElements) {
+            val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
+            if (e.isDirectory) {
+                val result = recursiveRemoveDirectory(fullPath)
+                result?.let { return it }
+            } else {
+                if (!removeFile(fullPath)) {
+                    return fullPath
+                }
+            }
+        }
+        return if (!rmdir(plain_directory_path)) {
+            plain_directory_path
+        } else {
+            null
+        }
+    }
 }

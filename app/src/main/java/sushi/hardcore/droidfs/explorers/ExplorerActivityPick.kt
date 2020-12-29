@@ -17,6 +17,10 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         resultIntent.putExtra("sessionID", gocryptfsVolume.sessionID)
     }
 
+    override fun bindFileOperationService() {
+        //don't bind
+    }
+
     override fun onExplorerItemClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         explorerAdapter.onItemClick(position)

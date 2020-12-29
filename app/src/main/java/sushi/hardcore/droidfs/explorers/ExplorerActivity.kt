@@ -3,20 +3,20 @@ package sushi.hardcore.droidfs.explorers
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.os.Looper
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.file_operations.OperationFile
+import sushi.hardcore.droidfs.util.ExternalProvider
+import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 
@@ -30,7 +30,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private var usf_decrypt = false
     private var usf_share = false
     private var currentItemAction = ItemsActions.NONE
-    private val itemsToProcess = ArrayList<ExplorerElement>()
+    private val itemsToProcess = ArrayList<OperationFile>()
     override fun init() {
         setContentView(R.layout.activity_explorer)
         usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
@@ -47,19 +47,17 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (fileName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            checkPathOverwrite(PathUtils.pathJoin(currentDirectoryPath, fileName), false)?.let {
-                val handleID = gocryptfsVolume.openWriteMode(it)
-                if (handleID == -1) {
-                    ColoredAlertDialogBuilder(this)
+            val handleID = gocryptfsVolume.openWriteMode(fileName) //don't check overwrite because openWriteMode open in read-write (doesn't erase content)
+            if (handleID == -1) {
+                ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.file_creation_failed)
                         .setPositiveButton(R.string.ok, null)
                         .show()
-                } else {
-                    gocryptfsVolume.closeFile(handleID)
-                    setCurrentPath(currentDirectoryPath)
-                    invalidateOptionsMenu()
-                }
+            } else {
+                gocryptfsVolume.closeFile(handleID)
+                setCurrentPath(currentDirectoryPath)
+                invalidateOptionsMenu()
             }
         }
     }
@@ -138,162 +136,137 @@ class ExplorerActivity : BaseExplorerActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == PICK_FILES_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                object : LoadingTask(this, R.string.loading_msg_import){
-                    override fun doTask(activity: AppCompatActivity) {
-                        val uris: MutableList<Uri> = ArrayList()
-                        val singleUri = data.data
-                        if (singleUri == null) { //multiples choices
-                            val clipData = data.clipData
-                            if (clipData != null){
-                                for (i in 0 until clipData.itemCount) {
-                                    uris.add(clipData.getItemAt(i).uri)
-                                }
-                            }
-                        } else {
-                            uris.add(singleUri)
+                val uris: MutableList<Uri> = ArrayList()
+                val singleUri = data.data
+                if (singleUri == null) { //multiples choices
+                    val clipData = data.clipData
+                    if (clipData != null){
+                        for (i in 0 until clipData.itemCount) {
+                            uris.add(clipData.getItemAt(i).uri)
                         }
-                        Looper.prepare()
-                        if (importFilesFromUris(uris, this)) {
-                            stopTask {
-                                ColoredAlertDialogBuilder(activity)
-                                    .setTitle(R.string.success_import)
-                                    .setMessage("""
+                    }
+                } else {
+                    uris.add(singleUri)
+                }
+                importFilesFromUris(uris){ failedItem ->
+                    if (failedItem == null){
+                        ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.success_import)
+                                .setMessage("""
                                 ${getString(R.string.success_import_msg)}
                                 ${getString(R.string.ask_for_wipe)}
                                 """.trimIndent())
-                                    .setPositiveButton(R.string.yes) { _, _ ->
-                                        object : LoadingTask(activity, R.string.loading_msg_wipe){
-                                            override fun doTask(activity: AppCompatActivity) {
-                                                var success = true
-                                                for (uri in uris) {
-                                                    val errorMsg = Wiper.wipe(activity, uri)
-                                                    if (errorMsg != null) {
-                                                        stopTask {
-                                                            ColoredAlertDialogBuilder(activity)
-                                                                .setTitle(R.string.error)
-                                                                .setMessage(getString(R.string.wipe_failed, errorMsg))
-                                                                .setPositiveButton(R.string.ok, null)
-                                                                .show()
-                                                        }
-                                                        success = false
-                                                        break
-                                                    }
-                                                }
-                                                if (success) {
-                                                    stopTask {
-                                                        ColoredAlertDialogBuilder(activity)
-                                                            .setTitle(R.string.wipe_successful)
-                                                            .setMessage(R.string.wipe_success_msg)
-                                                            .setPositiveButton(R.string.ok, null)
-                                                            .show()
-                                                    }
-                                                }
+                                .setPositiveButton(R.string.yes) { _, _ ->
+                                    fileOperationService.wipeUris(uris) { errorMsg ->
+                                        runOnUiThread {
+                                            if (errorMsg == null){
+                                                ColoredAlertDialogBuilder(this)
+                                                        .setTitle(R.string.wipe_successful)
+                                                        .setMessage(R.string.wipe_success_msg)
+                                                        .setPositiveButton(R.string.ok, null)
+                                                        .show()
+                                            } else {
+                                                ColoredAlertDialogBuilder(this)
+                                                        .setTitle(R.string.error)
+                                                        .setMessage(getString(R.string.wipe_failed, errorMsg))
+                                                        .setPositiveButton(R.string.ok, null)
+                                                        .show()
                                             }
                                         }
+
                                     }
-                                    .setNegativeButton(R.string.no, null)
-                                    .show()
-                            }
-                        }
-                    }
-                    override fun doFinally(activity: AppCompatActivity){
-                        setCurrentPath(currentDirectoryPath)
+                                }
+                                .setNegativeButton(R.string.no, null)
+                                .show()
+                    } else {
+                        ColoredAlertDialogBuilder(this)
+                                .setTitle(R.string.error)
+                                .setMessage(getString(R.string.import_failed, failedItem))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
                     }
                 }
             }
         } else if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                object : LoadingTask(this, R.string.loading_msg_export){
-                    override fun doTask(activity: AppCompatActivity) {
-                        data.data?.let {uri ->
-                            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                            DocumentFile.fromTreeUri(activity, uri)?.let { treeDocumentFile ->
-                                var failedItem: String? = null
-                                for (i in explorerAdapter.selectedItems) {
-                                    val element = explorerAdapter.getItem(i)
-                                    val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
-                                    failedItem = if (element.isDirectory) {
-                                        recursiveExportDirectory(fullPath, treeDocumentFile)
-                                    } else {
-                                        if (exportFileInto(fullPath, treeDocumentFile)) null else fullPath
-                                    }
-                                    if (failedItem != null) {
-                                        stopTask {
-                                            ColoredAlertDialogBuilder(activity)
-                                                .setTitle(R.string.error)
-                                                .setMessage(getString(R.string.export_failed, failedItem))
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
-                                        }
-                                        break
-                                    }
-                                }
-                                if (failedItem == null) {
-                                    stopTask {
-                                        ColoredAlertDialogBuilder(activity)
-                                            .setTitle(R.string.success_export)
-                                            .setMessage(R.string.success_export_msg)
-                                            .setPositiveButton(R.string.ok, null)
-                                            .show()
-                                    }
-                                }
+                data.data?.let { uri ->
+                    fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] }){ failedItem ->
+                        runOnUiThread {
+                            if (failedItem == null){
+                                ColoredAlertDialogBuilder(this)
+                                        .setTitle(R.string.success_export)
+                                        .setMessage(R.string.success_export_msg)
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
+                            } else {
+                                ColoredAlertDialogBuilder(this)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.export_failed, failedItem))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
                             }
                         }
                     }
-                    override fun doFinally(activity: AppCompatActivity) {
-                        unselectAll()
-                    }
+                    unselectAll()
                 }
             }
         } else if (requestCode == PICK_OTHER_VOLUME_ITEMS_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK && data != null) {
-                object : LoadingTask(this, R.string.loading_msg_import){
-                    override fun doTask(activity: AppCompatActivity) {
-                        val remoteSessionID = data.getIntExtra("sessionID", -1)
-                        val remoteGocryptfsVolume = GocryptfsVolume(remoteSessionID)
-                        val path = data.getStringExtra("path")
-                        var failedItem: String? = null
-                        Looper.prepare()
-                        if (path == null) {
-                            val paths = data.getStringArrayListExtra("paths")
-                            val types = data.getIntegerArrayListExtra("types")
-                            if (types != null && paths != null){
-                                for (i in paths.indices) {
-                                    failedItem = if (types[i] == 0) { //directory
-                                        recursiveImportDirectoryFromOtherVolume(remoteGocryptfsVolume, paths[i], currentDirectoryPath)
-                                    } else {
-                                        safeImportFileFromOtherVolume(remoteGocryptfsVolume, paths[i], PathUtils.pathJoin(currentDirectoryPath, File(paths[i]).name))
-                                    }
-                                    if (failedItem != null) {
-                                        break
-                                    }
+                val remoteSessionID = data.getIntExtra("sessionID", -1)
+                val remoteGocryptfsVolume = GocryptfsVolume(remoteSessionID)
+                val path = data.getStringExtra("path")
+                val operationFiles = ArrayList<OperationFile>()
+                if (path == null){ //multiples elements
+                    val paths = data.getStringArrayListExtra("paths")
+                    val types = data.getIntegerArrayListExtra("types")
+                    if (types != null && paths != null){
+                        for (i in paths.indices) {
+                            operationFiles.add(
+                                    OperationFile.fromExplorerElement(
+                                            ExplorerElement(File(paths[i]).name, types[i].toShort(), -1, -1, PathUtils.getParentPath(paths[i]))
+                                    )
+                            )
+                            if (types[i] == 0){ //directory
+                                remoteGocryptfsVolume.recursiveMapFiles(paths[i]).forEach {
+                                    operationFiles.add(OperationFile.fromExplorerElement(it))
                                 }
                             }
+                        }
+                    }
+                } else {
+                    operationFiles.add(
+                            OperationFile.fromExplorerElement(
+                                    ExplorerElement(File(path).name, 1, -1, -1, PathUtils.getParentPath(path))
+                            )
+                    )
+                }
+                if (operationFiles.size > 0){
+                    checkPathOverwrite(operationFiles, currentDirectoryPath) { items ->
+                        if (items == null) {
+                            remoteGocryptfsVolume.close()
                         } else {
-                            failedItem = safeImportFileFromOtherVolume(remoteGocryptfsVolume, path, PathUtils.pathJoin(currentDirectoryPath, File(path).name))
-                        }
-                        if (failedItem == null) {
-                            stopTask {
-                                ColoredAlertDialogBuilder(activity)
-                                    .setTitle(R.string.success_import)
-                                    .setMessage(R.string.success_import_msg)
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
+                            fileOperationService.copyElements(items, remoteGocryptfsVolume){ failedItem ->
+                                runOnUiThread {
+                                    if (failedItem == null){
+                                        ColoredAlertDialogBuilder(this)
+                                                .setTitle(R.string.success_import)
+                                                .setMessage(R.string.success_import_msg)
+                                                .setPositiveButton(R.string.ok, null)
+                                                .show()
+                                    } else {
+                                        ColoredAlertDialogBuilder(this)
+                                                .setTitle(R.string.error)
+                                                .setMessage(getString(R.string.import_failed, failedItem))
+                                                .setPositiveButton(R.string.ok, null)
+                                                .show()
+                                    }
+                                }
+                                remoteGocryptfsVolume.close()
                             }
-                        } else if (failedItem!!.isNotEmpty()){
-                            stopTask {
-                                ColoredAlertDialogBuilder(activity)
-                                    .setTitle(R.string.error)
-                                    .setMessage(getString(R.string.import_failed, failedItem))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
                         }
-                        remoteGocryptfsVolume.close()
                     }
-                    override fun doFinally(activity: AppCompatActivity) {
-                        setCurrentPath(currentDirectoryPath)
-                    }
+                } else {
+                    remoteGocryptfsVolume.close()
                 }
             }
         }
@@ -344,7 +317,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.cut -> {
                 for (i in explorerAdapter.selectedItems){
-                    itemsToProcess.add(explorerElements[i])
+                    itemsToProcess.add(OperationFile.fromExplorerElement(explorerElements[i]))
                 }
                 currentItemAction = ItemsActions.MOVE
                 unselectAll()
@@ -352,7 +325,12 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.copy -> {
                 for (i in explorerAdapter.selectedItems){
-                    itemsToProcess.add(explorerElements[i])
+                    itemsToProcess.add(OperationFile.fromExplorerElement(explorerElements[i]))
+                    if (explorerElements[i].isDirectory){
+                        gocryptfsVolume.recursiveMapFiles(explorerElements[i].fullPath).forEach {
+                            itemsToProcess.add(OperationFile.fromExplorerElement(it))
+                        }
+                    }
                 }
                 currentItemAction = ItemsActions.COPY
                 unselectAll()
@@ -360,81 +338,45 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.validate -> {
                 if (currentItemAction == ItemsActions.COPY){
-                    object : LoadingTask(this, R.string.loading_msg_copy){
-                        override fun doTask(activity: AppCompatActivity) {
-                            var failedItem: String? = null
-                            Looper.prepare()
-                            for (element in itemsToProcess) {
-                                val dstPath = checkPathOverwrite(PathUtils.pathJoin(currentDirectoryPath, element.name), element.isDirectory)
-                                failedItem = if (dstPath == null){
-                                    ""
-                                } else {
-                                    if (element.isDirectory) {
-                                        recursiveCopyDirectory(element.fullPath, dstPath)
-                                    } else {
-                                        if (copyFile(element.fullPath, dstPath)) null else element.fullPath
-                                    }
-                                }
-                                if (failedItem != null){
-                                    if (failedItem.isNotEmpty()) {
-                                        stopTask {
-                                            ColoredAlertDialogBuilder(activity)
+                    checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
+                        items?.let {
+                            fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
+                                runOnUiThread {
+                                    if (failedItem != null){
+                                        ColoredAlertDialogBuilder(this)
                                                 .setTitle(R.string.error)
-                                                .setMessage(getString(
-                                                        R.string.copy_failed,
-                                                        failedItem
-                                                    ))
+                                                .setMessage(getString(R.string.copy_failed, failedItem))
                                                 .setPositiveButton(R.string.ok, null)
                                                 .show()
-                                        }
+                                    } else {
+                                        Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
                                     }
-                                    break
-                                }
-                            }
-                            if (failedItem == null) {
-                                stopTask {
-                                    ColoredAlertDialogBuilder(activity)
-                                        .setTitle(getString(R.string.copy_success))
-                                        .setMessage(getString(R.string.copy_success_msg))
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
                                 }
                             }
                         }
-                        override fun doFinally(activity: AppCompatActivity) {
-                            cancelItemAction()
-                            unselectAll()
-                            setCurrentPath(currentDirectoryPath)
-                        }
+                        cancelItemAction()
+                        unselectAll()
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
-                    object : LoadingTask(this, R.string.loading_msg_move){
-                        override fun doTask(activity: AppCompatActivity) {
-                            Looper.prepare()
-                            val failedItem = moveElements(itemsToProcess, currentDirectoryPath)
-                            if (failedItem == null) {
-                                stopTask {
-                                    ColoredAlertDialogBuilder(activity)
-                                        .setTitle(getString(R.string.move_success))
-                                        .setMessage(getString(R.string.move_success_msg))
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
-                                }
-                            } else if (failedItem.isNotEmpty()){
-                                stopTask {
-                                    ColoredAlertDialogBuilder(activity)
-                                        .setTitle(R.string.error)
-                                        .setMessage(getString(R.string.move_failed, failedItem))
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
+                    mapFileForMove(itemsToProcess, itemsToProcess[0].explorerElement.parentPath)
+                    checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
+                        items?.let {
+                            fileOperationService.moveElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
+                                runOnUiThread {
+                                    if (failedItem != null){
+                                        ColoredAlertDialogBuilder(this)
+                                                .setTitle(R.string.error)
+                                                .setMessage(getString(R.string.move_failed, failedItem))
+                                                .setPositiveButton(R.string.ok, null)
+                                                .show()
+                                    } else {
+                                        Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         }
-                        override fun doFinally(activity: AppCompatActivity) {
-                            cancelItemAction()
-                            unselectAll()
-                            setCurrentPath(currentDirectoryPath)
-                        }
+                        cancelItemAction()
+                        unselectAll()
                     }
                 }
                 true
@@ -473,6 +415,24 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
+    private fun mapFileForMove(items: ArrayList<OperationFile>, srcDirectoryPath: String): ArrayList<OperationFile> {
+        val newItems = ArrayList<OperationFile>()
+        items.forEach {
+            if (it.explorerElement.isDirectory){
+                if (gocryptfsVolume.pathExists(PathUtils.pathJoin(currentDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, it.explorerElement.fullPath)))){
+                    newItems.addAll(
+                        mapFileForMove(
+                            gocryptfsVolume.listDir(it.explorerElement.fullPath).map { e -> OperationFile.fromExplorerElement(e) } as ArrayList<OperationFile>,
+                            srcDirectoryPath
+                        )
+                    )
+                }
+            }
+        }
+        items.addAll(newItems)
+        return items
+    }
+
     private fun cancelItemAction() {
         if (currentItemAction != ItemsActions.NONE){
             currentItemAction = ItemsActions.NONE
@@ -489,220 +449,13 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun copyFile(srcPath: String, dstPath: String): Boolean {
-        var success = true
-        val originalHandleId = gocryptfsVolume.openReadMode(srcPath)
-        if (originalHandleId != -1){
-            val newHandleId = gocryptfsVolume.openWriteMode(dstPath)
-            if (newHandleId != -1){
-                var offset: Long = 0
-                val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
-                var length: Int
-                while (gocryptfsVolume.readFile(originalHandleId, offset, ioBuffer).also { length = it } > 0) {
-                    val written = gocryptfsVolume.writeFile(newHandleId, offset, ioBuffer, length).toLong()
-                    if (written == length.toLong()) {
-                        offset += written
-                    } else {
-                        success = false
-                        break
-                    }
-                }
-                gocryptfsVolume.closeFile(newHandleId)
-            } else {
-                success = false
-            }
-            gocryptfsVolume.closeFile(originalHandleId)
-        } else {
-            success = false
-        }
-        return success
-    }
-
-    private fun recursiveCopyDirectory(srcDirectoryPath: String, dstDirectoryPath: String): String? {
-        val mappedElements = gocryptfsVolume.recursiveMapFiles(srcDirectoryPath)
-        if (!gocryptfsVolume.pathExists(dstDirectoryPath)){
-            if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
-                return srcDirectoryPath
-            }
-        }
-        for (e in mappedElements) {
-            val dstPath = checkPathOverwrite(PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, e.fullPath)), e.isDirectory)
-            if (dstPath == null){
-                return ""
-            } else {
-                if (e.isDirectory) {
-                    if (!gocryptfsVolume.pathExists(dstPath)){
-                        if (!gocryptfsVolume.mkdir(dstPath)){
-                            return e.fullPath
-                        }
-                    }
-                } else {
-                    if (!copyFile(e.fullPath, dstPath)) {
-                        return e.fullPath
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    private fun moveDirectory(srcDirectoryPath: String, dstDirectoryPath: String): String? {
-        if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
-            if (!gocryptfsVolume.rename(srcDirectoryPath, dstDirectoryPath)) {
-                return srcDirectoryPath
-            }
-        } else {
-            moveElements(gocryptfsVolume.listDir(srcDirectoryPath), dstDirectoryPath)
-            gocryptfsVolume.rmdir(srcDirectoryPath)
-        }
-        return null
-    }
-
-    private fun moveElements(elements: List<ExplorerElement>, dstDirectoryPath: String): String? {
-        for (element in elements){
-            val dstPath = checkPathOverwrite(PathUtils.pathJoin(dstDirectoryPath, element.name), element.isDirectory)
-            if (dstPath == null){
-                return ""
-            } else {
-                if (element.isDirectory){
-                    moveDirectory(element.fullPath, dstPath)?.let{
-                        return it
-                    }
-                } else {
-                    if (!gocryptfsVolume.rename(element.fullPath, dstPath)){
-                        return element.fullPath
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    private fun importFileFromOtherVolume(remoteGocryptfsVolume: GocryptfsVolume, srcPath: String, dstPath: String): Boolean {
-        var success = true
-        val srcHandleID = remoteGocryptfsVolume.openReadMode(srcPath)
-        if (srcHandleID != -1) {
-            val dstHandleID = gocryptfsVolume.openWriteMode(dstPath)
-            if (dstHandleID != -1) {
-                var length: Int
-                val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
-                var offset: Long = 0
-                while (remoteGocryptfsVolume.readFile(srcHandleID, offset, ioBuffer).also { length = it } > 0) {
-                    val written =
-                        gocryptfsVolume.writeFile(dstHandleID, offset, ioBuffer, length).toLong()
-                    if (written == length.toLong()) {
-                        offset += length.toLong()
-                    } else {
-                        success = false
-                        break
-                    }
-                }
-                gocryptfsVolume.closeFile(dstHandleID)
-            }
-            remoteGocryptfsVolume.closeFile(srcHandleID)
-        }
-        return success
-    }
-
-    private fun safeImportFileFromOtherVolume(remoteGocryptfsVolume: GocryptfsVolume, srcPath: String, dstPath: String): String? {
-        val checkedDstPath = checkPathOverwrite(dstPath, false)
-        return if (checkedDstPath == null){
-            ""
-        } else {
-            if (importFileFromOtherVolume(remoteGocryptfsVolume, srcPath, checkedDstPath)) null else srcPath
-        }
-    }
-
-    private fun recursiveImportDirectoryFromOtherVolume(remote_gocryptfsVolume: GocryptfsVolume, remote_directory_path: String, outputPath: String): String? {
-        val mappedElements = remote_gocryptfsVolume.recursiveMapFiles(remote_directory_path)
-        val dstDirectoryPath = checkPathOverwrite(PathUtils.pathJoin(outputPath, File(remote_directory_path).name), true)
-        if (dstDirectoryPath == null){
-            return ""
-        } else {
-            if (!gocryptfsVolume.pathExists(dstDirectoryPath)) {
-                if (!gocryptfsVolume.mkdir(dstDirectoryPath)) {
-                    return remote_directory_path
-                }
-            }
-            for (e in mappedElements) {
-                val dstPath = checkPathOverwrite(PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(remote_directory_path, e.fullPath)), e.isDirectory)
-                if (dstPath == null){
-                    return ""
-                } else {
-                    if (e.isDirectory) {
-                        if (!gocryptfsVolume.pathExists(dstPath)){
-                            if (!gocryptfsVolume.mkdir(dstPath)){
-                                return e.fullPath
-                            }
-                        }
-                    } else {
-                        if (!importFileFromOtherVolume(remote_gocryptfsVolume, e.fullPath, dstPath)) {
-                            return e.fullPath
-                        }
-                    }
-                }
-            }
-        }
-        return null
-    }
-
-    private fun exportFileInto(srcPath: String, treeDocumentFile: DocumentFile): Boolean {
-        val outputStream = treeDocumentFile.createFile("*/*", File(srcPath).name)?.uri?.let {
-            contentResolver.openOutputStream(it)
-        }
-        return if (outputStream != null){
-            gocryptfsVolume.exportFile(srcPath, outputStream)
-        } else {
-            false
-        }
-    }
-
-    private fun recursiveExportDirectory(plain_directory_path: String, treeDocumentFile: DocumentFile): String? {
-        treeDocumentFile.createDirectory(File(plain_directory_path).name)?.let {childTree ->
-            val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
-            for (e in explorerElements) {
-                val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
-                if (e.isDirectory) {
-                    val failedItem = recursiveExportDirectory(fullPath, childTree)
-                    failedItem?.let { return it }
-                } else {
-                    if (!exportFileInto(fullPath, childTree)){
-                        return fullPath
-                    }
-                }
-            }
-            return null
-        }
-        return treeDocumentFile.name
-    }
-
-    private fun recursiveRemoveDirectory(plain_directory_path: String): String? {
-        val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
-        for (e in explorerElements) {
-            val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
-            if (e.isDirectory) {
-                val result = recursiveRemoveDirectory(fullPath)
-                result?.let { return it }
-            } else {
-                if (!gocryptfsVolume.removeFile(fullPath)) {
-                    return fullPath
-                }
-            }
-        }
-        return if (!gocryptfsVolume.rmdir(plain_directory_path)) {
-            plain_directory_path
-        } else {
-            null
-        }
-    }
-
     private fun removeSelectedItems() {
         var failedItem: String? = null
         for (i in explorerAdapter.selectedItems) {
             val element = explorerAdapter.getItem(i)
             val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
             if (element.isDirectory) {
-                val result = recursiveRemoveDirectory(fullPath)
+                val result = gocryptfsVolume.recursiveRemoveDirectory(fullPath)
                 result?.let{ failedItem = it }
             } else {
                 if (!gocryptfsVolume.removeFile(fullPath)) {
