@@ -186,4 +186,11 @@
     <string name="hidden_volume_warning">Hidden volumes are stored in the app\'s internal storage. Other apps can\'t see these volumes without root access. However, if you uninstall DroidFS or clear data of the app, all your hidden volumes will be LOST. Be sure to make backups !</string>
     <string name="camera_perm_needed">Camera permission is needed to take photo.</string>
     <string name="choose_resolution">Choose a resolution</string>
+    <string name="file_operations">File Operations</string>
+    <string name="file_op_notification_title">File Operations running…</string>
+    <string name="file_op_copy_msg">Copying files…</string>
+    <string name="file_op_import_msg">Importing files…</string>
+    <string name="file_op_export_msg">Exporting files…</string>
+    <string name="file_op_move_msg">Moving files…</string>
+    <string name="file_op_wiping_msg">Wiping files…</string>
 </resources>
