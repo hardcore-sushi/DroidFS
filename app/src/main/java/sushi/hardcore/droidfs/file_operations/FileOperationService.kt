@@ -1,11 +1,9 @@
 package sushi.hardcore.droidfs.file_operations
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.Service
+import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.*
 import androidx.documentfile.provider.DocumentFile
@@ -20,11 +18,13 @@ import java.io.FileNotFoundException
 class FileOperationService : Service() {
     companion object {
         const val NOTIFICATION_CHANNEL_ID = "FileOperations"
+        const val ACTION_CANCEL = "file_operation_cancel"
     }
 
     private val binder = LocalBinder()
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var notificationManager: NotificationManager
+    private var notifications = HashMap<Int, Boolean>()
     private var lastNotificationId = 0
 
     inner class LocalBinder : Binder() {
@@ -39,6 +39,7 @@ class FileOperationService : Service() {
     }
 
     private fun showNotification(message: Int, total: Int): FileOperationNotification {
+        ++lastNotificationId
         if (!::notificationManager.isInitialized){
             notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         }
@@ -49,13 +50,35 @@ class FileOperationService : Service() {
         } else {
             Notification.Builder(this)
         }
+        val cancelIntent = Intent(this, NotificationBroadcastReceiver::class.java).apply {
+            val bundle = Bundle()
+            bundle.putBinder("binder", LocalBinder())
+            bundle.putInt("notificationId", lastNotificationId)
+            putExtra("bundle", bundle)
+            action = ACTION_CANCEL
+        }
+        val cancelPendingIntent = PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+        val notificationAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            Notification.Action.Builder(
+                    Icon.createWithResource(this, R.drawable.icon_close),
+                    getString(R.string.cancel),
+                    cancelPendingIntent
+            )
+        } else {
+            Notification.Action.Builder(
+                    R.drawable.icon_close,
+                    getString(R.string.cancel),
+                    cancelPendingIntent
+            )
+        }
         notificationBuilder
-                .setOngoing(true)
                 .setContentTitle(getString(message))
                 .setContentText("0/$total")
                 .setSmallIcon(R.mipmap.icon_launcher)
+                .setOngoing(true)
                 .setProgress(total, 0, false)
-        ++lastNotificationId
+                .addAction(notificationAction.build())
+        notifications[lastNotificationId] = false
         notificationManager.notify(lastNotificationId, notificationBuilder.build())
         return FileOperationNotification(notificationBuilder, lastNotificationId)
     }
@@ -69,6 +92,10 @@ class FileOperationService : Service() {
 
     private fun cancelNotification(notification: FileOperationNotification){
         notificationManager.cancel(notification.notificationId)
+    }
+
+    fun cancelOperation(notificationId: Int){
+        notifications[notificationId] = true
     }
 
     private fun copyFile(srcPath: String, dstPath: String, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume): Boolean {
@@ -105,6 +132,10 @@ class FileOperationService : Service() {
             val notification = showNotification(R.string.file_op_copy_msg, items.size)
             var failedItem: String? = null
             for (i in 0 until items.size){
+                if (notifications[notification.notificationId]!!){
+                    cancelNotification(notification)
+                    return@Thread
+                }
                 if (items[i].explorerElement.isDirectory){
                     if (!gocryptfsVolume.pathExists(items[i].dstPath!!)) {
                         if (!gocryptfsVolume.mkdir(items[i].dstPath!!)) {
@@ -133,6 +164,10 @@ class FileOperationService : Service() {
             val mergedFolders = ArrayList<String>()
             var failedItem: String? = null
             for (i in 0 until items.size){
+                if (notifications[notification.notificationId]!!){
+                    cancelNotification(notification)
+                    return@Thread
+                }
                 if (items[i].explorerElement.isDirectory && gocryptfsVolume.pathExists(items[i].dstPath!!)){ //folder will be merged
                     mergedFolders.add(items[i].explorerElement.fullPath)
                 } else {
@@ -146,6 +181,10 @@ class FileOperationService : Service() {
             }
             if (failedItem == null){
                 for (i in 0 until mergedFolders.size) {
+                    if (notifications[notification.notificationId]!!){
+                        cancelNotification(notification)
+                        return@Thread
+                    }
                     if (!gocryptfsVolume.rmdir(mergedFolders[i])){
                         failedItem = mergedFolders[i]
                         break
@@ -164,6 +203,10 @@ class FileOperationService : Service() {
             val notification = showNotification(R.string.file_op_import_msg, items.size)
             var failedIndex = -1
             for (i in 0 until items.size) {
+                if (notifications[notification.notificationId]!!){
+                    cancelNotification(notification)
+                    return@Thread
+                }
                 try {
                     if (!gocryptfsVolume.importFile(this, uris[i], items[i].dstPath!!)){
                         failedIndex = i
@@ -191,6 +234,10 @@ class FileOperationService : Service() {
             val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
             var errorMsg: String? = null
             for (i in uris.indices) {
+                if (notifications[notification.notificationId]!!){
+                    cancelNotification(notification)
+                    return@Thread
+                }
                 errorMsg = Wiper.wipe(this, uris[i])
                 if (errorMsg == null) {
                     updateNotificationProgress(notification, i, uris.size)
@@ -240,6 +287,10 @@ class FileOperationService : Service() {
                 val notification = showNotification(R.string.file_op_export_msg, items.size)
                 var failedItem: String? = null
                 for (i in items.indices) {
+                    if (notifications[notification.notificationId]!!){
+                        cancelNotification(notification)
+                        return@Thread
+                    }
                     failedItem = if (items[i].isDirectory) {
                         recursiveExportDirectory(items[i].fullPath, treeDocumentFile)
                     } else {

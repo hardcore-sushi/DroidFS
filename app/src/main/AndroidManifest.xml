@@ -88,6 +88,12 @@
 
         <service android:name=".file_operations.FileOperationService" android:exported="false"/>
 
+        <receiver android:name=".file_operations.NotificationBroadcastReceiver" android:exported="false">
+            <intent-filter>
+                <action android:name="file_operation_cancel"/>
+            </intent-filter>
+        </receiver>
+
         <provider
             android:name=".content_providers.RestrictedFileProvider"
             android:authorities="${applicationId}.temporary_provider"
