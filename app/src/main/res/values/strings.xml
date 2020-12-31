@@ -26,7 +26,6 @@
     <string name="import_failed">Import of %s failed.</string>
     <string name="export_failed">Export of %s failed.</string>
     <string name="success_export">Export successful !</string>
-    <string name="success_export_msg">The selected files have been successfully exported.</string>
     <string name="remove_failed">Deletion of %s failed.</string>
     <string name="passwords_mismatch">Passwords don\'t match</string>
     <string name="dir_not_empty">The selected directory isn\'t empty</string>
@@ -57,7 +56,6 @@
     <string name="ask_for_wipe">Do you want to wipe the original files ?</string>
     <string name="wipe_failed">Wiping failed: %s</string>
     <string name="wipe_successful">Files successfully wiped !</string>
-    <string name="wipe_success_msg">The imported files have been successfully wiped from their original locations.</string>
     <string name="create_password_warning">Warning !\nThis password will be the only way to decrypt the volume and access the files inside.\nChoose a very strong password (not \"123456\" or \"password\"), do not lose it and keep it secure (preferably only in your mind).\n\nDroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.\nDo not type passwords in insecure environments.</string>
     <string name="open_activity_warning">Warning !\nOpening volumes in insecure environments can lead to data leaks.\nDroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.\nDo not open volumes containing sensitive data unless you know exactly what you are doing.</string>
     <string name="rename">Rename</string>

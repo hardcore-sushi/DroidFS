@@ -160,11 +160,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     fileOperationService.wipeUris(uris) { errorMsg ->
                                         runOnUiThread {
                                             if (errorMsg == null){
-                                                ColoredAlertDialogBuilder(this)
-                                                        .setTitle(R.string.wipe_successful)
-                                                        .setMessage(R.string.wipe_success_msg)
-                                                        .setPositiveButton(R.string.ok, null)
-                                                        .show()
+                                                Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
                                             } else {
                                                 ColoredAlertDialogBuilder(this)
                                                         .setTitle(R.string.error)
@@ -194,11 +190,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] }){ failedItem ->
                         runOnUiThread {
                             if (failedItem == null){
-                                ColoredAlertDialogBuilder(this)
-                                        .setTitle(R.string.success_export)
-                                        .setMessage(R.string.success_export_msg)
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
+                                Toast.makeText(this, R.string.success_export, Toast.LENGTH_SHORT).show()
                             } else {
                                 ColoredAlertDialogBuilder(this)
                                         .setTitle(R.string.error)
@@ -249,11 +241,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             fileOperationService.copyElements(items, remoteGocryptfsVolume){ failedItem ->
                                 runOnUiThread {
                                     if (failedItem == null){
-                                        ColoredAlertDialogBuilder(this)
-                                                .setTitle(R.string.success_import)
-                                                .setMessage(R.string.success_import_msg)
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
+                                        Toast.makeText(this, R.string.success_import, Toast.LENGTH_SHORT).show()
                                     } else {
                                         ColoredAlertDialogBuilder(this)
                                                 .setTitle(R.string.error)
@@ -344,14 +332,14 @@ class ExplorerActivity : BaseExplorerActivity() {
                         items?.let {
                             fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
                                 runOnUiThread {
-                                    if (failedItem != null){
+                                    if (failedItem == null){
+                                        Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
+                                    } else {
                                         ColoredAlertDialogBuilder(this)
                                                 .setTitle(R.string.error)
                                                 .setMessage(getString(R.string.copy_failed, failedItem))
                                                 .setPositiveButton(R.string.ok, null)
                                                 .show()
-                                    } else {
-                                        Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
                                     }
                                     setCurrentPath(currentDirectoryPath)
                                 }
@@ -366,14 +354,14 @@ class ExplorerActivity : BaseExplorerActivity() {
                         items?.let {
                             fileOperationService.moveElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
                                 runOnUiThread {
-                                    if (failedItem != null){
+                                    if (failedItem == null){
+                                        Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
+                                    } else {
                                         ColoredAlertDialogBuilder(this)
                                                 .setTitle(R.string.error)
                                                 .setMessage(getString(R.string.move_failed, failedItem))
                                                 .setPositiveButton(R.string.ok, null)
                                                 .show()
-                                    } else {
-                                        Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
                                     }
                                     setCurrentPath(currentDirectoryPath)
                                 }

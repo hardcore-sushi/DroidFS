@@ -65,7 +65,6 @@ open class BaseExplorerActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
-        val intent = intent
         volumeName = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)

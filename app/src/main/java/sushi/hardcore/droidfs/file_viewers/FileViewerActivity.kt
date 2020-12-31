@@ -12,7 +12,7 @@ abstract class FileViewerActivity: BaseActivity() {
     lateinit var gocryptfsVolume: GocryptfsVolume
     lateinit var filePath: String
     private var isFinishingIntentionally = false
-    protected var usf_keep_open = false
+    private var usf_keep_open = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!

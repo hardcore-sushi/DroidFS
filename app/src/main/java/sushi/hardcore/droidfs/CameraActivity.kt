@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.DisplayMetrics
+import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -55,6 +56,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 image_timer.setImageResource(R.drawable.icon_timer_off)
             }
         }
+    private var usf_keep_open = false
     private lateinit var sensorOrientationListener: SensorOrientationListener
     private var previousOrientation: Float = 0f
     private lateinit var orientedIcons: List<ImageView>
@@ -69,6 +71,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private var isBackCamera = true
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         setContentView(R.layout.activity_camera)
         gocryptfsVolume = GocryptfsVolume(intent.getIntExtra("sessionID", -1))
         outputDirectory = intent.getStringExtra("path")!!
@@ -319,7 +322,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     override fun onStop() {
         super.onStop()
-        if (!isFinishing){
+        if (!isFinishing && !usf_keep_open){
             finish()
         }
     }
@@ -327,7 +330,10 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     override fun onPause() {
         super.onPause()
         sensorOrientationListener.remove(this)
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){ //if not asking for permission
+        if (
+                (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) //not asking for permission
+                && !usf_keep_open
+        ){
             finish()
         }
     }
