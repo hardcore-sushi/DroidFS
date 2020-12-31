@@ -1,4 +1,4 @@
-package sushi.hardcore.droidfs
+package sushi.hardcore.droidfs.file_operations
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,24 +9,23 @@ import android.content.Intent
 import android.net.Uri
 import android.os.*
 import androidx.documentfile.provider.DocumentFile
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.file_operations.OperationFile
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
 import java.io.FileNotFoundException
 
-
 class FileOperationService : Service() {
     companion object {
-        const val NOTIFICATION_ID = 1
         const val NOTIFICATION_CHANNEL_ID = "FileOperations"
     }
 
     private val binder = LocalBinder()
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var notificationManager: NotificationManager
+    private var lastNotificationId = 0
 
     inner class LocalBinder : Binder() {
         fun getService(): FileOperationService = this@FileOperationService
@@ -39,7 +38,7 @@ class FileOperationService : Service() {
         return binder
     }
 
-    private fun showNotification(message: String, total: Int): Notification.Builder {
+    private fun showNotification(message: Int, total: Int): FileOperationNotification {
         if (!::notificationManager.isInitialized){
             notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         }
@@ -50,22 +49,26 @@ class FileOperationService : Service() {
         } else {
             Notification.Builder(this)
         }
-        notificationBuilder.setOngoing(true)
-                .setContentTitle(getString(R.string.file_op_notification_title))
-                .setContentText(message)
+        notificationBuilder
+                .setOngoing(true)
+                .setContentTitle(getString(message))
+                .setContentText("0/$total")
                 .setSmallIcon(R.mipmap.icon_launcher)
                 .setProgress(total, 0, false)
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
-        return notificationBuilder
+        ++lastNotificationId
+        notificationManager.notify(lastNotificationId, notificationBuilder.build())
+        return FileOperationNotification(notificationBuilder, lastNotificationId)
     }
 
-    private fun updateNotificationProgress(notificationBuilder: Notification.Builder, progress: Int, total: Int){
-        notificationBuilder.setProgress(total, progress, false)
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build())
+    private fun updateNotificationProgress(notification: FileOperationNotification, progress: Int, total: Int){
+        notification.notificationBuilder
+                .setProgress(total, progress, false)
+                .setContentText("$progress/$total")
+        notificationManager.notify(notification.notificationId, notification.notificationBuilder.build())
     }
 
-    private fun cancelNotification(){
-        notificationManager.cancel(NOTIFICATION_ID)
+    private fun cancelNotification(notification: FileOperationNotification){
+        notificationManager.cancel(notification.notificationId)
     }
 
     private fun copyFile(srcPath: String, dstPath: String, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume): Boolean {
@@ -99,7 +102,7 @@ class FileOperationService : Service() {
 
     fun copyElements(items: ArrayList<OperationFile>, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume, callback: (String?) -> Unit){
         Thread {
-            val notificationBuilder = showNotification(getString(R.string.file_op_copy_msg), items.size)
+            val notification = showNotification(R.string.file_op_copy_msg, items.size)
             var failedItem: String? = null
             for (i in 0 until items.size){
                 if (items[i].explorerElement.isDirectory){
@@ -114,19 +117,19 @@ class FileOperationService : Service() {
                     }
                 }
                 if (failedItem == null){
-                    updateNotificationProgress(notificationBuilder, i, items.size)
+                    updateNotificationProgress(notification, i, items.size)
                 } else {
                     break
                 }
             }
-            cancelNotification()
+            cancelNotification(notification)
             callback(failedItem)
         }.start()
     }
 
     fun moveElements(items: ArrayList<OperationFile>, callback: (String?) -> Unit){
         Thread {
-            val notificationBuilder = showNotification(getString(R.string.file_op_move_msg), items.size)
+            val notification = showNotification(R.string.file_op_move_msg, items.size)
             val mergedFolders = ArrayList<String>()
             var failedItem: String? = null
             for (i in 0 until items.size){
@@ -137,7 +140,7 @@ class FileOperationService : Service() {
                         failedItem = items[i].explorerElement.fullPath
                         break
                     } else {
-                        updateNotificationProgress(notificationBuilder, i, items.size)
+                        updateNotificationProgress(notification, i, items.size)
                     }
                 }
             }
@@ -147,18 +150,18 @@ class FileOperationService : Service() {
                         failedItem = mergedFolders[i]
                         break
                     } else {
-                        updateNotificationProgress(notificationBuilder, items.size-(mergedFolders.size-i), items.size)
+                        updateNotificationProgress(notification, items.size-(mergedFolders.size-i), items.size)
                     }
                 }
             }
-            cancelNotification()
+            cancelNotification(notification)
             callback(failedItem)
         }.start()
     }
 
     fun importFilesFromUris(items: ArrayList<OperationFile>, uris: List<Uri>, callback: (String?) -> Unit){
         Thread {
-            val notificationBuilder = showNotification(getString(R.string.file_op_import_msg), items.size)
+            val notification = showNotification(R.string.file_op_import_msg, items.size)
             var failedIndex = -1
             for (i in 0 until items.size) {
                 try {
@@ -169,15 +172,15 @@ class FileOperationService : Service() {
                     failedIndex = i
                 }
                 if (failedIndex == -1) {
-                    updateNotificationProgress(notificationBuilder, i, items.size)
+                    updateNotificationProgress(notification, i, items.size)
                 } else {
-                    cancelNotification()
+                    cancelNotification(notification)
                     callback(uris[failedIndex].toString())
                     break
                 }
             }
             if (failedIndex == -1){
-                cancelNotification()
+                cancelNotification(notification)
                 callback(null)
             }
         }.start()
@@ -185,17 +188,17 @@ class FileOperationService : Service() {
 
     fun wipeUris(uris: List<Uri>, callback: (String?) -> Unit){
         Thread {
-            val notificationBuilder = showNotification(getString(R.string.file_op_wiping_msg), uris.size)
+            val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
             var errorMsg: String? = null
             for (i in uris.indices) {
                 errorMsg = Wiper.wipe(this, uris[i])
                 if (errorMsg == null) {
-                    updateNotificationProgress(notificationBuilder, i, uris.size)
+                    updateNotificationProgress(notification, i, uris.size)
                 } else {
                     break
                 }
             }
-            cancelNotification()
+            cancelNotification(notification)
             callback(errorMsg)
         }.start()
     }
@@ -234,7 +237,7 @@ class FileOperationService : Service() {
         Thread {
             contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             DocumentFile.fromTreeUri(this, uri)?.let { treeDocumentFile ->
-                val notificationBuilder = showNotification(getString(R.string.file_op_export_msg), items.size)
+                val notification = showNotification(R.string.file_op_export_msg, items.size)
                 var failedItem: String? = null
                 for (i in items.indices) {
                     failedItem = if (items[i].isDirectory) {
@@ -243,12 +246,12 @@ class FileOperationService : Service() {
                         if (exportFileInto(items[i].fullPath, treeDocumentFile)) null else items[i].fullPath
                     }
                     if (failedItem == null) {
-                        updateNotificationProgress(notificationBuilder, i, items.size)
+                        updateNotificationProgress(notification, i, items.size)
                     } else {
                         break
                     }
                 }
-                cancelNotification()
+                cancelNotification(notification)
                 callback(failedItem)
             }
         }.start()

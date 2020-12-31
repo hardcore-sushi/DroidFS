@@ -187,7 +187,6 @@
     <string name="camera_perm_needed">Camera permission is needed to take photo.</string>
     <string name="choose_resolution">Choose a resolution</string>
     <string name="file_operations">File Operations</string>
-    <string name="file_op_notification_title">File Operations running…</string>
     <string name="file_op_copy_msg">Copying files…</string>
     <string name="file_op_import_msg">Importing files…</string>
     <string name="file_op_export_msg">Exporting files…</string>

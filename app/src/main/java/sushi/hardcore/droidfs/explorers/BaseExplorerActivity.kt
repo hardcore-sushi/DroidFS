@@ -26,7 +26,7 @@ import sushi.hardcore.droidfs.ConstValues.Companion.isAudio
 import sushi.hardcore.droidfs.ConstValues.Companion.isImage
 import sushi.hardcore.droidfs.ConstValues.Companion.isText
 import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
-import sushi.hardcore.droidfs.FileOperationService
+import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
@@ -36,9 +36,9 @@ import sushi.hardcore.droidfs.file_viewers.AudioPlayer
 import sushi.hardcore.droidfs.file_viewers.ImageViewer
 import sushi.hardcore.droidfs.file_viewers.TextEditor
 import sushi.hardcore.droidfs.file_viewers.VideoPlayer
-import sushi.hardcore.droidfs.provider.RestrictedFileProvider
-import sushi.hardcore.droidfs.util.ExternalProvider
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
+import sushi.hardcore.droidfs.content_providers.ExternalProvider
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 

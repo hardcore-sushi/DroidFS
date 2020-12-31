@@ -9,7 +9,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.ByteArrayInputStream
 import java.io.File

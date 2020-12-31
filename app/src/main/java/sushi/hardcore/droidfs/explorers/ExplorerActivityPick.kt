@@ -5,7 +5,7 @@ import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 

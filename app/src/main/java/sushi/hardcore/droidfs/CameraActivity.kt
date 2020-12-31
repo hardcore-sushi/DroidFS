@@ -28,8 +28,7 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import kotlinx.android.synthetic.main.activity_camera.*
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
-import sushi.hardcore.droidfs.provider.RestrictedFileProvider
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.ByteArrayInputStream

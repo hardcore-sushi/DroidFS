@@ -3,7 +3,7 @@ package sushi.hardcore.droidfs.file_viewers
 import android.net.Uri
 import com.google.android.exoplayer2.upstream.*
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.GocryptfsVolume
 import kotlin.math.ceil
 import kotlin.math.min
 

@@ -1,4 +1,4 @@
-package sushi.hardcore.droidfs.provider
+package sushi.hardcore.droidfs.content_providers
 
 import android.content.ContentProvider
 import android.content.ContentValues

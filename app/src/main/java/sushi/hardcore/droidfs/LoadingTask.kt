@@ -1,10 +1,9 @@
-package sushi.hardcore.droidfs.util
+package sushi.hardcore.droidfs
 
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 abstract class LoadingTask(val activity: AppCompatActivity, loadingMessageResId: Int) {

@@ -4,8 +4,8 @@ import android.os.Bundle
 import android.view.View
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.provider.RestrictedFileProvider
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {

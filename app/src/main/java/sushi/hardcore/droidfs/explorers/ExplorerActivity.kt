@@ -14,8 +14,8 @@ import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.file_operations.OperationFile
-import sushi.hardcore.droidfs.util.ExternalProvider
-import sushi.hardcore.droidfs.util.GocryptfsVolume
+import sushi.hardcore.droidfs.content_providers.ExternalProvider
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File

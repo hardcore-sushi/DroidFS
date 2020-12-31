@@ -1,9 +1,9 @@
-package sushi.hardcore.droidfs.util
+package sushi.hardcore.droidfs
 
 import android.content.Context
 import android.net.Uri
-import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -47,70 +47,100 @@ class GocryptfsVolume(var sessionID: Int) {
     }
 
     fun close() {
-        native_close(sessionID)
+        synchronized(this){
+            native_close(sessionID)
+        }
     }
 
     fun isClosed(): Boolean {
-        return native_is_closed(sessionID)
+        synchronized(this){
+            return native_is_closed(sessionID)
+        }
     }
 
     fun listDir(dir_path: String): MutableList<ExplorerElement> {
-        return native_list_dir(sessionID, dir_path)
+        synchronized(this){
+            return native_list_dir(sessionID, dir_path)
+        }
     }
 
     fun mkdir(dir_path: String): Boolean {
-        return native_mkdir(sessionID, dir_path)
+        synchronized(this){
+            return native_mkdir(sessionID, dir_path)
+        }
     }
 
     fun rmdir(dir_path: String): Boolean {
-        return native_rmdir(sessionID, dir_path)
+        synchronized(this){
+            return native_rmdir(sessionID, dir_path)
+        }
     }
 
     fun removeFile(file_path: String): Boolean {
-        return native_remove_file(sessionID, file_path)
+        synchronized(this){
+            return native_remove_file(sessionID, file_path)
+        }
     }
 
     fun pathExists(file_path: String): Boolean {
-        return native_path_exists(sessionID, file_path)
+        synchronized(this){
+            return native_path_exists(sessionID, file_path)
+        }
     }
 
     fun getSize(file_path: String): Long {
-        return native_get_size(sessionID, file_path)
+        synchronized(this){
+            return native_get_size(sessionID, file_path)
+        }
     }
 
     fun closeFile(handleID: Int) {
-        native_close_file(sessionID, handleID)
+        synchronized(this){
+            native_close_file(sessionID, handleID)
+        }
     }
 
     fun openReadMode(file_path: String): Int {
-        return native_open_read_mode(sessionID, file_path)
+        synchronized(this){
+            return native_open_read_mode(sessionID, file_path)
+        }
     }
 
     fun openWriteMode(file_path: String): Int {
-        return native_open_write_mode(sessionID, file_path)
+        synchronized(this){
+            return native_open_write_mode(sessionID, file_path)
+        }
     }
 
     fun readFile(handleID: Int, offset: Long, buff: ByteArray): Int {
-        return native_read_file(sessionID, handleID, offset, buff)
+        synchronized(this){
+            return native_read_file(sessionID, handleID, offset, buff)
+        }
     }
 
     fun writeFile(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
-        return native_write_file(sessionID, handleID, offset, buff, buff_size)
+        synchronized(this){
+            return native_write_file(sessionID, handleID, offset, buff, buff_size)
+        }
     }
 
     fun truncate(file_path: String, offset: Long): Boolean {
-        return native_truncate(sessionID, file_path, offset)
+        synchronized(this) {
+            return native_truncate(sessionID, file_path, offset)
+        }
     }
 
     fun rename(old_path: String, new_path: String): Boolean {
-        return native_rename(sessionID, old_path, new_path)
+        synchronized(this) {
+            return native_rename(sessionID, old_path, new_path)
+        }
     }
 
     fun exportFile(handleID: Int, os: OutputStream): Boolean {
         var offset: Long = 0
         val ioBuffer = ByteArray(DefaultBS)
         var length: Int
-        while (native_read_file(sessionID, handleID, offset, ioBuffer).also { length = it } > 0){
+        while (readFile(handleID, offset, ioBuffer).also { length = it } > 0){
             os.write(ioBuffer, 0, length)
             offset += length.toLong()
         }
@@ -145,7 +175,7 @@ class GocryptfsVolume(var sessionID: Int) {
         val ioBuffer = ByteArray(DefaultBS)
         var length: Int
         while (inputStream.read(ioBuffer).also { length = it } > 0) {
-            val written = native_write_file(sessionID, handleID, offset, ioBuffer, length).toLong()
+            val written = writeFile(handleID, offset, ioBuffer, length).toLong()
             if (written == length.toLong()) {
                  offset += written
             } else {
@@ -153,7 +183,7 @@ class GocryptfsVolume(var sessionID: Int) {
                 return false
             }
         }
-        native_close_file(sessionID, handleID)
+        closeFile(handleID)
         inputStream.close()
         return true
     }

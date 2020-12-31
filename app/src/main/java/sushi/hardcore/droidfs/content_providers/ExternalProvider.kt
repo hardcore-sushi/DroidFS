@@ -1,12 +1,13 @@
-package sushi.hardcore.droidfs.util
+package sushi.hardcore.droidfs.content_providers
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatActivity
+import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.provider.RestrictedFileProvider
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 
