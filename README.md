@@ -3,9 +3,9 @@ DroidFS is an alternative way to use encrypted overlay filesystems on Android th
 It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) could be added in the future.
 
 <p align="center">
-<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" height="500">
-<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" height="500">
-<img src="https://git.drycat.fr/hardcore-sushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" height="500">
+<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.jpg" height="500">
+<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.jpg" height="500">
+<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.jpg" height="500">
 </p>
 
 # Disclamer

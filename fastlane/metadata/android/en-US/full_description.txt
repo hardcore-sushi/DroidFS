@@ -1,7 +1,7 @@
 DroidFS allows you to create encrypted virtual volumes on which you can safely store and access files.
 Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file contents and file names but doesn't hide directory structure or file sizes. If you want more details, take a look on their <a href="https://github.com/rfjakob/gocryptfs">github repository</a>.
 
-DroidFS is free, open-source, and you can find the project's repository on <a href="https://github.com/hardcore-sushi/DroidFS">github</a> or on <a href="https://git.drycat.fr/hardcore-sushi/DroidFS">the gitea instance of drycat.fr</a>.
+DroidFS is free, open-source, and you can find the project's repository on <a href="https://github.com/hardcore-sushi/DroidFS">github</a> or on <a href="https://forge.chapril.org/hardcoresushi/DroidFS">the gitea instance of the Chapril project</a>.
 
 <b>Warning !</b>
 Security is relative. DroidFS does not come with any warranty and should not be considered as an absolute safe way to store files.
