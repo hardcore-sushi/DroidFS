@@ -137,7 +137,7 @@
     <string name="github">GitHub</string>
     <string name="github_summary">O repositório de DroidFS no GitHub. Código fonte, documentação, rastreador de falhas…</string>
     <string name="gitea">Gitea</string>
-    <string name="gitea_summary">O repositório de DroidFS no DryCat Gitea. Gitea é totalmente livre e auto-hospedado. Código fonte, documentação, rastreador de falhas…</string>
+    <string name="gitea_summary">O repositório de DroidFS no Chapril Gitea. Gitea é totalmente livre e auto-hospedado. Código fonte, documentação, rastreador de falhas…</string>
     <string name="share">Compartilhar</string>
     <string name="decrypt_files">Exportar/Descriptografar</string>
     <string name="copy_failed">Falha ao copiar o %s .</string>
