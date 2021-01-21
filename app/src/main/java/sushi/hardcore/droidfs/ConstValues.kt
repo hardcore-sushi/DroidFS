@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs
 
 import android.net.Uri
 import java.io.File
+import java.util.*
 
 class ConstValues {
     companion object {
@@ -20,17 +21,21 @@ class ConstValues {
             Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "ini", "md"))
         )
 
+        private fun isExtensionType(extensionType: String, path: String): Boolean {
+            return fileExtensions[extensionType]?.contains(File(path).extension.toLowerCase(Locale.ROOT)) ?: false
+        }
+
         fun isImage(path: String): Boolean {
-            return fileExtensions["image"]?.contains(File(path).extension) ?: false
+            return isExtensionType("image", path)
         }
         fun isVideo(path: String): Boolean {
-            return fileExtensions["video"]?.contains(File(path).extension) ?: false
+            return isExtensionType("video", path)
         }
         fun isAudio(path: String): Boolean {
-            return fileExtensions["audio"]?.contains(File(path).extension) ?: false
+            return isExtensionType("audio", path)
         }
         fun isText(path: String): Boolean {
-            return fileExtensions["text"]?.contains(File(path).extension) ?: false
+            return isExtensionType("text", path)
         }
         fun getAssociatedDrawable(path: String): Int {
             return when {
