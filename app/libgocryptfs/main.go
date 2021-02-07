@@ -475,7 +475,7 @@ func truncate(sessionID, handleID int, newSize uint64) bool {
   return true
 }
 
-func init_new_session(root_cipher_dir string, masterkey []byte) int {
+func init_new_session(root_cipher_dir string, masterkey []byte, cf *configfile.ConfFile) int {
   // Initialize EME for filename encryption.
   var emeCipher *eme.EMECipher
   var err error
@@ -492,7 +492,9 @@ func init_new_session(root_cipher_dir string, masterkey []byte) int {
 
     // Initialize contentEnc
     cryptoBackend := cryptocore.BackendGoGCM
-    if stupidgcm.PreferOpenSSL() {
+    if cf.IsFeatureFlagSet(configfile.FlagAESSIV) {
+      cryptoBackend = cryptocore.BackendAESSIV
+    } else if stupidgcm.PreferOpenSSL() {
       cryptoBackend = cryptocore.BackendOpenSSL
     }
     forcedecode := false
@@ -535,7 +537,7 @@ func gcf_init(root_cipher_dir string, password, givenScryptHash, returnedScryptH
   if err == nil {
     masterkey := cf.GetMasterkey(password, givenScryptHash, returnedScryptHashBuff)
     if masterkey != nil {
-      sessionID = init_new_session(root_cipher_dir, masterkey)
+      sessionID = init_new_session(root_cipher_dir, masterkey, cf)
       wipe(masterkey)
     }
   }
