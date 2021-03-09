@@ -14,4 +14,10 @@
     <!--<style name="menu_overflow" parent="Widget.AppCompat.PopupMenu.Overflow">
         <item name="android:popupBackground">@drawable/popupmenu_overflow</item>
     </style>-->
+    <style name="infoBarTextView">
+        <item name="android:ellipsize">start</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textAlignment">center</item>
+    </style>
 </resources>
