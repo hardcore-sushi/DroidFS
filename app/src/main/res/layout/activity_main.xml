@@ -8,57 +8,49 @@
 
     <include layout="@layout/toolbar"/>
 
-    <ScrollView
+
+    <sushi.hardcore.droidfs.widgets.ColoredImageView
+        android:id="@+id/image_logo"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="0dp"
+        android:layout_margin="30dp"
+        android:src="@drawable/logo"
+        android:layout_weight="1"/>
 
-        <LinearLayout
+    <LinearLayout
+        android:id="@+id/aaa"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        android:layout_weight="1">
+
+        <androidx.appcompat.widget.AppCompatButton
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="@dimen/main_activity_button_height"
+            android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
+            android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
+            android:onClick="onClickOpen"
+            android:text="@string/open_volume"
+            style="@style/button"/>
 
-            <sushi.hardcore.droidfs.widgets.ColoredImageView
-                android:id="@+id/image_logo"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="20dp"/>
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/main_activity_button_height"
+            android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
+            android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
+            android:onClick="onClickCreate"
+            android:text="@string/create_volume"
+            style="@style/button"/>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical">
+        <androidx.appcompat.widget.AppCompatButton
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/main_activity_button_height"
+            android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
+            android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
+            android:onClick="onClickChangePassword"
+            android:text="@string/change_volume_password"
+            style="@style/button"/>
 
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/main_activity_button_height"
-                    android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-                    android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
-                    android:onClick="onClickOpen"
-                    android:text="@string/open_volume"
-                    style="@style/button"/>
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/main_activity_button_height"
-                    android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-                    android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
-                    android:onClick="onClickCreate"
-                    android:text="@string/create_volume"
-                    style="@style/button"/>
-
-                <androidx.appcompat.widget.AppCompatButton
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/main_activity_button_height"
-                    android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-                    android:layout_marginVertical="@dimen/main_activity_button_ver_margin"
-                    android:onClick="onClickChangePassword"
-                    android:text="@string/change_volume_password"
-                    style="@style/button"/>
-
-            </LinearLayout>
-
-        </LinearLayout>
-
-    </ScrollView>
+    </LinearLayout>
 
 </LinearLayout>
