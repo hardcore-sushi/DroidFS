@@ -61,7 +61,7 @@ DroidFS need some permissions to work properly. Here is why:
   Required to encrypt/decrypt password hashes using a fingerprint protected key.
   </li>
   <li><h4>Camera:</h4>
-  Needed to take photos directly from DroidFS to import them securely.
+  Needed to take photos directly from DroidFS to import them securely. You can deny this permission if you don't want to use it.
   </li>
 </ul>
 
@@ -71,7 +71,7 @@ Most of the original gocryptfs code was used as is (written in Go) and compiled 
 #### Install Requirements
 - [Android Studio](https://developer.android.com/studio/)
 - [Android NDK and CMake](https://developer.android.com/studio/projects/install-ndk)
-- [Go](https://golang.org/doc/install)
+- [Go](https://golang.org/doc/install) (on debian: `$ sudo apt-get install golang-go`)
 
 #### Download Sources
 ```
@@ -87,11 +87,11 @@ $ wget -qO - https://www.openssl.org/source/openssl-1.1.1h.tar.gz | tar -xvzf -
 First, we need to build libgocryptfs.<br>
 For this, we will need to install some dependencies:
 ```
-sudo apt-get install libcrypto++-dev libssl-dev pkg-config
+$ sudo apt-get install libcrypto++-dev libssl-dev pkg-config
 ```
 And also Go dependencies:
 ```
-go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf
+$ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf
 ```
 Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/AndroidSDK/ndk/\<NDK version\>". We can now start the build process: 
 ```

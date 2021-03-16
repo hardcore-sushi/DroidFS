@@ -1,6 +1,19 @@
 DroidFS allows you to create encrypted virtual volumes on which you can safely store and access files.
 Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file contents and file names but doesn't hide directory structure or file sizes. If you want more details, take a look on their <a href="https://github.com/rfjakob/gocryptfs">github repository</a>.
 
+<b>Permissions:</b>
+<ul>
+	<li>
+		<b>Read & write access to shared storage:</b> required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
+	</li>
+	<li>
+		<b>Biometric/Fingerprint hardware:</b> required to encrypt/decrypt password hashes using a fingerprint protected key.
+	</li>
+	<li>
+		<b>Camera:</b> needed to take photos directly from DroidFS to import them securely. You can deny this permission if you don't want to use it.
+	</li>
+</ul>
+
 DroidFS is free, open-source, and you can find the project's repository on <a href="https://github.com/hardcore-sushi/DroidFS">github</a> or on <a href="https://forge.chapril.org/hardcoresushi/DroidFS">the gitea instance of the Chapril project</a>.
 
 <b>Warning !</b>
