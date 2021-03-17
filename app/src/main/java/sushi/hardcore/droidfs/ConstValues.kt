@@ -21,7 +21,7 @@ class ConstValues {
             Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "ini", "md"))
         )
 
-        private fun isExtensionType(extensionType: String, path: String): Boolean {
+        fun isExtensionType(extensionType: String, path: String): Boolean {
             return fileExtensions[extensionType]?.contains(File(path).extension.toLowerCase(Locale.ROOT)) ?: false
         }
 

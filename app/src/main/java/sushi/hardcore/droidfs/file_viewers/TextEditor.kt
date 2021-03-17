@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.annotation.SuppressLint
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
@@ -24,6 +25,11 @@ class TextEditor: FileViewerActivity() {
     override fun hideSystemUi() {
         //don't hide system ui
     }
+
+    override fun getFileType(): String {
+        return "text"
+    }
+
     override fun viewFile() {
         loadWholeFile(filePath)?.let {
             fileName = File(filePath).name
@@ -60,6 +66,7 @@ class TextEditor: FileViewerActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (!changedSinceLastSave){
                     changedSinceLastSave = true
+                    @SuppressLint("SetTextI18n")
                     titleText.text = "*$fileName"
                 }
             }

@@ -19,7 +19,6 @@
             android:id="@+id/audio_controller"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:controller_layout_id="@layout/exo_custom_playback_control"
             app:show_timeout="0"/>
 
 </LinearLayout>

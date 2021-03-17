@@ -9,6 +9,22 @@ class AudioPlayer: MediaPlayer(){
     override fun viewFile() {
         setContentView(R.layout.activity_audio_player)
         super.viewFile()
+        refreshFileName()
+    }
+
+    override fun getFileType(): String {
+        return "audio"
+    }
+
+    override fun bindPlayer(player: SimpleExoPlayer) {
+        audio_controller.player = player
+    }
+
+    override fun onPlaylistIndexChanged() {
+        refreshFileName()
+    }
+
+    private fun refreshFileName() {
         val filename = File(filePath).name
         val pos = filename.lastIndexOf('.')
         music_title.text = if (pos != -1){
@@ -16,9 +32,5 @@ class AudioPlayer: MediaPlayer(){
         } else {
             filename
         }
-    }
-
-    override fun bindPlayer(player: SimpleExoPlayer) {
-        audio_controller.player = player
     }
 }

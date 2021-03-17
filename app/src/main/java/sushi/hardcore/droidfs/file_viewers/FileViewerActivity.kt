@@ -3,16 +3,23 @@ package sushi.hardcore.droidfs.file_viewers
 import android.os.Bundle
 import android.view.View
 import sushi.hardcore.droidfs.BaseActivity
+import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
-import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
-    lateinit var gocryptfsVolume: GocryptfsVolume
-    lateinit var filePath: String
+    protected lateinit var gocryptfsVolume: GocryptfsVolume
+    protected lateinit var filePath: String
     private var isFinishingIntentionally = false
     private var usf_keep_open = false
+    private var wasMapped = false
+    protected val mappedPlaylist = mutableListOf<ExplorerElement>()
+    protected var currentPlaylistIndex = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
@@ -22,6 +29,7 @@ abstract class FileViewerActivity: BaseActivity() {
         hideSystemUi()
         viewFile()
     }
+
     open fun hideSystemUi(){
         window.decorView.systemUiVisibility =
             View.SYSTEM_UI_FLAG_FULLSCREEN/* or
@@ -31,14 +39,18 @@ abstract class FileViewerActivity: BaseActivity() {
             View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
             View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION*/
     }
+
+    abstract fun getFileType(): String
     abstract fun viewFile()
+
     override fun onUserInteraction() {
         super.onUserInteraction()
         if (window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0){
             hideSystemUi()
         }
     }
-    fun loadWholeFile(path: String): ByteArray? {
+
+    protected fun loadWholeFile(path: String): ByteArray? {
         val fileSize = gocryptfsVolume.getSize(path)
         if (fileSize >= 0){
             try {
@@ -86,7 +98,49 @@ abstract class FileViewerActivity: BaseActivity() {
         return null
     }
 
-    protected fun goBackToExplorer(){
+    protected fun createPlaylist() {
+        if (!wasMapped){
+            for (e in gocryptfsVolume.recursiveMapFiles(PathUtils.getParentPath(filePath))){
+                if (e.isRegularFile) {
+                    if (ConstValues.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
+                        mappedPlaylist.add(e)
+                    }
+                }
+            }
+            val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
+            ExplorerElement.sortBy(sortOrder, mappedPlaylist)
+            //find current index
+            for ((i, e) in mappedPlaylist.withIndex()){
+                if (filePath == e.fullPath){
+                    currentPlaylistIndex = i
+                    break
+                }
+            }
+            wasMapped = true
+        }
+    }
+
+    protected fun playlistNext(forward: Boolean) {
+        createPlaylist()
+        currentPlaylistIndex = if (forward) {
+            (currentPlaylistIndex+1)%mappedPlaylist.size
+        } else {
+            var x = (currentPlaylistIndex-1)%mappedPlaylist.size
+            if (x < 0) {
+                x += mappedPlaylist.size
+            }
+            x
+        }
+        filePath = mappedPlaylist[currentPlaylistIndex].fullPath
+    }
+
+    protected fun refreshPlaylist() {
+        mappedPlaylist.clear()
+        wasMapped = false
+        createPlaylist()
+    }
+
+    protected fun goBackToExplorer() {
         isFinishingIntentionally = true
         finish()
     }

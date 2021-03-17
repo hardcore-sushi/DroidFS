@@ -16,9 +16,6 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.util.MiscUtils
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
@@ -36,11 +33,7 @@ class ImageViewer: FileViewerActivity() {
     private lateinit var glideImage: RequestBuilder<Drawable>
     private var x1 = 0F
     private var x2 = 0F
-    private val mappedImages = mutableListOf<ExplorerElement>()
-    private lateinit var sortOrder: String
-    private var wasMapped = false
     private var slideshowActive = false
-    private var currentMappedImageIndex = -1
     private var rotationAngle: Float = 0F
     private var rotatedBitmap: Bitmap? = null
     private val handler = Handler()
@@ -54,6 +47,11 @@ class ImageViewer: FileViewerActivity() {
             swipeImage(-1F, true)
         }
     }
+
+    override fun getFileType(): String {
+        return "image"
+    }
+
     override fun viewFile() {
         setContentView(R.layout.activity_image_viewer)
         image_viewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
@@ -106,38 +104,13 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false){
-        if (!wasMapped){
-            for (e in gocryptfsVolume.recursiveMapFiles(PathUtils.getParentPath(filePath))){
-                if (e.isRegularFile && ConstValues.isImage(e.name)){
-                    mappedImages.add(e)
-                }
+        playlistNext(deltaX < 0)
+        loadImage()
+        if (slideshowActive){
+            if (!slideshowSwipe) { //reset slideshow delay if user swipes
+                handler.removeCallbacks(slideshowNext)
             }
-            sortOrder = intent.getStringExtra("sortOrder") ?: "name"
-            ExplorerElement.sortBy(sortOrder, mappedImages)
-            for ((i, e) in mappedImages.withIndex()){
-                if (filePath == e.fullPath){
-                    currentMappedImageIndex = i
-                    break
-                }
-            }
-            wasMapped = true
-        }
-        if (mappedImages.size == 0){ //can happen on deleting images
-            goBackToExplorer()
-        } else {
-            currentMappedImageIndex = if (deltaX < 0){
-                MiscUtils.incrementIndex(currentMappedImageIndex, mappedImages)
-            } else {
-                MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
-            }
-            filePath = mappedImages[currentMappedImageIndex].fullPath
-            loadImage()
-            if (slideshowActive){
-                if (!slideshowSwipe) { //reset slideshow delay if user swipes
-                    handler.removeCallbacks(slideshowNext)
-                }
-                handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
-            }
+            handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
         }
     }
 
@@ -147,10 +120,13 @@ class ImageViewer: FileViewerActivity() {
             .setTitle(R.string.warning)
             .setPositiveButton(R.string.ok) { _, _ ->
                 if (gocryptfsVolume.removeFile(filePath)){
-                    currentMappedImageIndex = MiscUtils.decrementIndex(currentMappedImageIndex, mappedImages)
-                    mappedImages.clear()
-                    wasMapped = false
-                    swipeImage(-1F)
+                    playlistNext(true)
+                    refreshPlaylist()
+                    if (mappedPlaylist.size == 0) { //deleted all images of the playlist
+                        goBackToExplorer()
+                    } else {
+                        loadImage()
+                    }
                 } else {
                     ColoredAlertDialogBuilder(this)
                         .keepFullScreen()

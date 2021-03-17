@@ -1,18 +1,17 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.view.WindowManager
-import androidx.appcompat.app.AlertDialog
 import com.google.android.exoplayer2.ExoPlaybackException
+import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.extractor.flac.FlacExtractor
 import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor
 import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
 import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
 import com.google.android.exoplayer2.extractor.ogg.OggExtractor
 import com.google.android.exoplayer2.extractor.wav.WavExtractor
-import com.google.android.exoplayer2.source.LoopingMediaSource
+import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
@@ -20,46 +19,48 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 abstract class MediaPlayer: FileViewerActivity() {
     private lateinit var player: SimpleExoPlayer
-    private var currentWindow = 0
-    private var playbackPosition: Long = 0
-    private lateinit var errorDialog: AlertDialog
 
     override fun viewFile() {
-        errorDialog = ColoredAlertDialogBuilder(this)
-            .setTitle(R.string.error)
-            .setMessage(R.string.playing_failed)
-            .setCancelable(false)
-            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
-            .create()
         hideSystemUi()
         initializePlayer()
     }
 
     abstract fun bindPlayer(player: SimpleExoPlayer)
+    protected open fun onPlaylistIndexChanged() {}
 
-    private fun initializePlayer(){
-        player = SimpleExoPlayer.Builder(this).build()
-        bindPlayer(player)
+    private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
-        val mediaSource = ProgressiveMediaSource.Factory(dataSourceFactory, ExtractorsFactory {
-            arrayOf(
+        return ProgressiveMediaSource.Factory(dataSourceFactory, { arrayOf(
                 MatroskaExtractor(),
                 Mp4Extractor(),
                 Mp3Extractor(),
                 OggExtractor(),
                 WavExtractor(),
                 FlacExtractor()
-            )
-        }).createMediaSource(ConstValues.fakeUri)
-        player.seekTo(currentWindow, playbackPosition)
+        ) }).createMediaSource(MediaItem.fromUri(ConstValues.fakeUri))
+    }
+
+    private fun initializePlayer(){
+        player = SimpleExoPlayer.Builder(this).build()
+        bindPlayer(player)
+        createPlaylist()
+        for (e in mappedPlaylist) {
+            player.addMediaSource(createMediaSource(e.fullPath))
+        }
+        player.repeatMode = Player.REPEAT_MODE_ALL
+        player.seekToDefaultPosition(currentPlaylistIndex)
         player.playWhenReady = true
         player.addListener(object : Player.EventListener{
             override fun onPlayerError(error: ExoPlaybackException) {
                 if (error.type == ExoPlaybackException.TYPE_SOURCE){
-                    errorDialog.show()
+                    ColoredAlertDialogBuilder(this@MediaPlayer)
+                            .setTitle(R.string.error)
+                            .setMessage(R.string.playing_failed)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
+                            .show()
                 }
             }
-
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (isPlaying){
                     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -67,20 +68,20 @@ abstract class MediaPlayer: FileViewerActivity() {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
+            override fun onPositionDiscontinuity(reason: Int) {
+                if (player.currentWindowIndex != currentPlaylistIndex) {
+                    playlistNext(player.currentWindowIndex == (currentPlaylistIndex+1)%mappedPlaylist.size)
+                    onPlaylistIndexChanged()
+                }
+            }
         })
-        player.prepare(LoopingMediaSource(mediaSource), false, false)
-    }
-
-    private fun releasePlayer(){
-        if (::player.isInitialized) {
-            playbackPosition = player.currentPosition
-            currentWindow = player.currentWindowIndex
-            player.release()
-        }
+        player.prepare()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        releasePlayer()
+        if (::player.isInitialized) {
+            player.release()
+        }
     }
 }

@@ -112,12 +112,11 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
-    private fun startFileViewer(cls: Class<*>, filePath: String, sortOrder: String = ""){
-        val intent = Intent(this, cls)
-        intent.putExtra("path", filePath)
-        intent.putExtra("sessionID", gocryptfsVolume.sessionID)
-        if (sortOrder.isNotEmpty()){
-            intent.putExtra("sortOrder", sortOrder)
+    private fun startFileViewer(cls: Class<*>, filePath: String){
+        val intent = Intent(this, cls).apply {
+            putExtra("path", filePath)
+            putExtra("sessionID", gocryptfsVolume.sessionID)
+            putExtra("sortOrder", sortOrderValues[currentSortOrderIndex])
         }
         isStartingActivity = true
         startActivity(intent)
@@ -142,7 +141,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                     }
                     isImage(fullPath) -> {
-                        startFileViewer(ImageViewer::class.java, fullPath, sortOrderValues[currentSortOrderIndex])
+                        startFileViewer(ImageViewer::class.java, fullPath)
                     }
                     isVideo(fullPath) -> {
                         startFileViewer(VideoPlayer::class.java, fullPath)

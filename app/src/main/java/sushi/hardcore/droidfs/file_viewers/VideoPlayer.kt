@@ -13,4 +13,8 @@ class VideoPlayer: MediaPlayer() {
     override fun bindPlayer(player: SimpleExoPlayer) {
         video_player.player = player
     }
+
+    override fun getFileType(): String {
+        return "video"
+    }
 }
