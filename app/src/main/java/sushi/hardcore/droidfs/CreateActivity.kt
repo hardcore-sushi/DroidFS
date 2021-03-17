@@ -21,6 +21,7 @@ class CreateActivity : VolumeActionActivity() {
         private const val PICK_DIRECTORY_REQUEST_CODE = 1
     }
     private var sessionID = -1
+    private var isStartingExplorer = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
@@ -129,7 +130,7 @@ class CreateActivity : VolumeActionActivity() {
                                 sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)
                                 if (sessionID != -1) {
                                     if (checkbox_remember_path.isChecked) {
-                                        if (volumeDatabase.isVolumeSaved(currentVolumeName)) {
+                                        if (volumeDatabase.isVolumeSaved(currentVolumeName)) { //cleaning old saved path
                                             volumeDatabase.removeVolume(Volume(currentVolumeName))
                                         }
                                         volumeDatabase.saveVolume(Volume(currentVolumeName, switch_hidden_volume.isChecked))
@@ -172,17 +173,18 @@ class CreateActivity : VolumeActionActivity() {
                 .setMessage(R.string.success_volume_create_msg)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    val intent = Intent(applicationContext, ExplorerActivity::class.java)
+                    val intent = Intent(this, ExplorerActivity::class.java)
                     intent.putExtra("sessionID", sessionID)
                     intent.putExtra("volume_name", File(currentVolumeName).name)
                     startActivity(intent)
+                    isStartingExplorer = true
                     finish()
                 }
                 .show()
     }
 
     fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked){
+        if (!checkbox_remember_path.isChecked) {
             checkbox_save_password.isChecked = false
         }
     }
@@ -190,7 +192,7 @@ class CreateActivity : VolumeActionActivity() {
     override fun onPause() {
         super.onPause()
         //Closing volume if leaving activity while showing dialog
-        if (sessionID != -1){
+        if (sessionID != -1 && !isStartingExplorer) {
             GocryptfsVolume(sessionID).close()
             finish()
         }

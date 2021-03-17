@@ -198,7 +198,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), PathUtils.pathJoin(outputDirectory, fileName))){
                     Toast.makeText(applicationContext, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
                 } else {
-                    ColoredAlertDialogBuilder(applicationContext)
+                    ColoredAlertDialogBuilder(this@CameraActivity)
                         .setTitle(R.string.error)
                         .setMessage(R.string.picture_save_failed)
                         .setCancelable(false)
