@@ -3,7 +3,7 @@
 if [ -z ${ANDROID_NDK_HOME+x} ]; then
   echo "Error: \$ANDROID_NDK_HOME is not defined."
 elif [ -z ${OPENSSL_PATH+x} ]; then
-    echo "Error: \$OPENSSL_PATH is not defined."
+  echo "Error: \$OPENSSL_PATH is not defined."
 else
   NDK_BIN_PATH="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
   declare -a ABIs=("x86_64" "arm64-v8a" "armeabi-v7a")
