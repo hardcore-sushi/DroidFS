@@ -1,20 +1,25 @@
-DroidFS allows you to create encrypted virtual volumes on which you can safely store and access files.
-Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file contents and file names but doesn't hide directory structure or file sizes. If you want more details, take a look on their <a href="https://github.com/rfjakob/gocryptfs">github repository</a>.
+DroidFS is an alternative way to use encrypted overlay file-systems on Android that uses its own internal file explorer instead of mounting virtual volumes. This allows you to store files in encrypted virtual volumes that other apps can't decrypt.
+Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file contents and file names but doesn't hide directory structure or file sizes. If you want more details, take a look at their GitHub repository: https://github.com/rfjakob/gocryptfs
+
+<b>Features:</b>
+- Volumes fully compatibles with their original algorithm implementation
+- Internal opening of images, videos, audios and text files
+- Common file and folder operations: copy, move, rename, delete
+- Volume password changing
+- Internal/External encrypted volumes
+- Cross-volume file imports
+- Internal camera to safely take pictures and import them directly into a volume
+- In-app screenshot protection
+- Theme color fully customizable
 
 <b>Permissions:</b>
-<ul>
-	<li>
-		<b>Read & write access to shared storage:</b> required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
-	</li>
-	<li>
-		<b>Biometric/Fingerprint hardware:</b> required to encrypt/decrypt password hashes using a fingerprint protected key.
-	</li>
-	<li>
-		<b>Camera:</b> needed to take photos directly from DroidFS to import them securely. You can deny this permission if you don't want to use it.
-	</li>
-</ul>
+<b>Read & write access to shared storage:</b> required to create, open and modify volumes and import/export files to/from volumes.
+<b>Biometric/Fingerprint hardware:</b> needed to encrypt/decrypt password hashes using a fingerprint protected key.
+<b>Camera:</b> required to take photos directly from DroidFS and import them securely. You can deny this permission if you don't want to use this feature.
 
-DroidFS is free, open-source, and you can find the project's repository on <a href="https://github.com/hardcore-sushi/DroidFS">github</a> or on <a href="https://forge.chapril.org/hardcoresushi/DroidFS">the gitea instance of the Chapril project</a>.
+DroidFS is free, open-source, and you can find the project's repository:
+- on GitHub: https://github.com/hardcore-sushi/DroidFS
+- on the Gitea instance of the Chapril project: https://forge.chapril.org/hardcoresushi/DroidFS
 
 <b>Warning !</b>
 Security is relative. DroidFS does not come with any warranty and should not be considered as an absolute safe way to store files.
