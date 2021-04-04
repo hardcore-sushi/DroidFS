@@ -190,4 +190,6 @@
     <string name="file_op_export_msg">Exporting files…</string>
     <string name="file_op_move_msg">Moving files…</string>
     <string name="file_op_wiping_msg">Wiping files…</string>
+    <string name="folders_first">Folders first</string>
+    <string name="folders_first_summary">Show folders at the beginning of the list</string>
 </resources>

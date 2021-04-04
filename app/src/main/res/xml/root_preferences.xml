@@ -28,6 +28,13 @@
             android:title="@string/settings_title_sort_order"
             android:icon="@drawable/icon_sort"/>
 
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            app:icon="@drawable/icon_folder"
+            android:key="folders_first"
+            android:title="@string/folders_first"
+            android:summary="@string/folders_first_summary"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/unsafe_features">

@@ -16,6 +16,7 @@ abstract class FileViewerActivity: BaseActivity() {
     protected lateinit var filePath: String
     private var isFinishingIntentionally = false
     private var usf_keep_open = false
+    private var foldersFirst = true
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
@@ -26,6 +27,7 @@ abstract class FileViewerActivity: BaseActivity() {
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
+        foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         hideSystemUi()
         viewFile()
     }
@@ -108,7 +110,7 @@ abstract class FileViewerActivity: BaseActivity() {
                 }
             }
             val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
-            ExplorerElement.sortBy(sortOrder, mappedPlaylist)
+            ExplorerElement.sortBy(sortOrder, foldersFirst, mappedPlaylist)
             //find current index
             for ((i, e) in mappedPlaylist.withIndex()){
                 if (filePath == e.fullPath){

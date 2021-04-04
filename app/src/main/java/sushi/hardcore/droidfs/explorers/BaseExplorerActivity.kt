@@ -45,6 +45,7 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
     private lateinit var sortOrderValues: Array<String>
+    private var foldersFirst = true
     private var currentSortOrderIndex = 0
     protected lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var volumeName: String
@@ -70,6 +71,7 @@ open class BaseExplorerActivity : BaseActivity() {
         gocryptfsVolume = GocryptfsVolume(sessionID)
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
+        foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
         setSupportActionBar(toolbar)
@@ -188,7 +190,7 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     private fun sortExplorerElements() {
-        ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], explorerElements)
+        ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         val sharedPrefsEditor = sharedPrefs.edit()
         sharedPrefsEditor.putString(ConstValues.sort_order_key, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
@@ -249,11 +251,11 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
-    private fun createFolder(folder_name: String){
-        if (folder_name.isEmpty()) {
+    private fun createFolder(folderName: String){
+        if (folderName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folder_name))) {
+            if (!gocryptfsVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folderName))) {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)

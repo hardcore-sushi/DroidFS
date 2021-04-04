@@ -3,8 +3,8 @@ package sushi.hardcore.droidfs.explorers
 import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
-class ExplorerElement(val name: String, val elementType: Short, var size: Long, val mtime: Long, val parentPath: String) {
-    val mTime = Date((mtime * 1000).toString().toLong())
+class ExplorerElement(val name: String, val elementType: Short, var size: Long, mTime: Long, val parentPath: String) {
+    val mTime = Date((mTime * 1000).toString().toLong())
     val fullPath: String = PathUtils.pathJoin(parentPath, name)
 
     val isDirectory: Boolean
@@ -17,25 +17,53 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long, 
         get() = elementType.toInt() == 1
 
     companion object {
-        fun sortBy(sortOrder: String, explorerElements: MutableList<ExplorerElement>) {
+        private fun foldersFirst(a: ExplorerElement, b: ExplorerElement, default: () -> Int): Int {
+            return if (a.isDirectory && b.isRegularFile) {
+                -1
+            } else if (b.isDirectory && a.isRegularFile) {
+                1
+            } else {
+                default()
+            }
+        }
+        private fun doSort(a: ExplorerElement, b: ExplorerElement, foldersFirst: Boolean, sorter: () -> Int): Int {
+            return if (foldersFirst) {
+                foldersFirst(a, b, sorter)
+            } else {
+                sorter()
+            }
+        }
+        fun sortBy(sortOrder: String, foldersFirst: Boolean, explorerElements: MutableList<ExplorerElement>) {
             when (sortOrder) {
                 "name" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o1.fullPath.compareTo(o2.fullPath) })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { a.fullPath.compareTo(b.fullPath, true) }
+                    }
                 }
                 "size" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> (o1.size - o2.size).toInt() })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { (a.size - b.size).toInt() }
+                    }
                 }
                 "date" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o1.mTime.compareTo(o2.mTime) })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { a.mTime.compareTo(b.mTime) }
+                    }
                 }
                 "name_desc" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o2.fullPath.compareTo(o1.fullPath) })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { b.fullPath.compareTo(a.fullPath, true) }
+                    }
                 }
                 "size_desc" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> (o2.size - o1.size).toInt() })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { (b.size - a.size).toInt() }
+                    }
                 }
                 "date_desc" -> {
-                    explorerElements.sortWith(Comparator { o1, o2 -> o2.mTime.compareTo(o1.mTime) })
+                    explorerElements.sortWith { a, b ->
+                        doSort(a, b, foldersFirst) { b.mTime.compareTo(a.mTime) }
+                    }
                 }
             }
         }
