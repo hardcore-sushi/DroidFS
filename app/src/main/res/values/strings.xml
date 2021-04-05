@@ -106,7 +106,7 @@
     <string name="manage_unsafe_features">Manage unsafe features</string>
     <string name="manage_unsafe_features_summary">Enable/Disable unsafe features</string>
     <string name="ui">UI</string>
-    <string name="preference_theme_color_title">Theme color</string>
+    <string name="preference_theme_color">Theme color</string>
     <string name="preference_theme_color_summary">Set a custom theme color</string>
     <string name="usf_home_warning_msg">DroidFS try to be as secure as possible. However, security often involves lack of comfort. This is why DroidFS offer you additional unsafe features that you can enable/disable according to your needs.\n\nWarning: this features can be UNSAFE. Do not use them unless you know exactly what you are doing. It is highly recommended to read the documentation before enabling them.</string>
     <string name="see_unsafe_features">See unsafe features</string>
@@ -192,4 +192,6 @@
     <string name="file_op_wiping_msg">Wiping files…</string>
     <string name="folders_first">Folders first</string>
     <string name="folders_first_summary">Show folders at the beginning of the list</string>
+    <string name="auto_fit_title">Video player screen auto-rotation</string>
+    <string name="auto_fit_summary">Auto-rotate the screen to fit video dimensions</string>
 </resources>

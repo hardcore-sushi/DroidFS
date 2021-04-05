@@ -106,7 +106,7 @@
     <string name="manage_unsafe_features">Gerenciar funcionalidades inseguras</string>
     <string name="manage_unsafe_features_summary">Des/ativar funcionalidades inseguras</string>
     <string name="ui">UI</string>
-    <string name="preference_theme_color_title">Cor do tema</string>
+    <string name="preference_theme_color">Cor do tema</string>
     <string name="preference_theme_color_summary">Definir uma cor do tema personalizada</string>
     <string name="usf_home_warning_msg">DroidFS tentar ser o mais seguro possível. No entanto, a segurança muitas vezes envolve falta de conforto. Por isso o DroidFS oferece funcionalidades inseguras adicionais que você pode des/ativar de acordo com as suas necessidades.\n\nAviso: estas funcionalidades podem ser INSEGURAS. Não as utilize a menos que você saiba exatamente o que está fazendo. É altamente recomendável ler a documentação antes de ativá-las..</string>
     <string name="see_unsafe_features">Ver funcionalidades inseguras</string>

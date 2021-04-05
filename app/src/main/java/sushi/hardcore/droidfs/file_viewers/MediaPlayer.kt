@@ -27,6 +27,7 @@ abstract class MediaPlayer: FileViewerActivity() {
 
     abstract fun bindPlayer(player: SimpleExoPlayer)
     protected open fun onPlaylistIndexChanged() {}
+    protected open fun onPlayerReady() {}
 
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
@@ -51,6 +52,11 @@ abstract class MediaPlayer: FileViewerActivity() {
         player.seekToDefaultPosition(currentPlaylistIndex)
         player.playWhenReady = true
         player.addListener(object : Player.EventListener{
+            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                if (playbackState == Player.STATE_READY) {
+                    onPlayerReady()
+                }
+            }
             override fun onPlayerError(error: ExoPlaybackException) {
                 if (error.type == ExoPlaybackException.TYPE_SOURCE){
                     ColoredAlertDialogBuilder(this@MediaPlayer)

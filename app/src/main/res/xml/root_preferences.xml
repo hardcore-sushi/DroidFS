@@ -6,7 +6,7 @@
         <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
             android:defaultValue="@color/themeColor"
             android:key="themeColor"
-            android:title="@string/preference_theme_color_title"
+            android:title="@string/preference_theme_color"
             android:summary="@string/preference_theme_color_summary"
             android:icon="@drawable/icon_palette"/>
 
@@ -15,6 +15,13 @@
             android:summary="@string/reset_theme_color_summary"
             android:key="resetThemeColor"
             android:icon="@drawable/icon_restore"/>
+
+        <SwitchPreferenceCompat
+            android:title="@string/auto_fit_title"
+            android:summary="@string/auto_fit_summary"
+            android:key="autoFit"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_screen_rotation"/>
 
     </PreferenceCategory>
 
