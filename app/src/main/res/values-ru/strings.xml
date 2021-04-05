@@ -46,7 +46,7 @@
     <string name="external_open">Открыть внешним приложением</string>
     <string name="single_delete_confirm">Удалить %s?</string>
     <string name="multiple_delete_confirm">Удалить %s элементов?</string>
-    <string name="location">Место: /%s</string>
+    <string name="location">Путь: /%s</string>
     <string name="total_size">Общий размер: %s</string>
     <string name="import_from_other_volume">Импорт из другого тома</string>
     <string name="read_file_failed">Невозможно открыть файл.</string>
@@ -186,4 +186,8 @@
     <string name="file_op_export_msg">Экспортирование файлов…</string>
     <string name="file_op_move_msg">Перемещение файлов…</string>
     <string name="file_op_wiping_msg">Уничтожение файлов…</string>
+    <string name="folders_first">Сначала папки</string>
+    <string name="folders_first_summary">Показывать папки в начале списка</string>
+    <string name="auto_fit_title">Автоповорот видео</string>
+    <string name="auto_fit_summary">Автоматический поворот экрана в соответствии с размерами видео</string>
 </resources>
