@@ -119,7 +119,8 @@ class ImageViewer: FileViewerActivity() {
             .keepFullScreen()
             .setTitle(R.string.warning)
             .setPositiveButton(R.string.ok) { _, _ ->
-                if (gocryptfsVolume.removeFile(filePath)){
+                createPlaylist() //be sure the playlist is created before deleting if there is only one image
+                if (gocryptfsVolume.removeFile(filePath)) {
                     playlistNext(true)
                     refreshPlaylist()
                     if (mappedPlaylist.size == 0) { //deleted all images of the playlist
