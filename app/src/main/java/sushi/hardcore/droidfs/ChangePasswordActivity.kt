@@ -1,12 +1,10 @@
 package sushi.hardcore.droidfs
 
-import android.app.Activity
-import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -14,20 +12,19 @@ import kotlinx.android.synthetic.main.activity_change_password.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.WidgetUtil
+import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
 class ChangePasswordActivity : VolumeActionActivity() {
-    companion object {
-        private const val PICK_DIRECTORY_REQUEST_CODE = 1
-    }
     private lateinit var savedVolumesAdapter: SavedVolumesAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
@@ -42,7 +39,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
                     switch_hidden_volume.isChecked = false
                     edit_volume_path.setText(currentVolumeName)
                 }
-                onClickSwitchHiddenVolume(switch_hidden_volume)
+                onClickSwitchHiddenVolume()
             }
         } else {
             WidgetUtil.hideWithPadding(saved_path_listview)
@@ -73,46 +70,37 @@ class ChangePasswordActivity : VolumeActionActivity() {
         }
         edit_volume_path.addTextChangedListener(textWatcher)
         edit_volume_name.addTextChangedListener(textWatcher)
-        edit_new_password_confirm.setOnEditorActionListener { v, _, _ ->
-            onClickChangePassword(v)
+        edit_new_password_confirm.setOnEditorActionListener { _, _, _ ->
+            checkVolumePathThenChangePassword()
             true
         }
-    }
-
-    fun pickDirectory(view: View?) {
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data?.data != null) {
-                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data!!)){
-                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                        if (path != null){
-                            edit_volume_path.setText(path)
-                        } else {
-                            ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.error)
-                                .setMessage(R.string.path_from_uri_null_error_msg)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                    } else {
-                        ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.change_pwd_on_sdcard_error_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                    }
-                }
-            }
+        button_change_password.setOnClickListener {
+            checkVolumePathThenChangePassword()
         }
     }
 
-    fun onClickChangePassword(view: View?) {
+    override fun onDirectoryPicked(uri: Uri) {
+        if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
+            val path = PathUtils.getFullPathFromTreeUri(uri, this)
+            if (path != null){
+                edit_volume_path.setText(path)
+            } else {
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.path_from_uri_null_error_msg)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            }
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.change_pwd_on_sdcard_error_msg)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
+    }
+
+    fun checkVolumePathThenChangePassword() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
@@ -217,12 +205,6 @@ class ChangePasswordActivity : VolumeActionActivity() {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { _, _ -> finish() }
                 .show()
-    }
-
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked){
-            checkbox_save_password.isChecked = false
-        }
     }
 
     override fun onDestroy() {

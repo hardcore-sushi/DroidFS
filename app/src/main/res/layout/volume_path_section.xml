@@ -11,8 +11,7 @@
         android:layout_height="wrap_content"
         android:text="@string/hidden_volume"
         app:switchPadding="10dp"
-        android:layout_gravity="center_horizontal"
-        android:onClick="onClickSwitchHiddenVolume"/>
+        android:layout_gravity="center_horizontal"/>
 
     <LinearLayout
         android:id="@+id/normal_volume_section"
@@ -35,9 +34,9 @@
             android:maxLines="1"/>
 
         <sushi.hardcore.droidfs.widgets.ColoredImageButton
+            android:id="@+id/button_pick_directory"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
-            android:onClick="pickDirectory"
             android:scaleType="fitCenter"
             android:background="#00000000"
             android:src="@drawable/icon_folder" />

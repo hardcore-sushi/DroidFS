@@ -1,82 +1,71 @@
 package sushi.hardcore.droidfs
 
-import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
 class CreateActivity : VolumeActionActivity() {
-    companion object {
-        private const val PICK_DIRECTORY_REQUEST_CODE = 1
-    }
     private var sessionID = -1
     private var isStartingExplorer = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
-        edit_password_confirm.setOnEditorActionListener { v, _, _ ->
-            onClickCreate(v)
+        edit_password_confirm.setOnEditorActionListener { _, _, _ ->
+            createVolume()
             true
         }
-        switch_hidden_volume.setOnClickListener {
-            onClickSwitchHiddenVolume(it)
-            if (switch_hidden_volume.isChecked){
+        button_create.setOnClickListener {
+            createVolume()
+        }
+    }
+
+    override fun onClickSwitchHiddenVolume() {
+        super.onClickSwitchHiddenVolume()
+        if (switch_hidden_volume.isChecked){
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.hidden_volume_warning)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
+    }
+
+    override fun onDirectoryPicked(uri: Uri) {
+        if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
+            val path = PathUtils.getFullPathFromTreeUri(uri, this)
+            if (path != null){
+                edit_volume_path.setText(path)
+            } else {
                 ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.hidden_volume_warning)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.path_from_uri_null_error_msg)
                     .setPositiveButton(R.string.ok, null)
                     .show()
             }
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.create_on_sdcard_error_msg)
+                .setPositiveButton(R.string.ok, null)
+                .show()
         }
     }
 
-    fun pickDirectory(view: View?) {
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data?.data != null) {
-                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data!!)){
-                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                        if (path != null){
-                            edit_volume_path.setText(path)
-                        } else {
-                            ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.error)
-                                .setMessage(R.string.path_from_uri_null_error_msg)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                    } else {
-                        ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.create_on_sdcard_error_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                    }
-                }
-            }
-        }
-    }
-
-    fun onClickCreate(view: View?) {
+    fun createVolume() {
         loadVolumePath {
             val password = edit_password.text.toString().toCharArray()
             val passwordConfirm = edit_password_confirm.text.toString().toCharArray()
@@ -181,12 +170,6 @@ class CreateActivity : VolumeActionActivity() {
                     finish()
                 }
                 .show()
-    }
-
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked) {
-            checkbox_save_password.isChecked = false
-        }
     }
 
     override fun onPause() {

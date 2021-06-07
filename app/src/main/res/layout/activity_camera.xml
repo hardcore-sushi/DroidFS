@@ -21,7 +21,6 @@
             android:id="@+id/image_ratio"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:onClick="onClickRatio"
             android:src="@drawable/icon_aspect_ratio"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_timer"
@@ -32,7 +31,6 @@
             android:id="@+id/image_timer"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:onClick="onClickTimer"
             android:src="@drawable/icon_timer_off"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_close"
@@ -43,7 +41,6 @@
             android:id="@+id/image_close"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:onClick="onClickClose"
             android:src="@drawable/icon_close"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -73,8 +70,7 @@
             android:src="@drawable/icon_flash_auto"
             android:layout_alignEnd="@id/take_photo_button"
             android:layout_marginEnd="120dp"
-            android:layout_centerVertical="true"
-            android:onClick="onClickFlash"/>
+            android:layout_centerVertical="true"/>
 
         <sushi.hardcore.droidfs.widgets.TakePhotoButton
             android:id="@+id/take_photo_button"
@@ -90,8 +86,7 @@
             android:src="@drawable/icon_camera_front"
             android:layout_alignStart="@id/take_photo_button"
             android:layout_marginStart="120dp"
-            android:layout_centerVertical="true"
-            android:onClick="onClickCameraSwitch"/>
+            android:layout_centerVertical="true"/>
 
     </RelativeLayout>
 

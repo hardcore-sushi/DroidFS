@@ -1,40 +1,39 @@
 package sushi.hardcore.droidfs
 
-import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.MenuItem
-import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
+import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.WidgetUtil
+import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
 class OpenActivity : VolumeActionActivity() {
-    companion object {
-        private const val PICK_DIRECTORY_REQUEST_CODE = 1
-    }
     private lateinit var savedVolumesAdapter: SavedVolumesAdapter
     private var sessionID = -1
     private var isStartingActivity = false
     private var isFinishingIntentionally = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_open)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
@@ -49,7 +48,7 @@ class OpenActivity : VolumeActionActivity() {
                     switch_hidden_volume.isChecked = false
                     edit_volume_path.setText(currentVolumeName)
                 }
-                onClickSwitchHiddenVolume(switch_hidden_volume)
+                onClickSwitchHiddenVolume()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                     volume.hash?.let { hash ->
                         volume.iv?.let { iv ->
@@ -89,9 +88,12 @@ class OpenActivity : VolumeActionActivity() {
         }
         edit_volume_path.addTextChangedListener(textWatcher)
         edit_volume_name.addTextChangedListener(textWatcher)
-        edit_password.setOnEditorActionListener { v, _, _ ->
-            onClickOpen(v)
+        edit_password.setOnEditorActionListener { _, _, _ ->
+            checkVolumePathThenOpen()
             true
+        }
+        button_open.setOnClickListener {
+            checkVolumePathThenOpen()
         }
     }
 
@@ -106,33 +108,24 @@ class OpenActivity : VolumeActionActivity() {
         }
     }
 
-    fun pickDirectory(view: View?) {
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
+    override fun onPickingDirectory() {
         isStartingActivity = true
-        startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data?.data != null) {
-                    val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                    if (path != null){
-                        edit_volume_path.setText(path)
-                    } else {
-                        ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.error)
-                            .setMessage(R.string.path_from_uri_null_error_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                    }
-                }
-            }
+    override fun onDirectoryPicked(uri: Uri) {
+        val path = PathUtils.getFullPathFromTreeUri(uri, this)
+        if (path != null){
+            edit_volume_path.setText(path)
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.error)
+                .setMessage(R.string.path_from_uri_null_error_msg)
+                .setPositiveButton(R.string.ok, null)
+                .show()
         }
     }
 
-    fun onClickOpen(view: View?) {
+    fun checkVolumePathThenOpen() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
@@ -250,21 +243,15 @@ class OpenActivity : VolumeActionActivity() {
         finish()
     }
 
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked){
-            checkbox_save_password.isChecked = false
-        }
-    }
-
     override fun onBackPressed() {
         super.onBackPressed()
         isFinishingIntentionally = true
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         if (intent.action == "pick"){
-            if (isStartingActivity){
+            if (isStartingActivity) {
                 isStartingActivity = false
             } else {
                 finish()

@@ -18,11 +18,11 @@ class ConstValues {
             Pair("image", listOf("png", "jpg", "jpeg", "gif", "bmp")),
             Pair("video", listOf("mp4", "webm", "mkv", "mov")),
             Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac")),
-            Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "ini", "md"))
+            Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "rs", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "toml", "ini", "md"))
         )
 
         fun isExtensionType(extensionType: String, path: String): Boolean {
-            return fileExtensions[extensionType]?.contains(File(path).extension.toLowerCase(Locale.ROOT)) ?: false
+            return fileExtensions[extensionType]?.contains(File(path).extension.lowercase()) ?: false
         }
 
         fun isImage(path: String): Boolean {

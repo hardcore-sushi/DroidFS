@@ -5,6 +5,7 @@ import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.extractor.flac.FlacExtractor
 import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor
 import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
@@ -31,7 +32,7 @@ abstract class MediaPlayer: FileViewerActivity() {
 
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
-        return ProgressiveMediaSource.Factory(dataSourceFactory, { arrayOf(
+        return ProgressiveMediaSource.Factory(dataSourceFactory, ExtractorsFactory { arrayOf(
                 MatroskaExtractor(),
                 Mp4Extractor(),
                 Mp3Extractor(),
@@ -51,7 +52,7 @@ abstract class MediaPlayer: FileViewerActivity() {
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.seekToDefaultPosition(currentPlaylistIndex)
         player.playWhenReady = true
-        player.addListener(object : Player.EventListener{
+        player.addListener(object : Player.Listener{
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 if (playbackState == Player.STATE_READY) {
                     onPlayerReady()
