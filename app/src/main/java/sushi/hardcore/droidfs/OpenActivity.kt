@@ -7,7 +7,6 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.MenuItem
-import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_open.*
@@ -34,7 +33,7 @@ class OpenActivity : VolumeActionActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_open)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
@@ -49,7 +48,7 @@ class OpenActivity : VolumeActionActivity() {
                     switch_hidden_volume.isChecked = false
                     edit_volume_path.setText(currentVolumeName)
                 }
-                onClickSwitchHiddenVolume(switch_hidden_volume)
+                onClickSwitchHiddenVolume()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                     volume.hash?.let { hash ->
                         volume.iv?.let { iv ->
@@ -89,9 +88,12 @@ class OpenActivity : VolumeActionActivity() {
         }
         edit_volume_path.addTextChangedListener(textWatcher)
         edit_volume_name.addTextChangedListener(textWatcher)
-        edit_password.setOnEditorActionListener { v, _, _ ->
-            onClickOpen(v)
+        edit_password.setOnEditorActionListener { _, _, _ ->
+            checkVolumePathThenOpen()
             true
+        }
+        button_open.setOnClickListener {
+            checkVolumePathThenOpen()
         }
     }
 
@@ -104,10 +106,6 @@ class OpenActivity : VolumeActionActivity() {
             }
             else -> super.onOptionsItemSelected(item)
         }
-    }
-
-    fun pickDirectory(view: View?) {
-        askPermissionThenPickDirectory()
     }
 
     override fun onPickingDirectory() {
@@ -127,7 +125,7 @@ class OpenActivity : VolumeActionActivity() {
         }
     }
 
-    fun onClickOpen(view: View?) {
+    fun checkVolumePathThenOpen() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
@@ -243,12 +241,6 @@ class OpenActivity : VolumeActionActivity() {
         startActivity(explorerIntent)
         isFinishingIntentionally = true
         finish()
-    }
-
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked){
-            checkbox_save_password.isChecked = false
-        }
     }
 
     override fun onBackPressed() {

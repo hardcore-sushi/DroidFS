@@ -9,10 +9,11 @@ class TakePhotoButton: AppCompatImageView {
     constructor(context: Context) : super(context) { init() }
     constructor(context: Context, attrs: AttributeSet): super(context, attrs) { init() }
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr) { init() }
-    lateinit var onClick: ()->Unit
+    lateinit var onClick: () -> Unit
 
-    private fun init(){
-        setOnTouchListener{ _, event ->
+    private fun init() {
+        setOnTouchListener{ view, event ->
+            view.performClick()
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> onClick()
                 MotionEvent.ACTION_UP -> isPressed = true

@@ -10,7 +10,6 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -59,21 +58,53 @@ abstract class VolumeActionActivity : BaseActivity() {
         private const val GCM_TAG_LEN = 128
     }
 
-    protected open fun onPickingDirectory() {}
-    protected abstract fun onDirectoryPicked(uri: Uri)
-
-    protected fun askPermissionThenPickDirectory() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
-                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
+    protected fun setupLayout() {
+        setSupportActionBar(toolbar)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        button_pick_directory.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
+                    ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
+                } else {
+                    safePickDirectory()
+                }
             } else {
                 safePickDirectory()
             }
-        } else {
-            safePickDirectory()
+        }
+        switch_hidden_volume.setOnClickListener {
+            onClickSwitchHiddenVolume()
+        }
+        checkbox_remember_path.setOnClickListener {
+            if (!checkbox_remember_path.isChecked) {
+                checkbox_save_password.isChecked = false
+            }
+        }
+        checkbox_save_password.setOnClickListener {
+            if (checkbox_save_password.isChecked) {
+                if (biometricCanAuthenticateCode == 0) {
+                    checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
+                } else {
+                    checkbox_save_password.isChecked = false
+                    printAuthenticateImpossibleError()
+                }
+            }
         }
     }
+
+    protected open fun onClickSwitchHiddenVolume() {
+        if (switch_hidden_volume.isChecked){
+            WidgetUtil.show(hidden_volume_section, originalHiddenVolumeSectionLayoutParams)
+            WidgetUtil.hide(normal_volume_section)
+        } else {
+            WidgetUtil.show(normal_volume_section, originalNormalVolumeSectionLayoutParams)
+            WidgetUtil.hide(hidden_volume_section)
+        }
+    }
+
+    protected open fun onPickingDirectory() {}
+    protected abstract fun onDirectoryPicked(uri: Uri)
 
     private fun safePickDirectory() {
         try {
@@ -185,11 +216,6 @@ abstract class VolumeActionActivity : BaseActivity() {
         }
     }
 
-    protected fun setupActionBar(){
-        setSupportActionBar(toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-    }
-
     private fun canAuthenticate(): Int {
         val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         return if (!keyguardManager.isKeyguardSecure) {
@@ -213,17 +239,6 @@ abstract class VolumeActionActivity : BaseActivity() {
             4 -> R.string.fingerprint_error_no_fingerprints
             else -> R.string.error
         }, Toast.LENGTH_SHORT).show()
-    }
-
-    fun onClickSavePasswordHash(view: View) {
-        if (checkbox_save_password.isChecked){
-            if (biometricCanAuthenticateCode == 0){
-                checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
-            } else {
-                checkbox_save_password.isChecked = false
-                printAuthenticateImpossibleError()
-            }
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -335,16 +350,6 @@ abstract class VolumeActionActivity : BaseActivity() {
                 currentVolumeName
             }
             callback()
-        }
-    }
-
-    fun onClickSwitchHiddenVolume(view: View){
-        if (switch_hidden_volume.isChecked){
-            WidgetUtil.show(hidden_volume_section, originalHiddenVolumeSectionLayoutParams)
-            WidgetUtil.hide(normal_volume_section)
-        } else {
-            WidgetUtil.show(normal_volume_section, originalNormalVolumeSectionLayoutParams)
-            WidgetUtil.hide(hidden_volume_section)
         }
     }
 }

@@ -4,11 +4,11 @@ import android.app.Activity
 import android.content.Intent
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import kotlinx.android.synthetic.main.activity_explorer.*
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.OpenActivity
@@ -146,6 +146,71 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun init() {
         setContentView(R.layout.activity_explorer)
+        fab.setOnClickListener {
+            if (currentItemAction != ItemsActions.NONE){
+                openDialogCreateFolder()
+            } else {
+                val adapter = IconTextDialogAdapter(this)
+                adapter.items = listOf(
+                    listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfert),
+                    listOf("importFiles", R.string.import_files, R.drawable.icon_encrypt),
+                    listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
+                    listOf("createFolder", R.string.mkdir, R.drawable.icon_folder),
+                    listOf("takePhoto", R.string.take_photo, R.drawable.icon_camera)
+                )
+                ColoredAlertDialogBuilder(this)
+                    .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
+                        when (adapter.getItem(which)){
+                            "importFromOtherVolumes" -> {
+                                val intent = Intent(this, OpenActivity::class.java)
+                                intent.action = "pick"
+                                intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                                isStartingActivity = true
+                                pickFromOtherVolumes.launch(intent)
+                            }
+                            "importFiles" -> {
+                                isStartingActivity = true
+                                pickFiles.launch(arrayOf("*/*"))
+                            }
+                            "createFile" -> {
+                                val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+                                val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+                                val dialog = ColoredAlertDialogBuilder(this)
+                                    .setView(dialogEditTextView)
+                                    .setTitle(getString(R.string.enter_file_name))
+                                    .setPositiveButton(R.string.ok) { _, _ ->
+                                        val fileName = dialogEditText.text.toString()
+                                        createNewFile(fileName)
+                                    }
+                                    .setNegativeButton(R.string.cancel, null)
+                                    .create()
+                                dialogEditText.setOnEditorActionListener { _, _, _ ->
+                                    val fileName = dialogEditText.text.toString()
+                                    dialog.dismiss()
+                                    createNewFile(fileName)
+                                    true
+                                }
+                                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+                                dialog.show()
+                            }
+                            "createFolder" -> {
+                                openDialogCreateFolder()
+                            }
+                            "takePhoto" -> {
+                                val intent = Intent(this, CameraActivity::class.java)
+                                intent.putExtra("path", currentDirectoryPath)
+                                intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                                isStartingActivity = true
+                                startActivity(intent)
+                            }
+                        }
+                        thisDialog.dismiss()
+                    }
+                    .setTitle(getString(R.string.fab_dialog_title))
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            }
+        }
         usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
         usf_share = sharedPrefs.getBoolean("usf_share", false)
     }
@@ -172,72 +237,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                 setCurrentPath(currentDirectoryPath)
                 invalidateOptionsMenu()
             }
-        }
-    }
-
-    fun onClickFAB(view: View) {
-        if (currentItemAction != ItemsActions.NONE){
-            openDialogCreateFolder()
-        } else {
-            val adapter = IconTextDialogAdapter(this)
-            adapter.items = listOf(
-                listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfert),
-                listOf("importFiles", R.string.import_files, R.drawable.icon_encrypt),
-                listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
-                listOf("createFolder", R.string.mkdir, R.drawable.icon_folder),
-                listOf("takePhoto", R.string.take_photo, R.drawable.icon_camera)
-            )
-            ColoredAlertDialogBuilder(this)
-                .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
-                    when (adapter.getItem(which)){
-                        "importFromOtherVolumes" -> {
-                            val intent = Intent(this, OpenActivity::class.java)
-                            intent.action = "pick"
-                            intent.putExtra("sessionID", gocryptfsVolume.sessionID)
-                            isStartingActivity = true
-                            pickFromOtherVolumes.launch(intent)
-                        }
-                        "importFiles" -> {
-                            isStartingActivity = true
-                            pickFiles.launch(arrayOf("*/*"))
-                        }
-                        "createFile" -> {
-                            val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-                            val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                            val dialog = ColoredAlertDialogBuilder(this)
-                                .setView(dialogEditTextView)
-                                .setTitle(getString(R.string.enter_file_name))
-                                .setPositiveButton(R.string.ok) { _, _ ->
-                                    val fileName = dialogEditText.text.toString()
-                                    createNewFile(fileName)
-                                }
-                                .setNegativeButton(R.string.cancel, null)
-                                .create()
-                            dialogEditText.setOnEditorActionListener { _, _, _ ->
-                                val fileName = dialogEditText.text.toString()
-                                dialog.dismiss()
-                                createNewFile(fileName)
-                                true
-                            }
-                            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-                            dialog.show()
-                        }
-                        "createFolder" -> {
-                            openDialogCreateFolder()
-                        }
-                        "takePhoto" -> {
-                            val intent = Intent(this, CameraActivity::class.java)
-                            intent.putExtra("path", currentDirectoryPath)
-                            intent.putExtra("sessionID", gocryptfsVolume.sessionID)
-                            isStartingActivity = true
-                            startActivity(intent)
-                        }
-                    }
-                    thisDialog.dismiss()
-                }
-                .setTitle(getString(R.string.fab_dialog_title))
-                .setNegativeButton(R.string.cancel, null)
-                .show()
         }
     }
 

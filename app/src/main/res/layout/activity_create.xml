@@ -69,10 +69,10 @@
                 android:text="@string/create_password_warning"/>
 
             <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/button_create"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/action_activity_button_height"
                 android:layout_marginHorizontal="@dimen/action_activity_button_horizontal_margin"
-                android:onClick="onClickCreate"
                 android:text="@string/create"
                 style="@style/button"/>
 

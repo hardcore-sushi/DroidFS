@@ -83,6 +83,64 @@ class ImageViewer: FileViewerActivity() {
                 }
             }
         })
+        image_delete.setOnClickListener {
+            ColoredAlertDialogBuilder(this)
+                .keepFullScreen()
+                .setTitle(R.string.warning)
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    createPlaylist() //be sure the playlist is created before deleting if there is only one image
+                    if (gocryptfsVolume.removeFile(filePath)) {
+                        playlistNext(true)
+                        refreshPlaylist()
+                        if (mappedPlaylist.size == 0) { //deleted all images of the playlist
+                            goBackToExplorer()
+                        } else {
+                            loadImage()
+                        }
+                    } else {
+                        ColoredAlertDialogBuilder(this)
+                            .keepFullScreen()
+                            .setTitle(R.string.error)
+                            .setMessage(getString(R.string.remove_failed, fileName))
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .setMessage(getString(R.string.single_delete_confirm, fileName))
+                .show()
+        }
+        image_button_slideshow.setOnClickListener {
+            if (!slideshowActive){
+                slideshowActive = true
+                handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
+                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                hideUI.run()
+                Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
+            } else {
+                stopSlideshow()
+            }
+        }
+        image_previous.setOnClickListener {
+            askSaveRotation {
+                image_viewer.resetZoomFactor()
+                swipeImage(1F)
+            }
+        }
+        image_next.setOnClickListener {
+            askSaveRotation {
+                image_viewer.resetZoomFactor()
+                swipeImage(-1F)
+            }
+        }
+        image_rotate_right.setOnClickListener {
+            rotationAngle += 90
+            rotateImage()
+        }
+        image_rotate_left.setOnClickListener {
+            rotationAngle -= 90
+            rotateImage()
+        }
         loadImage()
         handler.postDelayed(hideUI, hideDelay)
     }
@@ -111,46 +169,6 @@ class ImageViewer: FileViewerActivity() {
                 handler.removeCallbacks(slideshowNext)
             }
             handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
-        }
-    }
-
-    fun onClickDelete(view: View) {
-        ColoredAlertDialogBuilder(this)
-            .keepFullScreen()
-            .setTitle(R.string.warning)
-            .setPositiveButton(R.string.ok) { _, _ ->
-                createPlaylist() //be sure the playlist is created before deleting if there is only one image
-                if (gocryptfsVolume.removeFile(filePath)) {
-                    playlistNext(true)
-                    refreshPlaylist()
-                    if (mappedPlaylist.size == 0) { //deleted all images of the playlist
-                        goBackToExplorer()
-                    } else {
-                        loadImage()
-                    }
-                } else {
-                    ColoredAlertDialogBuilder(this)
-                        .keepFullScreen()
-                        .setTitle(R.string.error)
-                        .setMessage(getString(R.string.remove_failed, fileName))
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                }
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .setMessage(getString(R.string.single_delete_confirm, fileName))
-            .show()
-    }
-
-    fun onClickSlideshow(view: View) {
-        if (!slideshowActive){
-            slideshowActive = true
-            handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
-            window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            hideUI.run()
-            Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
-        } else {
-            stopSlideshow()
         }
     }
 
@@ -185,27 +203,6 @@ class ImageViewer: FileViewerActivity() {
     private fun rotateImage(){
         image_viewer.restoreZoomNormal()
         glideImage.transform(RotateTransformation(this)).into(image_viewer)
-    }
-    fun onCLickRotateRight(view: View){
-        rotationAngle += 90
-        rotateImage()
-    }
-    fun onClickRotateLeft(view: View){
-        rotationAngle -= 90
-        rotateImage()
-    }
-
-    fun onClickPrevious(view: View){
-        askSaveRotation {
-            image_viewer.resetZoomFactor()
-            swipeImage(1F)
-        }
-    }
-    fun onClickNext(view: View){
-        askSaveRotation {
-            image_viewer.resetZoomFactor()
-            swipeImage(-1F)
-        }
     }
 
     private fun askSaveRotation(callback: () -> Unit){

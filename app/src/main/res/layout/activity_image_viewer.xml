@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -38,7 +37,6 @@
             android:background="#00000000"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_delete"
-            android:onClick="onClickDelete"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             android:layout_toStartOf="@id/image_button_slideshow"
@@ -51,7 +49,6 @@
             android:background="#00000000"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_slideshow"
-            android:onClick="onClickSlideshow"
             android:layout_alignParentEnd="true"
             android:layout_centerVertical="true"/>
 
@@ -65,40 +62,40 @@
         android:gravity="center">
 
         <ImageButton
+            android:id="@+id/image_previous"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
-            android:src="@drawable/exo_icon_previous"
-            android:onClick="onClickPrevious"/>
+            android:src="@drawable/exo_icon_previous"/>
 
         <ImageButton
+            android:id="@+id/image_next"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
-            android:src="@drawable/icon_rotate_left"
-            android:onClick="onClickRotateLeft"/>
+            android:src="@drawable/icon_rotate_left"/>
 
         <ImageButton
+            android:id="@+id/image_rotate_right"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
-            android:src="@drawable/icon_rotate_right"
-            android:onClick="onCLickRotateRight"/>
+            android:src="@drawable/icon_rotate_right"/>
 
         <ImageButton
+            android:id="@+id/image_rotate_left"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
             android:scaleType="fitCenter"
             android:background="#00000000"
-            android:src="@drawable/exo_icon_next"
-            android:onClick="onClickNext"/>
+            android:src="@drawable/exo_icon_next"/>
 
     </LinearLayout>
 

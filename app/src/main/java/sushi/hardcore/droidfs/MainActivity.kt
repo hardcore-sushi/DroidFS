@@ -4,7 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
@@ -29,6 +29,15 @@ class MainActivity : BaseActivity() {
                     .show()
             }
         }
+        button_open.setOnClickListener {
+            startActivity(OpenActivity::class.java)
+        }
+        button_create.setOnClickListener {
+            startActivity(CreateActivity::class.java)
+        }
+        button_change_password.setOnClickListener {
+            startActivity(ChangePasswordActivity::class.java)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -47,18 +56,8 @@ class MainActivity : BaseActivity() {
         return true
     }
 
-    fun onClickCreate(v: View?) {
-        val intent = Intent(this, CreateActivity::class.java)
-        startActivity(intent)
-    }
-
-    fun onClickOpen(v: View?) {
-        val intent = Intent(this, OpenActivity::class.java)
-        startActivity(intent)
-    }
-
-    fun onClickChangePassword(v: View?) {
-        val intent = Intent(this, ChangePasswordActivity::class.java)
+    fun <T> startActivity(clazz: Class<T>) {
+        val intent = Intent(this, clazz)
         startActivity(intent)
     }
 }

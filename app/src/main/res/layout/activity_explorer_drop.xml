@@ -35,13 +35,13 @@
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
         <sushi.hardcore.droidfs.widgets.ColoredFAB
+            android:id="@+id/fab"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentEnd="true"
             android:layout_margin="15dp"
-            android:src="@drawable/icon_add"
-            android:onClick="onClickFAB"/>
+            android:src="@drawable/icon_add"/>
 
     </RelativeLayout>
 

@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_create.*
@@ -23,26 +22,26 @@ class CreateActivity : VolumeActionActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
-        edit_password_confirm.setOnEditorActionListener { v, _, _ ->
-            onClickCreate(v)
+        edit_password_confirm.setOnEditorActionListener { _, _, _ ->
+            createVolume()
             true
         }
-        switch_hidden_volume.setOnClickListener {
-            onClickSwitchHiddenVolume(it)
-            if (switch_hidden_volume.isChecked){
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.hidden_volume_warning)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-            }
+        button_create.setOnClickListener {
+            createVolume()
         }
     }
 
-    fun pickDirectory(view: View?) {
-        askPermissionThenPickDirectory()
+    override fun onClickSwitchHiddenVolume() {
+        super.onClickSwitchHiddenVolume()
+        if (switch_hidden_volume.isChecked){
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.hidden_volume_warning)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
     }
 
     override fun onDirectoryPicked(uri: Uri) {
@@ -66,7 +65,7 @@ class CreateActivity : VolumeActionActivity() {
         }
     }
 
-    fun onClickCreate(view: View?) {
+    fun createVolume() {
         loadVolumePath {
             val password = edit_password.text.toString().toCharArray()
             val passwordConfirm = edit_password_confirm.text.toString().toCharArray()
@@ -171,12 +170,6 @@ class CreateActivity : VolumeActionActivity() {
                     finish()
                 }
                 .show()
-    }
-
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked) {
-            checkbox_save_password.isChecked = false
-        }
     }
 
     override fun onPause() {

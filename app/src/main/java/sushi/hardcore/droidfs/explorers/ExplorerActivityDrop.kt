@@ -4,17 +4,16 @@ import android.content.Intent
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
+import kotlinx.android.synthetic.main.activity_explorer_drop.*
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
     override fun init() {
         setContentView(R.layout.activity_explorer_drop)
-    }
-
-    fun onClickFAB(view: View) {
-        openDialogCreateFolder()
+        fab.setOnClickListener {
+            openDialogCreateFolder()
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

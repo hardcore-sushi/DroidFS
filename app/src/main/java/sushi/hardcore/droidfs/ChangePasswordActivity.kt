@@ -5,7 +5,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
-import android.view.View
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -25,7 +24,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_change_password)
-        setupActionBar()
+        setupLayout()
         setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
@@ -40,7 +39,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
                     switch_hidden_volume.isChecked = false
                     edit_volume_path.setText(currentVolumeName)
                 }
-                onClickSwitchHiddenVolume(switch_hidden_volume)
+                onClickSwitchHiddenVolume()
             }
         } else {
             WidgetUtil.hideWithPadding(saved_path_listview)
@@ -71,14 +70,13 @@ class ChangePasswordActivity : VolumeActionActivity() {
         }
         edit_volume_path.addTextChangedListener(textWatcher)
         edit_volume_name.addTextChangedListener(textWatcher)
-        edit_new_password_confirm.setOnEditorActionListener { v, _, _ ->
-            onClickChangePassword(v)
+        edit_new_password_confirm.setOnEditorActionListener { _, _, _ ->
+            checkVolumePathThenChangePassword()
             true
         }
-    }
-
-    fun pickDirectory(view: View?) {
-        askPermissionThenPickDirectory()
+        button_change_password.setOnClickListener {
+            checkVolumePathThenChangePassword()
+        }
     }
 
     override fun onDirectoryPicked(uri: Uri) {
@@ -102,7 +100,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
         }
     }
 
-    fun onClickChangePassword(view: View?) {
+    fun checkVolumePathThenChangePassword() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
@@ -207,12 +205,6 @@ class ChangePasswordActivity : VolumeActionActivity() {
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { _, _ -> finish() }
                 .show()
-    }
-
-    fun onClickRememberPath(view: View) {
-        if (!checkbox_remember_path.isChecked){
-            checkbox_save_password.isChecked = false
-        }
     }
 
     override fun onDestroy() {

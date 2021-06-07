@@ -10,7 +10,7 @@ import kotlinx.android.synthetic.main.toolbar.*
 import sushi.hardcore.droidfs.widgets.SimpleActionPreference
 import sushi.hardcore.droidfs.widgets.ThemeColor
 
-class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceStartFragmentCallback {
+class SettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,13 +71,5 @@ class SettingsActivity : BaseActivity(), PreferenceFragmentCompat.OnPreferenceSt
             setPreferencesFromResource(R.xml.unsafe_features_preferences, rootKey)
             ThemeColor.tintPreferenceIcons(preferenceScreen, ThemeColor.getThemeColor(requireContext()))
         }
-    }
-
-    override fun onPreferenceStartFragment(caller: PreferenceFragmentCompat, pref: Preference): Boolean {
-        val fragment = supportFragmentManager.fragmentFactory.instantiate(classLoader, pref.fragment)
-        fragment.arguments = pref.extras
-        fragment.setTargetFragment(caller, 0)
-        supportFragmentManager.beginTransaction().replace(R.id.settings, fragment).addToBackStack(null).commit()
-        return true
     }
 }

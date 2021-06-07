@@ -9,7 +9,6 @@ import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.DisplayMetrics
-import android.util.Log
 import android.util.Size
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -44,7 +43,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         private const val CAMERA_PERMISSION_REQUEST_CODE = 1
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
-        private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss")
+        private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
         private val random = Random()
     }
     private var timerDuration = 0
@@ -88,6 +87,74 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
         cameraExecutor = Executors.newSingleThreadExecutor()
 
+        image_ratio.setOnClickListener {
+            resolutions?.let {
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.choose_resolution)
+                    .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }.toTypedArray()), currentResolutionIndex) { dialog, which ->
+                        setupCamera(resolutions!![which])
+                        dialog.dismiss()
+                        currentResolutionIndex = which
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            }
+        }
+        image_timer.setOnClickListener {
+            val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
+            val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
+            dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
+            val dialog = ColoredAlertDialogBuilder(this)
+                .setView(dialogEditTextView)
+                .setTitle(getString(R.string.enter_timer_duration))
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    val enteredValue = dialogEditText.text.toString()
+                    if (enteredValue.isEmpty()){
+                        Toast.makeText(this, getString(R.string.timer_empty_error_msg), Toast.LENGTH_SHORT).show()
+                    } else {
+                        timerDuration = enteredValue.toInt()
+                    }
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .create()
+            dialogEditText.setOnEditorActionListener { _, _, _ ->
+                timerDuration = dialogEditText.text.toString().toInt()
+                dialog.dismiss()
+                true
+            }
+            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
+            dialog.show()
+        }
+        image_close.setOnClickListener {
+            isFinishingIntentionally = true
+            finish()
+        }
+        image_flash.setOnClickListener {
+            image_flash.setImageResource(when (imageCapture?.flashMode) {
+                ImageCapture.FLASH_MODE_AUTO -> {
+                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
+                    R.drawable.icon_flash_on
+                }
+                ImageCapture.FLASH_MODE_ON -> {
+                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                    R.drawable.icon_flash_off
+                }
+                else -> {
+                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
+                    R.drawable.icon_flash_auto
+                }
+            })
+        }
+        image_camera_switch.setOnClickListener {
+            isBackCamera = if (isBackCamera) {
+                image_camera_switch.setImageResource(R.drawable.icon_camera_front)
+                false
+            } else {
+                image_camera_switch.setImageResource(R.drawable.icon_camera_back)
+                true
+            }
+            setupCamera()
+        }
         take_photo_button.onClick = ::onClickTakePhoto
         orientedIcons = listOf(image_ratio, image_timer, image_close, image_flash, image_camera_switch)
         sensorOrientationListener = SensorOrientationListener(this)
@@ -99,23 +166,25 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 return true
             }
         })
-        camera_preview.setOnTouchListener { _, motionEvent: MotionEvent ->
-            when (motionEvent.action) {
+        camera_preview.setOnTouchListener { view, event ->
+            view.performClick()
+            when (event.action) {
                 MotionEvent.ACTION_DOWN -> true
                 MotionEvent.ACTION_UP -> {
                     val factory = camera_preview.meteringPointFactory
-                    val point = factory.createPoint(motionEvent.x, motionEvent.y)
+                    val point = factory.createPoint(event.x, event.y)
                     val action = FocusMeteringAction.Builder(point).build()
                     imageCapture?.camera?.cameraControl?.startFocusAndMetering(action)
                     true
                 }
-                MotionEvent.ACTION_MOVE -> scaleGestureDetector.onTouchEvent(motionEvent)
+                MotionEvent.ACTION_MOVE -> scaleGestureDetector.onTouchEvent(event)
                 else -> false
             }
         }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults.size == 1) {
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -134,7 +203,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
-    private fun adaptPreviewSize(resolution: Size){
+    private fun adaptPreviewSize(resolution: Size) {
         val metrics = DisplayMetrics()
         windowManager.defaultDisplay.getMetrics(metrics)
         //resolution.width and resolution.height seem to be inverted
@@ -236,79 +305,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         } else {
             takePhoto()
         }
-    }
-
-    fun onClickFlash(view: View) {
-        image_flash.setImageResource(when (imageCapture?.flashMode) {
-            ImageCapture.FLASH_MODE_AUTO -> {
-                imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
-                R.drawable.icon_flash_on
-            }
-            ImageCapture.FLASH_MODE_ON -> {
-                imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
-                R.drawable.icon_flash_off
-            }
-            else -> {
-                imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
-                R.drawable.icon_flash_auto
-            }
-        })
-    }
-
-    fun onClickCameraSwitch(view: View) {
-        isBackCamera = if (isBackCamera) {
-            image_camera_switch.setImageResource(R.drawable.icon_camera_front)
-            false
-        } else {
-            image_camera_switch.setImageResource(R.drawable.icon_camera_back)
-            true
-        }
-        setupCamera()
-    }
-
-    fun onClickTimer(view: View) {
-        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
-        val dialog = ColoredAlertDialogBuilder(this)
-            .setView(dialogEditTextView)
-            .setTitle(getString(R.string.enter_timer_duration))
-            .setPositiveButton(R.string.ok) { _, _ ->
-                val enteredValue = dialogEditText.text.toString()
-                if (enteredValue.isEmpty()){
-                    Toast.makeText(this, getString(R.string.timer_empty_error_msg), Toast.LENGTH_SHORT).show()
-                } else {
-                    timerDuration = enteredValue.toInt()
-                }
-            }
-            .setNegativeButton(R.string.cancel, null)
-            .create()
-        dialogEditText.setOnEditorActionListener { _, _, _ ->
-            timerDuration = dialogEditText.text.toString().toInt()
-            dialog.dismiss()
-            true
-        }
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        dialog.show()
-    }
-
-    fun onClickRatio(view: View) {
-        resolutions?.let {
-            ColoredAlertDialogBuilder(this)
-                .setTitle(R.string.choose_resolution)
-                .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }.toTypedArray()), currentResolutionIndex) { dialog, which ->
-                    setupCamera(resolutions!![which])
-                    dialog.dismiss()
-                    currentResolutionIndex = which
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        }
-    }
-
-    fun onClickClose(view: View) {
-        isFinishingIntentionally = true
-        finish()
     }
 
     override fun onDestroy() {
