@@ -194,4 +194,5 @@
     <string name="folders_first_summary">Show folders at the beginning of the list</string>
     <string name="auto_fit_title">Video player screen auto-rotation</string>
     <string name="auto_fit_summary">Auto-rotate the screen to fit video dimensions</string>
+    <string name="open_tree_failed">No file explorer found. Please install one and retry.</string>
 </resources>

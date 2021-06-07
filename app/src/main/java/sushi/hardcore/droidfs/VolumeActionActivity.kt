@@ -1,7 +1,9 @@
 package sushi.hardcore.droidfs
 
 import android.app.KeyguardManager
+import android.content.ActivityNotFoundException
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
@@ -9,6 +11,7 @@ import android.security.keystore.KeyProperties
 import android.view.View
 import android.widget.LinearLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
@@ -23,10 +26,15 @@ import java.security.KeyStore
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
 
-open class VolumeActionActivity : BaseActivity() {
+abstract class VolumeActionActivity : BaseActivity() {
     protected lateinit var currentVolumeName: String
     protected lateinit var currentVolumePath: String
     protected lateinit var volumeDatabase: VolumeDatabase
+    protected val pickDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            onDirectoryPicked(uri)
+        }
+    }
     private var usf_fingerprint = false
     private var biometricCanAuthenticateCode: Int = -1
     private lateinit var biometricManager: BiometricManager
@@ -46,6 +54,20 @@ open class VolumeActionActivity : BaseActivity() {
         private const val KEY_ALIAS = "Hash Key"
         private const val KEY_SIZE = 256
         private const val GCM_TAG_LEN = 128
+    }
+
+    protected abstract fun onDirectoryPicked(uri: Uri)
+
+    protected fun safePickDirectory() {
+        try {
+            pickDirectory.launch(null)
+        } catch (e: ActivityNotFoundException) {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.error)
+                .setMessage(R.string.open_tree_failed)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
     }
 
     protected fun setupFingerprintStuff(){
@@ -137,7 +159,7 @@ open class VolumeActionActivity : BaseActivity() {
         return if (!keyguardManager.isKeyguardSecure) {
             1
         } else {
-            when (biometricManager.canAuthenticate()){
+            when (biometricManager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG)){
                 BiometricManager.BIOMETRIC_SUCCESS -> 0
                 BiometricManager.BIOMETRIC_ERROR_NO_HARDWARE -> 2
                 BiometricManager.BIOMETRIC_ERROR_HW_UNAVAILABLE -> 3
@@ -209,7 +231,7 @@ open class VolumeActionActivity : BaseActivity() {
             .setSubtitle(getString(R.string.encrypt_action_description))
             .setDescription(getString(R.string.fingerprint_instruction))
             .setNegativeButtonText(getString(R.string.cancel))
-            .setDeviceCredentialAllowed(false)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .setConfirmationRequired(false)
             .build()
         if (!isCipherReady){
@@ -233,7 +255,7 @@ open class VolumeActionActivity : BaseActivity() {
             .setSubtitle(getString(R.string.decrypt_action_description))
             .setDescription(getString(R.string.fingerprint_instruction))
             .setNegativeButtonText(getString(R.string.cancel))
-            .setDeviceCredentialAllowed(false)
+            .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG)
             .setConfirmationRequired(false)
             .build()
         this.onPasswordDecrypted = onPasswordDecrypted

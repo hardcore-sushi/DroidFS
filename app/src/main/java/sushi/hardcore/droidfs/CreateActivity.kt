@@ -1,7 +1,7 @@
 package sushi.hardcore.droidfs
 
-import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -11,15 +11,13 @@ import kotlinx.android.synthetic.main.activity_create.*
 import kotlinx.android.synthetic.main.checkboxes_section.*
 import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
-import sushi.hardcore.droidfs.util.*
+import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
 import java.util.*
 
 class CreateActivity : VolumeActionActivity() {
-    companion object {
-        private const val PICK_DIRECTORY_REQUEST_CODE = 1
-    }
     private var sessionID = -1
     private var isStartingExplorer = false
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,35 +42,27 @@ class CreateActivity : VolumeActionActivity() {
     }
 
     fun pickDirectory(view: View?) {
-        val i = Intent(Intent.ACTION_OPEN_DOCUMENT_TREE)
-        startActivityForResult(i, PICK_DIRECTORY_REQUEST_CODE)
+        safePickDirectory()
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == Activity.RESULT_OK) {
-            if (requestCode == PICK_DIRECTORY_REQUEST_CODE) {
-                if (data?.data != null) {
-                    if (PathUtils.isTreeUriOnPrimaryStorage(data.data!!)){
-                        val path = PathUtils.getFullPathFromTreeUri(data.data, this)
-                        if (path != null){
-                            edit_volume_path.setText(path)
-                        } else {
-                            ColoredAlertDialogBuilder(this)
-                                .setTitle(R.string.error)
-                                .setMessage(R.string.path_from_uri_null_error_msg)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                    } else {
-                        ColoredAlertDialogBuilder(this)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.create_on_sdcard_error_msg)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                    }
-                }
+    override fun onDirectoryPicked(uri: Uri) {
+        if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
+            val path = PathUtils.getFullPathFromTreeUri(uri, this)
+            if (path != null){
+                edit_volume_path.setText(path)
+            } else {
+                ColoredAlertDialogBuilder(this)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.path_from_uri_null_error_msg)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
             }
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.create_on_sdcard_error_msg)
+                .setPositiveButton(R.string.ok, null)
+                .show()
         }
     }
 
