@@ -1,8 +1,10 @@
 package sushi.hardcore.droidfs
 
+import android.Manifest
 import android.app.KeyguardManager
 import android.content.ActivityNotFoundException
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -50,16 +52,32 @@ abstract class VolumeActionActivity : BaseActivity() {
     private lateinit var originalHiddenVolumeSectionLayoutParams: LinearLayout.LayoutParams
     private lateinit var originalNormalVolumeSectionLayoutParams: LinearLayout.LayoutParams
     companion object {
+        private const val STORAGE_PERMISSIONS_REQUEST = 0
         private const val ANDROID_KEY_STORE = "AndroidKeyStore"
         private const val KEY_ALIAS = "Hash Key"
         private const val KEY_SIZE = 256
         private const val GCM_TAG_LEN = 128
     }
 
+    protected open fun onPickingDirectory() {}
     protected abstract fun onDirectoryPicked(uri: Uri)
 
-    protected fun safePickDirectory() {
+    protected fun askPermissionThenPickDirectory() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE), STORAGE_PERMISSIONS_REQUEST)
+            } else {
+                safePickDirectory()
+            }
+        } else {
+            safePickDirectory()
+        }
+    }
+
+    private fun safePickDirectory() {
         try {
+            onPickingDirectory()
             pickDirectory.launch(null)
         } catch (e: ActivityNotFoundException) {
             ColoredAlertDialogBuilder(this)
@@ -67,6 +85,24 @@ abstract class VolumeActionActivity : BaseActivity() {
                 .setMessage(R.string.open_tree_failed)
                 .setPositiveButton(R.string.ok, null)
                 .show()
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            STORAGE_PERMISSIONS_REQUEST -> if (grantResults.size == 2) {
+                if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
+                    ColoredAlertDialogBuilder(this)
+                        .setTitle(R.string.storage_perm_denied)
+                        .setMessage(R.string.storage_perm_denied_msg)
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                } else {
+                    safePickDirectory()
+                }
+            }
         }
     }
 

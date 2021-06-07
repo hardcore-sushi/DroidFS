@@ -78,7 +78,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
     }
 
     fun pickDirectory(view: View?) {
-        safePickDirectory()
+        askPermissionThenPickDirectory()
     }
 
     override fun onDirectoryPicked(uri: Uri) {

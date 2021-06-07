@@ -107,8 +107,11 @@ class OpenActivity : VolumeActionActivity() {
     }
 
     fun pickDirectory(view: View?) {
+        askPermissionThenPickDirectory()
+    }
+
+    override fun onPickingDirectory() {
         isStartingActivity = true
-        safePickDirectory()
     }
 
     override fun onDirectoryPicked(uri: Uri) {
@@ -253,10 +256,10 @@ class OpenActivity : VolumeActionActivity() {
         isFinishingIntentionally = true
     }
 
-    override fun onPause() {
-        super.onPause()
+    override fun onStop() {
+        super.onStop()
         if (intent.action == "pick"){
-            if (isStartingActivity){
+            if (isStartingActivity) {
                 isStartingActivity = false
             } else {
                 finish()
