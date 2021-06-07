@@ -65,6 +65,9 @@ DroidFS need some permissions to work properly. Here is why:
   </li>
 </ul>
 
+# Limitations
+DroidFS use some parts of the original gocryptfs code, which is designed to run on Linux x86 systems: it accesses the underlying file system with file paths and syscalls. However in Android, you can't access other apps files with file paths. Instead, you must use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. And obviously, the original gocryptfs code doesn't work with this API. This is why DroidFS can't open volumes provided by other applications, such as cloud storage clients. You can only use DroidFS with volumes located on shared storage or in the app's internal storage (hidden volumes). External storage such as SD cards are only supported in read-only access for now.
+
 # Build
 Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
 
