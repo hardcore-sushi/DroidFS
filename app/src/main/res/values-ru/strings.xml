@@ -190,4 +190,8 @@
     <string name="folders_first_summary">Показывать папки в начале списка</string>
     <string name="auto_fit_title">Автоповорот видео</string>
     <string name="auto_fit_summary">Автоматический поворот экрана в соответствии с размерами видео</string>
+    <string name="open_tree_failed">Проводник файлов не найден. Установите его и повторите попытку.</string>
+    <string name="close_volume">Закрыть том</string>
+    <string name="sort_by">Сортировка</string>
+    <string name="cut">Вырезать</string>
 </resources>
