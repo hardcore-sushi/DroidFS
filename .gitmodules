@@ -1,0 +1,3 @@
+[submodule "app/libgocryptfs"]
+	path = app/libgocryptfs
+	url = https://forge.chapril.org/hardcoresushi/libgocryptfs.git

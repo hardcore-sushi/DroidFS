@@ -111,7 +111,7 @@ class CreateActivity : VolumeActionActivity() {
                             }
                         }
                         if (goodDirectory) {
-                            if (GocryptfsVolume.createVolume(currentVolumePath, password, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
+                            if (GocryptfsVolume.createVolume(currentVolumePath, password, false, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                                 var returnedHash: ByteArray? = null
                                 if (checkbox_save_password.isChecked){
                                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)

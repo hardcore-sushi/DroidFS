@@ -33,6 +33,7 @@ void jbyteArray_to_unsignedCharArray(const jbyte* src, unsigned char* dst, const
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
                                                                              jstring jroot_cipher_dir, jcharArray jpassword,
+                                                                             jboolean plainTextNames,
                                                                              jint logN,
                                                                              jstring jcreator) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
@@ -45,7 +46,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
     jcharArray_to_charArray(jchar_password, password, password_len);
     GoSlice go_password = {password, password_len, password_len};
 
-    GoUint8 result = gcf_create_volume(gofilename, go_password, logN, gocreator);
+    GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, logN, gocreator);
 
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
     (*env)->ReleaseStringUTFChars(env, jcreator, creator);
@@ -317,11 +318,12 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1open_1read_1mode(JNIEnv *env
 JNIEXPORT jint JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1open_1write_1mode(JNIEnv *env, jobject thiz,
                                                                           jint sessionID,
-                                                                          jstring jfile_path) {
+                                                                          jstring jfile_path,
+                                                                          jint mode) {
     const char* file_path = (*env)->GetStringUTFChars(env, jfile_path, NULL);
     GoString go_file_path = {file_path, strlen(file_path)};
 
-    GoInt handleID = gcf_open_write_mode(sessionID, go_file_path);
+    GoInt handleID = gcf_open_write_mode(sessionID, go_file_path, mode);
 
     (*env)->ReleaseStringUTFChars(env, jfile_path, file_path);
 
@@ -362,15 +364,8 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1read_1file(JNIEnv *env, jobj
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1truncate(JNIEnv *env, jobject thiz,
                                                                   jint sessionID,
-                                                                  jstring jfile_path, jlong offset) {
-    const char* file_path = (*env)->GetStringUTFChars(env, jfile_path, NULL);
-    GoString go_file_path = {file_path, strlen(file_path)};
-
-    GoUint8 result = gcf_truncate(sessionID, go_file_path, offset);
-
-    (*env)->ReleaseStringUTFChars(env, jfile_path, file_path);
-
-    return result;
+                                                                  jint handleID, jlong offset) {
+    return gcf_truncate(sessionID, handleID, offset);
 }
 
 JNIEXPORT void JNICALL
@@ -395,11 +390,11 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1remove_1file(JNIEnv *env, jo
 
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1mkdir(JNIEnv *env, jobject thiz,
-                                                      jint sessionID, jstring jdir_path) {
+                                                      jint sessionID, jstring jdir_path, jint mode) {
     const char* dir_path = (*env)->GetStringUTFChars(env, jdir_path, NULL);
     GoString go_dir_path = {dir_path, strlen(dir_path)};
 
-    GoUint8 result = gcf_mkdir(sessionID, go_dir_path);
+    GoUint8 result = gcf_mkdir(sessionID, go_dir_path, mode);
 
     (*env)->ReleaseStringUTFChars(env, jdir_path, dir_path);
 
