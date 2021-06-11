@@ -4,13 +4,13 @@
 
     <item
         android:id="@+id/validate"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:visible="false"
         android:icon="@drawable/icon_check"/>
 
     <item
         android:id="@+id/select_all"
-        app:showAsAction="ifRoom"
+        app:showAsAction="always"
         android:visible="false"
         android:icon="@drawable/icon_select_all"/>
 
@@ -22,12 +22,14 @@
 
     <item
         android:id="@+id/sort"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
+        android:title="@string/sort_by"
         android:icon="@drawable/icon_sort"/>
 
     <item
         android:id="@+id/close"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
+        android:title="@string/close_volume"
         android:icon="@drawable/icon_close"/>
 
 </menu>
