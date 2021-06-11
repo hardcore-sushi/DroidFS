@@ -8,13 +8,13 @@ import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import kotlinx.android.synthetic.main.activity_explorer.*
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.OpenActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
+import sushi.hardcore.droidfs.databinding.ActivityExplorerBinding
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
@@ -24,10 +24,12 @@ class ExplorerActivity : BaseExplorerActivity() {
     companion object {
         private enum class ItemsActions {NONE, COPY, MOVE}
     }
+
     private var usf_decrypt = false
     private var usf_share = false
     private var currentItemAction = ItemsActions.NONE
     private val itemsToProcess = ArrayList<OperationFile>()
+    private lateinit var binding: ActivityExplorerBinding
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
@@ -145,8 +147,9 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     override fun init() {
-        setContentView(R.layout.activity_explorer)
-        fab.setOnClickListener {
+        binding = ActivityExplorerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.fab.setOnClickListener {
             if (currentItemAction != ItemsActions.NONE){
                 openDialogCreateFolder()
             } else {

@@ -2,22 +2,23 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.content.pm.ActivityInfo
 import com.google.android.exoplayer2.SimpleExoPlayer
-import kotlinx.android.synthetic.main.activity_video_player.*
-import sushi.hardcore.droidfs.R
-
+import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
     private var firstPlay = true
     private val autoFit by lazy {
         sharedPrefs.getBoolean("autoFit", false)
     }
+    private lateinit var binding: ActivityVideoPlayerBinding
+
     override fun viewFile() {
-        setContentView(R.layout.activity_video_player)
+        binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         super.viewFile()
     }
 
     override fun bindPlayer(player: SimpleExoPlayer) {
-        video_player.player = player
+        binding.videoPlayer.player = player
     }
 
     override fun getFileType(): String {
@@ -26,7 +27,7 @@ class VideoPlayer: MediaPlayer() {
 
     override fun onPlayerReady() {
         if (firstPlay && autoFit) {
-            requestedOrientation = if (video_player.width <  video_player.height) ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT else ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+            requestedOrientation = if (binding.videoPlayer.width <  binding.videoPlayer.height) ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT else ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
             firstPlay = false
         }
     }

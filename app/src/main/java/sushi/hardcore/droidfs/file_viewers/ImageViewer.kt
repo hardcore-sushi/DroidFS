@@ -13,9 +13,9 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
-import kotlinx.android.synthetic.main.activity_image_viewer.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
@@ -29,6 +29,7 @@ class ImageViewer: FileViewerActivity() {
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150
     }
+
     private lateinit var fileName: String
     private lateinit var glideImage: RequestBuilder<Drawable>
     private var x1 = 0F
@@ -38,28 +39,30 @@ class ImageViewer: FileViewerActivity() {
     private var rotatedBitmap: Bitmap? = null
     private val handler = Handler()
     private val hideUI = Runnable {
-        action_buttons.visibility = View.GONE
-        action_bar.visibility = View.GONE
+        binding.actionButtons.visibility = View.GONE
+        binding.actionBar.visibility = View.GONE
     }
     private val slideshowNext = Runnable {
         if (slideshowActive){
-            image_viewer.resetZoomFactor()
+            binding.imageViewer.resetZoomFactor()
             swipeImage(-1F, true)
         }
     }
+    private lateinit var binding: ActivityImageViewerBinding
 
     override fun getFileType(): String {
         return "image"
     }
 
     override fun viewFile() {
-        setContentView(R.layout.activity_image_viewer)
-        image_viewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
+        binding = ActivityImageViewerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
                 handler.removeCallbacks(hideUI)
-                if (action_buttons.visibility == View.GONE) {
-                    action_buttons.visibility = View.VISIBLE
-                    action_bar.visibility = View.VISIBLE
+                if (binding.actionButtons.visibility == View.GONE) {
+                    binding.actionButtons.visibility = View.VISIBLE
+                    binding.actionBar.visibility = View.VISIBLE
                     handler.postDelayed(hideUI, hideDelay)
                 } else {
                     hideUI.run()
@@ -67,7 +70,7 @@ class ImageViewer: FileViewerActivity() {
             }
 
             override fun onTouch(event: MotionEvent?) {
-                if (!image_viewer.isZoomed) {
+                if (!binding.imageViewer.isZoomed) {
                     when (event?.action) {
                         MotionEvent.ACTION_DOWN -> {
                             x1 = event.x
@@ -83,7 +86,7 @@ class ImageViewer: FileViewerActivity() {
                 }
             }
         })
-        image_delete.setOnClickListener {
+        binding.imageDelete.setOnClickListener {
             ColoredAlertDialogBuilder(this)
                 .keepFullScreen()
                 .setTitle(R.string.warning)
@@ -110,7 +113,7 @@ class ImageViewer: FileViewerActivity() {
                 .setMessage(getString(R.string.single_delete_confirm, fileName))
                 .show()
         }
-        image_button_slideshow.setOnClickListener {
+        binding.imageButtonSlideshow.setOnClickListener {
             if (!slideshowActive){
                 slideshowActive = true
                 handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
@@ -121,23 +124,23 @@ class ImageViewer: FileViewerActivity() {
                 stopSlideshow()
             }
         }
-        image_previous.setOnClickListener {
+        binding.imagePrevious.setOnClickListener {
             askSaveRotation {
-                image_viewer.resetZoomFactor()
+                binding.imageViewer.resetZoomFactor()
                 swipeImage(1F)
             }
         }
-        image_next.setOnClickListener {
+        binding.imageNext.setOnClickListener {
             askSaveRotation {
-                image_viewer.resetZoomFactor()
+                binding.imageViewer.resetZoomFactor()
                 swipeImage(-1F)
             }
         }
-        image_rotate_right.setOnClickListener {
+        binding.imageRotateRight.setOnClickListener {
             rotationAngle += 90
             rotateImage()
         }
-        image_rotate_left.setOnClickListener {
+        binding.imageRotateLeft.setOnClickListener {
             rotationAngle -= 90
             rotateImage()
         }
@@ -148,9 +151,9 @@ class ImageViewer: FileViewerActivity() {
     private fun loadImage(){
         loadWholeFile(filePath)?.let {
             glideImage = Glide.with(this).load(it)
-            glideImage.into(image_viewer)
+            glideImage.into(binding.imageViewer)
             fileName = File(filePath).name
-            text_filename.text = fileName
+            binding.textFilename.text = fileName
             rotationAngle = 0F
         }
     }
@@ -201,8 +204,8 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun rotateImage(){
-        image_viewer.restoreZoomNormal()
-        glideImage.transform(RotateTransformation(this)).into(image_viewer)
+        binding.imageViewer.restoreZoomNormal()
+        glideImage.transform(RotateTransformation(this)).into(binding.imageViewer)
     }
 
     private fun askSaveRotation(callback: () -> Unit){
@@ -250,6 +253,6 @@ class ImageViewer: FileViewerActivity() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        image_viewer.restoreZoomNormal()
+        binding.imageViewer.restoreZoomNormal()
     }
 }

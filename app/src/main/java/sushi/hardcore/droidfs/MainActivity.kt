@@ -4,15 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.toolbar.*
+import sushi.hardcore.droidfs.databinding.ActivityMainBinding
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 
 class MainActivity : BaseActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar.toolbar)
         if (!isRecreating) {
             if (sharedPrefs.getBoolean("applicationFirstOpening", true)){
                 ColoredAlertDialogBuilder(this)
@@ -29,13 +30,13 @@ class MainActivity : BaseActivity() {
                     .show()
             }
         }
-        button_open.setOnClickListener {
+        binding.buttonOpen.setOnClickListener {
             startActivity(OpenActivity::class.java)
         }
-        button_create.setOnClickListener {
+        binding.buttonCreate.setOnClickListener {
             startActivity(CreateActivity::class.java)
         }
-        button_change_password.setOnClickListener {
+        binding.buttonChangePassword.setOnClickListener {
             startActivity(ChangePasswordActivity::class.java)
         }
     }

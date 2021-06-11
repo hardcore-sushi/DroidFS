@@ -7,7 +7,7 @@
     android:orientation="vertical"
     tools:context="sushi.hardcore.droidfs.MainActivity">
 
-    <include layout="@layout/toolbar"/>
+    <include android:id="@+id/toolbar" layout="@layout/toolbar"/>
 
     <sushi.hardcore.droidfs.widgets.ColoredImageView
         android:id="@+id/image_logo"

@@ -6,9 +6,7 @@ import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_create.*
-import kotlinx.android.synthetic.main.checkboxes_section.*
-import kotlinx.android.synthetic.main.volume_path_section.*
+import sushi.hardcore.droidfs.databinding.ActivityCreateBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
@@ -19,23 +17,26 @@ import java.util.*
 class CreateActivity : VolumeActionActivity() {
     private var sessionID = -1
     private var isStartingExplorer = false
+    private lateinit var binding: ActivityCreateBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_create)
+        binding = ActivityCreateBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setupLayout()
         setupFingerprintStuff()
-        edit_password_confirm.setOnEditorActionListener { _, _, _ ->
+        binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
             createVolume()
             true
         }
-        button_create.setOnClickListener {
+        binding.buttonCreate.setOnClickListener {
             createVolume()
         }
     }
 
     override fun onClickSwitchHiddenVolume() {
         super.onClickSwitchHiddenVolume()
-        if (switch_hidden_volume.isChecked){
+        if (switchHiddenVolume.isChecked){
             ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.hidden_volume_warning)
@@ -48,7 +49,7 @@ class CreateActivity : VolumeActionActivity() {
         if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
             val path = PathUtils.getFullPathFromTreeUri(uri, this)
             if (path != null){
-                edit_volume_path.setText(path)
+                editVolumePath.setText(path)
             } else {
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.error)
@@ -67,8 +68,8 @@ class CreateActivity : VolumeActionActivity() {
 
     fun createVolume() {
         loadVolumePath {
-            val password = edit_password.text.toString().toCharArray()
-            val passwordConfirm = edit_password_confirm.text.toString().toCharArray()
+            val password = binding.editPassword.text.toString().toCharArray()
+            val passwordConfirm = binding.editPasswordConfirm.text.toString().toCharArray()
             if (!password.contentEquals(passwordConfirm)) {
                 Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
             } else {
@@ -113,18 +114,18 @@ class CreateActivity : VolumeActionActivity() {
                         if (goodDirectory) {
                             if (GocryptfsVolume.createVolume(currentVolumePath, password, false, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                                 var returnedHash: ByteArray? = null
-                                if (checkbox_save_password.isChecked){
+                                if (checkboxSavePassword.isChecked){
                                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                                 }
                                 sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)
                                 if (sessionID != -1) {
-                                    if (checkbox_remember_path.isChecked) {
+                                    if (checkboxRememberPath.isChecked) {
                                         if (volumeDatabase.isVolumeSaved(currentVolumeName)) { //cleaning old saved path
                                             volumeDatabase.removeVolume(Volume(currentVolumeName))
                                         }
-                                        volumeDatabase.saveVolume(Volume(currentVolumeName, switch_hidden_volume.isChecked))
+                                        volumeDatabase.saveVolume(Volume(currentVolumeName, switchHiddenVolume.isChecked))
                                     }
-                                    if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                                    if (checkboxSavePassword.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                                         stopTask {
                                             savePasswordHash(returnedHash) {
                                                 startExplorer()
@@ -183,7 +184,7 @@ class CreateActivity : VolumeActionActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Wiper.wipeEditText(edit_password)
-        Wiper.wipeEditText(edit_password_confirm)
+        Wiper.wipeEditText(binding.editPassword)
+        Wiper.wipeEditText(binding.editPasswordConfirm)
     }
 }

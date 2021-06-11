@@ -14,12 +14,12 @@ import android.view.WindowManager
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.AdapterView.OnItemLongClickListener
 import android.widget.EditText
+import android.widget.ListView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import kotlinx.android.synthetic.main.activity_explorer_base.*
-import kotlinx.android.synthetic.main.explorer_info_bar.*
-import kotlinx.android.synthetic.main.toolbar.*
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.ConstValues.Companion.isAudio
@@ -62,6 +62,14 @@ open class BaseExplorerActivity : BaseActivity() {
     protected var isStartingActivity = false
     private var usf_open = false
     protected var usf_keep_open = false
+    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
+    private lateinit var titleText: TextView
+    private lateinit var listExplorer: ListView
+    private lateinit var refresher: SwipeRefreshLayout
+    private lateinit var textDirEmpty: TextView
+    private lateinit var currentPathText: TextView
+    private lateinit var totalSizeText: TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         usf_open = sharedPrefs.getBoolean("usf_open", false)
@@ -74,16 +82,25 @@ open class BaseExplorerActivity : BaseActivity() {
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
+        toolbar = findViewById(R.id.toolbar)
+        titleText = findViewById(R.id.title_text)
+        listExplorer = findViewById(R.id.list_explorer)
+        refresher = findViewById(R.id.refresher)
+        textDirEmpty = findViewById(R.id.text_dir_empty)
+        currentPathText = findViewById(R.id.current_path_text)
+        totalSizeText = findViewById(R.id.total_size_text)
         setSupportActionBar(toolbar)
         title = ""
-        title_text.text = getString(R.string.volume, volumeName)
+        titleText.text = getString(R.string.volume, volumeName)
         explorerAdapter = ExplorerElementAdapter(this)
         explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
         setCurrentPath(currentDirectoryPath)
-        list_explorer.adapter = explorerAdapter
-        list_explorer.onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
-        list_explorer.onItemLongClickListener = OnItemLongClickListener { _, _, position, _ -> onExplorerItemLongClick(position); true }
+        listExplorer.apply {
+            adapter = explorerAdapter
+            onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
+            onItemLongClickListener = OnItemLongClickListener { _, _, position, _ -> onExplorerItemLongClick(position); true }
+        }
         refresher.setOnRefreshListener {
             setCurrentPath(currentDirectoryPath)
             refresher.isRefreshing = false
@@ -198,14 +215,14 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected fun setCurrentPath(path: String) {
         explorerElements = gocryptfsVolume.listDir(path)
-        text_dir_empty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
+        textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
         sortExplorerElements()
         if (path.isNotEmpty()) { //not root
             explorerElements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1, currentDirectoryPath))
         }
         explorerAdapter.setExplorerElements(explorerElements)
         currentDirectoryPath = path
-        current_path_text.text = getString(R.string.location, currentDirectoryPath)
+        currentPathText.text = getString(R.string.location, currentDirectoryPath)
         Thread{
             var totalSize: Long = 0
             for (element in explorerElements){
@@ -223,7 +240,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 }
             }
             runOnUiThread {
-                total_size_text.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+                totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
                 explorerAdapter.notifyDataSetChanged()
             }
         }.start()
