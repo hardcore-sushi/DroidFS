@@ -80,24 +80,28 @@ Most of the original gocryptfs code was used as is (written in Go) and compiled 
 ```
 $ git clone https://github.com/hardcore-sushi/DroidFS.git
 ```
-Gocryptfs need OpenSSL to work:
+Download [libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs):
 ```
-$ cd DroidFS/app/libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1j.tar.gz
+$ cd DroidFS
+$ git submodule update --init
+```
+libgocryptfs needs OpenSSL:
+```
+$ cd app/libgocryptfs
+$ wget https://www.openssl.org/source/openssl-1.1.1k.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ wget https://www.openssl.org/source/openssl-1.1.1j.tar.gz.asc
-$ gpg --verify openssl-1.1.1j.tar.gz.asc openssl-1.1.1j.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1k.tar.gz.asc
+$ gpg --verify openssl-1.1.1k.tar.gz.asc openssl-1.1.1k.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.
 ```
-$ tar -xvzf openssl-1.1.1j.tar.gz
+$ tar -xvzf openssl-1.1.1k.tar.gz
 ```
 
 #### Build
-First, we need to build libgocryptfs.<br>
-For this, we will need to install some dependencies:
+First, we need to install some dependencies:
 ```
 $ sudo apt-get install libcrypto++-dev libssl-dev pkg-config
 ```
@@ -105,13 +109,13 @@ And also Go dependencies:
 ```
 $ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf
 ```
-Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/AndroidSDK/ndk/\<NDK version\>". We can now start the build process: 
+Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". We can now build libgocryptfs: 
 ```
 $ cd DroidFS/app/libgocryptfs
-$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1j" ./build.sh
+$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1k" ./build.sh
  ```
-Then, open the DroidFS project with Android Studio.<br>
-If a device (virtual or physical) is connected, just click on "Run".<br>
+Then, open the DroidFS project with Android Studio. \
+If a device (virtual or physical) is connected, just click on "Run". \
 If you want to generate a signed APK, you can follow this [post](https://stackoverflow.com/a/28938286).
 
 # Third party code
