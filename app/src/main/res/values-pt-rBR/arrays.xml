@@ -7,12 +7,4 @@
         <item>Tamanho (desc)</item>
         <item>Data (decr)</item>
     </string-array>
-    <string-array name="sort_orders_values">
-        <item>nome</item>
-        <item>data</item>
-        <item>tamanho</item>
-        <item>nome_decr</item>
-        <item>tamanho_decr</item>
-        <item>data_decr</item>
-    </string-array>
 </resources>
