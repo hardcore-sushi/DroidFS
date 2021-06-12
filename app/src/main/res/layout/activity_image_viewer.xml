@@ -71,7 +71,7 @@
             android:src="@drawable/exo_icon_previous"/>
 
         <ImageButton
-            android:id="@+id/image_next"
+            android:id="@+id/image_rotate_left"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"
@@ -89,7 +89,7 @@
             android:src="@drawable/icon_rotate_right"/>
 
         <ImageButton
-            android:id="@+id/image_rotate_left"
+            android:id="@+id/image_next"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
             android:layout_margin="10dp"

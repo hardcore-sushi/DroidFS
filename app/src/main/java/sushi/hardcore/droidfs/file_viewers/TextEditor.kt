@@ -90,7 +90,7 @@ class TextEditor: FileViewerActivity() {
                 }
             }
             if (offset == content.size.toLong()){
-                success = gocryptfsVolume.truncate(filePath, offset)
+                success = gocryptfsVolume.truncate(handleID, offset)
             }
             gocryptfsVolume.closeFile(handleID)
             buff.close()

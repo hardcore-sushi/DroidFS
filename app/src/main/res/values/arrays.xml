@@ -7,6 +7,8 @@
         <item>Size (desc)</item>
         <item>Date (desc)</item>
     </string-array>
+
+    <!-- don't translate the following otherwise the app will crash -->
     <string-array name="sort_orders_values">
         <item>name</item>
         <item>date</item>

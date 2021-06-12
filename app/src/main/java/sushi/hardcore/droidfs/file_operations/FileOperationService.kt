@@ -7,9 +7,9 @@ import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.*
 import androidx.documentfile.provider.DocumentFile
+import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File

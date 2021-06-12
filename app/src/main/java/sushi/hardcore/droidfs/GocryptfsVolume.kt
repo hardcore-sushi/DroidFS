@@ -14,15 +14,15 @@ class GocryptfsVolume(var sessionID: Int) {
     private external fun native_is_closed(sessionID: Int): Boolean
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>
     private external fun native_open_read_mode(sessionID: Int, file_path: String): Int
-    private external fun native_open_write_mode(sessionID: Int, file_path: String): Int
+    private external fun native_open_write_mode(sessionID: Int, file_path: String, mode: Int): Int
     private external fun native_read_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray): Int
     private external fun native_write_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int
-    private external fun native_truncate(sessionID: Int, file_path: String, offset: Long): Boolean
+    private external fun native_truncate(sessionID: Int, handleID: Int, offset: Long): Boolean
     private external fun native_path_exists(sessionID: Int, file_path: String): Boolean
     private external fun native_get_size(sessionID: Int, file_path: String): Long
     private external fun native_close_file(sessionID: Int, handleID: Int)
     private external fun native_remove_file(sessionID: Int, file_path: String): Boolean
-    private external fun native_mkdir(sessionID: Int, dir_path: String): Boolean
+    private external fun native_mkdir(sessionID: Int, dir_path: String, mode: Int): Boolean
     private external fun native_rmdir(sessionID: Int, dir_path: String): Boolean
     private external fun native_rename(sessionID: Int, old_path: String, new_path: String): Boolean
 
@@ -30,7 +30,7 @@ class GocryptfsVolume(var sessionID: Int) {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
         const val DefaultBS = 4096
-        external fun createVolume(root_cipher_dir: String, password: CharArray, logN: Int, creator: String): Boolean
+        external fun createVolume(root_cipher_dir: String, password: CharArray, plainTextNames: Boolean, logN: Int, creator: String): Boolean
         external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
 
@@ -66,7 +66,7 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun mkdir(dir_path: String): Boolean {
         synchronized(this){
-            return native_mkdir(sessionID, dir_path)
+            return native_mkdir(sessionID, dir_path, 0)
         }
     }
 
@@ -108,7 +108,7 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun openWriteMode(file_path: String): Int {
         synchronized(this){
-            return native_open_write_mode(sessionID, file_path)
+            return native_open_write_mode(sessionID, file_path, 0)
         }
     }
 
@@ -124,9 +124,9 @@ class GocryptfsVolume(var sessionID: Int) {
         }
     }
 
-    fun truncate(file_path: String, offset: Long): Boolean {
+    fun truncate(handleID: Int, offset: Long): Boolean {
         synchronized(this) {
-            return native_truncate(sessionID, file_path, offset)
+            return native_truncate(sessionID, handleID, offset)
         }
     }
 

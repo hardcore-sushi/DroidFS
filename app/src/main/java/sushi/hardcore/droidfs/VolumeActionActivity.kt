@@ -10,24 +10,31 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
-import android.widget.LinearLayout
-import android.widget.Toast
+import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.appcompat.widget.SwitchCompat
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
-import kotlinx.android.synthetic.main.checkboxes_section.*
-import kotlinx.android.synthetic.main.toolbar.*
-import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.ColoredImageButton
 import java.security.KeyStore
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
 
 abstract class VolumeActionActivity : BaseActivity() {
+
+    companion object {
+        private const val STORAGE_PERMISSIONS_REQUEST = 0
+        private const val ANDROID_KEY_STORE = "AndroidKeyStore"
+        private const val KEY_ALIAS = "Hash Key"
+        private const val KEY_SIZE = 256
+        private const val GCM_TAG_LEN = 128
+    }
+
     protected lateinit var currentVolumeName: String
     protected lateinit var currentVolumePath: String
     protected lateinit var volumeDatabase: VolumeDatabase
@@ -50,18 +57,18 @@ abstract class VolumeActionActivity : BaseActivity() {
     private lateinit var dataToProcess: ByteArray
     private lateinit var originalHiddenVolumeSectionLayoutParams: LinearLayout.LayoutParams
     private lateinit var originalNormalVolumeSectionLayoutParams: LinearLayout.LayoutParams
-    companion object {
-        private const val STORAGE_PERMISSIONS_REQUEST = 0
-        private const val ANDROID_KEY_STORE = "AndroidKeyStore"
-        private const val KEY_ALIAS = "Hash Key"
-        private const val KEY_SIZE = 256
-        private const val GCM_TAG_LEN = 128
-    }
+    protected lateinit var switchHiddenVolume: SwitchCompat
+    protected lateinit var checkboxRememberPath: CheckBox
+    protected lateinit var checkboxSavePassword: CheckBox
+    protected lateinit var editVolumeName: EditText
+    protected lateinit var editVolumePath: EditText
+    private lateinit var hiddenVolumeSection: LinearLayout
+    private lateinit var normalVolumeSection: LinearLayout
 
     protected fun setupLayout() {
-        setSupportActionBar(toolbar)
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        button_pick_directory.setOnClickListener {
+        findViewById<ColoredImageButton>(R.id.button_pick_directory).setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
                     ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -73,20 +80,27 @@ abstract class VolumeActionActivity : BaseActivity() {
                 safePickDirectory()
             }
         }
-        switch_hidden_volume.setOnClickListener {
+        switchHiddenVolume = findViewById(R.id.switch_hidden_volume)
+        checkboxRememberPath = findViewById(R.id.checkbox_remember_path)
+        checkboxSavePassword = findViewById(R.id.checkbox_save_password)
+        editVolumeName = findViewById(R.id.edit_volume_name)
+        editVolumePath = findViewById(R.id.edit_volume_path)
+        hiddenVolumeSection = findViewById(R.id.hidden_volume_section)
+        normalVolumeSection = findViewById(R.id.normal_volume_section)
+        switchHiddenVolume.setOnClickListener {
             onClickSwitchHiddenVolume()
         }
-        checkbox_remember_path.setOnClickListener {
-            if (!checkbox_remember_path.isChecked) {
-                checkbox_save_password.isChecked = false
+        checkboxRememberPath.setOnClickListener {
+            if (!checkboxRememberPath.isChecked) {
+                checkboxSavePassword.isChecked = false
             }
         }
-        checkbox_save_password.setOnClickListener {
-            if (checkbox_save_password.isChecked) {
+        checkboxSavePassword.setOnClickListener {
+            if (checkboxSavePassword.isChecked) {
                 if (biometricCanAuthenticateCode == 0) {
-                    checkbox_remember_path.isChecked = checkbox_remember_path.isEnabled
+                    checkboxRememberPath.isChecked = checkboxRememberPath.isEnabled
                 } else {
-                    checkbox_save_password.isChecked = false
+                    checkboxSavePassword.isChecked = false
                     printAuthenticateImpossibleError()
                 }
             }
@@ -94,12 +108,12 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     protected open fun onClickSwitchHiddenVolume() {
-        if (switch_hidden_volume.isChecked){
-            WidgetUtil.show(hidden_volume_section, originalHiddenVolumeSectionLayoutParams)
-            WidgetUtil.hide(normal_volume_section)
+        if (switchHiddenVolume.isChecked){
+            WidgetUtil.show(hiddenVolumeSection, originalHiddenVolumeSectionLayoutParams)
+            WidgetUtil.hide(normalVolumeSection)
         } else {
-            WidgetUtil.show(normal_volume_section, originalNormalVolumeSectionLayoutParams)
-            WidgetUtil.hide(hidden_volume_section)
+            WidgetUtil.show(normalVolumeSection, originalNormalVolumeSectionLayoutParams)
+            WidgetUtil.hide(hiddenVolumeSection)
         }
     }
 
@@ -138,9 +152,9 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     protected fun setupFingerprintStuff(){
-        originalHiddenVolumeSectionLayoutParams = hidden_volume_section.layoutParams as LinearLayout.LayoutParams
-        originalNormalVolumeSectionLayoutParams = normal_volume_section.layoutParams as LinearLayout.LayoutParams
-        WidgetUtil.hide(hidden_volume_section)
+        originalHiddenVolumeSectionLayoutParams = hiddenVolumeSection.layoutParams as LinearLayout.LayoutParams
+        originalNormalVolumeSectionLayoutParams = normalVolumeSection.layoutParams as LinearLayout.LayoutParams
+        WidgetUtil.hide(hiddenVolumeSection)
         volumeDatabase = VolumeDatabase(this)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
@@ -173,7 +187,7 @@ abstract class VolumeActionActivity : BaseActivity() {
                                 when (actionMode) {
                                     Cipher.ENCRYPT_MODE -> {
                                         val cipherText = cipherObject.doFinal(dataToProcess)
-                                        success = volumeDatabase.addHash(Volume(currentVolumeName, switch_hidden_volume.isChecked, cipherText, cipherObject.iv))
+                                        success = volumeDatabase.addHash(Volume(currentVolumeName, switchHiddenVolume.isChecked, cipherText, cipherObject.iv))
                                     }
                                     Cipher.DECRYPT_MODE -> {
                                         try {
@@ -212,7 +226,7 @@ abstract class VolumeActionActivity : BaseActivity() {
                 biometricPrompt = BiometricPrompt(this, executor, callback)
             }
         } else {
-            WidgetUtil.hideWithPadding(checkbox_save_password)
+            WidgetUtil.hideWithPadding(checkboxSavePassword)
         }
     }
 
@@ -334,17 +348,17 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     protected fun loadVolumePath(callback: () -> Unit){
-        currentVolumeName = if (switch_hidden_volume.isChecked){
-            edit_volume_name.text.toString()
+        currentVolumeName = if (switchHiddenVolume.isChecked){
+            editVolumeName.text.toString()
         } else {
-            edit_volume_path.text.toString()
+            editVolumePath.text.toString()
         }
         if (currentVolumeName.isEmpty()) {
-            Toast.makeText(this, if (switch_hidden_volume.isChecked) {R.string.enter_volume_name} else {R.string.enter_volume_path}, Toast.LENGTH_SHORT).show()
-        } else if (switch_hidden_volume.isChecked && currentVolumeName.contains("/")){
+            Toast.makeText(this, if (switchHiddenVolume.isChecked) {R.string.enter_volume_name} else {R.string.enter_volume_path}, Toast.LENGTH_SHORT).show()
+        } else if (switchHiddenVolume.isChecked && currentVolumeName.contains("/")){
             Toast.makeText(this, R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
         } else {
-            currentVolumePath = if (switch_hidden_volume.isChecked) {
+            currentVolumePath = if (switchHiddenVolume.isChecked) {
                 PathUtils.pathJoin(filesDir.path, currentVolumeName)
             } else {
                 currentVolumeName

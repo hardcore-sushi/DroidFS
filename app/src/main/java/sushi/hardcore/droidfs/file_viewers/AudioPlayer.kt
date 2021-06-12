@@ -1,13 +1,15 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import com.google.android.exoplayer2.SimpleExoPlayer
-import kotlinx.android.synthetic.main.activity_audio_player.*
-import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.databinding.ActivityAudioPlayerBinding
 import java.io.File
 
 class AudioPlayer: MediaPlayer(){
+    private lateinit var binding: ActivityAudioPlayerBinding
+
     override fun viewFile() {
-        setContentView(R.layout.activity_audio_player)
+        binding = ActivityAudioPlayerBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         super.viewFile()
         refreshFileName()
     }
@@ -17,7 +19,7 @@ class AudioPlayer: MediaPlayer(){
     }
 
     override fun bindPlayer(player: SimpleExoPlayer) {
-        audio_controller.player = player
+        binding.audioController.player = player
     }
 
     override fun onPlaylistIndexChanged() {
@@ -27,7 +29,7 @@ class AudioPlayer: MediaPlayer(){
     private fun refreshFileName() {
         val filename = File(filePath).name
         val pos = filename.lastIndexOf('.')
-        music_title.text = if (pos != -1){
+        binding.musicTitle.text = if (pos != -1){
             filename.substring(0,pos)
         } else {
             filename

@@ -9,11 +9,9 @@ import android.text.TextWatcher
 import android.view.MenuItem
 import android.widget.AdapterView.OnItemClickListener
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_open.*
-import kotlinx.android.synthetic.main.checkboxes_section.*
-import kotlinx.android.synthetic.main.volume_path_section.*
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
+import sushi.hardcore.droidfs.databinding.ActivityOpenBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
@@ -29,24 +27,26 @@ class OpenActivity : VolumeActionActivity() {
     private var sessionID = -1
     private var isStartingActivity = false
     private var isFinishingIntentionally = false
+    private lateinit var binding: ActivityOpenBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_open)
+        binding = ActivityOpenBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         setupLayout()
         setupFingerprintStuff()
         savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
-            saved_path_listview.adapter = savedVolumesAdapter
-            saved_path_listview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
+            binding.savedPathListview.adapter = savedVolumesAdapter
+            binding.savedPathListview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
                 val volume = savedVolumesAdapter.getItem(position)
                 currentVolumeName = volume.name
                 if (volume.isHidden){
-                    switch_hidden_volume.isChecked = true
-                    edit_volume_name.setText(currentVolumeName)
+                    switchHiddenVolume.isChecked = true
+                    editVolumeName.setText(currentVolumeName)
                 } else {
-                    switch_hidden_volume.isChecked = false
-                    edit_volume_path.setText(currentVolumeName)
+                    switchHiddenVolume.isChecked = false
+                    editVolumePath.setText(currentVolumeName)
                 }
                 onClickSwitchHiddenVolume()
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
@@ -63,7 +63,7 @@ class OpenActivity : VolumeActionActivity() {
                 }
             }
         } else {
-            WidgetUtil.hideWithPadding(saved_path_listview)
+            WidgetUtil.hideWithPadding(binding.savedPathListview)
         }
         val textWatcher = object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {
@@ -72,27 +72,27 @@ class OpenActivity : VolumeActionActivity() {
             }
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (volumeDatabase.isVolumeSaved(s.toString())){
-                    checkbox_remember_path.isEnabled = false
-                    checkbox_remember_path.isChecked = false
+                    checkboxRememberPath.isEnabled = false
+                    checkboxRememberPath.isChecked = false
                     if (volumeDatabase.isHashSaved(s.toString())){
-                        checkbox_save_password.isEnabled = false
-                        checkbox_save_password.isChecked = false
+                        checkboxSavePassword.isEnabled = false
+                        checkboxSavePassword.isChecked = false
                     } else {
-                        checkbox_save_password.isEnabled = true
+                        checkboxSavePassword.isEnabled = true
                     }
                 } else {
-                    checkbox_remember_path.isEnabled = true
-                    checkbox_save_password.isEnabled = true
+                    checkboxRememberPath.isEnabled = true
+                    checkboxSavePassword.isEnabled = true
                 }
             }
         }
-        edit_volume_path.addTextChangedListener(textWatcher)
-        edit_volume_name.addTextChangedListener(textWatcher)
-        edit_password.setOnEditorActionListener { _, _, _ ->
+        editVolumePath.addTextChangedListener(textWatcher)
+        editVolumeName.addTextChangedListener(textWatcher)
+        binding.editPassword.setOnEditorActionListener { _, _, _ ->
             checkVolumePathThenOpen()
             true
         }
-        button_open.setOnClickListener {
+        binding.buttonOpen.setOnClickListener {
             checkVolumePathThenOpen()
         }
     }
@@ -115,7 +115,7 @@ class OpenActivity : VolumeActionActivity() {
     override fun onDirectoryPicked(uri: Uri) {
         val path = PathUtils.getFullPathFromTreeUri(uri, this)
         if (path != null){
-            edit_volume_path.setText(path)
+            editVolumePath.setText(path)
         } else {
             ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.error)
@@ -162,17 +162,17 @@ class OpenActivity : VolumeActionActivity() {
     private fun openVolume(){
         object : LoadingTask(this, R.string.loading_msg_open){
             override fun doTask(activity: AppCompatActivity) {
-                val password = edit_password.text.toString().toCharArray()
+                val password = binding.editPassword.text.toString().toCharArray()
                 var returnedHash: ByteArray? = null
-                if (checkbox_save_password.isChecked){
+                if (checkboxSavePassword.isChecked){
                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
                 sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)
                 if (sessionID != -1) {
-                    if (checkbox_remember_path.isChecked) {
-                        volumeDatabase.saveVolume(Volume(currentVolumeName, switch_hidden_volume.isChecked))
+                    if (checkboxRememberPath.isChecked) {
+                        volumeDatabase.saveVolume(Volume(currentVolumeName, switchHiddenVolume.isChecked))
                     }
-                    if (checkbox_save_password.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+                    if (checkboxSavePassword.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
                             stopTask {
                                 savePasswordHash(returnedHash) { success ->
                                     if (success){
@@ -261,7 +261,7 @@ class OpenActivity : VolumeActionActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Wiper.wipeEditText(edit_password)
+        Wiper.wipeEditText(binding.editPassword)
         if (intent.action == "pick" && !isFinishingIntentionally){
             val sessionID = intent.getIntExtra("sessionID", -1)
             if (sessionID != -1){

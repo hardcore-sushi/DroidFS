@@ -6,7 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.jaredrummler.android.colorpicker.ColorPreferenceCompat
-import kotlinx.android.synthetic.main.toolbar.*
+import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
 import sushi.hardcore.droidfs.widgets.SimpleActionPreference
 import sushi.hardcore.droidfs.widgets.ThemeColor
 
@@ -14,8 +14,9 @@ class SettingsActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_settings)
-        setSupportActionBar(toolbar)
+        val binding = ActivitySettingsBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val screen = intent.extras?.getString("screen") ?: "main"
         val fragment = if (screen == "UnsafeFeaturesSettingsFragment") {

@@ -9,12 +9,6 @@
         android:icon="@drawable/icon_select_all"/>
 
     <item
-        android:id="@+id/cut"
-        app:showAsAction="always"
-        android:visible="false"
-        android:icon="@drawable/icon_cut"/>
-
-    <item
         android:id="@+id/delete"
         app:showAsAction="always"
         android:visible="false"
@@ -26,6 +20,13 @@
         android:visible="false"
         android:icon="@drawable/icon_copy"
         android:title="@string/copy_menu_title"/>
+
+    <item
+        android:id="@+id/cut"
+        app:showAsAction="ifRoom"
+        android:visible="false"
+        android:title="@string/cut"
+        android:icon="@drawable/icon_cut"/>
 
     <item
         android:id="@+id/decrypt"
@@ -61,12 +62,14 @@
 
     <item
         android:id="@+id/sort"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
+        android:title="@string/sort_by"
         android:icon="@drawable/icon_sort"/>
 
     <item
         android:id="@+id/close"
-        app:showAsAction="always"
+        app:showAsAction="ifRoom"
+        android:title="@string/close_volume"
         android:icon="@drawable/icon_close"/>
 
 </menu>
