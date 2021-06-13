@@ -21,7 +21,7 @@ import java.util.*
 
 class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
     private val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
-    private lateinit var explorerElements: List<ExplorerElement>
+    private var explorerElements = listOf<ExplorerElement>()
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     val selectedItems: MutableList<Int> = ArrayList()
     private val themeColor = ThemeColor.getThemeColor(context)
@@ -113,7 +113,7 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
     }
 
     fun setExplorerElements(explorer_elements: List<ExplorerElement>) {
-        unSelectAll()
         this.explorerElements = explorer_elements
+        unSelectAll()
     }
 }

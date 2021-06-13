@@ -216,11 +216,6 @@ open class BaseExplorerActivity : BaseActivity() {
     protected fun setCurrentPath(path: String) {
         explorerElements = gocryptfsVolume.listDir(path)
         textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
-        sortExplorerElements()
-        if (path.isNotEmpty()) { //not root
-            explorerElements.add(0, ExplorerElement("..", (-1).toShort(), -1, -1, currentDirectoryPath))
-        }
-        explorerAdapter.setExplorerElements(explorerElements)
         currentDirectoryPath = path
         currentPathText.text = getString(R.string.location, currentDirectoryPath)
         Thread{
@@ -241,7 +236,14 @@ open class BaseExplorerActivity : BaseActivity() {
             }
             runOnUiThread {
                 totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
-                explorerAdapter.notifyDataSetChanged()
+                sortExplorerElements()
+                if (path.isNotEmpty()) { //not root
+                    explorerElements.add(
+                        0,
+                        ExplorerElement("..", (-1).toShort(), -1, -1, currentDirectoryPath)
+                    )
+                }
+                explorerAdapter.setExplorerElements(explorerElements)
             }
         }.start()
     }
