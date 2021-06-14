@@ -42,13 +42,19 @@ It is strongly recommended to read the documentation of a feature before enablin
 * Features requiring temporary writing of the plain file to disk (DroidFS internal storage). This file could be read by apps with root access or by physical access if your device is not encrypted.
 
 # Download
-You can download the latest version in the Releases section. All APKs from v1.3.0 are signed with my PGP key available on keyservers:
+You can download the latest version in the _Releases_ section. All releases since v1.3.0 are signed with my PGP key available on keyservers:
 
 `gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 007F84120107191E` \
 Fingerprint: `BD5621479E7B74D36A405BE8007F84120107191E` \
 Email: `Hardcore Sushi <hardcore.sushi@disroot.org>`
 
-To verify APKs: `gpg --verify <ASC file> <APK file>`
+To verify APKs, save the PGP-signed message to a file and run `gpg --verify <the file>`.  __Don't install any APK if the verification fails !__
+
+If the signature is valid, you can compare the SHA256 checksums with:
+```
+sha256sum <APK file>
+```
+__Don't install the APK if the checksum doesn't match!__
 
 # Permissions
 DroidFS need some permissions to work properly. Here is why:
@@ -107,7 +113,7 @@ $ sudo apt-get install libcrypto++-dev libssl-dev pkg-config
 ```
 And also Go dependencies:
 ```
-$ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf
+$ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf github.com/jacobsa/crypto/siv github.com/rfjakob/eme
 ```
 Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". We can now build libgocryptfs: 
 ```
