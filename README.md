@@ -77,9 +77,10 @@ DroidFS use some parts of the original gocryptfs code, which is designed to run 
 # Build
 Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
 
+
 #### Install Requirements
 - [Android Studio](https://developer.android.com/studio/)
-- [Android NDK and CMake](https://developer.android.com/studio/projects/install-ndk)
+- [Android NDK and CMake](https://developer.android.com/studio/projects/install-ndk) (OpenSSL build fails with NDK versions higher than v22. It should pass with NDK v21.4.7075529 and lower)
 - [Go](https://golang.org/doc/install) (on debian: `$ sudo apt-get install golang-go`)
 
 #### Download Sources
