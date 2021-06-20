@@ -42,7 +42,13 @@ It is strongly recommended to read the documentation of a feature before enablin
 * Features requiring temporary writing of the plain file to disk (DroidFS internal storage). This file could be read by apps with root access or by physical access if your device is not encrypted.
 
 # Download
-You can download the latest version in the _Releases_ section. All releases since v1.3.0 are signed with my PGP key available on keyservers:
+<a href="https://f-droid.org/packages/sushi.hardcore.droidfs">
+	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="75">
+</a>
+
+You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs) or from the "Releases" section in the repo. 
+
+APKs availables here are signed with my PGP key available on keyservers:
 
 `gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 007F84120107191E` \
 Fingerprint: `BD5621479E7B74D36A405BE8007F84120107191E` \
@@ -54,7 +60,9 @@ If the signature is valid, you can compare the SHA256 checksums with:
 ```
 sha256sum <APK file>
 ```
-__Don't install the APK if the checksum doesn't match!__
+__Don't install the APK if the checksums don't match!__
+
+F-Droid APKs should be signed with the F-Droid key. More details [here](https://f-droid.org/docs/Release_Channels_and_Signing_Keys).
 
 # Permissions
 DroidFS need some permissions to work properly. Here is why:
