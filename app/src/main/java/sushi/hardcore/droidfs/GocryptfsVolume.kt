@@ -66,7 +66,7 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun mkdir(dir_path: String): Boolean {
         synchronized(this){
-            return native_mkdir(sessionID, dir_path, 0)
+            return native_mkdir(sessionID, dir_path, ConstValues.DIRECTORY_MODE)
         }
     }
 
@@ -108,7 +108,7 @@ class GocryptfsVolume(var sessionID: Int) {
 
     fun openWriteMode(file_path: String): Int {
         synchronized(this){
-            return native_open_write_mode(sessionID, file_path, 0)
+            return native_open_write_mode(sessionID, file_path, ConstValues.FILE_MODE)
         }
     }
 
