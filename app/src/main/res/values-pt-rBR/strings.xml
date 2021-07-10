@@ -48,6 +48,7 @@
     <string name="multiple_delete_confirm">Você tem certeza de que deseja excluir estos %s itens ?</string>
     <string name="location">Local: /%s</string>
     <string name="total_size">Tamanho total: %s</string>
+    <string name="default_total_size">N/A</string>
     <string name="import_from_other_volume">Importar do outro volume</string>
     <string name="read_file_failed">Falha ao abrir o arquivo.</string>
     <string name="volume">Volume: %s</string>
@@ -146,7 +147,6 @@
     <string name="take_photo">Tirar foto</string>
     <string name="picture_save_success">Foto salva ao %s</string>
     <string name="picture_save_failed">Falha ao salvar esta imagem.</string>
-    <string name="default_total_size">N//A</string>
     <string name="file_overwrite_question">%s já existe, você quer substitui-lo ?</string>
     <string name="dir_overwrite_question">%s já existe, você quer integrar ao conteúdo ?</string>
     <string name="enter_new_name">Digite um novo nome</string>

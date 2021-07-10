@@ -42,6 +42,13 @@
             android:title="@string/folders_first"
             android:summary="@string/folders_first_summary"/>
 
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
+            app:icon="@drawable/icon_folder_search"
+            android:key="map_folders"
+            android:title="@string/map_folders"
+            android:summary="@string/map_folders_summary"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/unsafe_features">

@@ -46,6 +46,7 @@ open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
     private lateinit var sortOrderValues: Array<String>
     private var foldersFirst = true
+    private var mapFolders = true
     private var currentSortOrderIndex = 0
     protected lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var volumeName: String
@@ -80,6 +81,7 @@ open class BaseExplorerActivity : BaseActivity() {
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
+        mapFolders = sharedPrefs.getBoolean("map_folders", true)
         currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
         toolbar = findViewById(R.id.toolbar)
@@ -221,25 +223,30 @@ open class BaseExplorerActivity : BaseActivity() {
         currentDirectoryPath = path
         currentPathText.text = getString(R.string.location, currentDirectoryPath)
         Thread{
-            var totalSize: Long = 0
-            synchronized(this) {
-                for (element in explorerElements){
-                    if (element.isDirectory){
-                        var dirSize: Long = 0
-                        for (subFile in gocryptfsVolume.recursiveMapFiles(element.fullPath)){
-                            if (subFile.isRegularFile){
-                                dirSize += subFile.size
+            val totalSizeValue = if (mapFolders) {
+                var totalSize: Long = 0
+                synchronized(this) {
+                    for (element in explorerElements){
+                        if (element.isDirectory){
+                            var dirSize: Long = 0
+                            for (subFile in gocryptfsVolume.recursiveMapFiles(element.fullPath)){
+                                if (subFile.isRegularFile){
+                                    dirSize += subFile.size
+                                }
                             }
+                            element.size = dirSize
+                            totalSize += dirSize
+                        } else if (element.isRegularFile) {
+                            totalSize += element.size
                         }
-                        element.size = dirSize
-                        totalSize += dirSize
-                    } else if (element.isRegularFile) {
-                        totalSize += element.size
                     }
                 }
+                PathUtils.formatSize(totalSize)
+            } else {
+                getString(R.string.default_total_size)
             }
             runOnUiThread {
-                totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+                totalSizeText.text = getString(R.string.total_size, totalSizeValue)
                 synchronized(this) {
                     sortExplorerElements()
                 }
