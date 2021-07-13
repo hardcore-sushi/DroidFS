@@ -194,4 +194,6 @@
     <string name="close_volume">Закрыть том</string>
     <string name="sort_by">Сортировка</string>
     <string name="cut">Вырезать</string>
+    <string name="map_folders">Карта папок</string>
+    <string name="map_folders_summary">Рекурсивное отображение папок для вычисления их размеров (следует отключать при открытии больших томов)</string>
 </resources>
