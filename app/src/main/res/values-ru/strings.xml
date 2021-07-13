@@ -171,7 +171,7 @@
     <string name="error_not_a_volume">Том GocryptFS не распознан. Проверьте выбранный путь.</string>
     <string name="version">Версия</string>
     <string name="error_cipher_null">Шифр ошибки нулевой</string>
-    <string name="key_permanently_invalidated_exception_msg">Похоже, вы добавили новый отпечаток пальца. Хеш сохранённых паролей стал непригодным для использования.</string>
+    <string name="key_permanently_invalidated_exception_msg">Похоже, вы добавили новый отпечаток пальца. Сохранённый хеш паролей стал непригодным для использования.</string>
     <string name="usf_read_doc">Вы должны внимательно прочитать документацию, прежде чем включать любую из этих функций.</string>
     <string name="usf_doc">Документация по небезопасным функциям</string>
     <string name="error_retrieving_filename">Невозможно получить имя файла для URI: %s</string>
