@@ -1,8 +1,8 @@
 <resources>
     <string-array name="sort_orders_entries">
         <item>Nome</item>
-        <item>Data</item>
         <item>Tamanho</item>
+        <item>Data</item>
         <item>Nome (decr)</item>
         <item>Tamanho (desc)</item>
         <item>Data (decr)</item>

@@ -2,12 +2,13 @@ package sushi.hardcore.droidfs
 
 import android.net.Uri
 import java.io.File
-import java.util.*
 
 class ConstValues {
     companion object {
         const val creator = "DroidFS"
         const val gocryptfsConfFilename = "gocryptfs.conf"
+        const val FILE_MODE = 384 //0600
+        const val DIRECTORY_MODE = 448 //0700
         const val volumeDatabaseName = "SavedVolumes"
         const val sort_order_key = "sort_order"
         val fakeUri: Uri = Uri.parse("fakeuri://droidfs")

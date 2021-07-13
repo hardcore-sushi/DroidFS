@@ -228,7 +228,8 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (fileName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            val handleID = gocryptfsVolume.openWriteMode(fileName) //don't check overwrite because openWriteMode open in read-write (doesn't erase content)
+            val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
+            val handleID = gocryptfsVolume.openWriteMode(filePath) //don't check overwrite because openWriteMode open in read-write (doesn't erase content)
             if (handleID == -1) {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)

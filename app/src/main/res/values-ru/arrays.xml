@@ -2,8 +2,8 @@
 <resources>
     <string-array name="sort_orders_entries">
         <item>Имя</item>
-        <item>Дата</item>
         <item>Размер</item>
+        <item>Дата</item>
         <item>Имя (по убыванию)</item>
         <item>Размер (по убыванию)</item>
         <item>Дата (по убыванию)</item>
