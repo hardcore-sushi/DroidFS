@@ -1,9 +1,7 @@
 package sushi.hardcore.droidfs.explorers
 
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
+import android.app.ProgressDialog
+import android.content.*
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
@@ -17,6 +15,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -41,6 +40,7 @@ import sushi.hardcore.droidfs.file_viewers.TextEditor
 import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import java.lang.Exception
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -418,6 +418,20 @@ open class BaseExplorerActivity : BaseActivity() {
                         runOnUiThread {
                             callback(failedItem)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    fun importDirectory(sourceUri: Uri, callback: (String?, List<Uri>) -> Unit) {
+        val tree = DocumentFile.fromTreeUri(this, sourceUri)!!
+        val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, -1, -1, currentDirectoryPath))
+        checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOpertaion ->
+            checkedOpertaion?.let {
+                fileOperationService.importDirectory(checkedOpertaion[0], tree) { failed, uris ->
+                    runOnUiThread {
+                        callback(failed, uris)
                     }
                 }
             }

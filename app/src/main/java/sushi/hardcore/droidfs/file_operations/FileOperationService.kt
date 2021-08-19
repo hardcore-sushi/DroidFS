@@ -2,10 +2,12 @@ package sushi.hardcore.droidfs.file_operations
 
 import android.app.*
 import android.content.Context
+import android.content.DialogInterface
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.*
+import android.widget.Toast
 import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
@@ -14,6 +16,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
 import java.io.FileNotFoundException
+import java.lang.Exception
 
 class FileOperationService : Service() {
     companion object {
@@ -38,7 +41,7 @@ class FileOperationService : Service() {
         return binder
     }
 
-    private fun showNotification(message: Int, total: Int): FileOperationNotification {
+    private fun showNotification(message: Int, total: Int?): FileOperationNotification {
         ++lastNotificationId
         if (!::notificationManager.isInitialized){
             notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -73,11 +76,18 @@ class FileOperationService : Service() {
         }
         notificationBuilder
                 .setContentTitle(getString(message))
-                .setContentText("0/$total")
                 .setSmallIcon(R.mipmap.icon_launcher)
                 .setOngoing(true)
-                .setProgress(total, 0, false)
                 .addAction(notificationAction.build())
+        if (total != null) {
+            notificationBuilder
+                .setContentText("0/$total")
+                .setProgress(total, 0, false)
+        } else {
+            notificationBuilder
+                .setContentText(getString(R.string.discovering_files))
+                .setProgress(0, 0, true)
+        }
         notifications[lastNotificationId] = false
         notificationManager.notify(lastNotificationId, notificationBuilder.build())
         return FileOperationNotification(notificationBuilder, lastNotificationId)
@@ -198,33 +208,108 @@ class FileOperationService : Service() {
         }.start()
     }
 
-    fun importFilesFromUris(items: ArrayList<OperationFile>, uris: List<Uri>, callback: (String?) -> Unit){
+    private fun importFilesFromUris(items: List<OperationFile>, uris: List<Uri>, reuseNotification: FileOperationNotification? = null, callback: (String?) -> Unit){
+        val notification = reuseNotification ?: showNotification(R.string.file_op_import_msg, items.size)
+        var failedIndex = -1
+        for (i in 0 until items.size) {
+            if (notifications[notification.notificationId]!!){
+                cancelNotification(notification)
+                return
+            }
+            try {
+                if (!gocryptfsVolume.importFile(this, uris[i], items[i].dstPath!!)){
+                    failedIndex = i
+                }
+            } catch (e: FileNotFoundException){
+                failedIndex = i
+            }
+            if (failedIndex == -1) {
+                updateNotificationProgress(notification, i, items.size)
+            } else {
+                cancelNotification(notification)
+                callback(uris[failedIndex].toString())
+                break
+            }
+        }
+        if (failedIndex == -1){
+            cancelNotification(notification)
+            callback(null)
+        }
+    }
+
+    fun importFilesFromUris(items: List<OperationFile>, uris: List<Uri>, callback: (String?) -> Unit) {
         Thread {
-            val notification = showNotification(R.string.file_op_import_msg, items.size)
-            var failedIndex = -1
-            for (i in 0 until items.size) {
-                if (notifications[notification.notificationId]!!){
+            importFilesFromUris(items, uris, null, callback)
+        }.start()
+    }
+
+    /**
+     * List the content of an unencrypted directory
+     *
+     * Contents of outOperations and outUris, at the same index, will match each other
+     *
+     * @return True if interrupted early. False otherwise.
+     */
+    private fun listDirectory(
+        rootFile: DocumentFile,
+        selfPath: String,
+        outOperations: ArrayList<OperationFile>,
+        outUris: ArrayList<Uri>,
+        outMkdirs: ArrayList<String>,
+        notification: FileOperationNotification
+    ): Boolean {
+        if (!rootFile.isDirectory) {
+            return false
+        }
+        outMkdirs.add(selfPath)
+
+        val childFolders = arrayListOf<DocumentFile>()
+        for (child in rootFile.listFiles()) {
+            if (notifications[notification.notificationId]!!) {
+                cancelNotification(notification)
+                return true
+            }
+            if (child.isDirectory) {
+                childFolders.add(child)
+            } else if (child.isFile) {
+                val childFileName = child.name!!
+                val operation = OperationFile.fromExplorerElement(ExplorerElement(childFileName, 1, -1, -1, selfPath))
+                operation.dstPath = PathUtils.pathJoin(selfPath, childFileName)
+                outOperations.add(operation)
+                outUris.add(child.uri)
+            }
+        }
+        for (folder in childFolders) {
+            val newSelfPath = PathUtils.pathJoin(selfPath, folder.name!!)
+            if (listDirectory(folder, newSelfPath, outOperations, outUris, outMkdirs, notification)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    fun importDirectory(rootOperation: OperationFile, rootFile: DocumentFile, callback: (String?, List<Uri>) -> Unit) {
+        Thread {
+            val notification = showNotification(R.string.file_op_import_msg, null)
+
+            val operations = arrayListOf<OperationFile>()
+            val uris = arrayListOf<Uri>()
+            val mkdirs = arrayListOf<String>()
+            if (listDirectory(rootFile, rootOperation.dstPath!!, operations, uris, mkdirs, notification)) {
+                return@Thread
+            }
+
+            // Create folders in DroidFS so the new files can use them
+            for (mkdir in mkdirs) {
+                if (notifications[notification.notificationId]!!) {
                     cancelNotification(notification)
                     return@Thread
                 }
-                try {
-                    if (!gocryptfsVolume.importFile(this, uris[i], items[i].dstPath!!)){
-                        failedIndex = i
-                    }
-                } catch (e: FileNotFoundException){
-                    failedIndex = i
-                }
-                if (failedIndex == -1) {
-                    updateNotificationProgress(notification, i, items.size)
-                } else {
-                    cancelNotification(notification)
-                    callback(uris[failedIndex].toString())
-                    break
-                }
+                gocryptfsVolume.mkdir(mkdir)
             }
-            if (failedIndex == -1){
-                cancelNotification(notification)
-                callback(null)
+
+            importFilesFromUris(operations, uris, notification) {
+                callback(it, uris)
             }
         }.start()
     }

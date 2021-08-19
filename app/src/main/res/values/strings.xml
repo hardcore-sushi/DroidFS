@@ -11,6 +11,8 @@
     <string name="volume_path">Volume Path:</string>
     <string name="volume_name">Volume Name:</string>
     <string name="import_files">Import/Encrypt files</string>
+    <string name="import_folder">Import/Encrypt folder</string>
+    <string name="discovering_files">Discovering files to transfer…</string>
     <string name="mkdir">Create folder</string>
     <string name="dir_empty">Directory Empty</string>
     <string name="warning">Warning !</string>

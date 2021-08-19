@@ -2,12 +2,15 @@ package sushi.hardcore.droidfs.explorers
 
 import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
 import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.net.toFile
+import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.OpenActivity
@@ -19,6 +22,8 @@ import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
+import kotlin.io.path.Path
+import kotlin.io.path.relativeTo
 
 class ExplorerActivity : BaseExplorerActivity() {
     companion object {
@@ -92,42 +97,11 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFiles = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris != null) {
             importFilesFromUris(uris){ failedItem ->
-                if (failedItem == null){
-                    ColoredAlertDialogBuilder(this)
-                        .setTitle(R.string.success_import)
-                        .setMessage("""
-                                ${getString(R.string.success_import_msg)}
-                                ${getString(R.string.ask_for_wipe)}
-                                """.trimIndent())
-                        .setPositiveButton(R.string.yes) { _, _ ->
-                            fileOperationService.wipeUris(uris) { errorMsg ->
-                                runOnUiThread {
-                                    if (errorMsg == null){
-                                        Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        ColoredAlertDialogBuilder(this)
-                                            .setTitle(R.string.error)
-                                            .setMessage(getString(R.string.wipe_failed, errorMsg))
-                                            .setPositiveButton(R.string.ok, null)
-                                            .show()
-                                    }
-                                }
-                            }
-                        }
-                        .setNegativeButton(R.string.no, null)
-                        .show()
-                } else {
-                    ColoredAlertDialogBuilder(this)
-                        .setTitle(R.string.error)
-                        .setMessage(getString(R.string.import_failed, failedItem))
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                }
-                setCurrentPath(currentDirectoryPath)
+                onImportComplete(failedItem, uris)
             }
         }
     }
-    private val pickDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+    private val pickExportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] }){ failedItem ->
                 runOnUiThread {
@@ -145,6 +119,45 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
         unselectAll()
     }
+    private val pickImportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { rootUri ->
+        unselectAll()
+        importDirectory(rootUri, this::onImportComplete)
+    }
+
+    private fun onImportComplete(failedItem: String?, uris: List<Uri>) {
+        if (failedItem == null){
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.success_import)
+                .setMessage("""
+                                ${getString(R.string.success_import_msg)}
+                                ${getString(R.string.ask_for_wipe)}
+                                """.trimIndent())
+                .setPositiveButton(R.string.yes) { _, _ ->
+                    fileOperationService.wipeUris(uris) { errorMsg ->
+                        runOnUiThread {
+                            if (errorMsg == null){
+                                Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
+                            } else {
+                                ColoredAlertDialogBuilder(this)
+                                    .setTitle(R.string.error)
+                                    .setMessage(getString(R.string.wipe_failed, errorMsg))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
+                            }
+                        }
+                    }
+                }
+                .setNegativeButton(R.string.no, null)
+                .show()
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.error)
+                .setMessage(getString(R.string.import_failed, failedItem))
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
+        setCurrentPath(currentDirectoryPath)
+    }
 
     override fun init() {
         binding = ActivityExplorerBinding.inflate(layoutInflater)
@@ -157,6 +170,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 adapter.items = listOf(
                     listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfert),
                     listOf("importFiles", R.string.import_files, R.drawable.icon_encrypt),
+                    listOf("importFolder", R.string.import_folder, R.drawable.icon_folder),
                     listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
                     listOf("createFolder", R.string.mkdir, R.drawable.icon_folder),
                     listOf("takePhoto", R.string.take_photo, R.drawable.icon_camera)
@@ -174,6 +188,10 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "importFiles" -> {
                                 isStartingActivity = true
                                 pickFiles.launch(arrayOf("*/*"))
+                            }
+                            "importFolder" -> {
+                                isStartingActivity = true
+                                pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
                                 val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
@@ -381,7 +399,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.decrypt -> {
                 isStartingActivity = true
-                pickDirectory.launch(null)
+                pickExportDirectory.launch(null)
                 true
             }
             else -> super.onOptionsItemSelected(item)
