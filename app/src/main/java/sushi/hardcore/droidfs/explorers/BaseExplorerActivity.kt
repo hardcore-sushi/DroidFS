@@ -17,6 +17,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -254,7 +255,7 @@ open class BaseExplorerActivity : BaseActivity() {
                     synchronized(this) {
                         explorerElements.add(
                             0,
-                            ExplorerElement("..", (-1).toShort(), -1, -1, currentDirectoryPath)
+                            ExplorerElement("..", (-1).toShort(), parentPath = currentDirectoryPath)
                         )
                     }
                 }
@@ -408,16 +409,30 @@ open class BaseExplorerActivity : BaseActivity() {
                 items.clear()
                 break
             } else {
-                items.add(OperationFile.fromExplorerElement(ExplorerElement(fileName, 1, -1, -1, currentDirectoryPath)))
+                items.add(OperationFile.fromExplorerElement(ExplorerElement(fileName, 1, parentPath = currentDirectoryPath)))
             }
         }
         if (items.size > 0) {
             checkPathOverwrite(items, currentDirectoryPath) { checkedItems ->
                 checkedItems?.let {
-                    fileOperationService.importFilesFromUris(checkedItems, uris){ failedItem ->
+                    fileOperationService.importFilesFromUris(checkedItems.map { it.dstPath!! }, uris){ failedItem ->
                         runOnUiThread {
                             callback(failedItem)
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    fun importDirectory(sourceUri: Uri, callback: (String?, List<Uri>) -> Unit) {
+        val tree = DocumentFile.fromTreeUri(this, sourceUri)!! //non-null after Lollipop
+        val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, parentPath = currentDirectoryPath))
+        checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
+            checkedOperation?.let {
+                fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree) { failedItem, uris ->
+                    runOnUiThread {
+                        callback(failedItem, uris)
                     }
                 }
             }

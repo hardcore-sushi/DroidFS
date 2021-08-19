@@ -38,7 +38,7 @@ class FileOperationService : Service() {
         return binder
     }
 
-    private fun showNotification(message: Int, total: Int): FileOperationNotification {
+    private fun showNotification(message: Int, total: Int?): FileOperationNotification {
         ++lastNotificationId
         if (!::notificationManager.isInitialized){
             notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -73,11 +73,18 @@ class FileOperationService : Service() {
         }
         notificationBuilder
                 .setContentTitle(getString(message))
-                .setContentText("0/$total")
                 .setSmallIcon(R.mipmap.icon_launcher)
                 .setOngoing(true)
-                .setProgress(total, 0, false)
                 .addAction(notificationAction.build())
+        if (total != null) {
+            notificationBuilder
+                .setContentText("0/$total")
+                .setProgress(total, 0, false)
+        } else {
+            notificationBuilder
+                .setContentText(getString(R.string.discovering_files))
+                .setProgress(0, 0, true)
+        }
         notifications[lastNotificationId] = false
         notificationManager.notify(lastNotificationId, notificationBuilder.build())
         return FileOperationNotification(notificationBuilder, lastNotificationId)
@@ -198,33 +205,102 @@ class FileOperationService : Service() {
         }.start()
     }
 
-    fun importFilesFromUris(items: ArrayList<OperationFile>, uris: List<Uri>, callback: (String?) -> Unit){
+    private fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>, reuseNotification: FileOperationNotification? = null, callback: (String?) -> Unit){
+        val notification = reuseNotification ?: showNotification(R.string.file_op_import_msg, dstPaths.size)
+        var failedIndex = -1
+        for (i in dstPaths.indices) {
+            if (notifications[notification.notificationId]!!){
+                cancelNotification(notification)
+                return
+            }
+            try {
+                if (!gocryptfsVolume.importFile(this, uris[i], dstPaths[i])) {
+                    failedIndex = i
+                }
+            } catch (e: FileNotFoundException){
+                failedIndex = i
+            }
+            if (failedIndex == -1) {
+                updateNotificationProgress(notification, i, dstPaths.size)
+            } else {
+                cancelNotification(notification)
+                callback(uris[failedIndex].toString())
+                break
+            }
+        }
+        if (failedIndex == -1){
+            cancelNotification(notification)
+            callback(null)
+        }
+    }
+
+    fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>, callback: (String?) -> Unit) {
         Thread {
-            val notification = showNotification(R.string.file_op_import_msg, items.size)
-            var failedIndex = -1
-            for (i in 0 until items.size) {
-                if (notifications[notification.notificationId]!!){
+            importFilesFromUris(dstPaths, uris, null, callback)
+        }.start()
+    }
+
+    /**
+     * Map the content of an unencrypted directory to prepare its import
+     *
+     * Contents of dstFiles and srcUris, at the same index, will match each other
+     *
+     * @return false if cancelled early, true otherwise.
+     */
+    private fun recursiveMapDirectoryForImport(
+        rootSrcDir: DocumentFile,
+        rootDstPath: String,
+        dstFiles: ArrayList<String>,
+        srcUris: ArrayList<Uri>,
+        dstDirs: ArrayList<String>,
+        notification: FileOperationNotification
+    ): Boolean {
+        dstDirs.add(rootDstPath)
+        for (child in rootSrcDir.listFiles()) {
+            if (notifications[notification.notificationId]!!) {
+                cancelNotification(notification)
+                return false
+            }
+            child.name?.let { name ->
+                val subPath = PathUtils.pathJoin(rootDstPath, name)
+                if (child.isDirectory) {
+                    if (!recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs, notification)) {
+                        return false
+                    }
+                }
+                else if (child.isFile) {
+                    srcUris.add(child.uri)
+                    dstFiles.add(subPath)
+                }
+            }
+        }
+        return true
+    }
+
+    fun importDirectory(rootDstPath: String, rootSrcDir: DocumentFile, callback: (String?, List<Uri>) -> Unit) {
+        Thread {
+            val notification = showNotification(R.string.file_op_import_msg, null)
+
+            val dstFiles = arrayListOf<String>()
+            val srcUris = arrayListOf<Uri>()
+            val dstDirs = arrayListOf<String>()
+            if (!recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs, notification)) {
+                return@Thread
+            }
+
+            updateNotificationProgress(notification, 0, dstDirs.size)
+
+            // create destination folders so the new files can use them
+            for (mkdir in dstDirs) {
+                if (notifications[notification.notificationId]!!) {
                     cancelNotification(notification)
                     return@Thread
                 }
-                try {
-                    if (!gocryptfsVolume.importFile(this, uris[i], items[i].dstPath!!)){
-                        failedIndex = i
-                    }
-                } catch (e: FileNotFoundException){
-                    failedIndex = i
-                }
-                if (failedIndex == -1) {
-                    updateNotificationProgress(notification, i, items.size)
-                } else {
-                    cancelNotification(notification)
-                    callback(uris[failedIndex].toString())
-                    break
-                }
+                gocryptfsVolume.mkdir(mkdir)
             }
-            if (failedIndex == -1){
-                cancelNotification(notification)
-                callback(null)
+
+            importFilesFromUris(dstFiles, srcUris, notification) { failedItem ->
+                callback(failedItem, srcUris)
             }
         }.start()
     }
