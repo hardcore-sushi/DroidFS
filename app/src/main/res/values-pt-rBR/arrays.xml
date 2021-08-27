@@ -3,8 +3,8 @@
         <item>Nome</item>
         <item>Tamanho</item>
         <item>Data</item>
-        <item>Nome (decr)</item>
-        <item>Tamanho (desc)</item>
-        <item>Data (decr)</item>
+        <item>Nome (decres.)</item>
+        <item>Tamanho (decres.)</item>
+        <item>Data (decres.)</item>
     </string-array>
 </resources>
