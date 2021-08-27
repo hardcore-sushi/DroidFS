@@ -11,6 +11,8 @@
     <string name="volume_path">Путь тома:</string>
     <string name="volume_name">Имя тома:</string>
     <string name="import_files">Импорт/шифрование файлов</string>
+    <string name="import_folder">Импорт/шифрование папки</string>
+    <string name="discovering_files">Обнаружение файлов…</string>
     <string name="mkdir">Создать папку</string>
     <string name="dir_empty">Пусто</string>
     <string name="warning">Предупреждение!</string>
