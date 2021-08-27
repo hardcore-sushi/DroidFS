@@ -288,15 +288,17 @@ class FileOperationService : Service() {
                 return@Thread
             }
 
-            updateNotificationProgress(notification, 0, dstDirs.size)
-
             // create destination folders so the new files can use them
-            for (mkdir in dstDirs) {
+            for (dir in dstDirs) {
                 if (notifications[notification.notificationId]!!) {
                     cancelNotification(notification)
                     return@Thread
                 }
-                gocryptfsVolume.mkdir(mkdir)
+                if (!gocryptfsVolume.mkdir(dir)) {
+                    cancelNotification(notification)
+                    callback(dir, srcUris)
+                    break
+                }
             }
 
             importFilesFromUris(dstFiles, srcUris, notification) { failedItem ->

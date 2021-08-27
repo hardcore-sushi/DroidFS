@@ -425,14 +425,14 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
-    fun importDirectory(sourceUri: Uri, callback: (String?, List<Uri>) -> Unit) {
+    fun importDirectory(sourceUri: Uri, callback: (String?, List<Uri>, DocumentFile) -> Unit) {
         val tree = DocumentFile.fromTreeUri(this, sourceUri)!! //non-null after Lollipop
         val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, parentPath = currentDirectoryPath))
         checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
             checkedOperation?.let {
                 fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree) { failedItem, uris ->
                     runOnUiThread {
-                        callback(failedItem, uris)
+                        callback(failedItem, uris, tree)
                     }
                 }
             }

@@ -9,6 +9,7 @@ import android.view.WindowManager
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.OpenActivity
@@ -121,7 +122,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun onImportComplete(failedItem: String?, uris: List<Uri>) {
+    private fun onImportComplete(failedItem: String?, urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
         if (failedItem == null){
             ColoredAlertDialogBuilder(this)
                 .setTitle(R.string.success_import)
@@ -130,9 +131,10 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 ${getString(R.string.ask_for_wipe)}
                                 """.trimIndent())
                 .setPositiveButton(R.string.yes) { _, _ ->
-                    fileOperationService.wipeUris(uris) { errorMsg ->
+                    fileOperationService.wipeUris(urisToWipe) { errorMsg ->
                         runOnUiThread {
                             if (errorMsg == null){
+                                rootFile?.delete()
                                 Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
                             } else {
                                 ColoredAlertDialogBuilder(this)
