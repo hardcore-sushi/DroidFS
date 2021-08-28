@@ -307,7 +307,7 @@ class FileOperationService : Service() {
         }.start()
     }
 
-    fun wipeUris(uris: List<Uri>, callback: (String?) -> Unit){
+    fun wipeUris(uris: List<Uri>, rootFile: DocumentFile? = null, callback: (String?) -> Unit){
         Thread {
             val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
             var errorMsg: String? = null
@@ -322,6 +322,9 @@ class FileOperationService : Service() {
                 } else {
                     break
                 }
+            }
+            if (errorMsg == null) {
+                rootFile?.delete()
             }
             cancelNotification(notification)
             callback(errorMsg)

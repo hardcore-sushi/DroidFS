@@ -131,10 +131,9 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 ${getString(R.string.ask_for_wipe)}
                                 """.trimIndent())
                 .setPositiveButton(R.string.yes) { _, _ ->
-                    fileOperationService.wipeUris(urisToWipe) { errorMsg ->
+                    fileOperationService.wipeUris(urisToWipe, rootFile) { errorMsg ->
                         runOnUiThread {
                             if (errorMsg == null){
-                                rootFile?.delete()
                                 Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
                             } else {
                                 ColoredAlertDialogBuilder(this)
