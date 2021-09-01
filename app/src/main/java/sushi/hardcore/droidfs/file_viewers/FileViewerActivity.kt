@@ -14,6 +14,7 @@ import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 abstract class FileViewerActivity: BaseActivity() {
     protected lateinit var gocryptfsVolume: GocryptfsVolume
     protected lateinit var filePath: String
+    private lateinit var originalParentPath: String
     private var isFinishingIntentionally = false
     private var usf_keep_open = false
     private var foldersFirst = true
@@ -24,6 +25,7 @@ abstract class FileViewerActivity: BaseActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
+        originalParentPath = PathUtils.getParentPath(filePath)
         val sessionID = intent.getIntExtra("sessionID", -1)
         gocryptfsVolume = GocryptfsVolume(sessionID)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
@@ -102,7 +104,7 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected fun createPlaylist() {
         if (!wasMapped){
-            for (e in gocryptfsVolume.recursiveMapFiles(PathUtils.getParentPath(filePath))){
+            for (e in gocryptfsVolume.recursiveMapFiles(originalParentPath)) {
                 if (e.isRegularFile) {
                     if (ConstValues.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
                         mappedPlaylist.add(e)
