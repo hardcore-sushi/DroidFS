@@ -19,7 +19,7 @@ class ColoredListPreference: ListPreference {
     override fun onClick() {
         ColoredAlertDialogBuilder(context)
             .setTitle(title)
-            .setSingleChoiceItems(DialogSingleChoiceAdapter(context, entries.map { s -> s.toString() }.toTypedArray()), entryValues.indexOf(getPersistedString(value))) { dialog, which ->
+            .setSingleChoiceItems(DialogSingleChoiceAdapter(context, entries.map { s -> s.toString() }), entryValues.indexOf(getPersistedString(value))) { dialog, which ->
                 dialog.dismiss()
                 summary = entries[which].toString()
                 persistString(entryValues[which].toString())

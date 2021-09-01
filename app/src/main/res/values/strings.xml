@@ -118,7 +118,7 @@
     <string name="video">Video</string>
     <string name="audio">Audio</string>
     <string name="media_player_prepare_failed">Failed to initialize the media player.</string>
-    <string name="playing_failed">Failed to play this file.</string>
+    <string name="playing_failed">Failed to play this file: %s</string>
     <string name="text">Text</string>
     <string name="save_failed">Save failed</string>
     <string name="file_saved">File saved !</string>
@@ -202,4 +202,7 @@
     <string name="cut">Cut</string>
     <string name="map_folders">Map folders</string>
     <string name="map_folders_summary">Recursively map folders to calculate their sizes (you should disable this when opening large volumes)</string>
+    <string name="camera_optimization">Camera optimization</string>
+    <string name="maximize_quality">Maximize quality</string>
+    <string name="minimize_latency">Minimize latency</string>
 </resources>

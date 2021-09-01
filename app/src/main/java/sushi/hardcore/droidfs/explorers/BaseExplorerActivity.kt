@@ -486,7 +486,7 @@ open class BaseExplorerActivity : BaseActivity() {
             R.id.sort -> {
                 ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.sort_order)
-                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortOrderEntries), currentSortOrderIndex) { dialog, which ->
+                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortOrderEntries.toList()), currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
                             setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()

@@ -1,10 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.view.WindowManager
-import com.google.android.exoplayer2.ExoPlaybackException
-import com.google.android.exoplayer2.MediaItem
-import com.google.android.exoplayer2.Player
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.ExtractorsFactory
 import com.google.android.exoplayer2.extractor.flac.FlacExtractor
 import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor
@@ -58,15 +55,13 @@ abstract class MediaPlayer: FileViewerActivity() {
                     onPlayerReady()
                 }
             }
-            override fun onPlayerError(error: ExoPlaybackException) {
-                if (error.type == ExoPlaybackException.TYPE_SOURCE){
-                    ColoredAlertDialogBuilder(this@MediaPlayer)
-                            .setTitle(R.string.error)
-                            .setMessage(R.string.playing_failed)
-                            .setCancelable(false)
-                            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
-                            .show()
-                }
+            override fun onPlayerError(error: PlaybackException) {
+                ColoredAlertDialogBuilder(this@MediaPlayer)
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.playing_failed, error.errorCodeName))
+                        .setCancelable(false)
+                        .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer()}
+                        .show()
             }
             override fun onIsPlayingChanged(isPlaying: Boolean) {
                 if (isPlaying){

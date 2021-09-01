@@ -18,13 +18,23 @@
         android:layout_marginTop="20dp">
 
         <ImageView
+            android:id="@+id/image_capture_mode"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/icon_high_quality"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/image_ratio"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"/>
+
+        <ImageView
             android:id="@+id/image_ratio"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_aspect_ratio"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_timer"
-            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintStart_toEndOf="@id/image_capture_mode"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView

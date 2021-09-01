@@ -117,7 +117,7 @@
     <string name="video">Видео</string>
     <string name="audio">Аудио</string>
     <string name="media_player_prepare_failed">Невозможно инициализировать медиапроигрыватель.</string>
-    <string name="playing_failed">Невозможно воспроизвести файл.</string>
+    <string name="playing_failed">Невозможно воспроизвести файл: %s</string>
     <string name="text">Текст</string>
     <string name="save_failed">Невозможно сохранить.</string>
     <string name="file_saved">Файл сохранён!</string>

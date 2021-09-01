@@ -9,7 +9,7 @@ import android.widget.CheckedTextView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.ThemeColor
 
-class DialogSingleChoiceAdapter(private val context: Context, private val entries: Array<String>): BaseAdapter() {
+class DialogSingleChoiceAdapter(private val context: Context, private val entries: List<String>): BaseAdapter() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view: View = convertView ?: inflater.inflate(R.layout.adapter_colored_dialog_single_choice, parent, false)

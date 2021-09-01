@@ -116,7 +116,7 @@
     <string name="video">Vídeo</string>
     <string name="audio">Áudio</string>
     <string name="media_player_prepare_failed">Falha ao abrir o reprodutor de mídia.</string>
-    <string name="playing_failed">Falha ao reproduzir este arquivo.</string>
+    <string name="playing_failed">Falha ao reproduzir este arquivo: %s</string>
     <string name="text">Texto</string>
     <string name="save_failed">Falha ao salvar</string>
     <string name="file_saved">Arquivo salvo!</string>

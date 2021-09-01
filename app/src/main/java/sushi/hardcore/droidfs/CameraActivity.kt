@@ -8,7 +8,6 @@ import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
-import android.util.DisplayMetrics
 import android.util.Size
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -23,7 +22,8 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
-import androidx.camera.extensions.HdrImageCaptureExtender
+import androidx.camera.extensions.ExtensionMode
+import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
@@ -35,8 +35,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
+import java.util.concurrent.Executor
 
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     companion object {
@@ -64,10 +63,16 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var outputDirectory: String
     private lateinit var fileName: String
     private var isFinishingIntentionally = false
-    private lateinit var cameraExecutor: ExecutorService
+    private var permissionsGranted = false
+    private lateinit var executor: Executor
+    private lateinit var cameraProvider: ProcessCameraProvider
+    private lateinit var extensionsManager: ExtensionsManager
+    private val cameraPreview = Preview.Builder().build()
     private var imageCapture: ImageCapture? = null
-    private var resolutions: Array<Size>? = null
+    private var camera: Camera? = null
+    private var resolutions: List<Size>? = null
     private var currentResolutionIndex: Int = 0
+    private var captureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
     private var isBackCamera = true
     private lateinit var binding: ActivityCameraBinding
 
@@ -81,21 +86,61 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
-                setupCamera()
+                permissionsGranted = true
             } else {
                 requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
             }
         } else {
-            setupCamera()
+            permissionsGranted = true
         }
 
-        cameraExecutor = Executors.newSingleThreadExecutor()
+        executor = ContextCompat.getMainExecutor(this)
+        cameraPreview.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
+        ProcessCameraProvider.getInstance(this).apply {
+            addListener({
+                cameraProvider = get()
+                setupCamera()
+            }, executor)
+        }
+        ExtensionsManager.getInstance(this).apply {
+            addListener({
+                extensionsManager = get()
+                setupCamera()
+            }, executor)
+        }
 
+        binding.imageCaptureMode.setOnClickListener {
+            val currentIndex = if (captureMode == ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY) {
+                0
+            } else {
+                1
+            }
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.camera_optimization)
+                .setSingleChoiceItems(DialogSingleChoiceAdapter(this, arrayOf(R.string.maximize_quality, R.string.minimize_latency).map { getString(it) }), currentIndex) { dialog, which ->
+                    val resId: Int
+                    val newCaptureMode = if (which == 0) {
+                        resId = R.drawable.icon_high_quality
+                        ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
+                    } else {
+                        resId = R.drawable.icon_speed
+                        ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
+                    }
+                    if (newCaptureMode != captureMode) {
+                        captureMode = newCaptureMode
+                        binding.imageCaptureMode.setImageResource(resId)
+                        setupCamera()
+                    }
+                    dialog.dismiss()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }
         binding.imageRatio.setOnClickListener {
             resolutions?.let {
                 ColoredAlertDialogBuilder(this)
                     .setTitle(R.string.choose_resolution)
-                    .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }.toTypedArray()), currentResolutionIndex) { dialog, which ->
+                    .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }), currentResolutionIndex) { dialog, which ->
                         setupCamera(resolutions!![which])
                         dialog.dismiss()
                         currentResolutionIndex = which
@@ -151,10 +196,10 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageCameraSwitch.setOnClickListener {
             isBackCamera = if (isBackCamera) {
-                binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_front)
+                binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_back)
                 false
             } else {
-                binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_back)
+                binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_front)
                 true
             }
             setupCamera()
@@ -165,8 +210,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
         val scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener(){
             override fun onScale(detector: ScaleGestureDetector): Boolean {
-                val currentZoomRatio = imageCapture?.camera?.cameraInfo?.zoomState?.value?.zoomRatio ?: 0F
-                imageCapture?.camera?.cameraControl?.setZoomRatio(currentZoomRatio*detector.scaleFactor)
+                val currentZoomRatio = camera?.cameraInfo?.zoomState?.value?.zoomRatio ?: 0F
+                camera?.cameraControl?.setZoomRatio(currentZoomRatio*detector.scaleFactor)
                 return true
             }
         })
@@ -178,7 +223,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     val factory = binding.cameraPreview.meteringPointFactory
                     val point = factory.createPoint(event.x, event.y)
                     val action = FocusMeteringAction.Builder(point).build()
-                    imageCapture?.camera?.cameraControl?.startFocusAndMetering(action)
+                    camera?.cameraControl?.startFocusAndMetering(action)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> scaleGestureDetector.onTouchEvent(event)
@@ -191,7 +236,10 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         when (requestCode) {
             CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults.size == 1) {
-                if (grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionsGranted = true
+                    setupCamera()
+                } else {
                     ColoredAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.camera_perm_needed)
@@ -200,72 +248,62 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             isFinishingIntentionally = true
                             finish()
                         }.show()
-                } else {
-                    setupCamera()
                 }
             }
         }
     }
 
     private fun adaptPreviewSize(resolution: Size) {
-        val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
-        //resolution.width and resolution.height seem to be inverted
-        val width = resolution.height
-        val height = resolution.width
-        binding.cameraPreview.layoutParams = if (metrics.widthPixels < width){
+        val screenWidth = resources.displayMetrics.widthPixels
+        binding.cameraPreview.layoutParams = if (screenWidth < resolution.width) {
             RelativeLayout.LayoutParams(
-                metrics.widthPixels,
-                (height * (metrics.widthPixels.toFloat() / width)).toInt()
+                screenWidth,
+                (resolution.height * (screenWidth.toFloat() / resolution.width)).toInt()
             )
         } else {
-            RelativeLayout.LayoutParams(width, height)
+            RelativeLayout.LayoutParams(resolution.width, resolution.height)
         }
         (binding.cameraPreview.layoutParams as RelativeLayout.LayoutParams).addRule(RelativeLayout.CENTER_IN_PARENT)
     }
 
     private fun setupCamera(resolution: Size? = null){
-        val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
-        cameraProviderFuture.addListener({
-            val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
-            val preview = Preview.Builder()
-                .build()
-                .also {
-                    it.setSurfaceProvider(binding.cameraPreview.surfaceProvider)
+        if (permissionsGranted && ::extensionsManager.isInitialized && ::cameraProvider.isInitialized) {
+            imageCapture = ImageCapture.Builder()
+                .setCaptureMode(captureMode)
+                .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
+                .apply {
+                    resolution?.let {
+                        setTargetResolution(it)
+                    }
                 }
-            val builder = ImageCapture.Builder()
-                .setFlashMode(ImageCapture.FLASH_MODE_AUTO)
-            resolution?.let {
-                builder.setTargetResolution(it)
-            }
-            val hdrImageCapture = HdrImageCaptureExtender.create(builder)
-            val cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
+                .build()
 
-            if (hdrImageCapture.isExtensionAvailable(cameraSelector)){
-                hdrImageCapture.enableExtension(cameraSelector)
+            var cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
+            if (extensionsManager.isExtensionAvailable(cameraProvider, cameraSelector, ExtensionMode.HDR)) {
+                cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraProvider, cameraSelector, ExtensionMode.HDR)
             }
-
-            imageCapture = builder.build()
 
             cameraProvider.unbindAll()
-            val camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageCapture)
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
 
-            adaptPreviewSize(imageCapture!!.attachedSurfaceResolution!!)
+            adaptPreviewSize(resolution ?: imageCapture!!.attachedSurfaceResolution!!.swap())
 
-            val info = Camera2CameraInfo.from(camera.cameraInfo)
-            val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-            val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
-            characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
-                resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat)
+            if (resolutions == null) {
+                val info = Camera2CameraInfo.from(camera!!.cameraInfo)
+                val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
+                characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
+                    resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat).map { it.swap() }
+                }
             }
-        }, ContextCompat.getMainExecutor(this))
+        }
     }
 
     private fun takePhoto() {
         val imageCapture = imageCapture ?: return
         val outputBuff = ByteArrayOutputStream()
         val outputOptions = ImageCapture.OutputFileOptions.Builder(outputBuff).build()
-        imageCapture.takePicture(outputOptions, ContextCompat.getMainExecutor(this), object : ImageCapture.OnImageSavedCallback {
+        imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 binding.takePhotoButton.onPhotoTaken()
                 if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), PathUtils.pathJoin(outputDirectory, fileName))){
@@ -313,7 +351,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     override fun onDestroy() {
         super.onDestroy()
-        cameraExecutor.shutdown()
         if (!isFinishingIntentionally) {
             gocryptfsVolume.close()
             RestrictedFileProvider.wipeAll(this)
@@ -365,4 +402,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         orientedIcons.map { it.startAnimation(rotateAnimation) }
         previousOrientation = reversedOrientation
     }
+}
+
+private fun Size.swap(): Size {
+    return Size(height, width)
 }
