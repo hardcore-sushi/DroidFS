@@ -1,7 +1,8 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Bundle
-import android.view.View
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.GocryptfsVolume
@@ -15,6 +16,8 @@ abstract class FileViewerActivity: BaseActivity() {
     protected lateinit var gocryptfsVolume: GocryptfsVolume
     protected lateinit var filePath: String
     private lateinit var originalParentPath: String
+    private lateinit var windowInsetsController: WindowInsetsControllerCompat
+    private var windowTypeMask = 0
     private var isFinishingIntentionally = false
     private var usf_keep_open = false
     private var foldersFirst = true
@@ -30,18 +33,16 @@ abstract class FileViewerActivity: BaseActivity() {
         gocryptfsVolume = GocryptfsVolume(sessionID)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
+        windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
+        windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
+            windowTypeMask = typeMask
+        }
         hideSystemUi()
         viewFile()
     }
 
     open fun hideSystemUi(){
-        window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_FULLSCREEN/* or
-            View.SYSTEM_UI_FLAG_LOW_PROFILE or
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-            View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-            View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION*/
+        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
     }
 
     abstract fun getFileType(): String
@@ -49,7 +50,7 @@ abstract class FileViewerActivity: BaseActivity() {
 
     override fun onUserInteraction() {
         super.onUserInteraction()
-        if (window.decorView.systemUiVisibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0){
+        if (windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
             hideSystemUi()
         }
     }

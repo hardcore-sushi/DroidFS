@@ -31,13 +31,13 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private lateinit var fileName: String
+    private lateinit var handler: Handler
     private lateinit var glideImage: RequestBuilder<Drawable>
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
     private var rotationAngle: Float = 0F
     private var rotatedBitmap: Bitmap? = null
-    private val handler = Handler()
     private val hideUI = Runnable {
         binding.actionButtons.visibility = View.GONE
         binding.actionBar.visibility = View.GONE
@@ -57,6 +57,7 @@ class ImageViewer: FileViewerActivity() {
     override fun viewFile() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
                 handler.removeCallbacks(hideUI)
