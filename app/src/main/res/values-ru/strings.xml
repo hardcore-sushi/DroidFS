@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">DroidFS</string>
     <string name="open_volume">Открыть том</string>
     <string name="create_volume">Создать том</string>
     <string name="change_volume_password">Изменить пароль тома</string>
@@ -17,7 +16,6 @@
     <string name="dir_empty">Пусто</string>
     <string name="warning">Предупреждение!</string>
     <string name="ask_close_volume">Закрыть том?</string>
-    <string name="ok">OK</string>
     <string name="cancel">Отмена</string>
     <string name="enter_folder_name">Имя папки:</string>
     <string name="error">Ошибка</string>
@@ -198,4 +196,7 @@
     <string name="cut">Вырезать</string>
     <string name="map_folders">Карта папок</string>
     <string name="map_folders_summary">Рекурсивное отображение папок для вычисления их размеров (следует отключать при открытии больших томов)</string>
+    <string name="camera_optimization">Оптимизация камеры</string>
+    <string name="maximize_quality">Максимальное качество</string>
+    <string name="minimize_latency">Минимальная задержка</string>
 </resources>
