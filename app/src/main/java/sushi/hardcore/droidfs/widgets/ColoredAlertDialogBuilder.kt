@@ -1,9 +1,10 @@
 package sushi.hardcore.droidfs.widgets
 
-import androidx.appcompat.app.AlertDialog
 import android.content.Context
-import android.view.View
 import android.view.WindowManager
+import androidx.appcompat.app.AlertDialog
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class ColoredAlertDialogBuilder: AlertDialog.Builder {
     constructor(context: Context): super(context)
@@ -29,8 +30,11 @@ class ColoredAlertDialogBuilder: AlertDialog.Builder {
         val dialog = create()
         dialog.show()
         if (keepFullScreen){
-            dialog.window?.decorView?.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
-            dialog.window?.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            dialog.window?.let {
+                WindowInsetsControllerCompat(it, it.decorView)
+                    .hide(WindowInsetsCompat.Type.statusBars())
+                it.clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE)
+            }
         }
         return dialog
     }
