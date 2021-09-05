@@ -17,6 +17,12 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
         get() = elementType.toInt() == 1
 
     companion object {
+        @JvmStatic
+        //this function is needed because I had some problems calling the constructor from JNI, probably due to arguments with default values
+        fun new(name: String, elementType: Short, size: Long, mTime: Long, parentPath: String): ExplorerElement {
+            return ExplorerElement(name, elementType, size, mTime, parentPath)
+        }
+
         private fun foldersFirst(a: ExplorerElement, b: ExplorerElement, default: () -> Int): Int {
             return if (a.isDirectory && b.isRegularFile) {
                 -1

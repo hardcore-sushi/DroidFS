@@ -20,8 +20,8 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
--keepattributes InnerClasses
--keep class sushi.hardcore.droidfs.SettingsActivity$** {
-    *;
-}
+-keep class sushi.hardcore.droidfs.SettingsActivity$**
 -keep class sushi.hardcore.droidfs.explorers.ExplorerElement
+-keepclassmembers class sushi.hardcore.droidfs.explorers.ExplorerElement {
+    static sushi.hardcore.droidfs.explorers.ExplorerElement new(...);
+}

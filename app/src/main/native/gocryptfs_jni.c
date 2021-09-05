@@ -3,7 +3,6 @@
 #include <malloc.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <android/log.h>
 #include "libgocryptfs.h"
 
 void wipe(char* data, const unsigned int len){
@@ -234,8 +233,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1list_1dir(JNIEnv *env, jobje
     jmethodID java_ArrayList_add = (*env)->GetMethodID(env, java_ArrayList, "add", "(Ljava/lang/Object;)Z");
 
     jclass classExplorerElement = (*env)->NewGlobalRef(env, (*env)->FindClass(env, "sushi/hardcore/droidfs/explorers/ExplorerElement"));
-    jmethodID classExplorerElement_init = (*env)->GetMethodID(env, classExplorerElement, "<init>", "(Ljava/lang/String;SJJLjava/lang/String;)V");
-
+    jmethodID explorerElement_new = (*env)->GetStaticMethodID(env, classExplorerElement, "new", "(Ljava/lang/String;SJJLjava/lang/String;)Lsushi/hardcore/droidfs/explorers/ExplorerElement;");
     jobject element_list = (*env)->NewObject(env, java_ArrayList, java_ArrayList_init, elements.r2);
     unsigned int c = 0;
     for (unsigned int i=0; i<elements.r2; ++i){
@@ -261,8 +259,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1list_1dir(JNIEnv *env, jobje
             type = 1; //regular file
         }
         jstring jname = (*env)->NewStringUTF(env, name);
-        jobject explorerElement = (*env)->NewObject(env, classExplorerElement, classExplorerElement_init, jname, type, (long long)attrs.r0, attrs.r1, jplain_dir);
-        (*env)->CallBooleanMethod(env, element_list, java_ArrayList_add, explorerElement);
+        jobject explorerElement = (*env)->CallStaticObjectMethod(env, classExplorerElement, explorerElement_new, jname, type, (long long)attrs.r0, attrs.r1, jplain_dir);(*env)->CallBooleanMethod(env, element_list, java_ArrayList_add, explorerElement);
         c += name_len+1;
     }
 
