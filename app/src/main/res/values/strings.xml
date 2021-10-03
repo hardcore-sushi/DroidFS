@@ -146,9 +146,10 @@
     <string name="copy_failed">Copy of %s failed.</string>
     <string name="copy_success">Copy successful !</string>
     <string name="fab_dialog_title">Add</string>
-    <string name="take_photo">Take photo</string>
+    <string name="camera">Camera</string>
     <string name="picture_save_success">Picture saved to %s</string>
     <string name="picture_save_failed">Failed to save this picture.</string>
+    <string name="video_save_success">Video saved to %s</string>
     <string name="file_overwrite_question">%s already exists, do you want to overwrite it ?</string>
     <string name="dir_overwrite_question">%s already exists, do you want to merge its content ?</string>
     <string name="enter_new_name">Enter new name</string>

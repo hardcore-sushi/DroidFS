@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".CameraActivity">
+    tools:context=".CameraActivity"
+    android:background="#000000">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_preview"
@@ -43,15 +44,15 @@
             android:layout_height="30dp"
             android:src="@drawable/icon_timer_off"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/image_close"
+            app:layout_constraintEnd_toStartOf="@id/image_flash"
             app:layout_constraintStart_toEndOf="@id/image_ratio"
             app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
-            android:id="@+id/image_close"
+            android:id="@+id/image_flash"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/icon_close"
+            android:src="@drawable/icon_flash_auto"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/image_timer"
@@ -74,27 +75,41 @@
         android:layout_marginBottom="30dp">
 
         <ImageView
-            android:id="@+id/image_flash"
+            android:id="@+id/image_mode_switch"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:src="@drawable/icon_flash_auto"
-            android:layout_alignEnd="@id/take_photo_button"
+            android:src="@drawable/icon_video"
+            android:layout_alignEnd="@id/layout_record_buttons"
             android:layout_marginEnd="120dp"
             android:layout_centerVertical="true"/>
 
-        <sushi.hardcore.droidfs.widgets.TakePhotoButton
-            android:id="@+id/take_photo_button"
+        <RelativeLayout
+            android:id="@+id/layout_record_buttons"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/take_photo_button"
-            android:layout_centerInParent="true"/>
+            android:layout_centerInParent="true">
+
+            <ImageView
+                android:id="@+id/record_video_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/record_video_button"
+                android:visibility="gone"/>
+
+            <sushi.hardcore.droidfs.widgets.TakePhotoButton
+                android:id="@+id/take_photo_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/take_photo_button"/>
+
+        </RelativeLayout>
 
         <ImageView
             android:id="@+id/image_camera_switch"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_camera_front"
-            android:layout_alignStart="@id/take_photo_button"
+            android:layout_alignStart="@id/layout_record_buttons"
             android:layout_marginStart="120dp"
             android:layout_centerVertical="true"/>
 

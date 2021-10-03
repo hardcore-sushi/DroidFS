@@ -144,7 +144,7 @@
     <string name="copy_failed">Falha ao copiar o %s .</string>
     <string name="copy_success">Cópia feita!</string>
     <string name="fab_dialog_title">Adicionar</string>
-    <string name="take_photo">Tirar foto</string>
+    <string name="camera">Tirar foto</string>
     <string name="picture_save_success">Foto salva ao %s</string>
     <string name="picture_save_failed">Falha ao salvar esta imagem.</string>
     <string name="file_overwrite_question">%s já existe, você quer substitui-lo ?</string>

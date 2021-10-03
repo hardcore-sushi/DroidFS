@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.hardware.camera2.CameraCharacteristics
@@ -20,26 +21,31 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
+//import androidx.camera.core.VideoCapture
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.video_recording.SeekableWriter
+import sushi.hardcore.droidfs.video_recording.VideoCapture
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
+import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
 
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     companion object {
-        private const val CAMERA_PERMISSION_REQUEST_CODE = 1
+        private const val CAMERA_PERMISSION_REQUEST_CODE = 0
+        private const val AUDIO_PERMISSION_REQUEST_CODE = 1
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
         private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
@@ -61,19 +67,23 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var orientedIcons: List<ImageView>
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var outputDirectory: String
-    private lateinit var fileName: String
     private var isFinishingIntentionally = false
+    private var isAskingPermissions = false
     private var permissionsGranted = false
     private lateinit var executor: Executor
     private lateinit var cameraProvider: ProcessCameraProvider
     private lateinit var extensionsManager: ExtensionsManager
+    private lateinit var cameraSelector: CameraSelector
     private val cameraPreview = Preview.Builder().build()
     private var imageCapture: ImageCapture? = null
+    private var videoCapture: VideoCapture? = null
     private var camera: Camera? = null
     private var resolutions: List<Size>? = null
     private var currentResolutionIndex: Int = 0
     private var captureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
     private var isBackCamera = true
+    private var isInVideoMode = false
+    private var isRecording = false
     private lateinit var binding: ActivityCameraBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +98,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
                 permissionsGranted = true
             } else {
+                isAskingPermissions = true
                 requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
             }
         } else {
@@ -174,10 +185,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
             dialog.show()
         }
-        binding.imageClose.setOnClickListener {
-            isFinishingIntentionally = true
-            finish()
-        }
         binding.imageFlash.setOnClickListener {
             binding.imageFlash.setImageResource(when (imageCapture?.flashMode) {
                 ImageCapture.FLASH_MODE_AUTO -> {
@@ -194,6 +201,22 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 }
             })
         }
+        binding.imageModeSwitch.setOnClickListener {
+            isInVideoMode = !isInVideoMode
+            if (isInVideoMode) {
+                binding.recordVideoButton.visibility = View.VISIBLE
+                binding.takePhotoButton.visibility = View.GONE
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        isAskingPermissions = true
+                        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST_CODE)
+                    }
+                }
+            } else {
+                binding.recordVideoButton.visibility = View.GONE
+                binding.takePhotoButton.visibility = View.VISIBLE
+            }
+        }
         binding.imageCameraSwitch.setOnClickListener {
             isBackCamera = if (isBackCamera) {
                 binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_back)
@@ -205,7 +228,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             setupCamera()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
-        orientedIcons = listOf(binding.imageRatio, binding.imageTimer, binding.imageClose, binding.imageFlash, binding.imageCameraSwitch)
+        binding.recordVideoButton.setOnClickListener { onClickRecordVideo() }
+        orientedIcons = listOf(binding.imageRatio, binding.imageTimer, binding.imageCaptureMode, binding.imageFlash, binding.imageModeSwitch, binding.imageCameraSwitch)
         sensorOrientationListener = SensorOrientationListener(this)
 
         val scaleGestureDetector = ScaleGestureDetector(this, object : ScaleGestureDetector.SimpleOnScaleGestureListener(){
@@ -232,11 +256,13 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults.size == 1) {
-                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+        isAskingPermissions = false
+        if (grantResults.size == 1) {
+            when (requestCode) {
+                CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     permissionsGranted = true
                     setupCamera()
                 } else {
@@ -248,6 +274,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             isFinishingIntentionally = true
                             finish()
                         }.show()
+                }
+                AUDIO_PERMISSION_REQUEST_CODE -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    if (videoCapture != null) {
+                        cameraProvider.unbind(videoCapture)
+                        camera = cameraProvider.bindToLifecycle(this, cameraSelector, videoCapture)
+                    }
                 }
             }
         }
@@ -266,6 +298,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         (binding.cameraPreview.layoutParams as RelativeLayout.LayoutParams).addRule(RelativeLayout.CENTER_IN_PARENT)
     }
 
+    @SuppressLint("RestrictedApi")
     private fun setupCamera(resolution: Size? = null){
         if (permissionsGranted && ::extensionsManager.isInitialized && ::cameraProvider.isInitialized) {
             imageCapture = ImageCapture.Builder()
@@ -278,13 +311,19 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 }
                 .build()
 
-            var cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
+            videoCapture = VideoCapture.Builder().apply {
+                resolution?.let {
+                    setTargetResolution(it)
+                }
+            }.build()
+
+            cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
             if (extensionsManager.isExtensionAvailable(cameraProvider, cameraSelector, ExtensionMode.HDR)) {
                 cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraProvider, cameraSelector, ExtensionMode.HDR)
             }
 
             cameraProvider.unbindAll()
-            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture, videoCapture)
 
             adaptPreviewSize(resolution ?: imageCapture!!.attachedSurfaceResolution!!.swap())
 
@@ -299,15 +338,15 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
-    private fun takePhoto() {
+    private fun takePhoto(outputPath: String) {
         val imageCapture = imageCapture ?: return
         val outputBuff = ByteArrayOutputStream()
         val outputOptions = ImageCapture.OutputFileOptions.Builder(outputBuff).build()
         imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
             override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                 binding.takePhotoButton.onPhotoTaken()
-                if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), PathUtils.pathJoin(outputDirectory, fileName))){
-                    Toast.makeText(applicationContext, getString(R.string.picture_save_success, fileName), Toast.LENGTH_SHORT).show()
+                if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)){
+                    Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
                 } else {
                     ColoredAlertDialogBuilder(this@CameraActivity)
                         .setTitle(R.string.error)
@@ -327,11 +366,17 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         })
     }
 
-    private fun onClickTakePhoto() {
-        val baseName = "IMG_"+dateFormat.format(Date())+"_"
+    private fun getOutputPath(isVideo: Boolean): String {
+        val baseName = if (isVideo) {"VID"} else {"IMG"}+'_'+dateFormat.format(Date())+'_'
+        var fileName: String
         do {
-            fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+".jpg"
+            fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+'.'+ if (isVideo) {"mp4"} else {"jpg"}
         } while (gocryptfsVolume.pathExists(fileName))
+        return PathUtils.pathJoin(outputDirectory, fileName)
+    }
+
+    private fun onClickTakePhoto() {
+        val path = getOutputPath(false)
         if (timerDuration > 0){
             binding.textTimer.visibility = View.VISIBLE
             Thread{
@@ -340,12 +385,47 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     Thread.sleep(1000)
                 }
                 runOnUiThread {
-                    takePhoto()
+                    takePhoto(path)
                     binding.textTimer.visibility = View.GONE
                 }
             }.start()
         } else {
-            takePhoto()
+            takePhoto(path)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun onClickRecordVideo() {
+        isRecording = if (isRecording) {
+            videoCapture?.stopRecording()
+            false
+        } else {
+            val path = getOutputPath(true)
+            val handleId = gocryptfsVolume.openWriteMode(path)
+            videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
+                var offset = 0L
+                override fun write(byteArray: ByteArray) {
+                    offset += gocryptfsVolume.writeFile(handleId, offset, byteArray, byteArray.size)
+                }
+                override fun seek(offset: Long) {
+                    this.offset = offset
+                }
+                override fun close() {
+                    gocryptfsVolume.closeFile(handleId)
+                }
+            }), executor, object : VideoCapture.OnVideoSavedCallback {
+                override fun onVideoSaved() {
+                    Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
+                    binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                }
+                override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
+                    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                    cause?.printStackTrace()
+                    binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                }
+            })
+            binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
+            true
         }
     }
 
@@ -367,10 +447,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     override fun onPause() {
         super.onPause()
         sensorOrientationListener.remove(this)
-        if (
-                (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) //not asking for permission
-                && !usf_keep_open
-        ){
+        if (!isAskingPermissions && !usf_keep_open) {
             finish()
         }
     }

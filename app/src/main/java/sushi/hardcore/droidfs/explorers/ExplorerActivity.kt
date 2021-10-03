@@ -171,7 +171,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     listOf("importFolder", R.string.import_folder, R.drawable.icon_import_folder),
                     listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
                     listOf("createFolder", R.string.mkdir, R.drawable.icon_create_new_folder),
-                    listOf("takePhoto", R.string.take_photo, R.drawable.icon_camera)
+                    listOf("camera", R.string.camera, R.drawable.icon_camera)
                 )
                 ColoredAlertDialogBuilder(this)
                     .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
@@ -215,7 +215,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "createFolder" -> {
                                 openDialogCreateFolder()
                             }
-                            "takePhoto" -> {
+                            "camera" -> {
                                 val intent = Intent(this, CameraActivity::class.java)
                                 intent.putExtra("path", currentDirectoryPath)
                                 intent.putExtra("sessionID", gocryptfsVolume.sessionID)
