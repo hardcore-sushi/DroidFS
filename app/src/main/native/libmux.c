@@ -1,6 +1,7 @@
 #include <libavformat/avformat.h>
 #include <libavcodec/avcodec.h>
 #include <libavutil/channel_layout.h>
+#include <libavutil/display.h>
 #include <jni.h>
 
 const size_t BUFF_SIZE = 4096;
@@ -68,14 +69,19 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addAudioTrack(JNIEnv *en
 }
 
 JNIEXPORT jint JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addVideoTrack(JNIEnv *env, jobject thiz, jlong format_context, jint bitrate, jint width,
-                                                     jint height) {
+Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addVideoTrack(JNIEnv *env, jobject thiz,
+                                                                      jlong format_context,
+                                                                      jint bitrate, jint width,
+                                                                      jint height,
+                                                                      jint orientation_hint) {
     AVStream* stream = avformat_new_stream((AVFormatContext *) format_context, NULL);
     stream->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
     stream->codecpar->codec_id = AV_CODEC_ID_H264;
     stream->codecpar->bit_rate = bitrate;
     stream->codecpar->width = width;
     stream->codecpar->height = height;
+    uint8_t* matrix = av_stream_new_side_data(stream, AV_PKT_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9);
+    av_display_rotation_set((int32_t *) matrix, orientation_hint);
     return stream->index;
 }
 

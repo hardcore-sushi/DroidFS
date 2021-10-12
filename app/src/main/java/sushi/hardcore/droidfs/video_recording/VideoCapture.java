@@ -464,6 +464,7 @@ public final class VideoCapture extends UseCase {
 
         synchronized (mMuxerLock) {
             mMuxer = new MediaMuxer(outputFileOptions.mWriter);
+            mMuxer.setOrientationHint(getRelativeRotation(attachedCamera));
         }
 
         mEndOfVideoStreamSignal.set(false);

@@ -25,3 +25,7 @@
 -keepclassmembers class sushi.hardcore.droidfs.explorers.ExplorerElement {
     static sushi.hardcore.droidfs.explorers.ExplorerElement new(...);
 }
+-keepclassmembers class sushi.hardcore.droidfs.video_recording.MediaMuxer {
+    void writePacket(byte[]);
+    void seek(long);
+}
