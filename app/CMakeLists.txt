@@ -25,38 +25,38 @@ target_link_libraries(
 
 add_library(
         avformat
-        STATIC
+        SHARED
         IMPORTED
 )
 
 set_target_properties(
         avformat
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavformat/libavformat.a
+        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavformat/libavformat.so
 )
 
 add_library(
         avcodec
-        STATIC
+        SHARED
         IMPORTED
 )
 
 set_target_properties(
         avcodec
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavcodec/libavcodec.a
+        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavcodec/libavcodec.so
 )
 
 add_library(
         avutil
-        STATIC
+        SHARED
         IMPORTED
 )
 
 set_target_properties(
         avutil
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavutil/libavutil.a
+        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavutil/libavutil.so
 )
 
 add_library(

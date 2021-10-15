@@ -75,7 +75,10 @@ DroidFS need some permissions to work properly. Here is why:
   Required to encrypt/decrypt password hashes using a fingerprint protected key.
   </li>
   <li><h4>Camera:</h4>
-  Needed to take photos directly from DroidFS to import them securely. You can deny this permission if you don't want to use it.
+  Needed to take photos & videos directly encrypted inside DroidFS. You can deny this permission if you don't want to use it.
+  </li>
+  <li><h4>Record audio:</h4>
+  Required if you want sound on video recorded with DroidFS.
   </li>
 </ul>
 
@@ -114,6 +117,11 @@ Continue **ONLY** if the signature is **VALID**.
 ```
 $ tar -xvzf openssl-1.1.1l.tar.gz
 ```
+DroidFS also need [FFmpeg](https://ffmpeg.org) to record encrypted video:
+```
+$ cd app/ffmpeg
+$ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
+```
 
 #### Build
 First, we need to install some dependencies:
@@ -129,6 +137,11 @@ Then, retrieve your Android NDK installation path, usually someting like "/home/
 $ cd DroidFS/app/libgocryptfs
 $ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1l" ./build.sh
  ```
+And also FFmpeg:
+```
+$ cd app/ffmpeg
+$ env ANDROID_NDK_HOME="<your ndk path>" ./build.sh ffmpeg
+```
 Then, open the DroidFS project with Android Studio. \
 If a device (virtual or physical) is connected, just click on "Run". \
 If you want to generate a signed APK, you can follow this [post](https://stackoverflow.com/a/28938286).
