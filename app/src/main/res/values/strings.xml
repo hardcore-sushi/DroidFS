@@ -206,4 +206,7 @@
     <string name="camera_optimization">Camera optimization</string>
     <string name="maximize_quality">Maximize quality</string>
     <string name="minimize_latency">Minimize latency</string>
+    <string name="auto">Auto</string>
+    <string name="xchacha_warning">XChaCha20-Poly1305 is only supported since gocryptfs v2.2.0. Older versions won\'t be able to open a volume based on this cipher.</string>
+    <string name="encryption_cipher_label">Encryption cipher:</string>
 </resources>

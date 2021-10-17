@@ -4,7 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.widget.Toast
+import android.view.View
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.databinding.ActivityCreateBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
@@ -28,6 +29,25 @@ class CreateActivity : VolumeActionActivity() {
         binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
             createVolume()
             true
+        }
+        binding.spinnerXchacha.adapter = ArrayAdapter(
+            this@CreateActivity,
+            android.R.layout.simple_spinner_item,
+            resources.getStringArray(R.array.encryption_cipher)
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        binding.spinnerXchacha.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position == 1) {
+                    ColoredAlertDialogBuilder(this@CreateActivity)
+                        .setTitle(R.string.warning)
+                        .setMessage(R.string.xchacha_warning)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         binding.buttonCreate.setOnClickListener {
             createVolume()
@@ -112,7 +132,12 @@ class CreateActivity : VolumeActionActivity() {
                             }
                         }
                         if (goodDirectory) {
-                            if (GocryptfsVolume.createVolume(currentVolumePath, password, false, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
+                            val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
+                                0 -> 0
+                                1 -> 1
+                                else -> -1
+                            }
+                            if (GocryptfsVolume.createVolume(currentVolumePath, password, false, xchacha, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator)) {
                                 var returnedHash: ByteArray? = null
                                 if (checkboxSavePassword.isChecked){
                                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)

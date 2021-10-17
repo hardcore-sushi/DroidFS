@@ -59,6 +59,24 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="15dp"
+                android:gravity="center_horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/encryption_cipher_label"/>
+
+                <Spinner
+                    android:id="@+id/spinner_xchacha"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"/>
+
+            </LinearLayout>
+
             <include layout="@layout/checkboxes_section"/>
 
             <TextView

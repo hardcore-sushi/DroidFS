@@ -33,6 +33,7 @@ JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
                                                                              jstring jroot_cipher_dir, jcharArray jpassword,
                                                                              jboolean plainTextNames,
+                                                                             jint xchacha,
                                                                              jint logN,
                                                                              jstring jcreator) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
@@ -45,7 +46,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
     jcharArray_to_charArray(jchar_password, password, password_len);
     GoSlice go_password = {password, password_len, password_len};
 
-    GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, logN, gocreator);
+    GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, xchacha, logN, gocreator);
 
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
     (*env)->ReleaseStringUTFChars(env, jcreator, creator);
