@@ -141,7 +141,7 @@
     <string name="copy_failed">Ошибка при копировании %s.</string>
     <string name="copy_success">Копирование выполнено!</string>
     <string name="fab_dialog_title">Добавить</string>
-    <string name="camera">Сфотографировать</string>
+    <string name="camera">Камера</string>
     <string name="picture_save_success">Изображение сохранено в %s</string>
     <string name="picture_save_failed">Невозможно сохранить изображение.</string>
     <string name="file_overwrite_question">%s уже существует, переписать его?</string>
