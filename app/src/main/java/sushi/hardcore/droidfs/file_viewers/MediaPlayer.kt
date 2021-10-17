@@ -2,13 +2,7 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.view.WindowManager
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.extractor.ExtractorsFactory
-import com.google.android.exoplayer2.extractor.flac.FlacExtractor
-import com.google.android.exoplayer2.extractor.mkv.MatroskaExtractor
-import com.google.android.exoplayer2.extractor.mp3.Mp3Extractor
-import com.google.android.exoplayer2.extractor.mp4.Mp4Extractor
-import com.google.android.exoplayer2.extractor.ogg.OggExtractor
-import com.google.android.exoplayer2.extractor.wav.WavExtractor
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import sushi.hardcore.droidfs.ConstValues
@@ -28,14 +22,8 @@ abstract class MediaPlayer: FileViewerActivity() {
 
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
-        return ProgressiveMediaSource.Factory(dataSourceFactory, ExtractorsFactory { arrayOf(
-                MatroskaExtractor(),
-                Mp4Extractor(),
-                Mp3Extractor(),
-                OggExtractor(),
-                WavExtractor(),
-                FlacExtractor()
-        ) }).createMediaSource(MediaItem.fromUri(ConstValues.fakeUri))
+        return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
+            .createMediaSource(MediaItem.fromUri(ConstValues.fakeUri))
     }
 
     private fun initializePlayer(){

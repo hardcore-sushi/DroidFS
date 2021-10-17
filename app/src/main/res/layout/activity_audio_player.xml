@@ -19,6 +19,8 @@
             android:id="@+id/audio_controller"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:show_timeout="0"/>
+            app:show_timeout="0"
+            app:show_shuffle_button="true"
+            app:repeat_toggle_modes="all|one"/>
 
 </LinearLayout>
