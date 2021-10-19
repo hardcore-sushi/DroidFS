@@ -73,10 +73,10 @@ class OpenActivity : VolumeActionActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (volumeDatabase.isVolumeSaved(s.toString())){
                     checkboxRememberPath.isEnabled = false
-                    checkboxRememberPath.isChecked = false
+                    checkboxRememberPath.isChecked = true
                     if (volumeDatabase.isHashSaved(s.toString())){
                         checkboxSavePassword.isEnabled = false
-                        checkboxSavePassword.isChecked = false
+                        checkboxSavePassword.isChecked = true
                     } else {
                         checkboxSavePassword.isEnabled = true
                     }
@@ -164,7 +164,7 @@ class OpenActivity : VolumeActionActivity() {
             override fun doTask(activity: AppCompatActivity) {
                 val password = binding.editPassword.text.toString().toCharArray()
                 var returnedHash: ByteArray? = null
-                if (checkboxSavePassword.isChecked){
+                if (checkboxSavePassword.isChecked && usf_fingerprint) {
                     returnedHash = ByteArray(GocryptfsVolume.KeyLen)
                 }
                 sessionID = GocryptfsVolume.init(currentVolumePath, password, null, returnedHash)

@@ -25,7 +25,7 @@ class CreateActivity : VolumeActionActivity() {
         binding = ActivityCreateBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setupLayout()
-        setupFingerprintStuff()
+        setupFingerprintStuff(mayDecrypt = false)
         binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
             createVolume()
             true

@@ -43,7 +43,7 @@ abstract class VolumeActionActivity : BaseActivity() {
             onDirectoryPicked(uri)
         }
     }
-    private var usf_fingerprint = false
+    protected var usf_fingerprint = false
     private var biometricCanAuthenticateCode: Int = -1
     private lateinit var biometricManager: BiometricManager
     private lateinit var biometricPrompt: BiometricPrompt
@@ -98,7 +98,7 @@ abstract class VolumeActionActivity : BaseActivity() {
         checkboxSavePassword.setOnClickListener {
             if (checkboxSavePassword.isChecked) {
                 if (biometricCanAuthenticateCode == 0) {
-                    checkboxRememberPath.isChecked = checkboxRememberPath.isEnabled
+                    checkboxRememberPath.isChecked = true
                 } else {
                     checkboxSavePassword.isChecked = false
                     printAuthenticateImpossibleError()
@@ -151,13 +151,17 @@ abstract class VolumeActionActivity : BaseActivity() {
         }
     }
 
-    protected fun setupFingerprintStuff(){
+    protected fun setupFingerprintStuff(mayDecrypt: Boolean = true) {
         originalHiddenVolumeSectionLayoutParams = hiddenVolumeSection.layoutParams as LinearLayout.LayoutParams
         originalNormalVolumeSectionLayoutParams = normalVolumeSection.layoutParams as LinearLayout.LayoutParams
         WidgetUtil.hide(hiddenVolumeSection)
         volumeDatabase = VolumeDatabase(this)
         usf_fingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && usf_fingerprint) {
+        val marshmallow = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+        if (!marshmallow || !usf_fingerprint) {
+            WidgetUtil.hideWithPadding(checkboxSavePassword)
+        }
+        if (marshmallow && (mayDecrypt || usf_fingerprint)) {
             biometricManager = BiometricManager.from(this)
             biometricCanAuthenticateCode = canAuthenticate()
             if (biometricCanAuthenticateCode == 0){
@@ -225,8 +229,6 @@ abstract class VolumeActionActivity : BaseActivity() {
                 }
                 biometricPrompt = BiometricPrompt(this, executor, callback)
             }
-        } else {
-            WidgetUtil.hideWithPadding(checkboxSavePassword)
         }
     }
 

@@ -53,7 +53,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 if (volumeDatabase.isVolumeSaved(s.toString())){
                     checkboxRememberPath.isEnabled = false
-                    checkboxRememberPath.isChecked = false
+                    checkboxRememberPath.isChecked = true
                     binding.editOldPassword.apply {
                         if (volumeDatabase.isHashSaved(s.toString())){
                             text = null
