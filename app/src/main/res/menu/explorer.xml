@@ -49,6 +49,12 @@
         android:title="@string/external_open"/>
 
     <item
+        android:id="@+id/open_as"
+        app:showAsAction="never"
+        android:visible="false"
+        android:title="@string/open_as"/>
+
+    <item
         android:id="@+id/rename"
         app:showAsAction="never"
         android:visible="false"

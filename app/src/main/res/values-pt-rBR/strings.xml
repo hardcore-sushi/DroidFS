@@ -111,7 +111,7 @@
     <string name="preference_theme_color_summary">Definir uma cor personalizada do tema</string>
     <string name="usf_home_warning_msg">DroidFS tenta ser o mais seguro possível. No entanto, a segurança muitas vezes resulta em falta de conforto. Por isso o DroidFS oferece opções adicionais que você pode alternar de acordo com as suas necessidades.\n\nAviso: estas opções podem ser PERIGOSAS. Não as utilize a menos que você saiba o que está fazendo. É altamente recomendável ler a documentação antes de ativá-las.</string>
     <string name="see_unsafe_features">Ver opções perigosas</string>
-    <string name="open_as">Abrir como:</string>
+    <string name="open_as">Abrir como</string>
     <string name="image">Imagem</string>
     <string name="video">Vídeo</string>
     <string name="audio">Áudio</string>

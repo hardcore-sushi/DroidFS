@@ -3,12 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
-	    android:id="@+id/external_open"
-        app:showAsAction="never"
-        android:visible="false"
-        android:title="@string/external_open"/>
-
-    <item
 	    android:id="@+id/rename"
         app:showAsAction="never"
         android:visible="false"

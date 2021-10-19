@@ -149,6 +149,26 @@ open class BaseExplorerActivity : BaseActivity() {
         ExternalProvider.open(this, gocryptfsVolume, fullPath)
     }
 
+    private fun showOpenAsDialog(path: String) {
+        val adapter = OpenAsDialogAdapter(this, usf_open)
+        ColoredAlertDialogBuilder(this)
+            .setSingleChoiceItems(adapter, -1) { dialog, which ->
+                when (adapter.getItem(which)) {
+                    "image" -> startFileViewer(ImageViewer::class.java, path)
+                    "video" -> startFileViewer(VideoPlayer::class.java, path)
+                    "audio" -> startFileViewer(AudioPlayer::class.java, path)
+                    "text" -> startFileViewer(TextEditor::class.java, path)
+                    "external" -> if (usf_open) {
+                        openWithExternalApp(path)
+                    }
+                }
+                dialog.dismiss()
+            }
+            .setTitle(getString(R.string.open_as) + ':')
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
     protected open fun onExplorerItemClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         explorerAdapter.onItemClick(position)
@@ -174,25 +194,7 @@ open class BaseExplorerActivity : BaseActivity() {
                     isAudio(fullPath) -> {
                         startFileViewer(AudioPlayer::class.java, fullPath)
                     }
-                    else -> {
-                        val adapter = OpenAsDialogAdapter(this, usf_open)
-                        ColoredAlertDialogBuilder(this)
-                            .setSingleChoiceItems(adapter, -1){ dialog, which ->
-                                when (adapter.getItem(which)){
-                                    "image" -> startFileViewer(ImageViewer::class.java, fullPath)
-                                    "video" -> startFileViewer(VideoPlayer::class.java, fullPath)
-                                    "audio" -> startFileViewer(AudioPlayer::class.java, fullPath)
-                                    "text" -> startFileViewer(TextEditor::class.java, fullPath)
-                                    "external" -> if (usf_open){
-                                        openWithExternalApp(fullPath)
-                                    }
-                                }
-                                dialog.dismiss()
-                            }
-                            .setTitle(getString(R.string.open_as))
-                            .setNegativeButton(R.string.cancel, null)
-                            .show()
-                    }
+                    else -> showOpenAsDialog(fullPath)
                 }
             }
         }
@@ -458,6 +460,7 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected fun handleMenuItems(menu: Menu){
         menu.findItem(R.id.rename).isVisible = false
+        menu.findItem(R.id.open_as)?.isVisible = false
         if (usf_open){
             menu.findItem(R.id.external_open)?.isVisible = false
         }
@@ -470,8 +473,11 @@ open class BaseExplorerActivity : BaseActivity() {
             toolbar.setNavigationIcon(R.drawable.icon_arrow_back)
             if (explorerAdapter.selectedItems.size == 1) {
                 menu.findItem(R.id.rename).isVisible = true
-                if (usf_open && explorerElements[explorerAdapter.selectedItems[0]].isRegularFile) {
-                    menu.findItem(R.id.external_open)?.isVisible = true
+                if (explorerElements[explorerAdapter.selectedItems[0]].isRegularFile) {
+                    menu.findItem(R.id.open_as)?.isVisible = true
+                    if (usf_open) {
+                        menu.findItem(R.id.external_open)?.isVisible = true
+                    }
                 }
             }
         }
@@ -518,6 +524,10 @@ open class BaseExplorerActivity : BaseActivity() {
                 }
                 dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
                 dialog.show()
+                true
+            }
+            R.id.open_as -> {
+                showOpenAsDialog(PathUtils.pathJoin(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
                 true
             }
             R.id.external_open -> {
