@@ -94,19 +94,14 @@ object PathUtils {
         ) + " " + units[digitGroups]
     }
 
-    fun isTreeUriOnPrimaryStorage(treeUri: Uri): Boolean {
-        val volumeId = getVolumeIdFromTreeUri(treeUri)
-        return if (volumeId != null) {
-            volumeId == PRIMARY_VOLUME_NAME || volumeId == "home" || volumeId == "downloads"
-        } else {
-            false
-        }
+    fun getPackageDataFolder(context: Context): String {
+        return "Android/data/${context.packageName}/"
     }
 
     private fun getExternalStoragePath(context: Context): List<String> {
         val externalPaths: MutableList<String> = ArrayList()
         ContextCompat.getExternalFilesDirs(context, null).forEach {
-            val rootPath = it.path.substring(0, it.path.indexOf(pathJoin("Android/data/", context.packageName, "files")))
+            val rootPath = it.path.substring(0, it.path.indexOf(getPackageDataFolder(context)+"files"))
             if (!rootPath.endsWith("/0/")){ //not primary storage
                 externalPaths.add(rootPath)
             }

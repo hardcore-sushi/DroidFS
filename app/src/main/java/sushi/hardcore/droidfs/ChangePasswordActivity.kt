@@ -1,6 +1,5 @@
 package sushi.hardcore.droidfs
 
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -84,27 +83,6 @@ class ChangePasswordActivity : VolumeActionActivity() {
         }
     }
 
-    override fun onDirectoryPicked(uri: Uri) {
-        if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
-            val path = PathUtils.getFullPathFromTreeUri(uri, this)
-            if (path != null){
-                editVolumePath.setText(path)
-            } else {
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.path_from_uri_null_error_msg)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-            }
-        } else {
-            ColoredAlertDialogBuilder(this)
-                .setTitle(R.string.warning)
-                .setMessage(R.string.change_pwd_on_sdcard_error_msg)
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
-    }
-
     fun checkVolumePathThenChangePassword() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
@@ -115,11 +93,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
                     .setPositiveButton(R.string.ok, null)
                     .show()
             } else if (!volumeFile.canWrite()){
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.change_pwd_cant_write_error_msg)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
+                errorDirectoryNotWritable(R.string.change_pwd_cant_write_error_msg)
             } else {
                 changePassword()
             }

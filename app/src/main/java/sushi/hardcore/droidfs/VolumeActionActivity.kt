@@ -118,7 +118,18 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     protected open fun onPickingDirectory() {}
-    protected abstract fun onDirectoryPicked(uri: Uri)
+    protected fun onDirectoryPicked(uri: Uri) {
+        val path = PathUtils.getFullPathFromTreeUri(uri, this)
+        if (path != null) {
+            editVolumePath.setText(path)
+        } else {
+            ColoredAlertDialogBuilder(this)
+                .setTitle(R.string.error)
+                .setMessage(R.string.path_from_uri_null_error_msg)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
+    }
 
     private fun safePickDirectory() {
         try {
@@ -367,5 +378,21 @@ abstract class VolumeActionActivity : BaseActivity() {
             }
             callback()
         }
+    }
+
+    fun errorDirectoryNotWritable(errorMsg: Int) {
+        val dialog = ColoredAlertDialogBuilder(this)
+            .setTitle(R.string.error)
+            .setPositiveButton(R.string.ok, null)
+        if (PathUtils.isPathOnExternalStorage(currentVolumePath, this)) {
+            dialog.setView(
+                layoutInflater.inflate(R.layout.dialog_sdcard_error, null).apply {
+                    findViewById<TextView>(R.id.path).text = PathUtils.getPackageDataFolder(this@VolumeActionActivity)
+                }
+            )
+        } else {
+            dialog.setMessage(errorMsg)
+        }
+        dialog.show()
     }
 }

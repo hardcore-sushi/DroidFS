@@ -1,7 +1,6 @@
 package sushi.hardcore.droidfs
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -9,7 +8,6 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.databinding.ActivityCreateBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
 import java.io.File
@@ -65,27 +63,6 @@ class CreateActivity : VolumeActionActivity() {
         }
     }
 
-    override fun onDirectoryPicked(uri: Uri) {
-        if (PathUtils.isTreeUriOnPrimaryStorage(uri)){
-            val path = PathUtils.getFullPathFromTreeUri(uri, this)
-            if (path != null){
-                editVolumePath.setText(path)
-            } else {
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.path_from_uri_null_error_msg)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-            }
-        } else {
-            ColoredAlertDialogBuilder(this)
-                .setTitle(R.string.warning)
-                .setMessage(R.string.create_on_sdcard_error_msg)
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
-    }
-
     fun createVolume() {
         loadVolumePath {
             val password = binding.editPassword.text.toString().toCharArray()
@@ -93,45 +70,33 @@ class CreateActivity : VolumeActionActivity() {
             if (!password.contentEquals(passwordConfirm)) {
                 Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
             } else {
-                object: LoadingTask(this, R.string.loading_msg_create){
-                    override fun doTask(activity: AppCompatActivity) {
-                        val volumeFile = File(currentVolumePath)
-                        var goodDirectory = false
-                        if (!volumeFile.isDirectory) {
-                            if (volumeFile.mkdirs()) {
+                val volumeFile = File(currentVolumePath)
+                var goodDirectory = false
+                if (!volumeFile.isDirectory) {
+                    if (volumeFile.mkdirs()) {
+                        goodDirectory = true
+                    } else {
+                        errorDirectoryNotWritable(R.string.create_cant_write_error_msg)
+                    }
+                } else {
+                    val dirContent = volumeFile.list()
+                    if (dirContent != null) {
+                        if (dirContent.isEmpty()) {
+                            if (volumeFile.canWrite()) {
                                 goodDirectory = true
                             } else {
-                                stopTask {
-                                    ColoredAlertDialogBuilder(activity)
-                                        .setTitle(R.string.warning)
-                                        .setMessage(R.string.create_cant_write_error_msg)
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
-                                }
+                                errorDirectoryNotWritable(R.string.create_cant_write_error_msg)
                             }
                         } else {
-                            val dirContent = volumeFile.list()
-                            if (dirContent != null){
-                                if (dirContent.isEmpty()) {
-                                    if (volumeFile.canWrite()){
-                                        goodDirectory = true
-                                    } else {
-                                        stopTask {
-                                            ColoredAlertDialogBuilder(activity)
-                                                .setTitle(R.string.warning)
-                                                .setMessage(R.string.create_cant_write_error_msg)
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
-                                        }
-                                    }
-                                } else {
-                                    stopTaskWithToast(R.string.dir_not_empty)
-                                }
-                            } else {
-                                stopTaskWithToast(R.string.listdir_null_error_msg)
-                            }
+                            Toast.makeText(this, R.string.dir_not_empty, Toast.LENGTH_SHORT).show()
                         }
-                        if (goodDirectory) {
+                    } else {
+                        Toast.makeText(this, R.string.listdir_null_error_msg, Toast.LENGTH_SHORT).show()
+                    }
+                }
+                if (goodDirectory) {
+                    object: LoadingTask(this, R.string.loading_msg_create){
+                        override fun doTask(activity: AppCompatActivity) {
                             val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
                                 0 -> 0
                                 1 -> 1
@@ -172,10 +137,10 @@ class CreateActivity : VolumeActionActivity() {
                                 }
                             }
                         }
-                    }
-                    override fun doFinally(activity: AppCompatActivity) {
-                        Arrays.fill(password, 0.toChar())
-                        Arrays.fill(passwordConfirm, 0.toChar())
+                        override fun doFinally(activity: AppCompatActivity) {
+                            Arrays.fill(password, 0.toChar())
+                            Arrays.fill(passwordConfirm, 0.toChar())
+                        }
                     }
                 }
             }

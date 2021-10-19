@@ -159,12 +159,9 @@
     <string name="timer_empty_error_msg">Por favor, digite um valor numérico</string>
     <string name="path_from_uri_null_error_msg">Falha ao carregar o local selecionado.</string>
     <string name="create_cant_write_error_msg">DroidFS não pode salvar neste local. Por favor, tente algum outro.</string>
-    <string name="create_on_sdcard_error_msg">DroidFS não pode salvar em cartões SD externos, por favor selecione um local no armazenamento interno.</string>
-    <string name="open_on_sdcard_warning">DroidFS não pode salvar em cartões SD exteros. Abrindo o volume apenas com acesso de leitura.</string>
     <string name="open_cant_write_warning">DroidFS não tem permissão para salvar neste local. Abrindo o volume apenas com acesso de leitura.</string>
     <string name="open_cant_write_error_msg">DroidFS não tem permissão para salvar neste local. Por favor, tente outro volume.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS não tem permissão para salvar neste local. Pode tentar mover o volume para um local com permissão de escrita.</string>
-    <string name="change_pwd_on_sdcard_error_msg">DroidFS não pode salvar em cartões SD externos, por favor transfira o volume ao armazenamento interno.</string>
     <string name="slideshow_stopped">Apresentação parou</string>
     <string name="slideshow_started">Apresentação começou</string>
     <string name="ask_save_img_rotated">A imagem foi alternada. Você deseja salvar estas mudanças e substituir a imagem original?</string>

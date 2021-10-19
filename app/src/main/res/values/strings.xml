@@ -162,12 +162,12 @@
     <string name="timer_empty_error_msg">Please enter a numeric value</string>
     <string name="path_from_uri_null_error_msg">Failed to retrieve the selected path.</string>
     <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
-    <string name="create_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please select a path on internal storage.</string>
-    <string name="open_on_sdcard_warning">DroidFS can\'t write on removable SD cards. Opening volume with read-only access.</string>
+    <string name="open_read_only">Opening volume with read-only access.</string>
     <string name="open_cant_write_warning">DroidFS doesn\'t have write access to this path. Opening volume with read-only access.</string>
     <string name="open_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another volume.</string>
+    <string name="sdcard_error_header">DroidFS can only write to removable SD cards under:</string>
+    <string name="sdcard_error_footer">Please use a subdirectory of this path or internal storage.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS doesn\'t have write access to this path. You can try to move the volume to a writable location.</string>
-    <string name="change_pwd_on_sdcard_error_msg">DroidFS can\'t write on removable SD cards, please move the volume to internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
     <string name="slideshow_started">Slideshow started</string>
     <string name="ask_save_img_rotated">The image has been rotated. Do you want to save these changes and overwrite the original image ?</string>

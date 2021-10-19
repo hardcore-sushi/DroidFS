@@ -156,12 +156,9 @@
     <string name="timer_empty_error_msg">Введите числовое значение.</string>
     <string name="path_from_uri_null_error_msg">Невозможно получить выбранный путь.</string>
     <string name="create_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте найти другое место.</string>
-    <string name="create_on_sdcard_error_msg">DroidFS не может записывать на съёмные SD-карты, выберите путь во внутренней памяти.</string>
-    <string name="open_on_sdcard_warning">DroidFS не может писать на съёмные SD-карты. Том открывается только для чтения.</string>
     <string name="open_cant_write_warning">DroidFS не имеет доступа на запись по этому пути. Том открывается только для чтения.</string>
     <string name="open_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте другой том.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте переместить том в место, доступное для записи.</string>
-    <string name="change_pwd_on_sdcard_error_msg">DroidFS не может писать на съёмные SD-карты, переместите том во внутреннюю память.</string>
     <string name="slideshow_stopped">Слайдшоу остановлено</string>
     <string name="slideshow_started">Слайдшоу началось</string>
     <string name="ask_save_img_rotated">Изображение было повёрнуто. Сохранить изменения и перезаписать исходное изображение?</string>

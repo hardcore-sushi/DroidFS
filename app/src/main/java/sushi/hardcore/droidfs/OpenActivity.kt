@@ -1,13 +1,13 @@
 package sushi.hardcore.droidfs
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.MenuItem
 import android.widget.AdapterView.OnItemClickListener
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
@@ -112,19 +112,6 @@ class OpenActivity : VolumeActionActivity() {
         isStartingActivity = true
     }
 
-    override fun onDirectoryPicked(uri: Uri) {
-        val path = PathUtils.getFullPathFromTreeUri(uri, this)
-        if (path != null){
-            editVolumePath.setText(path)
-        } else {
-            ColoredAlertDialogBuilder(this)
-                .setTitle(R.string.error)
-                .setMessage(R.string.path_from_uri_null_error_msg)
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
-    }
-
     fun checkVolumePathThenOpen() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
@@ -147,7 +134,12 @@ class OpenActivity : VolumeActionActivity() {
                         .setCancelable(false)
                         .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
                     if (PathUtils.isPathOnExternalStorage(currentVolumeName, this)){
-                        dialog.setMessage(R.string.open_on_sdcard_warning)
+                        dialog.setView(
+                            layoutInflater.inflate(R.layout.dialog_sdcard_error, null).apply {
+                                findViewById<TextView>(R.id.path).text = PathUtils.getPackageDataFolder(this@OpenActivity)
+                                findViewById<TextView>(R.id.footer).text = getString(R.string.open_read_only)
+                            }
+                        )
                     } else {
                         dialog.setMessage(R.string.open_cant_write_warning)
                     }
