@@ -141,9 +141,10 @@
     <string name="copy_failed">Ошибка при копировании %s.</string>
     <string name="copy_success">Копирование выполнено!</string>
     <string name="fab_dialog_title">Добавить</string>
-    <string name="camera">Сфотографировать</string>
+    <string name="camera">Камера</string>
     <string name="picture_save_success">Изображение сохранено в %s</string>
     <string name="picture_save_failed">Невозможно сохранить изображение.</string>
+    <string name="video_save_success">Видео сохранено в %s</string>
     <string name="file_overwrite_question">%s уже существует, переписать его?</string>
     <string name="dir_overwrite_question">%s уже существует, объединить содержимое?</string>
     <string name="enter_new_name">Введите новое имя</string>
@@ -156,8 +157,11 @@
     <string name="timer_empty_error_msg">Введите числовое значение.</string>
     <string name="path_from_uri_null_error_msg">Невозможно получить выбранный путь.</string>
     <string name="create_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте найти другое место.</string>
+    <string name="open_read_only">Открытие тома с доступом только для чтения.</string>
     <string name="open_cant_write_warning">DroidFS не имеет доступа на запись по этому пути. Том открывается только для чтения.</string>
     <string name="open_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте другой том.</string>
+    <string name="sdcard_error_header">DroidFS может записывать на SD-карты только в:</string>
+    <string name="sdcard_error_footer">Используйте вложенную папку этого пути или внутреннее хранилище.</string>
     <string name="change_pwd_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте переместить том в место, доступное для записи.</string>
     <string name="slideshow_stopped">Слайдшоу остановлено</string>
     <string name="slideshow_started">Слайдшоу началось</string>
@@ -196,4 +200,7 @@
     <string name="camera_optimization">Оптимизация камеры</string>
     <string name="maximize_quality">Максимальное качество</string>
     <string name="minimize_latency">Минимальная задержка</string>
+    <string name="auto">Авто</string>
+    <string name="xchacha_warning">Шифр XChaCha20-Poly1305 поддерживается только с версии GocryptFS 2.2.0. Более старые версии не смогут открыть том, использующий данный шифр.</string>
+    <string name="encryption_cipher_label">Шифр:</string>
 </resources>
