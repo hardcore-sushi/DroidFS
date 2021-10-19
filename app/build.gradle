@@ -72,10 +72,10 @@ dependencies {
 
     implementation "androidx.concurrent:concurrent-futures:1.1.0"
 
-    def camerax_v1 = "1.1.0-alpha09"
+    def camerax_v1 = "1.1.0-alpha10"
     implementation "androidx.camera:camera-camera2:$camerax_v1"
     implementation "androidx.camera:camera-lifecycle:$camerax_v1"
-    def camerax_v2 = "1.0.0-alpha29"
+    def camerax_v2 = "1.0.0-alpha30"
     implementation "androidx.camera:camera-view:$camerax_v2"
     implementation "androidx.camera:camera-extensions:$camerax_v2"
 }
