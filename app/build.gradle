@@ -14,18 +14,20 @@ android {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 18
-        versionName "1.5.4"
+        versionCode 19
+        versionName "1.6.0"
 
         ndk {
             abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
         }
     }
 
-    splits {
-        abi {
-            enable true
-            universalApk true
+    if (!file("fdroid").exists()) {
+        splits {
+            abi {
+                enable true
+                universalApk true
+            }
         }
     }
 

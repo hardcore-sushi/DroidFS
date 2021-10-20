@@ -6,16 +6,16 @@ Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file 
 - Internal opening of images, videos, audios and text files
 - Common file and folder operations: copy, move, rename, delete
 - Volume password changing
-- Internal/External encrypted volumes
-- Cross-volume file imports
-- Internal camera to safely take pictures and import them directly into a volume
-- In-app screenshot protection
+- Internal and shared storage support
+- Cross-volume imports
+- Internal camera to take encrypted pictures or videos
 - Theme color fully customizable
 
 <b>Permissions:</b>
 <b>Read & write access to shared storage:</b> required to create, open and modify volumes and import/export files to/from volumes.
 <b>Biometric/Fingerprint hardware:</b> needed to encrypt/decrypt password hashes using a fingerprint protected key.
-<b>Camera:</b> required to take photos directly from DroidFS and import them securely. You can deny this permission if you don't want to use this feature.
+<b>Camera:</b> required to take encrypted photos or videos directly from DroidFS. You can deny this permission if you don't want to use this feature.
+<b>Record audio:</b> required if you want sound on videos recorded with DroidFS.
 
 DroidFS is free, open-source, and you can find the project's repository:
 - on GitHub: https://github.com/hardcore-sushi/DroidFS
