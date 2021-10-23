@@ -2,15 +2,14 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import sushi.hardcore.droidfs.ConstValues
@@ -32,7 +31,7 @@ class ImageViewer: FileViewerActivity() {
 
     private lateinit var fileName: String
     private lateinit var handler: Handler
-    private lateinit var glideImage: RequestBuilder<Drawable>
+    private lateinit var bitmap: Bitmap
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
@@ -151,8 +150,8 @@ class ImageViewer: FileViewerActivity() {
 
     private fun loadImage(){
         loadWholeFile(filePath)?.let {
-            glideImage = Glide.with(this).load(it)
-            glideImage.into(binding.imageViewer)
+            bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+            Glide.with(this).load(bitmap).into(binding.imageViewer)
             fileName = File(filePath).name
             binding.textFilename.text = fileName
             rotationAngle = 0F
@@ -206,7 +205,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun rotateImage(){
         binding.imageViewer.restoreZoomNormal()
-        glideImage.transform(RotateTransformation(this)).into(binding.imageViewer)
+        Glide.with(this).load(bitmap).transform(RotateTransformation(this)).into(binding.imageViewer)
     }
 
     private fun askSaveRotation(callback: () -> Unit){
