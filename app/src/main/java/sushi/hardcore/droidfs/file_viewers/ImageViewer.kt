@@ -150,8 +150,20 @@ class ImageViewer: FileViewerActivity() {
 
     private fun loadImage(){
         loadWholeFile(filePath)?.let {
-            bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-            Glide.with(this).load(bitmap).into(binding.imageViewer)
+            val displayWithGlide = if (it.size < 5_000_000) {
+                true
+            } else {
+                val decodedBitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                if (decodedBitmap == null) {
+                    true
+                } else {
+                    Glide.with(this).load(decodedBitmap).fitCenter().into(binding.imageViewer)
+                    false
+                }
+            }
+            if (displayWithGlide) {
+                Glide.with(this).load(it).into(binding.imageViewer)
+            }
             fileName = File(filePath).name
             binding.textFilename.text = fileName
             rotationAngle = 0F
