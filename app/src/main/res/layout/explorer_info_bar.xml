@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="25dp"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/infoBarBackgroundColor"
+    android:background="?attr/infoBarBackgroundColor"
     android:gravity="center_vertical">
 
     <TextView

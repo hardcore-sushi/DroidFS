@@ -9,12 +9,13 @@
 
     <include android:id="@+id/toolbar" layout="@layout/toolbar"/>
 
-    <sushi.hardcore.droidfs.widgets.ColoredImageView
+    <ImageView
         android:id="@+id/image_logo"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="30dp"
         android:src="@drawable/logo"
+        app:tint="?attr/colorAccent"
         android:layout_weight="1"/>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -29,8 +30,7 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toTopOf="@id/button_create"
             android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-            android:text="@string/open_volume"
-            style="@style/button"/>
+            android:text="@string/open_volume"/>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button_create"
@@ -39,8 +39,7 @@
             app:layout_constraintTop_toBottomOf="@id/button_open"
             app:layout_constraintBottom_toTopOf="@id/button_change_password"
             android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-            android:text="@string/create_volume"
-            style="@style/button"/>
+            android:text="@string/create_volume"/>
 
         <androidx.appcompat.widget.AppCompatButton
             android:id="@+id/button_change_password"
@@ -49,8 +48,7 @@
             app:layout_constraintTop_toBottomOf="@id/button_create"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginHorizontal="@dimen/main_activity_button_hor_margin"
-            android:text="@string/change_volume_password"
-            style="@style/button"/>
+            android:text="@string/change_volume_password"/>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

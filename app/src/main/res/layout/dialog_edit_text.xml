@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <sushi.hardcore.droidfs.widgets.ColoredEditText
+    <EditText
         android:id="@+id/dialog_edit_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -12,6 +12,6 @@
         android:layout_marginHorizontal="30dp"
         android:imeOptions="actionDone">
         <requestFocus/>
-    </sushi.hardcore.droidfs.widgets.ColoredEditText>
+    </EditText>
 
 </LinearLayout>

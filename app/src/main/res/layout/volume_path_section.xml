@@ -25,7 +25,7 @@
             android:text="@string/volume_path"
             android:textSize="@dimen/edit_text_label_text_size" />
 
-        <sushi.hardcore.droidfs.widgets.ColoredEditText
+        <EditText
             android:id="@+id/edit_volume_path"
             android:layout_width="0dp"
             android:layout_weight="0.5"
@@ -33,7 +33,7 @@
             android:inputType="text"
             android:maxLines="1"/>
 
-        <sushi.hardcore.droidfs.widgets.ColoredImageButton
+        <ImageButton
             android:id="@+id/button_pick_directory"
             android:layout_width="@dimen/image_button_size"
             android:layout_height="@dimen/image_button_size"
@@ -55,7 +55,7 @@
             android:text="@string/volume_name"
             android:textSize="@dimen/edit_text_label_text_size" />
 
-        <sushi.hardcore.droidfs.widgets.ColoredEditText
+        <EditText
             android:id="@+id/edit_volume_name"
             android:layout_width="0dp"
             android:layout_weight="0.5"

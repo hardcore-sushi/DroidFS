@@ -3,18 +3,14 @@
 
     <PreferenceCategory android:title="@string/ui">
 
-        <com.jaredrummler.android.colorpicker.ColorPreferenceCompat
-            android:defaultValue="@color/themeColor"
-            android:key="themeColor"
-            android:title="@string/preference_theme_color"
-            android:summary="@string/preference_theme_color_summary"
+        <ListPreference
+            android:defaultValue="dark_green"
+            android:entries="@array/themes_entries"
+            android:entryValues="@array/themes_values"
+            android:key="theme"
+            android:title="@string/theme"
+            android:summary="@string/theme_summary"
             android:icon="@drawable/icon_palette"/>
-
-        <sushi.hardcore.droidfs.widgets.SimpleActionPreference
-            android:title="@string/reset_theme_color"
-            android:summary="@string/reset_theme_color_summary"
-            android:key="resetThemeColor"
-            android:icon="@drawable/icon_restore"/>
 
         <SwitchPreferenceCompat
             android:title="@string/auto_fit_title"
@@ -27,7 +23,7 @@
 
     <PreferenceCategory android:title="@string/explorer">
 
-        <sushi.hardcore.droidfs.widgets.ColoredListPreference
+        <ListPreference
             app:defaultValue="name"
             app:entries="@array/sort_orders_entries"
             app:entryValues="@array/sort_orders_values"

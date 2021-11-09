@@ -9,7 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.databinding.ActivityCreateBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
 
@@ -38,7 +38,7 @@ class CreateActivity : VolumeActionActivity() {
         binding.spinnerXchacha.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 if (position == 1) {
-                    ColoredAlertDialogBuilder(this@CreateActivity)
+                    CustomAlertDialogBuilder(this@CreateActivity, themeValue)
                         .setTitle(R.string.warning)
                         .setMessage(R.string.xchacha_warning)
                         .setPositiveButton(R.string.ok, null)
@@ -55,7 +55,7 @@ class CreateActivity : VolumeActionActivity() {
     override fun onClickSwitchHiddenVolume() {
         super.onClickSwitchHiddenVolume()
         if (switchHiddenVolume.isChecked){
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.hidden_volume_warning)
                 .setPositiveButton(R.string.ok, null)
@@ -95,7 +95,7 @@ class CreateActivity : VolumeActionActivity() {
                     }
                 }
                 if (goodDirectory) {
-                    object: LoadingTask(this, R.string.loading_msg_create){
+                    object: LoadingTask(this, themeValue, R.string.loading_msg_create) {
                         override fun doTask(activity: AppCompatActivity) {
                             val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
                                 0 -> 0
@@ -129,7 +129,7 @@ class CreateActivity : VolumeActionActivity() {
                                 }
                             } else {
                                 stopTask {
-                                    ColoredAlertDialogBuilder(activity)
+                                    CustomAlertDialogBuilder(activity, themeValue)
                                         .setTitle(R.string.error)
                                         .setMessage(R.string.create_volume_failed)
                                         .setPositiveButton(R.string.ok, null)
@@ -148,7 +148,7 @@ class CreateActivity : VolumeActionActivity() {
     }
 
     private fun startExplorer(){
-        ColoredAlertDialogBuilder(this)
+        CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.success_volume_create)
                 .setMessage(R.string.success_volume_create_msg)
                 .setCancelable(false)

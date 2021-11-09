@@ -35,8 +35,6 @@
     <string name="open_volume_failed">Não foi possível abrir</string>
     <string name="open_volume_failed_msg">Falha ao abrir o volume. Por favor, verifique sua senha.</string>
     <string name="share_chooser">Compartilhar arquivo</string>
-    <string name="storage_unavailable">Armazenamento indisponível</string>
-    <string name="storage_unavailable_msg">DroidFS não vai funcionar sem acesso ao armazenamento.</string>
     <string name="storage_perm_denied">Permissão de armazenamento negada</string>
     <string name="storage_perm_denied_msg">DroidFS não vai funcionar sem permissão de acesso ao armazenamento.</string>
     <string name="get_size_failed">Falha na recuperação do tamanho do arquivo.</string>
@@ -107,15 +105,12 @@
     <string name="manage_unsafe_features">Gerenciar opções perigosas</string>
     <string name="manage_unsafe_features_summary">Alternar opções perigosas</string>
     <string name="ui">IU</string>
-    <string name="preference_theme_color">Cor do tema</string>
-    <string name="preference_theme_color_summary">Definir uma cor personalizada do tema</string>
     <string name="usf_home_warning_msg">DroidFS tenta ser o mais seguro possível. No entanto, a segurança muitas vezes resulta em falta de conforto. Por isso o DroidFS oferece opções adicionais que você pode alternar de acordo com as suas necessidades.\n\nAviso: estas opções podem ser PERIGOSAS. Não as utilize a menos que você saiba o que está fazendo. É altamente recomendável ler a documentação antes de ativá-las.</string>
     <string name="see_unsafe_features">Ver opções perigosas</string>
     <string name="open_as">Abrir como</string>
     <string name="image">Imagem</string>
     <string name="video">Vídeo</string>
     <string name="audio">Áudio</string>
-    <string name="media_player_prepare_failed">Falha ao abrir o reprodutor de mídia.</string>
     <string name="playing_failed">Falha ao reproduzir este arquivo: %s</string>
     <string name="text">Texto</string>
     <string name="save_failed">Falha ao salvar</string>
@@ -150,8 +145,6 @@
     <string name="file_overwrite_question">%s já existe, você quer substitui-lo ?</string>
     <string name="dir_overwrite_question">%s já existe, você quer integrar ao conteúdo ?</string>
     <string name="enter_new_name">Digite um novo nome</string>
-    <string name="reset_theme_color">Resetar a cor do tema</string>
-    <string name="reset_theme_color_summary">Resetar a cor do tema para padrão</string>
     <string name="copy_menu_title">Copiar</string>
     <string name="move_failed">Transferência do arquivo %s falhou.</string>
     <string name="move_success">Transferência bem sucedida!</string>

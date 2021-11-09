@@ -18,7 +18,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
 
@@ -35,7 +35,7 @@ class OpenActivity : VolumeActionActivity() {
         setContentView(binding.root)
         setupLayout()
         setupFingerprintStuff()
-        savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
+        savedVolumesAdapter = SavedVolumesAdapter(this, themeValue, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
             binding.savedPathListview.adapter = savedVolumesAdapter
             binding.savedPathListview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
@@ -116,20 +116,20 @@ class OpenActivity : VolumeActionActivity() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
                     .setMessage(R.string.error_not_a_volume)
                     .setPositiveButton(R.string.ok, null)
                     .show()
             } else if (!volumeFile.canWrite()) {
                 if ((intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) && intent.extras != null) { //import via android share menu
-                    ColoredAlertDialogBuilder(this)
+                    CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.open_cant_write_error_msg)
                         .setPositiveButton(R.string.ok, null)
                         .show()
                 } else {
-                    val dialog = ColoredAlertDialogBuilder(this)
+                    val dialog = CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.warning)
                         .setCancelable(false)
                         .setPositiveButton(R.string.ok) { _, _ -> openVolume() }
@@ -152,7 +152,7 @@ class OpenActivity : VolumeActionActivity() {
     }
 
     private fun openVolume(){
-        object : LoadingTask(this, R.string.loading_msg_open){
+        object : LoadingTask(this, themeValue, R.string.loading_msg_open) {
             override fun doTask(activity: AppCompatActivity) {
                 val password = binding.editPassword.text.toString().toCharArray()
                 var returnedHash: ByteArray? = null
@@ -179,7 +179,7 @@ class OpenActivity : VolumeActionActivity() {
                     }
                 } else {
                     stopTask {
-                        ColoredAlertDialogBuilder(activity)
+                        CustomAlertDialogBuilder(activity, themeValue)
                             .setTitle(R.string.open_volume_failed)
                             .setMessage(R.string.open_volume_failed_msg)
                             .setPositiveButton(R.string.ok, null)
@@ -192,14 +192,14 @@ class OpenActivity : VolumeActionActivity() {
     }
 
     private fun openUsingPasswordHash(passwordHash: ByteArray){
-        object : LoadingTask(this, R.string.loading_msg_open){
+        object : LoadingTask(this, themeValue, R.string.loading_msg_open) {
             override fun doTask(activity: AppCompatActivity) {
                 sessionID = GocryptfsVolume.init(currentVolumePath, null, passwordHash, null)
                 if (sessionID != -1){
                     stopTask { startExplorer() }
                 } else {
                     stopTask {
-                        ColoredAlertDialogBuilder(activity)
+                        CustomAlertDialogBuilder(activity, themeValue)
                             .setTitle(R.string.open_volume_failed)
                             .setMessage(R.string.open_failed_hash_msg)
                             .setPositiveButton(R.string.ok, null)

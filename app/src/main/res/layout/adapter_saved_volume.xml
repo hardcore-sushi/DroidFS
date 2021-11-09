@@ -14,7 +14,7 @@
         android:ellipsize="start"
         android:textSize="17sp"/>
 
-    <sushi.hardcore.droidfs.widgets.ColoredImageView
+    <ImageView
         android:id="@+id/delete_imageview"
         android:layout_width="30dp"
         android:layout_height="30dp"

@@ -3,36 +3,51 @@ package sushi.hardcore.droidfs
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.WindowManager
-import androidx.core.content.ContextCompat
+import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
-import com.jaredrummler.cyanea.app.CyaneaAppCompatActivity
-import sushi.hardcore.droidfs.widgets.ThemeColor
 
-open class BaseActivity: CyaneaAppCompatActivity() {
+open class BaseActivity: AppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
-    protected var isRecreating = false
+    protected lateinit var themeValue: String
+    protected var shouldCheckTheme = true
+
     override fun onCreate(savedInstanceState: Bundle?) {
-        val themeColor = ThemeColor.getThemeColor(this)
-        if (cyanea.accent != themeColor){
-            changeThemeColor(themeColor)
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        if (shouldCheckTheme) {
+            themeValue = sharedPrefs.getString("theme", "dark_green")!!
+            when (themeValue) {
+                "black_green" -> setTheme(R.style.BlackGreen)
+                "dark_red" -> setTheme(R.style.DarkRed)
+                "black_red" -> setTheme(R.style.BlackRed)
+                "dark_blue" -> setTheme(R.style.DarkBlue)
+                "black_blue" -> setTheme(R.style.BlackBlue)
+                "dark_yellow" -> setTheme(R.style.DarkYellow)
+                "black_yellow" -> setTheme(R.style.BlackYellow)
+                "dark_orange" -> setTheme(R.style.DarkOrange)
+                "black_orange" -> setTheme(R.style.BlackOrange)
+                "dark_purple" -> setTheme(R.style.DarkPurple)
+                "black_purple" -> setTheme(R.style.BlackPurple)
+            }
+        } else {
+            shouldCheckTheme = true
         }
         super.onCreate(savedInstanceState)
-        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         if (!sharedPrefs.getBoolean("usf_screenshot", false)){
             window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
     }
-    fun changeThemeColor(themeColor: Int? = null){
-        val accentColor = themeColor ?: ThemeColor.getThemeColor(this)
-        val backgroundColor = ContextCompat.getColor(this, R.color.backgroundColor)
-        isRecreating = true
-        cyanea.edit{
-            accent(accentColor)
-            //accentDark(themeColor)
-            //accentLight(themeColor)
-            background(backgroundColor)
-            //backgroundDark(backgroundColor)
-            //backgroundLight(backgroundColor)
-        }.recreate(this)
+
+    override fun onStart() {
+        super.onStart()
+        val newThemeValue = sharedPrefs.getString("theme", "dark_green")!!
+        onThemeChanged(newThemeValue)
+    }
+
+    fun onThemeChanged(newThemeValue: String) {
+        if (newThemeValue != themeValue) {
+            themeValue = newThemeValue
+            shouldCheckTheme = false
+            recreate()
+        }
     }
 }

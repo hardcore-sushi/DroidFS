@@ -35,8 +35,6 @@
     <string name="open_volume_failed">Ошибка открытия</string>
     <string name="open_volume_failed_msg">Невозможно открыть том. Проверьте пароль.</string>
     <string name="share_chooser">Поделиться файлом</string>
-    <string name="storage_unavailable">Хранилище недоступно</string>
-    <string name="storage_unavailable_msg">DroidFS не может работать без доступа к хранилищу.</string>
     <string name="storage_perm_denied">Доступ к хранилищу запрещён</string>
     <string name="storage_perm_denied_msg">DroidFS не может работать без разрешения на доступ к хранилищу.</string>
     <string name="get_size_failed">Невозможно получить размер файла.</string>
@@ -106,15 +104,12 @@
     <string name="manage_unsafe_features">Управление небезопасными функциями</string>
     <string name="manage_unsafe_features_summary">Включить/отключить небезопасные функции</string>
     <string name="ui">Интерфейс</string>
-    <string name="preference_theme_color">Цвет темы</string>
-    <string name="preference_theme_color_summary">Установить собственный цвет темы</string>
     <string name="usf_home_warning_msg">DroidFS старается быть максимально безопасным, однако безопасность часто связана с появлением неудобств. Поэтому DroidFS предлагает дополнительные небезопасные функции, которые вы можете включить/отключить в соответствии со своими потребностями.\n\nПредупреждение: эти функции могут быть НЕБЕЗОПАСНЫМИ. Не используйте их, если не уверены в своих действиях. Настоятельно рекомендуется прочитать документацию перед их включением.</string>
     <string name="see_unsafe_features">Посмотреть небезопасные функции</string>
     <string name="open_as">Открыть как</string>
     <string name="image">Изображение</string>
     <string name="video">Видео</string>
     <string name="audio">Аудио</string>
-    <string name="media_player_prepare_failed">Невозможно инициализировать медиапроигрыватель.</string>
     <string name="playing_failed">Невозможно воспроизвести файл: %s</string>
     <string name="text">Текст</string>
     <string name="save_failed">Невозможно сохранить.</string>
@@ -148,8 +143,6 @@
     <string name="file_overwrite_question">%s уже существует, переписать его?</string>
     <string name="dir_overwrite_question">%s уже существует, объединить содержимое?</string>
     <string name="enter_new_name">Введите новое имя</string>
-    <string name="reset_theme_color">Сброс цвета темы</string>
-    <string name="reset_theme_color_summary">Сбросить цвет темы на значение по умолчанию</string>
     <string name="copy_menu_title">Копировать</string>
     <string name="move_failed">Ошибка при перемещении %s.</string>
     <string name="move_success">Перемещение выполнено!</string>

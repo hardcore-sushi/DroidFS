@@ -2,13 +2,9 @@ package sushi.hardcore.droidfs
 
 import android.os.Bundle
 import android.view.MenuItem
-import androidx.core.content.ContextCompat
-import androidx.preference.Preference
+import androidx.preference.ListPreference
 import androidx.preference.PreferenceFragmentCompat
-import com.jaredrummler.android.colorpicker.ColorPreferenceCompat
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
-import sushi.hardcore.droidfs.widgets.SimpleActionPreference
-import sushi.hardcore.droidfs.widgets.ThemeColor
 
 class SettingsActivity : BaseActivity() {
 
@@ -43,26 +39,9 @@ class SettingsActivity : BaseActivity() {
     class MainSettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
-            ThemeColor.tintPreferenceIcons(preferenceScreen, ThemeColor.getThemeColor(requireContext()))
-            var originalThemeColor: Int? = null
-            context?.let {
-                originalThemeColor = ContextCompat.getColor(it, R.color.themeColor)
-            }
-            findPreference<ColorPreferenceCompat>("themeColor")?.let { colorPicker ->
-                colorPicker.onPreferenceChangeListener = Preference.OnPreferenceChangeListener{ _, _ ->
-                    (activity as SettingsActivity).changeThemeColor()
-                    true
-                }
-                findPreference<SimpleActionPreference>("resetThemeColor")?.onClick = {
-                    originalThemeColor?.let {
-                        colorPicker.saveValue(it)
-                        val settingsActivity = (activity as SettingsActivity)
-                        Thread {
-                            settingsActivity.sharedPrefs.edit().commit()
-                            settingsActivity.runOnUiThread { settingsActivity.changeThemeColor() }
-                        }.start()
-                    }
-                }
+            findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
+                (activity as BaseActivity).onThemeChanged(newValue as String)
+                true
             }
         }
     }
@@ -70,7 +49,6 @@ class SettingsActivity : BaseActivity() {
     class UnsafeFeaturesSettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.unsafe_features_preferences, rootKey)
-            ThemeColor.tintPreferenceIcons(preferenceScreen, ThemeColor.getThemeColor(requireContext()))
         }
     }
 }

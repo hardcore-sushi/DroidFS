@@ -6,7 +6,7 @@ import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityExplorerDropBinding
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
     private lateinit var binding: ActivityExplorerDropBinding
@@ -56,7 +56,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     getString(R.string.share_intent_parsing_failed)
                 }
                 errorMsg?.let {
-                    ColoredAlertDialogBuilder(this)
+                    CustomAlertDialogBuilder(this, themeValue)
                             .setTitle(R.string.error)
                             .setMessage(it)
                             .setPositiveButton(R.string.ok, null)
@@ -71,7 +71,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     private fun onImported(failedItem: String?){
         setCurrentPath(currentDirectoryPath)
         if (failedItem == null) {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.success_import)
                     .setMessage(R.string.success_import_msg)
                     .setCancelable(false)
@@ -80,7 +80,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     }
                     .show()
         } else {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
                     .setMessage(getString(R.string.import_failed, failedItem))
                     .setPositiveButton(R.string.ok, null)

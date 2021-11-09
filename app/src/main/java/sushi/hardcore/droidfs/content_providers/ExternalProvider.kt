@@ -8,13 +8,13 @@ import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 object ExternalProvider {
     private const val content_type_all = "*/*"
     private var storedFiles: MutableList<Uri> = ArrayList()
-    private fun getContentType(filename: String, previous_content_type: String?): String? {
+    private fun getContentType(filename: String, previous_content_type: String?): String {
         if (content_type_all != previous_content_type) {
             var contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(filename).extension)
             if (contentType == null) {
@@ -41,8 +41,8 @@ object ExternalProvider {
         return Pair(null, null)
     }
 
-    fun share(activity: AppCompatActivity, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
-        object : LoadingTask(activity, R.string.loading_msg_export){
+    fun share(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
+        object : LoadingTask(activity, themeValue, R.string.loading_msg_export) {
             override fun doTask(activity: AppCompatActivity) {
                 var contentType: String? = null
                 val uris = ArrayList<Uri>()
@@ -53,7 +53,7 @@ object ExternalProvider {
                         result.second
                     } else {
                         stopTask {
-                            ColoredAlertDialogBuilder(activity)
+                            CustomAlertDialogBuilder(activity, themeValue)
                                 .setTitle(R.string.error)
                                 .setMessage(activity.getString(R.string.export_failed, path))
                                 .setPositiveButton(R.string.ok, null)
@@ -78,8 +78,8 @@ object ExternalProvider {
         }
     }
 
-    fun open(activity: AppCompatActivity, gocryptfsVolume: GocryptfsVolume, file_path: String) {
-        object : LoadingTask(activity, R.string.loading_msg_export) {
+    fun open(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_path: String) {
+        object : LoadingTask(activity, themeValue, R.string.loading_msg_export) {
             override fun doTask(activity: AppCompatActivity) {
                 val result = exportFile(activity, gocryptfsVolume, file_path, null)
                 if (result.first != null) {
@@ -88,7 +88,7 @@ object ExternalProvider {
                     stopTask { activity.startActivity(openIntent) }
                 } else {
                     stopTask {
-                        ColoredAlertDialogBuilder(activity)
+                        CustomAlertDialogBuilder(activity, themeValue)
                             .setTitle(R.string.error)
                             .setMessage(activity.getString(R.string.export_failed, file_path))
                             .setPositiveButton(R.string.ok, null)

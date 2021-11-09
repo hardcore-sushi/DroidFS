@@ -12,7 +12,7 @@ import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
 
@@ -26,7 +26,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
         setContentView(binding.root)
         setupLayout()
         setupFingerprintStuff()
-        savedVolumesAdapter = SavedVolumesAdapter(this, volumeDatabase)
+        savedVolumesAdapter = SavedVolumesAdapter(this, themeValue, volumeDatabase)
         if (savedVolumesAdapter.count > 0){
             binding.savedPathListview.adapter = savedVolumesAdapter
             binding.savedPathListview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
@@ -87,7 +87,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
         loadVolumePath {
             val volumeFile = File(currentVolumePath)
             if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
                     .setMessage(R.string.error_not_a_volume)
                     .setPositiveButton(R.string.ok, null)
@@ -106,7 +106,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
         if (!newPassword.contentEquals(newPasswordConfirm)) {
             Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
         } else {
-            object : LoadingTask(this, R.string.loading_msg_change_password) {
+            object : LoadingTask(this, themeValue, R.string.loading_msg_change_password) {
                 override fun doTask(activity: AppCompatActivity) {
                     val oldPassword = binding.editOldPassword.text.toString().toCharArray()
                     var returnedHash: ByteArray? = null
@@ -159,7 +159,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
                             }
                         } else {
                             stopTask {
-                                ColoredAlertDialogBuilder(activity)
+                                CustomAlertDialogBuilder(activity, themeValue)
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.change_password_failed)
                                     .setPositiveButton(R.string.ok, null)
@@ -178,7 +178,7 @@ class ChangePasswordActivity : VolumeActionActivity() {
     }
 
     private fun onPasswordChanged(){
-        ColoredAlertDialogBuilder(this)
+        CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.success_change_password)
                 .setMessage(R.string.success_change_password_msg)
                 .setCancelable(false)

@@ -3,14 +3,14 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+    <CheckBox
         android:id="@+id/checkbox_remember_path"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:text="@string/remember_volume_path"/>
 
-    <sushi.hardcore.droidfs.widgets.ColoredCheckBox
+    <CheckBox
         android:id="@+id/checkbox_save_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

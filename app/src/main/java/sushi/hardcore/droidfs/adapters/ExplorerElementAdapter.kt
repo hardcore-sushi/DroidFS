@@ -2,8 +2,6 @@ package sushi.hardcore.droidfs.adapters
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,7 +13,6 @@ import sushi.hardcore.droidfs.ConstValues.Companion.getAssociatedDrawable
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.ThemeColor
 import java.text.DateFormat
 import java.util.*
 
@@ -24,7 +21,6 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
     private var explorerElements = listOf<ExplorerElement>()
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     val selectedItems: MutableList<Int> = ArrayList()
-    private val themeColor = ThemeColor.getThemeColor(context)
     override fun getCount(): Int {
         return explorerElements.size
     }
@@ -62,12 +58,9 @@ class ExplorerElementAdapter(private val context: Context) : BaseAdapter() {
                 drawableId = getAssociatedDrawable(currentElement.name)
             }
         }
-        val elementIcon = view.findViewById<ImageView>(R.id.icon_element)
-        val icon = ContextCompat.getDrawable(context, drawableId)
-        icon?.colorFilter = PorterDuffColorFilter(themeColor, PorterDuff.Mode.SRC_IN)
-        elementIcon.setImageDrawable(icon)
+        view.findViewById<ImageView>(R.id.icon_element).setImageResource(drawableId)
         if (selectedItems.contains(position)) {
-            view.setBackgroundColor(ContextCompat.getColor(context, R.color.item_selected))
+            view.setBackgroundColor(ContextCompat.getColor(context, R.color.itemSelected))
         } else {
             view.setBackgroundColor(Color.alpha(0))
         }

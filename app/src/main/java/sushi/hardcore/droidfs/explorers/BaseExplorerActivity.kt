@@ -17,6 +17,7 @@ import android.widget.EditText
 import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -41,7 +42,7 @@ import sushi.hardcore.droidfs.file_viewers.ImageViewer
 import sushi.hardcore.droidfs.file_viewers.TextEditor
 import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -146,12 +147,12 @@ open class BaseExplorerActivity : BaseActivity() {
 
     private fun openWithExternalApp(fullPath: String){
         isStartingActivity = true
-        ExternalProvider.open(this, gocryptfsVolume, fullPath)
+        ExternalProvider.open(this, themeValue, gocryptfsVolume, fullPath)
     }
 
     private fun showOpenAsDialog(path: String) {
         val adapter = OpenAsDialogAdapter(this, usf_open)
-        ColoredAlertDialogBuilder(this)
+        CustomAlertDialogBuilder(this, themeValue)
             .setSingleChoiceItems(adapter, -1) { dialog, which ->
                 when (adapter.getItem(which)) {
                     "image" -> startFileViewer(ImageViewer::class.java, path)
@@ -267,7 +268,7 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     private fun askCloseVolume() {
-        ColoredAlertDialogBuilder(this)
+        CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_close_volume)
                 .setPositiveButton(R.string.ok) { _, _ -> closeVolumeOnUserExit() }
@@ -293,7 +294,7 @@ open class BaseExplorerActivity : BaseActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!gocryptfsVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folderName))) {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
                         .setPositiveButton(R.string.ok, null)
@@ -308,7 +309,7 @@ open class BaseExplorerActivity : BaseActivity() {
     protected fun openDialogCreateFolder() {
         val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        val dialog = ColoredAlertDialogBuilder(this)
+        val dialog = CustomAlertDialogBuilder(this, themeValue)
                 .setView(dialogEditTextView)
                 .setTitle(R.string.enter_folder_name)
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -346,7 +347,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 }
             }
             if (!ready){
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.warning)
                     .setMessage(getString(if (items[i].explorerElement.isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, testDstPath))
                     .setPositiveButton(R.string.yes) {_, _ ->
@@ -359,7 +360,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
                         dialogEditText.setText(items[i].explorerElement.name)
                         dialogEditText.selectAll()
-                        val dialog = ColoredAlertDialogBuilder(this)
+                        val dialog = CustomAlertDialogBuilder(this, themeValue)
                                 .setView(dialogEditTextView)
                                 .setTitle(R.string.enter_new_name)
                                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -403,7 +404,7 @@ open class BaseExplorerActivity : BaseActivity() {
         for (uri in uris) {
             val fileName = PathUtils.getFilenameFromURI(this, uri)
             if (fileName == null) {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.error_retrieving_filename, uri))
                         .setPositiveButton(R.string.ok, null)
@@ -446,7 +447,7 @@ open class BaseExplorerActivity : BaseActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!gocryptfsVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
                         .setPositiveButton(R.string.ok, null)
@@ -458,6 +459,14 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
+    private fun setMenuIconTint(menu: Menu, iconColor: Int, menuItemId: Int, drawableId: Int) {
+        menu.findItem(menuItemId)?.let {
+            it.icon = ContextCompat.getDrawable(this, drawableId)?.apply {
+                setTint(iconColor)
+            }
+        }
+    }
+
     protected fun handleMenuItems(menu: Menu){
         menu.findItem(R.id.rename).isVisible = false
         menu.findItem(R.id.open_as)?.isVisible = false
@@ -465,6 +474,11 @@ open class BaseExplorerActivity : BaseActivity() {
             menu.findItem(R.id.external_open)?.isVisible = false
         }
         val noItemSelected = explorerAdapter.selectedItems.isEmpty()
+        val iconColor = ContextCompat.getColor(this, R.color.menuIconTint)
+        setMenuIconTint(menu, iconColor, R.id.sort, R.drawable.icon_sort)
+        setMenuIconTint(menu, iconColor, R.id.delete, R.drawable.icon_delete)
+        setMenuIconTint(menu, iconColor, R.id.decrypt, R.drawable.icon_decrypt)
+        setMenuIconTint(menu, iconColor, R.id.share, R.drawable.icon_share)
         menu.findItem(R.id.sort).isVisible = noItemSelected
         menu.findItem(R.id.close).isVisible = noItemSelected
         if (noItemSelected){
@@ -490,7 +504,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 true
             }
             R.id.sort -> {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortOrderEntries.toList()), currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
@@ -507,7 +521,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
                 dialogEditText.setText(oldName)
                 dialogEditText.selectAll()
-                val dialog = ColoredAlertDialogBuilder(this)
+                val dialog = CustomAlertDialogBuilder(this, themeValue)
                         .setView(dialogEditTextView)
                         .setTitle(R.string.rename_title)
                         .setPositiveButton(R.string.ok) { _, _ ->

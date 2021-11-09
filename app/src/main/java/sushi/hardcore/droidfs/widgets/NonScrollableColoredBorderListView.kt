@@ -1,13 +1,26 @@
 package sushi.hardcore.droidfs.widgets
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
+import android.util.TypedValue
 import android.widget.ListAdapter
+import android.widget.ListView
+import androidx.core.content.ContextCompat
+import sushi.hardcore.droidfs.R
 
-class NonScrollableColoredBorderListView: ColoredBorderListView {
-    constructor(context: Context) : super(context)
-    constructor(context: Context, attrs: AttributeSet): super(context, attrs)
-    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr)
+class NonScrollableColoredBorderListView: ListView {
+    constructor(context: Context) : super(context) { applyColor() }
+    constructor(context: Context, attrs: AttributeSet): super(context, attrs) { applyColor() }
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr) { applyColor() }
+
+    fun applyColor() {
+        val typedValue = TypedValue()
+        context.theme.resolveAttribute(R.attr.colorAccent, typedValue, true)
+        divider = ColorDrawable(typedValue.data)
+        dividerHeight = context.resources.displayMetrics.density.toInt()*2
+        background = ContextCompat.getDrawable(context, R.drawable.listview_border)
+    }
 
     fun computeHeight(): Int {
         var totalHeight = 0

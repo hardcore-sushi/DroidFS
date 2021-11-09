@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="DarkGreenDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="colorAccent">@color/secondary</item>
+        <item name="android:background">#333333</item>
+    </style>
+    <style name="DarkRedDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/red</item>
+    </style>
+    <style name="DarkBlueDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/blue</item>
+    </style>
+    <style name="DarkYellowDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/yellow</item>
+    </style>
+    <style name="DarkOrangeDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/orange</item>
+    </style>
+    <style name="DarkPurpleDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/purple</item>
+    </style>
+
+    <style name="BlackGreenDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+        <item name="colorAccent">@color/secondary</item>
+        <item name="android:background">#191919</item>
+    </style>
+    <style name="BlackRedDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/red</item>
+    </style>
+    <style name="BlackBlueDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/blue</item>
+    </style>
+    <style name="BlackYellowDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/yellow</item>
+    </style>
+    <style name="BlackOrangeDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/orange</item>
+    </style>
+    <style name="BlackPurpleDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/purple</item>
+    </style>
+
+</resources>

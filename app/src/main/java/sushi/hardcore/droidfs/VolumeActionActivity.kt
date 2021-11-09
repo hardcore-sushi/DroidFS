@@ -19,8 +19,7 @@ import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
-import sushi.hardcore.droidfs.widgets.ColoredImageButton
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.security.KeyStore
 import javax.crypto.*
 import javax.crypto.spec.GCMParameterSpec
@@ -68,7 +67,7 @@ abstract class VolumeActionActivity : BaseActivity() {
     protected fun setupLayout() {
         setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        findViewById<ColoredImageButton>(R.id.button_pick_directory).setOnClickListener {
+        findViewById<ImageButton>(R.id.button_pick_directory).setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) +
                     ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
@@ -123,7 +122,7 @@ abstract class VolumeActionActivity : BaseActivity() {
         if (path != null) {
             editVolumePath.setText(path)
         } else {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
                 .setMessage(R.string.path_from_uri_null_error_msg)
                 .setPositiveButton(R.string.ok, null)
@@ -136,7 +135,7 @@ abstract class VolumeActionActivity : BaseActivity() {
             onPickingDirectory()
             pickDirectory.launch(null)
         } catch (e: ActivityNotFoundException) {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
                 .setMessage(R.string.open_tree_failed)
                 .setPositiveButton(R.string.ok, null)
@@ -149,7 +148,7 @@ abstract class VolumeActionActivity : BaseActivity() {
         when (requestCode) {
             STORAGE_PERMISSIONS_REQUEST -> if (grantResults.size == 2) {
                 if (grantResults[0] != PackageManager.PERMISSION_GRANTED || grantResults[1] != PackageManager.PERMISSION_GRANTED) {
-                    ColoredAlertDialogBuilder(this)
+                    CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.storage_perm_denied)
                         .setMessage(R.string.storage_perm_denied_msg)
                         .setCancelable(false)
@@ -209,7 +208,7 @@ abstract class VolumeActionActivity : BaseActivity() {
                                             val plainText = cipherObject.doFinal(dataToProcess)
                                             onPasswordDecrypted(plainText)
                                         } catch (e: AEADBadTagException){
-                                            ColoredAlertDialogBuilder(activityContext)
+                                            CustomAlertDialogBuilder(activityContext, themeValue)
                                                 .setTitle(R.string.error)
                                                 .setMessage(R.string.MAC_verification_failed)
                                                 .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -221,7 +220,7 @@ abstract class VolumeActionActivity : BaseActivity() {
                                     }
                                 }
                             } catch (e: IllegalBlockSizeException){
-                                ColoredAlertDialogBuilder(activityContext)
+                                CustomAlertDialogBuilder(activityContext, themeValue)
                                     .setTitle(R.string.illegal_block_size_exception)
                                     .setMessage(R.string.illegal_block_size_exception_msg)
                                     .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -292,7 +291,7 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     private fun alertKeyPermanentlyInvalidatedException(){
-        ColoredAlertDialogBuilder(this)
+        CustomAlertDialogBuilder(this, themeValue)
             .setTitle(R.string.key_permanently_invalidated_exception)
             .setMessage(R.string.key_permanently_invalidated_exception_msg)
             .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -381,7 +380,7 @@ abstract class VolumeActionActivity : BaseActivity() {
     }
 
     fun errorDirectoryNotWritable(errorMsg: Int) {
-        val dialog = ColoredAlertDialogBuilder(this)
+        val dialog = CustomAlertDialogBuilder(this, themeValue)
             .setTitle(R.string.error)
             .setPositiveButton(R.string.ok, null)
         if (PathUtils.isPathOnExternalStorage(currentVolumePath, this)) {

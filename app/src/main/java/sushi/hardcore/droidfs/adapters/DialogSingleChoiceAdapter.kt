@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.CheckedTextView
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.widgets.ThemeColor
 
 class DialogSingleChoiceAdapter(private val context: Context, private val entries: List<String>): BaseAdapter() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
@@ -18,7 +17,6 @@ class DialogSingleChoiceAdapter(private val context: Context, private val entrie
         val typedArray = context.theme.obtainStyledAttributes(arrayOf(android.R.attr.listChoiceIndicatorSingle).toIntArray())
         val drawable = typedArray.getDrawable(0)
         typedArray.recycle()
-        drawable?.setTint(ThemeColor.getThemeColor(context))
         checkedTextView.setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         return view
     }

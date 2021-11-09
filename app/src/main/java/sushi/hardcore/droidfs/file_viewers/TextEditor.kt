@@ -11,7 +11,7 @@ import android.widget.Toast
 import androidx.appcompat.widget.Toolbar
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.GocryptfsVolume
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.ByteArrayInputStream
 import java.io.File
 
@@ -36,7 +36,7 @@ class TextEditor: FileViewerActivity() {
             try {
                 loadLayout(String(it))
             } catch (e: OutOfMemoryError){
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
@@ -105,7 +105,7 @@ class TextEditor: FileViewerActivity() {
 
     private fun checkSaveAndExit(){
         if (changedSinceLastSave){
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save)
                 .setPositiveButton(R.string.save) { _, _ ->

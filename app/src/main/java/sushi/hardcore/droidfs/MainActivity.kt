@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.databinding.ActivityMainBinding
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 class MainActivity : BaseActivity() {
 
@@ -14,21 +14,19 @@ class MainActivity : BaseActivity() {
         val binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(binding.toolbar.toolbar)
-        if (!isRecreating) {
-            if (sharedPrefs.getBoolean("applicationFirstOpening", true)){
-                ColoredAlertDialogBuilder(this)
-                    .setTitle(R.string.warning)
-                    .setMessage(R.string.usf_home_warning_msg)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.see_unsafe_features){ _, _ ->
-                        val intent = Intent(this, SettingsActivity::class.java)
-                        intent.putExtra("screen", "UnsafeFeaturesSettingsFragment")
-                        startActivity(intent)
-                    }
-                    .setNegativeButton(R.string.ok, null)
-                    .setOnDismissListener { sharedPrefs.edit().putBoolean("applicationFirstOpening", false).apply() }
-                    .show()
-            }
+        if (sharedPrefs.getBoolean("applicationFirstOpening", true)) {
+            CustomAlertDialogBuilder(this, themeValue)
+                .setTitle(R.string.warning)
+                .setMessage(R.string.usf_home_warning_msg)
+                .setCancelable(false)
+                .setPositiveButton(R.string.see_unsafe_features) { _, _ ->
+                    val intent = Intent(this, SettingsActivity::class.java)
+                    intent.putExtra("screen", "UnsafeFeaturesSettingsFragment")
+                    startActivity(intent)
+                }
+                .setNegativeButton(R.string.ok, null)
+                .setOnDismissListener { sharedPrefs.edit().putBoolean("applicationFirstOpening", false).apply() }
+                .show()
         }
         binding.buttonOpen.setOnClickListener {
             startActivity(OpenActivity::class.java)

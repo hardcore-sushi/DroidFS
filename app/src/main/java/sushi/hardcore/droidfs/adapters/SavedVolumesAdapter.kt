@@ -12,11 +12,11 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.Volume
 import sushi.hardcore.droidfs.VolumeDatabase
 import sushi.hardcore.droidfs.util.WidgetUtil
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.NonScrollableColoredBorderListView
 import java.io.File
 
-class SavedVolumesAdapter(private val context: Context, private val volumeDatabase: VolumeDatabase) : BaseAdapter() {
+class SavedVolumesAdapter(private val context: Context, private val themeValue: String, private val volumeDatabase: VolumeDatabase) : BaseAdapter() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     private lateinit var nonScrollableColoredBorderListView: NonScrollableColoredBorderListView
 
@@ -53,7 +53,7 @@ class SavedVolumesAdapter(private val context: Context, private val volumeDataba
         volumeNameTextView.text = currentVolume.name
         val deleteImageView = view.findViewById<ImageView>(R.id.delete_imageview)
         deleteImageView.setOnClickListener {
-            val dialog = ColoredAlertDialogBuilder(context)
+            val dialog = CustomAlertDialogBuilder(context, themeValue)
             dialog.setTitle(R.string.warning)
             if (currentVolume.isHidden){
                 if (currentVolume.hash != null) {

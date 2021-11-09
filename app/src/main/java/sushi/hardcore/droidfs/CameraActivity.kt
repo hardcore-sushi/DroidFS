@@ -36,7 +36,7 @@ import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -126,7 +126,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             } else {
                 1
             }
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.camera_optimization)
                 .setSingleChoiceItems(DialogSingleChoiceAdapter(this, arrayOf(R.string.maximize_quality, R.string.minimize_latency).map { getString(it) }), currentIndex) { dialog, which ->
                     val resId: Int
@@ -149,7 +149,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageRatio.setOnClickListener {
             resolutions?.let {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.choose_resolution)
                     .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }), currentResolutionIndex) { dialog, which ->
                         setupCamera(resolutions!![which])
@@ -164,7 +164,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
             val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
             dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
-            val dialog = ColoredAlertDialogBuilder(this)
+            val dialog = CustomAlertDialogBuilder(this, themeValue)
                 .setView(dialogEditTextView)
                 .setTitle(getString(R.string.enter_timer_duration))
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -266,7 +266,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     permissionsGranted = true
                     setupCamera()
                 } else {
-                    ColoredAlertDialogBuilder(this)
+                    CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.camera_perm_needed)
                         .setCancelable(false)
@@ -348,7 +348,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)){
                     Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
                 } else {
-                    ColoredAlertDialogBuilder(this@CameraActivity)
+                    CustomAlertDialogBuilder(this@CameraActivity, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.picture_save_failed)
                         .setCancelable(false)

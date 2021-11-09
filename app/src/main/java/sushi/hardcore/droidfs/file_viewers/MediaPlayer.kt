@@ -7,7 +7,7 @@ import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class MediaPlayer: FileViewerActivity() {
     private lateinit var player: SimpleExoPlayer
@@ -43,7 +43,7 @@ abstract class MediaPlayer: FileViewerActivity() {
                 }
             }
             override fun onPlayerError(error: PlaybackException) {
-                ColoredAlertDialogBuilder(this@MediaPlayer)
+                CustomAlertDialogBuilder(this@MediaPlayer, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.playing_failed, error.errorCodeName))
                         .setCancelable(false)

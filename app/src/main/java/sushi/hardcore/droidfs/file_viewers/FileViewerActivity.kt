@@ -10,7 +10,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
     protected lateinit var gocryptfsVolume: GocryptfsVolume
@@ -76,7 +76,7 @@ abstract class FileViewerActivity: BaseActivity() {
                 if (success){
                     return fileBuff
                 } else {
-                    ColoredAlertDialogBuilder(this)
+                    CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.read_file_failed)
                         .setCancelable(false)
@@ -84,7 +84,7 @@ abstract class FileViewerActivity: BaseActivity() {
                         .show()
                 }
             } catch (e: OutOfMemoryError){
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
@@ -93,7 +93,7 @@ abstract class FileViewerActivity: BaseActivity() {
             }
 
         } else {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
                 .setMessage(R.string.get_size_failed)
                 .setCancelable(false)

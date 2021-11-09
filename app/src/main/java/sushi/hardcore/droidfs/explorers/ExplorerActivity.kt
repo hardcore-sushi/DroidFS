@@ -19,7 +19,7 @@ import sushi.hardcore.droidfs.content_providers.ExternalProvider
 import sushi.hardcore.droidfs.databinding.ActivityExplorerBinding
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 class ExplorerActivity : BaseExplorerActivity() {
@@ -73,7 +73,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     if (failedItem == null){
                                         Toast.makeText(this, R.string.success_import, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        ColoredAlertDialogBuilder(this)
+                                        CustomAlertDialogBuilder(this, themeValue)
                                             .setTitle(R.string.error)
                                             .setMessage(getString(R.string.import_failed, failedItem))
                                             .setPositiveButton(R.string.ok, null)
@@ -105,7 +105,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     if (failedItem == null){
                         Toast.makeText(this, R.string.success_export, Toast.LENGTH_SHORT).show()
                     } else {
-                        ColoredAlertDialogBuilder(this)
+                        CustomAlertDialogBuilder(this, themeValue)
                             .setTitle(R.string.error)
                             .setMessage(getString(R.string.export_failed, failedItem))
                             .setPositiveButton(R.string.ok, null)
@@ -124,7 +124,7 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     private fun onImportComplete(failedItem: String?, urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
         if (failedItem == null){
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.success_import)
                 .setMessage("""
                                 ${getString(R.string.success_import_msg)}
@@ -136,7 +136,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             if (errorMsg == null){
                                 Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
                             } else {
-                                ColoredAlertDialogBuilder(this)
+                                CustomAlertDialogBuilder(this, themeValue)
                                     .setTitle(R.string.error)
                                     .setMessage(getString(R.string.wipe_failed, errorMsg))
                                     .setPositiveButton(R.string.ok, null)
@@ -148,7 +148,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 .setNegativeButton(R.string.no, null)
                 .show()
         } else {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
                 .setMessage(getString(R.string.import_failed, failedItem))
                 .setPositiveButton(R.string.ok, null)
@@ -173,7 +173,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     listOf("createFolder", R.string.mkdir, R.drawable.icon_create_new_folder),
                     listOf("camera", R.string.camera, R.drawable.icon_camera)
                 )
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                     .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
                         when (adapter.getItem(which)){
                             "importFromOtherVolumes" -> {
@@ -194,7 +194,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "createFile" -> {
                                 val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
                                 val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                                val dialog = ColoredAlertDialogBuilder(this)
+                                val dialog = CustomAlertDialogBuilder(this, themeValue)
                                     .setView(dialogEditTextView)
                                     .setTitle(getString(R.string.enter_file_name))
                                     .setPositiveButton(R.string.ok) { _, _ ->
@@ -247,7 +247,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
             val handleID = gocryptfsVolume.openWriteMode(filePath) //don't check overwrite because openWriteMode open in read-write (doesn't erase content)
             if (handleID == -1) {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.file_creation_failed)
                         .setPositiveButton(R.string.ok, null)
@@ -333,7 +333,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     if (failedItem == null){
                                         Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        ColoredAlertDialogBuilder(this)
+                                        CustomAlertDialogBuilder(this, themeValue)
                                                 .setTitle(R.string.error)
                                                 .setMessage(getString(R.string.copy_failed, failedItem))
                                                 .setPositiveButton(R.string.ok, null)
@@ -355,7 +355,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                     if (failedItem == null){
                                         Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        ColoredAlertDialogBuilder(this)
+                                        CustomAlertDialogBuilder(this, themeValue)
                                                 .setTitle(R.string.error)
                                                 .setMessage(getString(R.string.move_failed, failedItem))
                                                 .setPositiveButton(R.string.ok, null)
@@ -373,7 +373,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.delete -> {
                 val size = explorerAdapter.selectedItems.size
-                val dialog = ColoredAlertDialogBuilder(this)
+                val dialog = CustomAlertDialogBuilder(this, themeValue)
                 dialog.setTitle(R.string.warning)
                 dialog.setPositiveButton(R.string.ok) { _, _ -> removeSelectedItems() }
                 dialog.setNegativeButton(R.string.cancel, null)
@@ -391,7 +391,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     paths.add(explorerElements[i].fullPath)
                 }
                 isStartingActivity = true
-                ExternalProvider.share(this, gocryptfsVolume, paths)
+                ExternalProvider.share(this, themeValue, gocryptfsVolume, paths)
                 unselectAll()
                 true
             }
@@ -452,7 +452,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
             }
             if (failedItem != null) {
-                ColoredAlertDialogBuilder(this)
+                CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.remove_failed, failedItem))
                         .setPositiveButton(R.string.ok, null)

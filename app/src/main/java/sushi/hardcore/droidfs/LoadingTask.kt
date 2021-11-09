@@ -4,11 +4,11 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
-abstract class LoadingTask(val activity: AppCompatActivity, loadingMessageResId: Int) {
+abstract class LoadingTask(val activity: AppCompatActivity, themeValue: String, loadingMessageResId: Int) {
     private val dialogLoadingView = activity.layoutInflater.inflate(R.layout.dialog_loading, null)
-    private val dialogLoading: AlertDialog = ColoredAlertDialogBuilder(activity)
+    private val dialogLoading: AlertDialog = CustomAlertDialogBuilder(activity, themeValue)
         .setView(dialogLoadingView)
         .setTitle(R.string.loading)
         .setCancelable(false)

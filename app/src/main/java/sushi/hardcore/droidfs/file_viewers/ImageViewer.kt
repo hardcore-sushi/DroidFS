@@ -15,7 +15,7 @@ import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
-import sushi.hardcore.droidfs.widgets.ColoredAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -87,7 +87,7 @@ class ImageViewer: FileViewerActivity() {
             }
         })
         binding.imageDelete.setOnClickListener {
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .keepFullScreen()
                 .setTitle(R.string.warning)
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -101,7 +101,7 @@ class ImageViewer: FileViewerActivity() {
                             loadImage()
                         }
                     } else {
-                        ColoredAlertDialogBuilder(this)
+                        CustomAlertDialogBuilder(this, themeValue)
                             .keepFullScreen()
                             .setTitle(R.string.error)
                             .setMessage(getString(R.string.remove_failed, fileName))
@@ -222,7 +222,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun askSaveRotation(callback: () -> Unit){
         if (rotationAngle%360 != 0f && !slideshowActive){
-            ColoredAlertDialogBuilder(this)
+            CustomAlertDialogBuilder(this, themeValue)
                 .keepFullScreen()
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save_img_rotated)
@@ -241,7 +241,7 @@ class ImageViewer: FileViewerActivity() {
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
                                 callback()
                             } else {
-                                ColoredAlertDialogBuilder(this)
+                                CustomAlertDialogBuilder(this, themeValue)
                                     .keepFullScreen()
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.file_write_failed)
@@ -249,7 +249,7 @@ class ImageViewer: FileViewerActivity() {
                                     .show()
                             }
                         } else {
-                            ColoredAlertDialogBuilder(this)
+                            CustomAlertDialogBuilder(this, themeValue)
                                 .keepFullScreen()
                                 .setTitle(R.string.error)
                                 .setMessage(R.string.bitmap_compress_failed)
