@@ -1,5 +1,5 @@
 package sushi.hardcore.droidfs.file_operations
 
-import android.app.Notification
+import androidx.core.app.NotificationCompat
 
-class FileOperationNotification(val notificationBuilder: Notification.Builder, val notificationId: Int)
+class FileOperationNotification(val notificationBuilder: NotificationCompat.Builder, val notificationId: Int)

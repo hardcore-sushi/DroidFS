@@ -10,13 +10,13 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class MediaPlayer: FileViewerActivity() {
-    private lateinit var player: SimpleExoPlayer
+    private lateinit var player: ExoPlayer
 
     override fun viewFile() {
         initializePlayer()
     }
 
-    abstract fun bindPlayer(player: SimpleExoPlayer)
+    abstract fun bindPlayer(player: ExoPlayer)
     protected open fun onPlaylistIndexChanged() {}
     protected open fun onPlayerReady() {}
 
@@ -27,7 +27,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     }
 
     private fun initializePlayer(){
-        player = SimpleExoPlayer.Builder(this).build()
+        player = ExoPlayer.Builder(this).build()
         bindPlayer(player)
         createPlaylist()
         for (e in mappedPlaylist) {
@@ -58,8 +58,8 @@ abstract class MediaPlayer: FileViewerActivity() {
                 }
             }
             override fun onPositionDiscontinuity(reason: Int) {
-                if (player.currentWindowIndex != currentPlaylistIndex) {
-                    playlistNext(player.currentWindowIndex == (currentPlaylistIndex+1)%mappedPlaylist.size)
+                if (player.currentMediaItemIndex != currentPlaylistIndex) {
+                    playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex+1) % mappedPlaylist.size)
                     onPlaylistIndexChanged()
                 }
             }

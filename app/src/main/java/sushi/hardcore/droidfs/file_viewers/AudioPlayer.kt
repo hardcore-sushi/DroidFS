@@ -1,6 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ExoPlayer
 import sushi.hardcore.droidfs.databinding.ActivityAudioPlayerBinding
 import java.io.File
 
@@ -18,7 +18,7 @@ class AudioPlayer: MediaPlayer(){
         return "audio"
     }
 
-    override fun bindPlayer(player: SimpleExoPlayer) {
+    override fun bindPlayer(player: ExoPlayer) {
         binding.audioController.player = player
     }
 

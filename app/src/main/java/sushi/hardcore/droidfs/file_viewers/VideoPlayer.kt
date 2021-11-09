@@ -1,7 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.content.pm.ActivityInfo
-import com.google.android.exoplayer2.SimpleExoPlayer
+import com.google.android.exoplayer2.ExoPlayer
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
@@ -17,7 +17,7 @@ class VideoPlayer: MediaPlayer() {
         super.viewFile()
     }
 
-    override fun bindPlayer(player: SimpleExoPlayer) {
+    override fun bindPlayer(player: ExoPlayer) {
         binding.videoPlayer.player = player
     }
 

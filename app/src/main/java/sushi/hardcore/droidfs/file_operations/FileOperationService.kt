@@ -1,11 +1,11 @@
 package sushi.hardcore.droidfs.file_operations
 
 import android.app.*
-import android.content.Context
 import android.content.Intent
-import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.*
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
@@ -23,7 +23,7 @@ class FileOperationService : Service() {
 
     private val binder = LocalBinder()
     private lateinit var gocryptfsVolume: GocryptfsVolume
-    private lateinit var notificationManager: NotificationManager
+    private lateinit var notificationManager: NotificationManagerCompat
     private var notifications = HashMap<Int, Boolean>()
     private var lastNotificationId = 0
 
@@ -41,41 +41,38 @@ class FileOperationService : Service() {
     private fun showNotification(message: Int, total: Int?): FileOperationNotification {
         ++lastNotificationId
         if (!::notificationManager.isInitialized){
-            notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager = NotificationManagerCompat.from(this)
         }
-        val notificationBuilder = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, getString(R.string.file_operations), NotificationManager.IMPORTANCE_LOW)
-            notificationManager.createNotificationChannel(channel)
-            Notification.Builder(this, NOTIFICATION_CHANNEL_ID)
-        } else {
-            Notification.Builder(this)
-        }
-        val cancelIntent = Intent(this, NotificationBroadcastReceiver::class.java).apply {
-            val bundle = Bundle()
-            bundle.putBinder("binder", LocalBinder())
-            bundle.putInt("notificationId", lastNotificationId)
-            putExtra("bundle", bundle)
-            action = ACTION_CANCEL
-        }
-        val cancelPendingIntent = PendingIntent.getBroadcast(this, 0, cancelIntent, PendingIntent.FLAG_UPDATE_CURRENT)
-        val notificationAction = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Notification.Action.Builder(
-                    Icon.createWithResource(this, R.drawable.icon_close),
-                    getString(R.string.cancel),
-                    cancelPendingIntent
-            )
-        } else {
-            Notification.Action.Builder(
-                    R.drawable.icon_close,
-                    getString(R.string.cancel),
-                    cancelPendingIntent
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            notificationManager.createNotificationChannel(
+                NotificationChannel(
+                    NOTIFICATION_CHANNEL_ID,
+                    getString(R.string.file_operations),
+                    NotificationManager.IMPORTANCE_LOW
+                )
             )
         }
+        val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
         notificationBuilder
                 .setContentTitle(getString(message))
                 .setSmallIcon(R.mipmap.icon_launcher)
                 .setOngoing(true)
-                .addAction(notificationAction.build())
+                .addAction(NotificationCompat.Action(
+                    R.drawable.icon_close,
+                    getString(R.string.cancel),
+                    PendingIntent.getBroadcast(
+                        this,
+                        0,
+                        Intent(this, NotificationBroadcastReceiver::class.java).apply {
+                            val bundle = Bundle()
+                            bundle.putBinder("binder", LocalBinder())
+                            bundle.putInt("notificationId", lastNotificationId)
+                            putExtra("bundle", bundle)
+                            action = ACTION_CANCEL
+                        },
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                    )
+                ))
         if (total != null) {
             notificationBuilder
                 .setContentText("0/$total")
