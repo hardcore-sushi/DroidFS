@@ -4,44 +4,52 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView
-        android:id="@+id/icon_element"
-        android:layout_width="50dp"
-        android:layout_height="50dp"/>
-
     <LinearLayout
+        android:id="@+id/selectable_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="3dp"
-        android:orientation="vertical">
+        android:layout_height="match_parent"
+        android:background="?attr/selectableItemBackground">
 
-        <TextView
-            android:id="@+id/text_element_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="@dimen/adapter_text_size"/>
+        <ImageView
+            android:id="@+id/icon_element"
+            android:layout_width="50dp"
+            android:layout_height="50dp"/>
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_gravity="bottom">
+            android:layout_marginTop="3dp"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/text_element_mtime"
-                android:layout_width="wrap_content"
+                android:id="@+id/text_element_name"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="10sp"
-                android:layout_marginEnd="7dp"/>
+                android:textSize="@dimen/adapter_text_size"/>
 
-            <TextView
-                android:id="@+id/text_element_size"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="10sp"/>
+                android:orientation="horizontal"
+                android:layout_gravity="bottom">
+
+                <TextView
+                    android:id="@+id/text_element_mtime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"
+                    android:layout_marginEnd="7dp"/>
+
+                <TextView
+                    android:id="@+id/text_element_size"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="10sp"/>
+
+            </LinearLayout>
+
 
         </LinearLayout>
-
 
     </LinearLayout>
 

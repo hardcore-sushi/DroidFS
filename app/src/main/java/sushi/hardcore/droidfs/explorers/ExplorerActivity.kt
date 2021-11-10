@@ -235,9 +235,8 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     override fun onExplorerItemLongClick(position: Int) {
+        super.onExplorerItemLongClick(position)
         cancelItemAction()
-        explorerAdapter.onItemLongClick(position)
-        invalidateOptionsMenu()
     }
 
     private fun createNewFile(fileName: String){
@@ -380,7 +379,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 if (size > 1) {
                     dialog.setMessage(getString(R.string.multiple_delete_confirm, explorerAdapter.selectedItems.size.toString()))
                 } else {
-                    dialog.setMessage(getString(R.string.single_delete_confirm, explorerAdapter.getItem(explorerAdapter.selectedItems[0]).name))
+                    dialog.setMessage(getString(R.string.single_delete_confirm, explorerAdapter.explorerElements[explorerAdapter.selectedItems[0]].name))
                 }
                 dialog.show()
                 true
@@ -441,7 +440,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private fun removeSelectedItems() {
         var failedItem: String? = null
         for (i in explorerAdapter.selectedItems) {
-            val element = explorerAdapter.getItem(i)
+            val element = explorerAdapter.explorerElements[i]
             val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
             if (element.isDirectory) {
                 val result = gocryptfsVolume.recursiveRemoveDirectory(fullPath)

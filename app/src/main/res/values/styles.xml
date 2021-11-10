@@ -53,10 +53,6 @@
         <item name="android:background">@drawable/button_background</item>
     </style>
 
-    <style name="listViewNoDivider">
-        <item name="android:divider">#000000</item>
-        <item name="android:dividerHeight">0dp</item>
-    </style>
     <style name="infoBarTextView">
         <item name="android:ellipsize">start</item>
         <item name="android:singleLine">true</item>

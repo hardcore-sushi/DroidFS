@@ -8,15 +8,19 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
     val fullPath: String = PathUtils.pathJoin(parentPath, name)
 
     val isDirectory: Boolean
-        get() = elementType.toInt() == 0
+        get() = elementType.toInt() == DIRECTORY_TYPE
 
     val isParentFolder: Boolean
-        get() = elementType.toInt() == -1
+        get() = elementType.toInt() == PARENT_FOLDER_TYPE
 
     val isRegularFile: Boolean
-        get() = elementType.toInt() == 1
+        get() = elementType.toInt() == REGULAR_FILE_TYPE
 
     companion object {
+        const val DIRECTORY_TYPE = 0
+        const val PARENT_FOLDER_TYPE = -1
+        const val REGULAR_FILE_TYPE = 1
+
         @JvmStatic
         //this function is needed because I had some problems calling the constructor from JNI, probably due to arguments with default values
         fun new(name: String, elementType: Short, size: Long, mTime: Long, parentPath: String): ExplorerElement {

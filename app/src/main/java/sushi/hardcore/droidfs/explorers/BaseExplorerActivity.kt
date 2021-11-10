@@ -11,16 +11,15 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.AdapterView.OnItemClickListener
-import android.widget.AdapterView.OnItemLongClickListener
 import android.widget.EditText
-import android.widget.ListView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
@@ -67,7 +66,7 @@ open class BaseExplorerActivity : BaseActivity() {
     protected var usf_keep_open = false
     private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var titleText: TextView
-    private lateinit var listExplorer: ListView
+    private lateinit var recycler_view_explorer: RecyclerView
     private lateinit var refresher: SwipeRefreshLayout
     private lateinit var textDirEmpty: TextView
     private lateinit var currentPathText: TextView
@@ -88,7 +87,7 @@ open class BaseExplorerActivity : BaseActivity() {
         init()
         toolbar = findViewById(R.id.toolbar)
         titleText = findViewById(R.id.title_text)
-        listExplorer = findViewById(R.id.list_explorer)
+        recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
         refresher = findViewById(R.id.refresher)
         textDirEmpty = findViewById(R.id.text_dir_empty)
         currentPathText = findViewById(R.id.current_path_text)
@@ -96,14 +95,13 @@ open class BaseExplorerActivity : BaseActivity() {
         setSupportActionBar(toolbar)
         title = ""
         titleText.text = getString(R.string.volume, volumeName)
-        explorerAdapter = ExplorerElementAdapter(this)
+        explorerAdapter = ExplorerElementAdapter(this, ::onExplorerItemClick, ::onExplorerItemLongClick)
         explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
         setCurrentPath(currentDirectoryPath)
-        listExplorer.apply {
+        recycler_view_explorer.apply {
             adapter = explorerAdapter
-            onItemClickListener = OnItemClickListener { _, _, position, _ -> onExplorerItemClick(position) }
-            onItemLongClickListener = OnItemLongClickListener { _, _, position, _ -> onExplorerItemLongClick(position); true }
+            layoutManager = LinearLayoutManager(this@BaseExplorerActivity)
         }
         refresher.setOnRefreshListener {
             setCurrentPath(currentDirectoryPath)
@@ -172,7 +170,6 @@ open class BaseExplorerActivity : BaseActivity() {
 
     protected open fun onExplorerItemClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
-        explorerAdapter.onItemClick(position)
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
                 val fullPath = explorerElements[position].fullPath
@@ -203,7 +200,6 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     protected open fun onExplorerItemLongClick(position: Int) {
-        explorerAdapter.onItemLongClick(position)
         invalidateOptionsMenu()
     }
 
@@ -262,7 +258,7 @@ open class BaseExplorerActivity : BaseActivity() {
                         )
                     }
                 }
-                explorerAdapter.setExplorerElements(explorerElements)
+                explorerAdapter.explorerElements = explorerElements
             }
         }.start()
     }

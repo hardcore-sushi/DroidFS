@@ -23,7 +23,6 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     override fun onExplorerItemClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
-        explorerAdapter.onItemClick(position)
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {
                 val fullPath = PathUtils.pathJoin(currentDirectoryPath, explorerElements[position].name)
