@@ -40,6 +40,13 @@
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
+            android:icon="@drawable/icon_image"
+            android:key="thumbnails"
+            android:title="@string/thumbnails"
+            android:summary="@string/thumbnails_summary"/>
+
+        <SwitchPreferenceCompat
+            android:defaultValue="true"
             app:icon="@drawable/icon_folder_search"
             android:key="map_folders"
             android:title="@string/map_folders"

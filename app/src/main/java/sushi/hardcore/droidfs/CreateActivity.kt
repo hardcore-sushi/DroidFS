@@ -167,7 +167,7 @@ class CreateActivity : VolumeActionActivity() {
         super.onPause()
         //Closing volume if leaving activity while showing dialog
         if (sessionID != -1 && !isStartingExplorer) {
-            GocryptfsVolume(sessionID).close()
+            GocryptfsVolume(applicationContext, sessionID).close()
             finish()
         }
     }

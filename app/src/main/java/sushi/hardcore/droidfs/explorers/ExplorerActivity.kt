@@ -36,7 +36,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
                 val remoteSessionID = resultIntent.getIntExtra("sessionID", -1)
-                val remoteGocryptfsVolume = GocryptfsVolume(remoteSessionID)
+                val remoteGocryptfsVolume = GocryptfsVolume(applicationContext, remoteSessionID)
                 val path = resultIntent.getStringExtra("path")
                 val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements

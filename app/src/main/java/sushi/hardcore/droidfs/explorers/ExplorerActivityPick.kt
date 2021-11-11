@@ -86,8 +86,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         if (!isFinishingIntentionally && !usf_keep_open){
             val sessionID = intent.getIntExtra("originalSessionID", -1)
             if (sessionID != -1){
-                val v = GocryptfsVolume(sessionID)
-                v.close()
+                GocryptfsVolume(applicationContext, sessionID).close()
             }
             super.closeVolumeOnDestroy()
         }

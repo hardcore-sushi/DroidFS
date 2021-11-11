@@ -38,14 +38,5 @@ class ConstValues {
         fun isText(path: String): Boolean {
             return isExtensionType("text", path)
         }
-        fun getAssociatedDrawable(path: String): Int {
-            return when {
-                isAudio(path) -> R.drawable.icon_file_audio
-                isImage(path) -> R.drawable.icon_file_image
-                isVideo(path) -> R.drawable.icon_file_video
-                isText(path) -> R.drawable.icon_file_text
-                else -> R.drawable.icon_file_unknown
-            }
-        }
     }
 }

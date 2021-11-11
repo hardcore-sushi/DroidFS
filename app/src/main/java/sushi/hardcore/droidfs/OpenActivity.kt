@@ -170,7 +170,7 @@ class OpenActivity : VolumeActionActivity() {
                                     if (success){
                                         startExplorer()
                                     } else {
-                                        GocryptfsVolume(sessionID).close()
+                                        GocryptfsVolume(applicationContext, sessionID).close()
                                     }
                                 }
                             }
@@ -257,7 +257,7 @@ class OpenActivity : VolumeActionActivity() {
         if (intent.action == "pick" && !isFinishingIntentionally){
             val sessionID = intent.getIntExtra("sessionID", -1)
             if (sessionID != -1){
-                GocryptfsVolume(sessionID).close()
+                GocryptfsVolume(applicationContext, sessionID).close()
                 RestrictedFileProvider.wipeAll(this)
             }
         }

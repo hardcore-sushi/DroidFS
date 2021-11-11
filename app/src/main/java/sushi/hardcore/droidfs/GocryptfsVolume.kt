@@ -9,7 +9,7 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-class GocryptfsVolume(var sessionID: Int) {
+class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
     private external fun native_close(sessionID: Int)
     private external fun native_is_closed(sessionID: Int): Boolean
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>
@@ -47,79 +47,79 @@ class GocryptfsVolume(var sessionID: Int) {
     }
 
     fun close() {
-        synchronized(this){
+        synchronized(applicationContext) {
             native_close(sessionID)
         }
     }
 
     fun isClosed(): Boolean {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_is_closed(sessionID)
         }
     }
 
     fun listDir(dir_path: String): MutableList<ExplorerElement> {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_list_dir(sessionID, dir_path)
         }
     }
 
     fun mkdir(dir_path: String): Boolean {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_mkdir(sessionID, dir_path, ConstValues.DIRECTORY_MODE)
         }
     }
 
     fun rmdir(dir_path: String): Boolean {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_rmdir(sessionID, dir_path)
         }
     }
 
     fun removeFile(file_path: String): Boolean {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_remove_file(sessionID, file_path)
         }
     }
 
     fun pathExists(file_path: String): Boolean {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_path_exists(sessionID, file_path)
         }
     }
 
     fun getSize(file_path: String): Long {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_get_size(sessionID, file_path)
         }
     }
 
     fun closeFile(handleID: Int) {
-        synchronized(this){
+        synchronized(applicationContext) {
             native_close_file(sessionID, handleID)
         }
     }
 
     fun openReadMode(file_path: String): Int {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_open_read_mode(sessionID, file_path)
         }
     }
 
     fun openWriteMode(file_path: String): Int {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_open_write_mode(sessionID, file_path, ConstValues.FILE_MODE)
         }
     }
 
     fun readFile(handleID: Int, offset: Long, buff: ByteArray): Int {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_read_file(sessionID, handleID, offset, buff)
         }
     }
 
     fun writeFile(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
-        synchronized(this){
+        synchronized(applicationContext) {
             return native_write_file(sessionID, handleID, offset, buff, buff_size)
         }
     }
@@ -235,6 +235,42 @@ class GocryptfsVolume(var sessionID: Int) {
             plain_directory_path
         } else {
             null
+        }
+    }
+
+    fun loadWholeFile(fullPath: String, maxSize: Long? = null): Pair<ByteArray?, Int> {
+        val fileSize = getSize(fullPath)
+        return if (fileSize >= 0) {
+            maxSize?.let {
+                if (fileSize > it) {
+                    return Pair(null, 0)
+                }
+            }
+            try {
+                val fileBuff = ByteArray(fileSize.toInt())
+                val handleID = openReadMode(fullPath)
+                if (handleID == -1) {
+                    Pair(null, 3)
+                } else {
+                    var offset: Long = 0
+                    val ioBuffer = ByteArray(DefaultBS)
+                    var length: Int
+                    while (readFile(handleID, offset, ioBuffer).also { length = it } > 0) {
+                        System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
+                        offset += length.toLong()
+                    }
+                    closeFile(handleID)
+                    if (offset == fileBuff.size.toLong()) {
+                        Pair(fileBuff, 0)
+                    } else {
+                        Pair(null, 4)
+                    }
+                }
+            } catch (e: OutOfMemoryError) {
+                Pair(null, 2)
+            }
+        } else {
+            Pair(null, 1)
         }
     }
 }

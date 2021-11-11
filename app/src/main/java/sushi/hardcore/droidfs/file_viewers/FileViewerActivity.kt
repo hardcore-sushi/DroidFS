@@ -30,7 +30,7 @@ abstract class FileViewerActivity: BaseActivity() {
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
         val sessionID = intent.getIntExtra("sessionID", -1)
-        gocryptfsVolume = GocryptfsVolume(sessionID)
+        gocryptfsVolume = GocryptfsVolume(applicationContext, sessionID)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
@@ -56,51 +56,20 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     protected fun loadWholeFile(path: String): ByteArray? {
-        val fileSize = gocryptfsVolume.getSize(path)
-        if (fileSize >= 0){
-            try {
-                val fileBuff = ByteArray(fileSize.toInt())
-                var success = false
-                val handleID = gocryptfsVolume.openReadMode(path)
-                if (handleID != -1) {
-                    var offset: Long = 0
-                    val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
-                    var length: Int
-                    while (gocryptfsVolume.readFile(handleID, offset, ioBuffer).also { length = it } > 0){
-                        System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
-                        offset += length.toLong()
-                    }
-                    gocryptfsVolume.closeFile(handleID)
-                    success = offset == fileBuff.size.toLong()
-                }
-                if (success){
-                    return fileBuff
-                } else {
-                    CustomAlertDialogBuilder(this, themeValue)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.read_file_failed)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-                        .show()
-                }
-            } catch (e: OutOfMemoryError){
-                CustomAlertDialogBuilder(this, themeValue)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.outofmemoryerror_msg)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-                    .show()
-            }
-
-        } else {
-            CustomAlertDialogBuilder(this, themeValue)
+        val result = gocryptfsVolume.loadWholeFile(path)
+        if (result.second != 0) {
+            val dialog = CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
-                .setMessage(R.string.get_size_failed)
                 .setCancelable(false)
                 .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-                .show()
+            when (result.second) {
+                1 -> dialog.setMessage(R.string.get_size_failed)
+                2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
+                else -> dialog.setMessage(R.string.read_file_failed)
+            }
+            dialog.show()
         }
-        return null
+        return result.first
     }
 
     protected fun createPlaylist() {

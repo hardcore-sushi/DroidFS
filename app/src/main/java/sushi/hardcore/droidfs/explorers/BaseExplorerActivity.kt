@@ -78,7 +78,7 @@ open class BaseExplorerActivity : BaseActivity() {
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         volumeName = intent.getStringExtra("volume_name") ?: ""
         val sessionID = intent.getIntExtra("sessionID", -1)
-        gocryptfsVolume = GocryptfsVolume(sessionID)
+        gocryptfsVolume = GocryptfsVolume(applicationContext, sessionID)
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
@@ -95,7 +95,16 @@ open class BaseExplorerActivity : BaseActivity() {
         setSupportActionBar(toolbar)
         title = ""
         titleText.text = getString(R.string.volume, volumeName)
-        explorerAdapter = ExplorerElementAdapter(this, ::onExplorerItemClick, ::onExplorerItemLongClick)
+        explorerAdapter = ExplorerElementAdapter(
+            this,
+            if (sharedPrefs.getBoolean("thumbnails", true)) {
+                gocryptfsVolume
+            } else {
+                null
+            },
+            ::onExplorerItemClick,
+            ::onExplorerItemLongClick
+        )
         explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
         setCurrentPath(currentDirectoryPath)

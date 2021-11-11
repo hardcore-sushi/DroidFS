@@ -204,4 +204,6 @@
     <string name="encryption_cipher_label">Encryption cipher:</string>
     <string name="theme">Theme</string>
     <string name="theme_summary">Customize app theme</string>
+    <string name="thumbnails">Thumbnails</string>
+    <string name="thumbnails_summary">Show images and videos thumbnails</string>
 </resources>
