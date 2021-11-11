@@ -37,10 +37,16 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
             }
         }
         private fun doSort(a: ExplorerElement, b: ExplorerElement, foldersFirst: Boolean, sorter: () -> Int): Int {
-            return if (foldersFirst) {
-                foldersFirst(a, b, sorter)
+            return if (b.isParentFolder) {
+                1
+            } else if (a.isParentFolder) {
+                -1
             } else {
-                sorter()
+                if (foldersFirst) {
+                    foldersFirst(a, b, sorter)
+                } else {
+                    sorter()
+                }
             }
         }
         fun sortBy(sortOrder: String, foldersFirst: Boolean, explorerElements: MutableList<ExplorerElement>) {

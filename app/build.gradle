@@ -14,8 +14,8 @@ android {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
         targetSdkVersion 29
-        versionCode 19
-        versionName "1.6.0"
+        versionCode 20
+        versionName "1.7.0"
 
         ndk {
             abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"

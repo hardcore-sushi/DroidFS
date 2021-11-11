@@ -217,22 +217,32 @@ open class BaseExplorerActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
-    private fun sortExplorerElements() {
-        ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
+    private fun displayExplorerElements(totalSizeValue: String) {
+        totalSizeText.text = getString(R.string.total_size, totalSizeValue)
+        synchronized(this) {
+            ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
+        }
+        explorerAdapter.explorerElements = explorerElements
         val sharedPrefsEditor = sharedPrefs.edit()
         sharedPrefsEditor.putString(ConstValues.sort_order_key, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
     }
 
-    protected fun setCurrentPath(path: String) {
+    protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) {
         synchronized(this) {
             explorerElements = gocryptfsVolume.listDir(path)
+            if (path.isNotEmpty()) { //not root
+                explorerElements.add(
+                    0,
+                    ExplorerElement("..", (-1).toShort(), parentPath = currentDirectoryPath)
+                )
+            }
         }
         textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
         currentDirectoryPath = path
         currentPathText.text = getString(R.string.location, currentDirectoryPath)
-        Thread{
-            val totalSizeValue = if (mapFolders) {
+        if (mapFolders) {
+            Thread {
                 var totalSize: Long = 0
                 synchronized(this) {
                     for (element in explorerElements){
@@ -250,26 +260,16 @@ open class BaseExplorerActivity : BaseActivity() {
                         }
                     }
                 }
-                PathUtils.formatSize(totalSize)
-            } else {
-                getString(R.string.default_total_size)
-            }
-            runOnUiThread {
-                totalSizeText.text = getString(R.string.total_size, totalSizeValue)
-                synchronized(this) {
-                    sortExplorerElements()
+                val totalSizeValue = PathUtils.formatSize(totalSize)
+                runOnUiThread {
+                    displayExplorerElements(totalSizeValue)
+                    onDisplayed?.invoke()
                 }
-                if (path.isNotEmpty()) { //not root
-                    synchronized(this) {
-                        explorerElements.add(
-                            0,
-                            ExplorerElement("..", (-1).toShort(), parentPath = currentDirectoryPath)
-                        )
-                    }
-                }
-                explorerAdapter.explorerElements = explorerElements
-            }
-        }.start()
+            }.start()
+        } else {
+            displayExplorerElements(getString(R.string.default_total_size))
+            onDisplayed?.invoke()
+        }
     }
 
     private fun askCloseVolume() {
@@ -458,8 +458,9 @@ open class BaseExplorerActivity : BaseActivity() {
                         .setPositiveButton(R.string.ok, null)
                         .show()
             } else {
-                setCurrentPath(currentDirectoryPath)
-                invalidateOptionsMenu()
+                setCurrentPath(currentDirectoryPath) {
+                    invalidateOptionsMenu()
+                }
             }
         }
     }
