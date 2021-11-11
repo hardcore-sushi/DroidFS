@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs.widgets
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.util.AttributeSet
 import android.util.TypedValue
@@ -14,10 +15,16 @@ class NonScrollableColoredBorderListView: ListView {
     constructor(context: Context, attrs: AttributeSet): super(context, attrs) { applyColor() }
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr) { applyColor() }
 
-    fun applyColor() {
+    val colorAccent: Int
+
+    init {
         val typedValue = TypedValue()
         context.theme.resolveAttribute(R.attr.colorAccent, typedValue, true)
-        divider = ColorDrawable(typedValue.data)
+        colorAccent = typedValue.data
+    }
+
+    fun applyColor() {
+        divider = ColorDrawable(colorAccent)
         dividerHeight = context.resources.displayMetrics.density.toInt()*2
         background = ContextCompat.getDrawable(context, R.drawable.listview_border)
     }

@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs.adapters
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -8,9 +9,9 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.Volume
 import sushi.hardcore.droidfs.VolumeDatabase
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.NonScrollableColoredBorderListView
@@ -52,6 +53,7 @@ class SavedVolumesAdapter(private val context: Context, private val themeValue: 
         val currentVolume = getItem(position)
         volumeNameTextView.text = currentVolume.name
         val deleteImageView = view.findViewById<ImageView>(R.id.delete_imageview)
+        deleteImageView.imageTintList = ColorStateList.valueOf(nonScrollableColoredBorderListView.colorAccent) //fix a strange bug that sometimes displays the icon in white
         deleteImageView.setOnClickListener {
             val dialog = CustomAlertDialogBuilder(context, themeValue)
             dialog.setTitle(R.string.warning)
