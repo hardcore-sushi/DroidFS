@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="DarkGreenDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+    <style name="DarkGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">@color/secondary</item>
         <item name="android:background">#333333</item>
     </style>
@@ -21,7 +21,7 @@
         <item name="colorAccent">@color/purple</item>
     </style>
 
-    <style name="BlackGreenDialog" parent="Theme.AppCompat.DayNight.Dialog.Alert">
+    <style name="BlackGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">@color/secondary</item>
         <item name="android:background">#191919</item>
     </style>

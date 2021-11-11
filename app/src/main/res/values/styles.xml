@@ -1,5 +1,5 @@
 <resources>
-    <style name="BaseTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
+    <style name="BaseTheme" parent="Theme.AppCompat.NoActionBar">
         <item name="android:textColor">@color/textColor</item>
         <item name="colorAccent">@color/secondary</item>
         <item name="android:statusBarColor">@color/primary</item>
