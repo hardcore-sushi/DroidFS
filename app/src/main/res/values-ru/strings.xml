@@ -196,4 +196,8 @@
     <string name="auto">Авто</string>
     <string name="xchacha_warning">Шифр XChaCha20-Poly1305 поддерживается только с версии GocryptFS 2.2.0. Более старые версии не смогут открыть том, использующий данный шифр.</string>
     <string name="encryption_cipher_label">Шифр:</string>
+    <string name="theme">Тема</string>
+    <string name="theme_summary">Настройка темы приложения</string>
+    <string name="thumbnails">Эскизы</string>
+    <string name="thumbnails_summary">Показывать эскизы изображений и видео</string>
 </resources>
