@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
+    android:layoutDirection="ltr"
     android:background="@color/fullScreenBackgroundColor">
 
     <com.google.android.exoplayer2.ui.PlayerView
@@ -14,4 +15,11 @@
         app:show_shuffle_button="true"
         app:repeat_toggle_modes="all|one"/>
 
-</LinearLayout>
+    <ImageButton
+        android:id="@+id/rotate_button"
+        style="@style/ExoMediaButton"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="15dp"
+        android:src="@drawable/icon_screen_rotation"
+        app:tint="@color/white"/>
+</FrameLayout>

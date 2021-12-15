@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Bundle
+import android.view.View
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.BaseActivity
@@ -24,6 +25,9 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
+    private val legacyMod by lazy {
+        sharedPrefs.getBoolean("legacyMod", false)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,8 +45,15 @@ abstract class FileViewerActivity: BaseActivity() {
         viewFile()
     }
 
-    open fun hideSystemUi(){
-        windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+    open fun hideSystemUi() {
+        if (legacyMod) {
+            @Suppress("Deprecation")
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LOW_PROFILE or
+                View.SYSTEM_UI_FLAG_FULLSCREEN
+        } else {
+            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+        }
     }
 
     abstract fun getFileType(): String

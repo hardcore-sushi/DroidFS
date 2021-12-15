@@ -19,6 +19,17 @@ class VideoPlayer: MediaPlayer() {
 
     override fun bindPlayer(player: ExoPlayer) {
         binding.videoPlayer.player = player
+        binding.videoPlayer.setControllerVisibilityListener { visibility ->
+            binding.rotateButton.visibility = visibility
+        }
+        binding.rotateButton.setOnClickListener {
+            requestedOrientation =
+                if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE)
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                else
+                    ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+        }
+
     }
 
     override fun getFileType(): String {
