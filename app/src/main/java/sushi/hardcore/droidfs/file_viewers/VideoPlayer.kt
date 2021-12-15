@@ -14,6 +14,9 @@ class VideoPlayer: MediaPlayer() {
     private val autoFit by lazy {
         sharedPrefs.getBoolean("autoFit", false)
     }
+    private val legacyMod by lazy {
+        sharedPrefs.getBoolean("legacyMod", false)
+    }
     private lateinit var binding: ActivityVideoPlayerBinding
 
     override fun viewFile() {
@@ -23,8 +26,7 @@ class VideoPlayer: MediaPlayer() {
     }
 
     override fun hideSystemUi(){
-        val legacyMods = true // TODO put in to preference
-        if (legacyMods) {
+        if (legacyMod) {
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
                         View.SYSTEM_UI_FLAG_FULLSCREEN or

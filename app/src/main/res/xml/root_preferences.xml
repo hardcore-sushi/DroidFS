@@ -19,6 +19,13 @@
             android:defaultValue="false"
             android:icon="@drawable/icon_screen_rotation"/>
 
+        <SwitchPreferenceCompat
+            android:title="@string/legacy_mod_title"
+            android:summary="@string/legacy_mod_summary"
+            android:key="legacyMod"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_mod"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/explorer">
