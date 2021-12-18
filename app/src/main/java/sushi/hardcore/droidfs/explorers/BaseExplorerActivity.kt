@@ -223,6 +223,7 @@ open class BaseExplorerActivity : BaseActivity() {
             ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         }
         explorerAdapter.explorerElements = explorerElements
+        unselectAll()
         val sharedPrefsEditor = sharedPrefs.edit()
         sharedPrefsEditor.putString(ConstValues.sort_order_key, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()

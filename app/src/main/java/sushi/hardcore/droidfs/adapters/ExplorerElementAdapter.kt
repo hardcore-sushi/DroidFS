@@ -27,10 +27,6 @@ class ExplorerElementAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
-        set(value) {
-            field = value
-            unSelectAll()
-        }
     val selectedItems: MutableList<Int> = ArrayList()
 
     override fun getItemCount(): Int {

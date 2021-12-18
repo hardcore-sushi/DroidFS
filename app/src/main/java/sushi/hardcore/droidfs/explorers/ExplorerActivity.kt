@@ -343,7 +343,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                             }
                         }
                         cancelItemAction()
-                        unselectAll()
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
                     mapFileForMove(itemsToProcess, itemsToProcess[0].explorerElement.parentPath)
@@ -365,7 +364,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                             }
                         }
                         cancelItemAction()
-                        unselectAll()
                     }
                 }
                 true
@@ -459,7 +457,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                 break
             }
         }
-        unselectAll()
         setCurrentPath(currentDirectoryPath) //refresh
     }
 }
