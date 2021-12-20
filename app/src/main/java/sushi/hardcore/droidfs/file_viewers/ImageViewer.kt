@@ -4,12 +4,18 @@ import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
+import android.graphics.Point
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.os.Handler
+import android.util.Size
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Toast
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
 import sushi.hardcore.droidfs.ConstValues
@@ -31,7 +37,8 @@ class ImageViewer: FileViewerActivity() {
 
     private lateinit var fileName: String
     private lateinit var handler: Handler
-    private lateinit var bitmap: Bitmap
+    private var bitmap: Bitmap? = null
+    private var requestBuilder: RequestBuilder<Drawable>? = null
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
@@ -148,21 +155,49 @@ class ImageViewer: FileViewerActivity() {
         handler.postDelayed(hideUI, hideDelay)
     }
 
+    private fun getDisplaySize(): Size {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val insets = windowManager.currentWindowMetrics.windowInsets.getInsetsIgnoringVisibility(
+                WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
+            )
+            Size(insets.right + insets.left, insets.top + insets.bottom)
+        } else {
+            val point = Point()
+            @Suppress("Deprecation")
+            windowManager.defaultDisplay.getSize(point)
+            Size(point.x, point.y)
+        }
+    }
+
     private fun loadImage(){
         loadWholeFile(filePath)?.let {
             val displayWithGlide = if (it.size < 5_000_000) {
                 true
             } else {
-                val decodedBitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                if (decodedBitmap == null) {
+                bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
+                if (bitmap == null) {
                     true
                 } else {
-                    Glide.with(this).load(decodedBitmap).fitCenter().into(binding.imageViewer)
+                    val displaySize = getDisplaySize()
+                    if (displaySize.width < bitmap!!.width || displaySize.height < bitmap!!.height) {
+                        val newWidth: Int
+                        val newHeight: Int
+                        if (displaySize.width > displaySize.height) {
+                            newWidth = displaySize.width
+                            newHeight = bitmap!!.height*displaySize.width/bitmap!!.width
+                        } else {
+                            newHeight = displaySize.height
+                            newWidth = bitmap!!.width*displaySize.height/bitmap!!.height
+                        }
+                        bitmap = Bitmap.createScaledBitmap(bitmap!!, newWidth, newHeight, false)
+                    }
+                    Glide.with(this).load(bitmap).into(binding.imageViewer)
                     false
                 }
             }
             if (displayWithGlide) {
-                Glide.with(this).load(it).into(binding.imageViewer)
+                requestBuilder = Glide.with(this).load(it)
+                requestBuilder?.into(binding.imageViewer)
             }
             fileName = File(filePath).name
             binding.textFilename.text = fileName
@@ -217,7 +252,8 @@ class ImageViewer: FileViewerActivity() {
 
     private fun rotateImage(){
         binding.imageViewer.restoreZoomNormal()
-        Glide.with(this).load(bitmap).transform(RotateTransformation(this)).into(binding.imageViewer)
+        (requestBuilder ?: Glide.with(this).load(bitmap))
+            .transform(RotateTransformation(this)).into(binding.imageViewer)
     }
 
     private fun askSaveRotation(callback: () -> Unit){
