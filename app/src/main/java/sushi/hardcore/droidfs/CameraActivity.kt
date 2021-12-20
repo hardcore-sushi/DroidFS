@@ -110,13 +110,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         ProcessCameraProvider.getInstance(this).apply {
             addListener({
                 cameraProvider = get()
-                setupCamera()
-            }, executor)
-        }
-        ExtensionsManager.getInstance(this).apply {
-            addListener({
-                extensionsManager = get()
-                setupCamera()
+                ExtensionsManager.getInstanceAsync(this@CameraActivity, cameraProvider).apply {
+                    addListener({
+                        extensionsManager = get()
+                        setupCamera()
+                    }, executor)
+                }
             }, executor)
         }
 
@@ -318,8 +317,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }.build()
 
             cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
-            if (extensionsManager.isExtensionAvailable(cameraProvider, cameraSelector, ExtensionMode.HDR)) {
-                cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraProvider, cameraSelector, ExtensionMode.HDR)
+            if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.HDR)) {
+                cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.HDR)
             }
 
             cameraProvider.unbindAll()
