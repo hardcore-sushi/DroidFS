@@ -4,6 +4,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
+    android:layoutDirection="ltr"
     android:background="@color/fullScreenBackgroundColor">
 
     <com.google.android.exoplayer2.ui.PlayerView
@@ -15,9 +16,11 @@
         app:repeat_toggle_modes="all|one"/>
     <ImageButton
         android:id="@+id/rotate_button"
-        android:layout_width="wrap_content"
+        style="@style/ExoMediaButton"
+        android:layout_gravity="top|end"
+        android:layout_marginTop="15dp"
         android:onClick="toggleScreenOrientation"
-        android:src="@drawable/icon_screen_rotation"
+        android:src="@drawable/button_screen_rotation"
         android:background="@null"
-        android:layout_height="wrap_content"/>
+        />
 </FrameLayout>
