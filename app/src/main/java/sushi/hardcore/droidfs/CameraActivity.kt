@@ -84,6 +84,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private var isBackCamera = true
     private var isInVideoMode = false
     private var isRecording = false
+    private var isWaitingForTimer = false
     private lateinit var binding: ActivityCameraBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -185,24 +186,39 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             dialog.show()
         }
         binding.imageFlash.setOnClickListener {
-            binding.imageFlash.setImageResource(when (imageCapture?.flashMode) {
-                ImageCapture.FLASH_MODE_AUTO -> {
-                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
-                    R.drawable.icon_flash_on
+            binding.imageFlash.setImageResource(if (isInVideoMode) {
+                when (imageCapture?.flashMode) {
+                    ImageCapture.FLASH_MODE_ON -> {
+                        camera?.cameraControl?.enableTorch(false)
+                        imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                        R.drawable.icon_flash_off
+                    }
+                    else -> {
+                        camera?.cameraControl?.enableTorch(true)
+                        imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
+                        R.drawable.icon_flash_on
+                    }
                 }
-                ImageCapture.FLASH_MODE_ON -> {
-                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
-                    R.drawable.icon_flash_off
-                }
-                else -> {
-                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
-                    R.drawable.icon_flash_auto
+            } else {
+                when (imageCapture?.flashMode) {
+                    ImageCapture.FLASH_MODE_AUTO -> {
+                        imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
+                        R.drawable.icon_flash_on
+                    }
+                    ImageCapture.FLASH_MODE_ON -> {
+                        imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                        R.drawable.icon_flash_off
+                    }
+                    else -> {
+                        imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
+                        R.drawable.icon_flash_auto
+                    }
                 }
             })
         }
         binding.imageModeSwitch.setOnClickListener {
             isInVideoMode = !isInVideoMode
-            if (isInVideoMode) {
+            binding.imageFlash.setImageResource(if (isInVideoMode) {
                 binding.recordVideoButton.visibility = View.VISIBLE
                 binding.takePhotoButton.visibility = View.GONE
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -211,10 +227,14 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST_CODE)
                     }
                 }
+                imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                R.drawable.icon_flash_off
             } else {
                 binding.recordVideoButton.visibility = View.GONE
                 binding.takePhotoButton.visibility = View.VISIBLE
-            }
+                imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
+                R.drawable.icon_flash_auto
+            })
         }
         binding.imageCameraSwitch.setOnClickListener {
             isBackCamera = if (isBackCamera) {
@@ -337,34 +357,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
-    private fun takePhoto(outputPath: String) {
-        val imageCapture = imageCapture ?: return
-        val outputBuff = ByteArrayOutputStream()
-        val outputOptions = ImageCapture.OutputFileOptions.Builder(outputBuff).build()
-        imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
-            override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                binding.takePhotoButton.onPhotoTaken()
-                if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)){
-                    Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
-                } else {
-                    CustomAlertDialogBuilder(this@CameraActivity, themeValue)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.picture_save_failed)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ ->
-                            isFinishingIntentionally = true
-                            finish()
-                        }
-                        .show()
-                }
-            }
-            override fun onError(exception: ImageCaptureException) {
-                binding.takePhotoButton.onPhotoTaken()
-                Toast.makeText(applicationContext, exception.message, Toast.LENGTH_SHORT).show()
-            }
-        })
-    }
-
     private fun getOutputPath(isVideo: Boolean): String {
         val baseName = if (isVideo) {"VID"} else {"IMG"}+'_'+dateFormat.format(Date())+'_'
         var fileName: String
@@ -374,57 +366,94 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         return PathUtils.pathJoin(outputDirectory, fileName)
     }
 
-    private fun onClickTakePhoto() {
-        val path = getOutputPath(false)
+    private fun startTimerThen(action: () -> Unit) {
         if (timerDuration > 0){
             binding.textTimer.visibility = View.VISIBLE
+            isWaitingForTimer = true
             Thread{
                 for (i in timerDuration downTo 1){
                     runOnUiThread { binding.textTimer.text = i.toString() }
                     Thread.sleep(1000)
                 }
                 runOnUiThread {
-                    takePhoto(path)
+                    action()
                     binding.textTimer.visibility = View.GONE
                 }
+                isWaitingForTimer = false
             }.start()
         } else {
-            takePhoto(path)
+            action()
+        }
+    }
+
+    private fun onClickTakePhoto() {
+        if (!isWaitingForTimer) {
+            val outputPath = getOutputPath(false)
+            startTimerThen {
+                imageCapture?.let { imageCapture ->
+                    val outputBuff = ByteArrayOutputStream()
+                    val outputOptions = ImageCapture.OutputFileOptions.Builder(outputBuff).build()
+                    imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                            binding.takePhotoButton.onPhotoTaken()
+                            if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)) {
+                                Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
+                            } else {
+                                CustomAlertDialogBuilder(this@CameraActivity, themeValue)
+                                    .setTitle(R.string.error)
+                                    .setMessage(R.string.picture_save_failed)
+                                    .setCancelable(false)
+                                    .setPositiveButton(R.string.ok) { _, _ ->
+                                        isFinishingIntentionally = true
+                                        finish()
+                                    }
+                                    .show()
+                            }
+                        }
+                        override fun onError(exception: ImageCaptureException) {
+                            binding.takePhotoButton.onPhotoTaken()
+                            Toast.makeText(applicationContext, exception.message, Toast.LENGTH_SHORT).show()
+                        }
+                    })
+                }
+            }
         }
     }
 
     @SuppressLint("MissingPermission")
     private fun onClickRecordVideo() {
-        isRecording = if (isRecording) {
+        if (isRecording) {
             videoCapture?.stopRecording()
-            false
-        } else {
+            isRecording = false
+        } else if (!isWaitingForTimer) {
             val path = getOutputPath(true)
-            val handleId = gocryptfsVolume.openWriteMode(path)
-            videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
-                var offset = 0L
-                override fun write(byteArray: ByteArray) {
-                    offset += gocryptfsVolume.writeFile(handleId, offset, byteArray, byteArray.size)
-                }
-                override fun seek(offset: Long) {
-                    this.offset = offset
-                }
-                override fun close() {
-                    gocryptfsVolume.closeFile(handleId)
-                }
-            }), executor, object : VideoCapture.OnVideoSavedCallback {
-                override fun onVideoSaved() {
-                    Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
-                    binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
-                }
-                override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
-                    Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
-                    cause?.printStackTrace()
-                    binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
-                }
-            })
-            binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
-            true
+            startTimerThen {
+                val handleId = gocryptfsVolume.openWriteMode(path)
+                videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
+                    var offset = 0L
+                    override fun write(byteArray: ByteArray) {
+                        offset += gocryptfsVolume.writeFile(handleId, offset, byteArray, byteArray.size)
+                    }
+                    override fun seek(offset: Long) {
+                        this.offset = offset
+                    }
+                    override fun close() {
+                        gocryptfsVolume.closeFile(handleId)
+                    }
+                }), executor, object : VideoCapture.OnVideoSavedCallback {
+                    override fun onVideoSaved() {
+                        Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
+                        binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                    }
+                    override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
+                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
+                        cause?.printStackTrace()
+                        binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                    }
+                })
+                binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
+                isRecording = true
+            }
         }
     }
 
