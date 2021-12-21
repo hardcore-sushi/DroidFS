@@ -36,9 +36,12 @@ class VideoPlayer: MediaPlayer() {
         return "video"
     }
 
-    override fun onPlayerReady() {
+    override fun onVideoSizeChanged(width: Int, height: Int) {
         if (firstPlay && autoFit) {
-            requestedOrientation = if (binding.videoPlayer.width <  binding.videoPlayer.height) ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT else ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
+            requestedOrientation = if (width < height)
+                ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
+            else
+                ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
             firstPlay = false
         }
     }

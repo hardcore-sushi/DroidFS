@@ -5,6 +5,7 @@ import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
+import com.google.android.exoplayer2.video.VideoSize
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -18,7 +19,7 @@ abstract class MediaPlayer: FileViewerActivity() {
 
     abstract fun bindPlayer(player: ExoPlayer)
     protected open fun onPlaylistIndexChanged() {}
-    protected open fun onPlayerReady() {}
+    protected open fun onVideoSizeChanged(width: Int, height: Int) {}
 
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
@@ -37,10 +38,8 @@ abstract class MediaPlayer: FileViewerActivity() {
         player.seekToDefaultPosition(currentPlaylistIndex)
         player.playWhenReady = true
         player.addListener(object : Player.Listener{
-            override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                if (playbackState == Player.STATE_READY) {
-                    onPlayerReady()
-                }
+            override fun onVideoSizeChanged(videoSize: VideoSize) {
+                onVideoSizeChanged(videoSize.width, videoSize.height)
             }
             override fun onPlayerError(error: PlaybackException) {
                 CustomAlertDialogBuilder(this@MediaPlayer, themeValue)
