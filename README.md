@@ -106,16 +106,16 @@ $ git submodule update --init
 libgocryptfs needs OpenSSL:
 ```
 $ cd app/libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1l.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1m.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ wget https://www.openssl.org/source/openssl-1.1.1l.tar.gz.asc
-$ gpg --verify openssl-1.1.1l.tar.gz.asc openssl-1.1.1l.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1m.tar.gz.asc
+$ gpg --verify openssl-1.1.1m.tar.gz.asc openssl-1.1.1m.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.
 ```
-$ tar -xvzf openssl-1.1.1l.tar.gz
+$ tar -xvzf openssl-1.1.1m.tar.gz
 ```
 DroidFS also need [FFmpeg](https://ffmpeg.org) to record encrypted video:
 ```
@@ -135,7 +135,7 @@ $ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf git
 Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". We can now build libgocryptfs: 
 ```
 $ cd DroidFS/app/libgocryptfs
-$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1l" ./build.sh
+$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1m" ./build.sh
  ```
 And also FFmpeg:
 ```
