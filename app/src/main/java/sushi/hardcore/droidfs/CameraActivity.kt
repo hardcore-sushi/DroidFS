@@ -24,7 +24,6 @@ import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
-//import androidx.camera.core.VideoCapture
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -242,6 +241,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 false
             } else {
                 binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_front)
+                if (isInVideoMode) {
+                    //reset flash state
+                    imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
+                    binding.imageFlash.setImageResource(R.drawable.icon_flash_off)
+                }
                 true
             }
             setupCamera()
