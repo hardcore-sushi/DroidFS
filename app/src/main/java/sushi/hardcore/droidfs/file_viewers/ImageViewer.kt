@@ -170,6 +170,8 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun loadImage(){
+        bitmap = null
+        requestBuilder = null
         loadWholeFile(filePath)?.let {
             val displayWithGlide = if (it.size < 5_000_000) {
                 true
