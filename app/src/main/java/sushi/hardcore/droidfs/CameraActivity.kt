@@ -226,11 +226,15 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST_CODE)
                     }
                 }
+                binding.imageModeSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.icon_photo)?.also {
+                    it.setTint(ContextCompat.getColor(this, R.color.neutralIconTint))
+                })
                 imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
                 R.drawable.icon_flash_off
             } else {
                 binding.recordVideoButton.visibility = View.GONE
                 binding.takePhotoButton.visibility = View.VISIBLE
+                binding.imageModeSwitch.setImageResource(R.drawable.icon_video)
                 imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
                 R.drawable.icon_flash_auto
             })

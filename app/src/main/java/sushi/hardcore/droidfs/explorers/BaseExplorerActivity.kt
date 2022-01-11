@@ -481,7 +481,7 @@ open class BaseExplorerActivity : BaseActivity() {
             menu.findItem(R.id.external_open)?.isVisible = false
         }
         val noItemSelected = explorerAdapter.selectedItems.isEmpty()
-        val iconColor = ContextCompat.getColor(this, R.color.menuIconTint)
+        val iconColor = ContextCompat.getColor(this, R.color.neutralIconTint)
         setMenuIconTint(menu, iconColor, R.id.sort, R.drawable.icon_sort)
         setMenuIconTint(menu, iconColor, R.id.delete, R.drawable.icon_delete)
         setMenuIconTint(menu, iconColor, R.id.decrypt, R.drawable.icon_decrypt)

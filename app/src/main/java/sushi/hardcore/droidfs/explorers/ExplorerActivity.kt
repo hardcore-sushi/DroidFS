@@ -171,7 +171,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     listOf("importFolder", R.string.import_folder, R.drawable.icon_import_folder),
                     listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
                     listOf("createFolder", R.string.mkdir, R.drawable.icon_create_new_folder),
-                    listOf("camera", R.string.camera, R.drawable.icon_camera)
+                    listOf("camera", R.string.camera, R.drawable.icon_photo)
                 )
                 CustomAlertDialogBuilder(this, themeValue)
                     .setSingleChoiceItems(adapter, -1){ thisDialog, which ->

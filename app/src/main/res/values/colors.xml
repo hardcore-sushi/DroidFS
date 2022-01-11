@@ -9,7 +9,7 @@
     <color name="yellow">#FFD600</color>
     <color name="orange">#FF6D00</color>
     <color name="purple">#AA00FF</color>
-    <color name="menuIconTint">@color/white</color>
+    <color name="neutralIconTint">@color/white</color>
     <color name="fullScreenBackgroundColor">@color/black</color>
     <color name="textColor">@color/white</color>
     <color name="itemSelected">#66666666</color>
