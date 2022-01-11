@@ -44,8 +44,7 @@
         <activity
             android:name=".OpenActivity"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="nosensor"
-            android:windowSoftInputMode="adjustPan">
+            android:screenOrientation="nosensor">
             <intent-filter android:label="@string/share_menu_label">
                 <action android:name="android.intent.action.SEND" />
                 <action android:name="android.intent.action.SEND_MULTIPLE" />
@@ -62,8 +61,7 @@
         <activity
             android:name=".ChangePasswordActivity"
             android:parentActivityName=".MainActivity"
-            android:screenOrientation="nosensor"
-            android:windowSoftInputMode="adjustPan" />
+            android:screenOrientation="nosensor" />
         <activity
             android:name=".MainActivity"
             android:screenOrientation="nosensor">
