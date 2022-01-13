@@ -151,7 +151,8 @@ Thanks to these open source projects that DroidFS uses:
 
 ### Modified code:
 - [gocryptfs](https://github.com/rfjakob/gocryptfs) to encrypt your data
+### Borrowed code:
+- [MaterialFiles](https://github.com/zhanghai/MaterialFiles) for kotlin natural sorting implementation
 ### Libraries:
-- [Cyanea](https://github.com/jaredrummler/Cyanea) to customize UI
 - [Glide](https://github.com/bumptech/glide/) to display pictures
 - [ExoPlayer](https://github.com/google/ExoPlayer) to play media files

@@ -1,11 +1,14 @@
 package sushi.hardcore.droidfs.explorers
 
+import sushi.hardcore.droidfs.collation.getCollationKeyForFileName
 import sushi.hardcore.droidfs.util.PathUtils
+import java.text.Collator
 import java.util.*
 
 class ExplorerElement(val name: String, val elementType: Short, var size: Long = -1, mTime: Long = -1, val parentPath: String) {
     val mTime = Date((mTime * 1000).toString().toLong())
     val fullPath: String = PathUtils.pathJoin(parentPath, name)
+    val collationKey = Collator.getInstance().getCollationKeyForFileName(fullPath)
 
     val isDirectory: Boolean
         get() = elementType.toInt() == DIRECTORY_TYPE
@@ -53,7 +56,7 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
             when (sortOrder) {
                 "name" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { a.fullPath.compareTo(b.fullPath, true) }
+                        doSort(a, b, foldersFirst) { a.collationKey.compareTo(b.collationKey) }
                     }
                 }
                 "size" -> {
@@ -68,7 +71,7 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
                 }
                 "name_desc" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { b.fullPath.compareTo(a.fullPath, true) }
+                        doSort(a, b, foldersFirst) { b.collationKey.compareTo(a.collationKey) }
                     }
                 }
                 "size_desc" -> {
