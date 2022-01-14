@@ -8,12 +8,14 @@
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
             <EditText
                 android:id="@+id/text_editor"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="top"
                 android:textSize="15sp"
                 android:background="@null"
                 android:padding="5dp"/>
