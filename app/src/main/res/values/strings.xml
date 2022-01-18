@@ -208,4 +208,6 @@
     <string name="theme_summary">Customize app theme</string>
     <string name="thumbnails">Thumbnails</string>
     <string name="thumbnails_summary">Show images and videos thumbnails</string>
+    <string name="seek_seconds_forward">+%d seconds</string>
+    <string name="seek_seconds_backward">-%d seconds</string>
 </resources>

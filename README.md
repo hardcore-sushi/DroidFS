@@ -151,6 +151,7 @@ Thanks to these open source projects that DroidFS uses:
 
 ### Modified code:
 - [gocryptfs](https://github.com/rfjakob/gocryptfs) to encrypt your data
+- [DoubleTapPlayerView](https://github.com/vkay94/DoubleTapPlayerView) to add double-click controls to the video player
 ### Borrowed code:
 - [MaterialFiles](https://github.com/zhanghai/MaterialFiles) for kotlin natural sorting implementation
 ### Libraries:

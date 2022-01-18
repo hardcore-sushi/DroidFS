@@ -19,6 +19,7 @@ class VideoPlayer: MediaPlayer() {
 
     override fun bindPlayer(player: ExoPlayer) {
         binding.videoPlayer.player = player
+        binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
         binding.videoPlayer.setControllerVisibilityListener { visibility ->
             binding.rotateButton.visibility = visibility
         }

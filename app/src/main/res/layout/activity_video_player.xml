@@ -7,13 +7,25 @@
     android:layoutDirection="ltr"
     android:background="@color/fullScreenBackgroundColor">
 
-    <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/video_player"
+    <FrameLayout
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:layout_gravity="center"
-        app:show_shuffle_button="true"
-        app:repeat_toggle_modes="all|one"/>
+        android:layout_gravity="center">
+
+        <sushi.hardcore.droidfs.widgets.DoubleTapPlayerView
+            android:id="@+id/video_player"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            app:show_shuffle_button="true"
+            app:repeat_toggle_modes="all|one" />
+
+        <sushi.hardcore.droidfs.widgets.DoubleTapOverlay
+            android:id="@+id/double_tap_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="invisible"/>
+
+    </FrameLayout>
 
     <ImageButton
         android:id="@+id/rotate_button"
@@ -21,5 +33,6 @@
         android:layout_gravity="top|end"
         android:layout_marginTop="15dp"
         android:src="@drawable/icon_screen_rotation"
-        app:tint="@color/white"/>
+        app:tint="@color/neutralIconTint"/>
+
 </FrameLayout>
