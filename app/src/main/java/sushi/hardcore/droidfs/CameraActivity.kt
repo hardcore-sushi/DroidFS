@@ -29,14 +29,14 @@ import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import java.io.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
@@ -127,7 +127,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
             CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.camera_optimization)
-                .setSingleChoiceItems(DialogSingleChoiceAdapter(this, arrayOf(R.string.maximize_quality, R.string.minimize_latency).map { getString(it) }), currentIndex) { dialog, which ->
+                .setSingleChoiceItems(arrayOf(getString(R.string.maximize_quality), getString(R.string.minimize_latency)), currentIndex) { dialog, which ->
                     val resId: Int
                     val newCaptureMode = if (which == 0) {
                         resId = R.drawable.icon_high_quality
@@ -150,7 +150,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             resolutions?.let {
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.choose_resolution)
-                    .setSingleChoiceItems(DialogSingleChoiceAdapter(this, it.map { size -> size.toString() }), currentResolutionIndex) { dialog, which ->
+                    .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
                         setupCamera(resolutions!![which])
                         dialog.dismiss()
                         currentResolutionIndex = which

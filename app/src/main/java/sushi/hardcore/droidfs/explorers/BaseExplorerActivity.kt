@@ -29,7 +29,6 @@ import sushi.hardcore.droidfs.ConstValues.Companion.isText
 import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.adapters.DialogSingleChoiceAdapter
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
@@ -513,7 +512,7 @@ open class BaseExplorerActivity : BaseActivity() {
             R.id.sort -> {
                 CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.sort_order)
-                        .setSingleChoiceItems(DialogSingleChoiceAdapter(this, sortOrderEntries.toList()), currentSortOrderIndex) { dialog, which ->
+                        .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
                             setCurrentPath(currentDirectoryPath)
                             dialog.dismiss()
