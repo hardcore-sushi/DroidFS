@@ -180,7 +180,7 @@
     <string name="file_op_export_msg">Экспортирование файлов…</string>
     <string name="file_op_move_msg">Перемещение файлов…</string>
     <string name="file_op_wiping_msg">Уничтожение файлов…</string>
-    <string name="folders_first">Сначала папки</string>
+    <string name="folders_first">Папки первыми</string>
     <string name="folders_first_summary">Показывать папки в начале списка</string>
     <string name="auto_fit_title">Автоповорот видео</string>
     <string name="auto_fit_summary">Автоматический поворот экрана в соответствии с размерами видео</string>
@@ -202,4 +202,6 @@
     <string name="theme_summary">Настройка темы приложения</string>
     <string name="thumbnails">Эскизы</string>
     <string name="thumbnails_summary">Показывать эскизы изображений и видео</string>
+    <string name="seek_seconds_forward">+%d сек.</string>
+    <string name="seek_seconds_backward">-%d сек.</string>
 </resources>
