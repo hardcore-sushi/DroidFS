@@ -8,7 +8,7 @@ It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) b
 <img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/3.png" height="500">
 </p>
 
-# Disclamer
+# Disclaimer
 DroidFS is provided "as is", without any warranty of any kind.
 It shouldn't be considered as an absolute safe way to store files.
 DroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.
@@ -48,7 +48,7 @@ It is strongly recommended to read the documentation of a feature before enablin
 
 You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs) or from the "Releases" section in the repo. 
 
-APKs availables here are signed with my PGP key available on keyservers:
+APKs available here are signed with my PGP key available on keyservers:
 
 `gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 007F84120107191E` \
 Fingerprint: `BD5621479E7B74D36A405BE8007F84120107191E` \
@@ -88,11 +88,16 @@ DroidFS use some parts of the original gocryptfs code, which is designed to run 
 # Build
 Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
 
-
-#### Install Requirements
-- [Android Studio](https://developer.android.com/studio/)
-- [Android NDK and CMake](https://developer.android.com/studio/projects/install-ndk) (OpenSSL build fails with NDK versions higher than v22. It should pass with NDK v21.4.7075529 and lower)
-- [Go](https://golang.org/doc/install) (on debian: `$ sudo apt-get install golang-go`)
+#### Install dependencies
+On debian:
+```
+$ sudo apt-get install build-essential pkg-config libssl-dev
+```
+Install [Go](https://golang.org/doc/install):
+```
+$ sudo apt-get install golang-go
+```
+You also need to install the Android SDK build tools and the [Android NDK](https://developer.android.com/studio/projects/install-ndk).
 
 #### Download Sources
 ```
@@ -123,28 +128,32 @@ $ cd app/ffmpeg
 $ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
 ```
 
+#### Generate a keystore
+APKs must be signed to be installed on an Android device. If you don't already have a keystore, you can generate one by running:
+```
+$ keytool -genkey -keystore <output file> -alias <key alias> -keyalg EC -validity 10000
+```
+
 #### Build
-First, we need to install some dependencies:
-```
-$ sudo apt-get install libcrypto++-dev libssl-dev pkg-config
-```
-And also Go dependencies:
-```
-$ go get golang.org/x/sys/unix golang.org/x/sys/cpu golang.org/x/crypto/hkdf github.com/jacobsa/crypto/siv github.com/rfjakob/eme
-```
-Then, retrieve your Android NDK installation path, usually someting like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". We can now build libgocryptfs: 
+Retrieve your Android NDK installation path, usually something like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". Now you can build libgocryptfs:
 ```
 $ cd DroidFS/app/libgocryptfs
 $ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1m" ./build.sh
  ```
-And also FFmpeg:
+Then FFmpeg:
 ```
 $ cd app/ffmpeg
 $ env ANDROID_NDK_HOME="<your ndk path>" ./build.sh ffmpeg
 ```
-Then, open the DroidFS project with Android Studio. \
-If a device (virtual or physical) is connected, just click on "Run". \
-If you want to generate a signed APK, you can follow this [post](https://stackoverflow.com/a/28938286).
+Finally, compile the app:
+```
+$ ./gradlew assembleRelease
+```
+If the build succeeds, you will find the unsigned APKs in `app/build/outputs/apk/release/`. You need to sign them in order to install the app:
+```
+$ apksigner sign --out droidfs.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
+```
+Now you can install `droidfs.apk` on your device.
 
 # Third party code
 Thanks to these open source projects that DroidFS uses:

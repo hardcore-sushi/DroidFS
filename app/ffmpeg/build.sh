@@ -1,9 +1,11 @@
 #!/bin/bash
 
 if [ -z ${ANDROID_NDK_HOME+x} ]; then
-	echo "Error: \$ANDROID_NDK_HOME is not defined."
+	echo "Error: \$ANDROID_NDK_HOME is not defined." >&2
+	exit 1
 elif [ $# -lt 1 ]; then
-	echo "Usage: $0 <FFmpeg source directory> [<ABI>]"
+	echo "Usage: $0 <FFmpeg source directory> [<ABI>]" >&2
+	exit 1
 else
 	FFMPEG_DIR=$1
 	compile_for_arch() {
@@ -76,7 +78,8 @@ else
 		mkdir -p build/$1/libavformat build/$1/libavcodec build/$1/libavutil &&
 		cp $FFMPEG_DIR/libavformat/*.h $FFMPEG_DIR/libavformat/libavformat.so build/$1/libavformat &&
 		cp $FFMPEG_DIR/libavcodec/*.h $FFMPEG_DIR/libavcodec/libavcodec.so build/$1/libavcodec &&
-		cp $FFMPEG_DIR/libavutil/*.h $FFMPEG_DIR/libavutil/libavutil.so build/$1/libavutil
+		cp $FFMPEG_DIR/libavutil/*.h $FFMPEG_DIR/libavutil/libavutil.so build/$1/libavutil ||
+		exit 1
 	}
 
 	export PATH=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
