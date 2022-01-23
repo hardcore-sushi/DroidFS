@@ -1,17 +1,14 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.content.res.Configuration
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
-import android.graphics.Point
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.os.Handler
-import android.util.Size
 import android.view.MotionEvent
 import android.view.View
-import android.view.WindowInsets
 import android.view.WindowManager
 import android.widget.Toast
 import com.bumptech.glide.Glide
@@ -155,20 +152,6 @@ class ImageViewer: FileViewerActivity() {
         handler.postDelayed(hideUI, hideDelay)
     }
 
-    private fun getDisplaySize(): Size {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            val insets = windowManager.currentWindowMetrics.windowInsets.getInsetsIgnoringVisibility(
-                WindowInsets.Type.navigationBars() or WindowInsets.Type.displayCutout()
-            )
-            Size(insets.right + insets.left, insets.top + insets.bottom)
-        } else {
-            val point = Point()
-            @Suppress("Deprecation")
-            windowManager.defaultDisplay.getSize(point)
-            Size(point.x, point.y)
-        }
-    }
-
     private fun loadImage(){
         bitmap = null
         requestBuilder = null
@@ -180,16 +163,16 @@ class ImageViewer: FileViewerActivity() {
                 if (bitmap == null) {
                     true
                 } else {
-                    val displaySize = getDisplaySize()
-                    if (displaySize.width < bitmap!!.width || displaySize.height < bitmap!!.height) {
+                    val displayMetrics = Resources.getSystem().displayMetrics
+                    if (displayMetrics.widthPixels < bitmap!!.width || displayMetrics.heightPixels < bitmap!!.height) {
                         val newWidth: Int
                         val newHeight: Int
-                        if (displaySize.width > displaySize.height) {
-                            newWidth = displaySize.width
-                            newHeight = bitmap!!.height*displaySize.width/bitmap!!.width
+                        if (displayMetrics.widthPixels > displayMetrics.heightPixels) {
+                            newWidth = displayMetrics.widthPixels
+                            newHeight = bitmap!!.height*displayMetrics.widthPixels/bitmap!!.width
                         } else {
-                            newHeight = displaySize.height
-                            newWidth = bitmap!!.width*displaySize.height/bitmap!!.height
+                            newHeight = displayMetrics.heightPixels
+                            newWidth = bitmap!!.width*displayMetrics.heightPixels/bitmap!!.height
                         }
                         bitmap = Bitmap.createScaledBitmap(bitmap!!, newWidth, newHeight, false)
                     }
