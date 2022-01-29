@@ -50,8 +50,8 @@ You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardc
 
 APKs available here are signed with my PGP key available on keyservers:
 
-`gpg --keyserver hkp://pool.sks-keyservers.net --recv-keys 007F84120107191E` \
-Fingerprint: `BD5621479E7B74D36A405BE8007F84120107191E` \
+`gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys 007F84120107191E` \
+Fingerprint: `BD56 2147 9E7B 74D3 6A40  5BE8 007F 8412 0107 191E` \
 Email: `Hardcore Sushi <hardcore.sushi@disroot.org>`
 
 To verify APKs, save the PGP-signed message to a file and run `gpg --verify <the file>`.  __Don't install any APK if the verification fails !__
