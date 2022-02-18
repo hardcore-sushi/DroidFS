@@ -66,8 +66,8 @@ abstract class FileViewerActivity: BaseActivity() {
         }
     }
 
-    protected fun loadWholeFile(path: String): ByteArray? {
-        val result = gocryptfsVolume.loadWholeFile(path)
+    protected fun loadWholeFile(path: String, fileSize: Long? = null): ByteArray? {
+        val result = gocryptfsVolume.loadWholeFile(path, size = fileSize)
         if (result.second != 0) {
             val dialog = CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)

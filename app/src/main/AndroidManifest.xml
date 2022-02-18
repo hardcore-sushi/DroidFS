@@ -78,6 +78,9 @@
             android:name=".file_viewers.VideoPlayer"
             android:configChanges="screenSize|orientation" />
         <activity
+            android:name=".file_viewers.PdfViewer"
+            android:configChanges="screenSize|orientation" />
+        <activity
             android:name=".file_viewers.AudioPlayer"
             android:configChanges="screenSize|orientation" />
         <activity

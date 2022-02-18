@@ -1,2 +1,2 @@
-include ':app'
+include ':app', ':libpdfviewer:app'
 rootProject.name = "DroidFS"

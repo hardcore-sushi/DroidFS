@@ -1,3 +1,6 @@
 [submodule "app/libgocryptfs"]
 	path = app/libgocryptfs
 	url = https://forge.chapril.org/hardcoresushi/libgocryptfs.git
+[submodule "libpdfviewer"]
+	path = libpdfviewer
+	url = https://forge.chapril.org/hardcoresushi/libpdfviewer.git

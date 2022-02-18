@@ -101,14 +101,10 @@ You also need to install the Android SDK build tools and the [Android NDK](https
 
 #### Download Sources
 ```
-$ git clone https://github.com/hardcore-sushi/DroidFS.git
-```
-Download [libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs):
-```
+$ git clone --recurse-submodules https://github.com/hardcore-sushi/DroidFS.git
 $ cd DroidFS
-$ git submodule update --init
 ```
-libgocryptfs needs OpenSSL:
+[libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) needs OpenSSL:
 ```
 $ cd app/libgocryptfs
 $ wget https://www.openssl.org/source/openssl-1.1.1m.tar.gz

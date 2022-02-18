@@ -127,7 +127,7 @@ class ExplorerElementAdapter(
                 adapter.gocryptfsVolume?.let { volume ->
                     displayThumbnail = true
                     Thread {
-                        volume.loadWholeFile(fullPath, 50_000_000).first?.let {
+                        volume.loadWholeFile(fullPath, maxSize = 50_000_000).first?.let {
                             if (displayThumbnail) {
                                 adapter.activity.runOnUiThread {
                                     if (displayThumbnail) {

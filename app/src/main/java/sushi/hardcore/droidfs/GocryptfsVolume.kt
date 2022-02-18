@@ -238,8 +238,8 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
         }
     }
 
-    fun loadWholeFile(fullPath: String, maxSize: Long? = null): Pair<ByteArray?, Int> {
-        val fileSize = getSize(fullPath)
+    fun loadWholeFile(fullPath: String, size: Long? = null, maxSize: Long? = null): Pair<ByteArray?, Int> {
+        val fileSize = size ?: getSize(fullPath)
         return if (fileSize >= 0) {
             maxSize?.let {
                 if (fileSize > it) {

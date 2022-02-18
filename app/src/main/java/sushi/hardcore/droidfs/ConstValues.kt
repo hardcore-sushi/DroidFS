@@ -19,6 +19,7 @@ class ConstValues {
             Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")),
             Pair("video", listOf("mp4", "webm", "mkv", "mov")),
             Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac")),
+            Pair("pdf", listOf("pdf")),
             Pair("text", listOf("txt", "json", "conf", "log", "xml", "java", "kt", "py", "pl", "rb", "go", "c", "h", "cpp", "hpp", "rs", "sh", "bat", "js", "html", "css", "php", "yml", "yaml", "toml", "ini", "md", "properties"))
         )
 
@@ -34,6 +35,9 @@ class ConstValues {
         }
         fun isAudio(path: String): Boolean {
             return isExtensionType("audio", path)
+        }
+        fun isPDF(path: String): Boolean {
+            return isExtensionType("pdf", path)
         }
         fun isText(path: String): Boolean {
             return isExtensionType("text", path)
