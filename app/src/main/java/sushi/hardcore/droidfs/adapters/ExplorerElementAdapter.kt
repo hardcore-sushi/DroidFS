@@ -161,6 +161,7 @@ class ExplorerElementAdapter(
                         R.drawable.icon_file_video
                     }
                     ConstValues.isText(explorerElement.name) -> R.drawable.icon_file_text
+                    ConstValues.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
                     ConstValues.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
                     else -> R.drawable.icon_file_unknown
                 }
