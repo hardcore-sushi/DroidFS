@@ -68,15 +68,15 @@ dependencies {
     implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.1.0"
     implementation 'com.google.android.material:material:1.5.0'
     implementation "com.github.bumptech.glide:glide:4.12.0"
-    implementation "androidx.biometric:biometric:1.1.0"
+    implementation "androidx.biometric:biometric-ktx:1.2.0-alpha04"
 
-    def exoplayer_version = "2.16.1"
+    def exoplayer_version = "2.17.0"
     implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
     implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
 
     implementation "androidx.concurrent:concurrent-futures:1.1.0"
 
-    def camerax_version = "1.1.0-beta01"
+    def camerax_version = "1.1.0-beta02"
     implementation "androidx.camera:camera-camera2:$camerax_version"
     implementation "androidx.camera:camera-lifecycle:$camerax_version"
     implementation "androidx.camera:camera-view:$camerax_version"

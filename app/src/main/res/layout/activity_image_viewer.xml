@@ -13,7 +13,7 @@
         android:layout_gravity="center"/>
 
     <RelativeLayout
-        android:id="@+id/action_bar"
+        android:id="@+id/top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -38,7 +38,6 @@
             android:background="#00000000"
             android:scaleType="fitCenter"
             android:src="@drawable/icon_delete"
-            app:tint="@color/white"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="20dp"
             android:layout_toStartOf="@id/image_button_slideshow"

@@ -7,23 +7,18 @@
     android:paddingTop="@dimen/dialog_padding_top">
 
     <TextView
+        android:id="@+id/text_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/sdcard_error_header"
         android:textSize="@dimen/dialog_text_size"/>
 
-    <TextView
-        android:id="@+id/path"
+    <CheckBox
+        android:id="@+id/checkbox_apply_to_all"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_marginVertical="10dp"/>
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/add_read_only"
-        android:textSize="@dimen/dialog_text_size"/>
+        android:text="@string/apply_to_all"
+        android:layout_gravity="center"
+        android:layout_marginTop="5dp"
+        android:visibility="gone"/>
 
 </LinearLayout>

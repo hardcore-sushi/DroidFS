@@ -43,7 +43,7 @@ class ImageViewer: FileViewerActivity() {
     private var rotatedBitmap: Bitmap? = null
     private val hideUI = Runnable {
         binding.actionButtons.visibility = View.GONE
-        binding.actionBar.visibility = View.GONE
+        binding.topBar.visibility = View.GONE
     }
     private val slideshowNext = Runnable {
         if (slideshowActive){
@@ -60,13 +60,14 @@ class ImageViewer: FileViewerActivity() {
     override fun viewFile() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
                 handler.removeCallbacks(hideUI)
                 if (binding.actionButtons.visibility == View.GONE) {
                     binding.actionButtons.visibility = View.VISIBLE
-                    binding.actionBar.visibility = View.VISIBLE
+                    binding.topBar.visibility = View.VISIBLE
                     handler.postDelayed(hideUI, hideDelay)
                 } else {
                     hideUI.run()

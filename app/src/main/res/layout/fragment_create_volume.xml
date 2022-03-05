@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/password_label"/>
+
+    <EditText
+        android:id="@+id/edit_password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:maxLines="1"
+        android:autofillHints="password"
+        android:hint="@string/password"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/password_confirmation_label"
+        android:layout_marginTop="@dimen/volume_operation_vertical_gap"/>
+
+    <EditText
+        android:id="@+id/edit_password_confirm"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textPassword"
+        android:maxLines="1"
+        android:autofillHints="password"
+        android:hint="@string/password_confirmation_hint"/>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/volume_operation_vertical_gap">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/encryption_cipher_label"
+            android:layout_toStartOf="@id/spinner_xchacha"
+            android:layout_alignParentStart="true"/>
+
+        <Spinner
+            android:id="@+id/spinner_xchacha"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true" />
+
+    </RelativeLayout>
+
+    <CheckBox
+        android:id="@+id/checkbox_save_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/fingerprint_save_checkbox_text" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button_create"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/volume_operation_button_height"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="70dp"
+        android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        android:text="@string/create" />
+
+</LinearLayout>

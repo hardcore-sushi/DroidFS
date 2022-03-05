@@ -1,195 +1,161 @@
 package sushi.hardcore.droidfs
 
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
-import android.text.Editable
-import android.text.TextWatcher
-import android.widget.AdapterView.OnItemClickListener
+import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import sushi.hardcore.droidfs.adapters.SavedVolumesAdapter
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
-import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.WidgetUtil
-import sushi.hardcore.droidfs.util.Wiper
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import java.io.File
 import java.util.*
 
-class ChangePasswordActivity : VolumeActionActivity() {
-    private lateinit var savedVolumesAdapter: SavedVolumesAdapter
+class ChangePasswordActivity: BaseActivity() {
+
     private lateinit var binding: ActivityChangePasswordBinding
+    private lateinit var volume: Volume
+    private lateinit var volumeDatabase: VolumeDatabase
+    private var fingerprintProtector: FingerprintProtector? = null
+    private var usfFingerprint: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        volume = intent.getParcelableExtra("volume")!!
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        setupLayout()
-        setupFingerprintStuff()
-        savedVolumesAdapter = SavedVolumesAdapter(this, themeValue, volumeDatabase)
-        if (savedVolumesAdapter.count > 0){
-            binding.savedPathListview.adapter = savedVolumesAdapter
-            binding.savedPathListview.onItemClickListener = OnItemClickListener { _, _, position, _ ->
-                val volume = savedVolumesAdapter.getItem(position)
-                currentVolumeName = volume.name
-                if (volume.isHidden){
-                    switchHiddenVolume.isChecked = true
-                    editVolumeName.setText(currentVolumeName)
-                } else {
-                    switchHiddenVolume.isChecked = false
-                    editVolumePath.setText(currentVolumeName)
-                }
-                onClickSwitchHiddenVolume()
-            }
-        } else {
-            WidgetUtil.hideWithPadding(binding.savedPathListview)
-        }
-        val textWatcher = object: TextWatcher{
-            override fun afterTextChanged(s: Editable?) {
-            }
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-            }
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                if (volumeDatabase.isVolumeSaved(s.toString())){
-                    checkboxRememberPath.isEnabled = false
-                    checkboxRememberPath.isChecked = true
-                    binding.editOldPassword.apply {
-                        if (volumeDatabase.isHashSaved(s.toString())){
-                            text = null
-                            hint = getString(R.string.hash_saved_hint)
-                            isEnabled = false
-                        } else {
-                            hint = null
-                            isEnabled = true
-                        }
-                    }
-                } else {
-                    checkboxRememberPath.isEnabled = true
-                    binding.editOldPassword.apply {
-                        hint = null
-                        isEnabled = true
-                    }
-                }
+        title = getString(R.string.change_password)
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        binding.textVolumeName.text = volume.name
+        volumeDatabase = VolumeDatabase(this)
+        usfFingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            fingerprintProtector = FingerprintProtector.new(this, themeValue, volumeDatabase)
+            if (fingerprintProtector != null && volume.encryptedHash != null) {
+                binding.textCurrentPasswordLabel.visibility = View.GONE
+                binding.editCurrentPassword.visibility = View.GONE
             }
         }
-        editVolumePath.addTextChangedListener(textWatcher)
-        editVolumeName.addTextChangedListener(textWatcher)
-        binding.editNewPasswordConfirm.setOnEditorActionListener { _, _, _ ->
-            checkVolumePathThenChangePassword()
+        if (!usfFingerprint || fingerprintProtector == null) {
+            binding.checkboxSavePassword.visibility = View.GONE
+        }
+        binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
+            changeVolumePassword()
             true
         }
-        binding.buttonChangePassword.setOnClickListener {
-            checkVolumePathThenChangePassword()
-        }
+        binding.button.setOnClickListener { changeVolumePassword() }
     }
 
-    fun checkVolumePathThenChangePassword() {
-        loadVolumePath {
-            val volumeFile = File(currentVolumePath)
-            if (!GocryptfsVolume.isGocryptfsVolume(volumeFile)){
-                CustomAlertDialogBuilder(this, themeValue)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.error_not_a_volume)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-            } else if (!volumeFile.canWrite()){
-                errorDirectoryNotWritable(R.string.change_pwd_cant_write_error_msg)
-            } else {
-                changePassword()
-            }
-        }
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return if (item.itemId == android.R.id.home) {
+            finish()
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
-    private fun changePassword(givenHash: ByteArray? = null){
-        val newPassword = binding.editNewPassword.text.toString().toCharArray()
-        val newPasswordConfirm = binding.editNewPasswordConfirm.text.toString().toCharArray()
+    private fun showCurrentPasswordInput() {
+        binding.textCurrentPasswordLabel.visibility = View.VISIBLE
+        binding.editCurrentPassword.visibility = View.VISIBLE
+    }
+
+    private fun changeVolumePassword() {
+        val newPassword = CharArray(binding.editNewPassword.text.length)
+        binding.editNewPassword.text.getChars(0, newPassword.size, newPassword, 0)
+        val newPasswordConfirm = CharArray(binding.editPasswordConfirm.text.length)
+        binding.editPasswordConfirm.text.getChars(0, newPasswordConfirm.size, newPasswordConfirm, 0)
+        @SuppressLint("NewApi")
         if (!newPassword.contentEquals(newPasswordConfirm)) {
             Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
+            Arrays.fill(newPassword, 0.toChar())
         } else {
-            object : LoadingTask(this, themeValue, R.string.loading_msg_change_password) {
-                override fun doTask(activity: AppCompatActivity) {
-                    val oldPassword = binding.editOldPassword.text.toString().toCharArray()
-                    var returnedHash: ByteArray? = null
-                    if (checkboxSavePassword.isChecked) {
-                        returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                    }
-                    var changePasswordImmediately = true
-                    if (givenHash == null) {
-                        var volume: Volume? = null
-                        volumeDatabase.getVolumes().forEach { testVolume ->
-                            if (testVolume.name == currentVolumeName){
-                                volume = testVolume
+            var changeWithCurrentPassword = true
+            volume.encryptedHash?.let { encryptedHash ->
+                volume.iv?.let { iv ->
+                    fingerprintProtector?.let {
+                        changeWithCurrentPassword = false
+                        it.listener = object : FingerprintProtector.Listener {
+                            override fun onHashStorageReset() {
+                                showCurrentPasswordInput()
+                                volume.encryptedHash = null
+                                volume.iv = null
+                            }
+                            override fun onPasswordHashDecrypted(hash: ByteArray) {
+                                changeVolumePassword(newPassword, hash)
+                            }
+                            override fun onPasswordHashSaved() {}
+                            override fun onFailed(pending: Boolean) {
+                                Arrays.fill(newPassword, 0.toChar())
                             }
                         }
-                        volume?.let {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                                it.hash?.let { hash ->
-                                    it.iv?.let { iv ->
-                                        currentVolumePath = if (it.isHidden){
-                                            PathUtils.pathJoin(filesDir.path, it.name)
-                                        } else {
-                                            it.name
-                                        }
-                                        stopTask {
-                                            loadPasswordHash(hash, iv, ::changePassword)
-                                        }
-                                        changePasswordImmediately = false
-                                    }
-                                }
-                            }
-                        }
+                        it.loadPasswordHash(volume.name, encryptedHash, iv)
                     }
-                    if (changePasswordImmediately) {
-                        if (GocryptfsVolume.changePassword(currentVolumePath, oldPassword, givenHash, newPassword, returnedHash)) {
-                            val volume = Volume(currentVolumeName, switchHiddenVolume.isChecked)
-                            if (volumeDatabase.isHashSaved(currentVolumeName)) {
-                                volumeDatabase.removeHash(volume)
-                            }
-                            if (checkboxRememberPath.isChecked) {
-                                volumeDatabase.saveVolume(volume)
-                            }
-                            if (checkboxSavePassword.isChecked && returnedHash != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-                                stopTask {
-                                    savePasswordHash(returnedHash) {
-                                        onPasswordChanged()
-                                    }
-                                }
-                            } else {
-                                stopTask { onPasswordChanged() }
-                            }
-                        } else {
-                            stopTask {
-                                CustomAlertDialogBuilder(activity, themeValue)
-                                    .setTitle(R.string.error)
-                                    .setMessage(R.string.change_password_failed)
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
-                        }
-                    }
-                    Arrays.fill(oldPassword, 0.toChar())
-                }
-                override fun doFinally(activity: AppCompatActivity) {
-                    Arrays.fill(newPassword, 0.toChar())
-                    Arrays.fill(newPasswordConfirm, 0.toChar())
                 }
             }
+            if (changeWithCurrentPassword) {
+                changeVolumePassword(newPassword)
+            }
         }
+        Arrays.fill(newPasswordConfirm, 0.toChar())
     }
 
-    private fun onPasswordChanged(){
-        CustomAlertDialogBuilder(this, themeValue)
-                .setTitle(R.string.success_change_password)
-                .setMessage(R.string.success_change_password_msg)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ -> finish() }
-                .show()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Wiper.wipeEditText(binding.editOldPassword)
-        Wiper.wipeEditText(binding.editNewPassword)
-        Wiper.wipeEditText(binding.editNewPasswordConfirm)
+    private fun changeVolumePassword(newPassword: CharArray, givenHash: ByteArray? = null) {
+        object : LoadingTask(this, themeValue, R.string.loading_msg_change_password) {
+            override fun doTask(activity: AppCompatActivity) {
+                var returnedHash: ByteArray? = null
+                if (binding.checkboxSavePassword.isChecked) {
+                    returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+                }
+                var currentPassword: CharArray? = null
+                if (givenHash == null) {
+                    currentPassword = CharArray(binding.editCurrentPassword.text.length)
+                    binding.editCurrentPassword.text.getChars(0, currentPassword.size, currentPassword, 0)
+                }
+                if (GocryptfsVolume.changePassword(volume.getFullPath(filesDir.path), currentPassword, givenHash, newPassword, returnedHash)) {
+                    if (volumeDatabase.isHashSaved(volume.name)) {
+                        volumeDatabase.removeHash(volume)
+                    }
+                    stopTask {
+                        @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
+                        if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
+                            fingerprintProtector!!.let {
+                                it.listener = object : FingerprintProtector.Listener {
+                                    override fun onHashStorageReset() {
+                                        // retry
+                                        it.savePasswordHash(volume, returnedHash)
+                                    }
+                                    override fun onPasswordHashDecrypted(hash: ByteArray) {}
+                                    override fun onPasswordHashSaved() {
+                                        Arrays.fill(returnedHash, 0)
+                                        finish()
+                                    }
+                                    override fun onFailed(pending: Boolean) {
+                                        if (!pending) {
+                                            Arrays.fill(returnedHash, 0)
+                                            finish()
+                                        }
+                                    }
+                                }
+                                it.savePasswordHash(volume, returnedHash)
+                            }
+                        } else {
+                            finish()
+                        }
+                    }
+                } else {
+                    stopTask {
+                        CustomAlertDialogBuilder(activity, themeValue)
+                            .setTitle(R.string.error)
+                            .setMessage(R.string.change_password_failed)
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
+                }
+                if (currentPassword != null)
+                    Arrays.fill(currentPassword, 0.toChar())
+                Arrays.fill(newPassword, 0.toChar())
+                if (givenHash != null)
+                    Arrays.fill(givenHash, 0)
+            }
+        }
     }
 }

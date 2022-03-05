@@ -35,7 +35,8 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
                                                                              jboolean plainTextNames,
                                                                              jint xchacha,
                                                                              jint logN,
-                                                                             jstring jcreator) {
+                                                                             jstring jcreator,
+                                                                             jbyteArray jreturned_hash) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
     const char* creator = (*env)->GetStringUTFChars(env, jcreator, NULL);
     GoString gofilename = {root_cipher_dir, strlen(root_cipher_dir)}, gocreator = {creator, strlen(creator)};
@@ -46,12 +47,33 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
     jcharArray_to_charArray(jchar_password, password, password_len);
     GoSlice go_password = {password, password_len, password_len};
 
-    GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, xchacha, logN, gocreator);
+    size_t returned_hash_len;
+    jbyte* jbyte_returned_hash;
+    unsigned char* returned_hash;
+    GoSlice go_returned_hash = {NULL, 0, 0};
+    if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
+        returned_hash_len = (*env)->GetArrayLength(env, jreturned_hash);
+        jbyte_returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
+        returned_hash = malloc(returned_hash_len);
+        go_returned_hash.data = returned_hash;
+        go_returned_hash.len = returned_hash_len;
+        go_returned_hash.cap = returned_hash_len;
+    }
+
+    GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, xchacha, logN, gocreator, go_returned_hash);
 
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
     (*env)->ReleaseStringUTFChars(env, jcreator, creator);
     wipe(password, password_len);
     (*env)->ReleaseCharArrayElements(env, jpassword, jchar_password, 0);
+
+    if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
+        unsignedCharArray_to_jbyteArray(returned_hash, jbyte_returned_hash, returned_hash_len);
+        wipe(returned_hash, returned_hash_len);
+        free(returned_hash);
+        (*env)->ReleaseByteArrayElements(env, jreturned_hash, jbyte_returned_hash, 0);
+    }
+
     return result;
 }
 

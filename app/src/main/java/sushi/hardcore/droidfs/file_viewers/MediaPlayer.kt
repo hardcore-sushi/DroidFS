@@ -14,6 +14,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     private lateinit var player: ExoPlayer
 
     override fun viewFile() {
+        supportActionBar?.hide()
         initializePlayer()
     }
 

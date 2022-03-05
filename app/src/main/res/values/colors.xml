@@ -12,6 +12,7 @@
     <color name="neutralIconTint">@color/white</color>
     <color name="fullScreenBackgroundColor">@color/black</color>
     <color name="textColor">@color/white</color>
+    <color name="textColorSecondary">#AAAAAA</color>
     <color name="itemSelected">#66666666</color>
     <color name="playerDoubleTapTouch">#18FFFFFF</color>
     <color name="playerDoubleTapBackground">#20EEEEEE</color>

@@ -1,14 +1,9 @@
 <resources>
-    <string name="open_volume">Открыть том</string>
     <string name="create_volume">Создать том</string>
-    <string name="change_volume_password">Изменить пароль тома</string>
     <string name="open">Открыть</string>
     <string name="create">Создать</string>
     <string name="change_password">Изменить пароль</string>
-    <string name="password">Пароль:</string>
-    <string name="password_confirm">Повтор пароля:</string>
-    <string name="volume_path">Путь тома:</string>
-    <string name="volume_name">Имя тома:</string>
+    <string name="password">Пароль</string>
     <string name="import_files">Импорт/шифрование файлов</string>
     <string name="import_folder">Импорт/шифрование папки</string>
     <string name="discovering_files">Обнаружение файлов…</string>
@@ -29,8 +24,6 @@
     <string name="remove_failed">Ошибка при удалении %s.</string>
     <string name="passwords_mismatch">Пароли не совпадают</string>
     <string name="dir_not_empty">Выбранная папка не пустая</string>
-    <string name="success_volume_create">Том создан!</string>
-    <string name="success_volume_create_msg">Том успешно создан.</string>
     <string name="create_volume_failed">Невозможно создать том.</string>
     <string name="open_volume_failed">Ошибка открытия</string>
     <string name="open_volume_failed_msg">Невозможно открыть том. Проверьте пароль.</string>
@@ -55,18 +48,10 @@
     <string name="ask_for_wipe">Уничтожить исходные файлы?</string>
     <string name="wipe_failed">Ошибка при уничтожении: %s</string>
     <string name="wipe_successful">Файлы уничтожены!</string>
-    <string name="create_password_warning">Предупреждение!\nЭтот пароль будет единственным способом расшифровать том и получить доступ к файлам внутри.\nВыберите надёжный пароль (не \"123456\" или \"password\"), не потеряйте его и храните в безопасности (желательно только в своей голове).\n\nDroidFS не может защитить вас от приложений записи экрана, клавиатурных шпионов, скрытых недокументированных функций приложений, скомпрометированных прав root-доступа, дампов памяти и т.д.\nНе вводите пароль в небезопасных средах.</string>
-    <string name="open_activity_warning">Предупреждение!\nОткрытие томов в небезопасных средах может привести к утечке данных.\nDroidFS не может защитить вас от приложений записи экрана, клавиатурных шпионов, скрытых недокументированных функций приложений, скомпрометированных прав root-доступа, дампов памяти и т.д.\nНе открывайте тома, содержащие конфиденциальные данные, если не уверены в своих действиях.</string>
     <string name="rename">Переименовать</string>
     <string name="rename_title">Новое имя:</string>
     <string name="rename_failed">Ошибка при переименовании %s.</string>
-    <string name="remember_volume_path">Запомнить путь тома</string>
     <string name="sort_order">Порядок сортировки:</string>
-    <string name="old_password">Прежний пароль:</string>
-    <string name="new_password">Новый пароль:</string>
-    <string name="new_password_confirmation">Повтор пароля:</string>
-    <string name="success_change_password">Пароль изменён!</string>
-    <string name="success_change_password_msg">Пароль тома успешно изменён.</string>
     <string name="change_password_failed">Операция не выполнена. Проверьте прежний пароль.</string>
     <string name="share_menu_label">Зашифровать в DroidFS</string>
     <string name="share_intent_parsing_failed">Невозможно обработать запрос на совместное использование.</string>
@@ -74,22 +59,12 @@
     <string name="fingerprint_save_checkbox_text">Сохранить хеш пароля отпечатком пальца</string>
     <string name="fingerprint_instruction">Прикоснитесь к сканеру отпечатков пальцев</string>
     <string name="open_failed_hash_msg">Невозможно открыть том. Возможно, изменился пароль.</string>
-    <string name="authentication_failed">Ошибка аутентификации</string>
-    <string name="delete_hash_or_all">Удалить только хеш пароля или хеш пароля и сохранённый путь? (Сам том не будет удалён.)</string>
-    <string name="password_hash_and_path">Хеш пароля и путь</string>
-    <string name="password_hash">Хеш пароля</string>
-    <string name="ask_delete_volume_path">Забыть путь к тому? (Сам том не будет удалён.)</string>
-    <string name="hidden_volume_delete_question_hash">Удалить только хеш пароля, хеш пароля и сохранённый путь или ВЕСЬ том (включая его содержимое)?</string>
-    <string name="whole_volume">Весь том</string>
-    <string name="hidden_volume_delete_question">Удалить только путь или ВЕСЬ том (включая его содержимое)?</string>
-    <string name="path_only">Только путь</string>
     <string name="illegal_block_size_exception_msg">Это могло произойти, если вы добавили новый отпечаток пальца. Сброс хранилища хешей должен решить эту проблему.</string>
     <string name="reset_hash_storage">Сброс хранилища хешей</string>
     <string name="MAC_verification_failed">Проверка подписи/MAC не выполнена. Хранилище ключей Android или сохранённый хеш был изменён. Сброс хранилища хешей должен решить эту проблему.</string>
     <string name="hash_storage_reset">Хранилище хешей успешно сброшено</string>
     <string name="encrypt_action_description">Шифрование и сохранение хеша пароля</string>
     <string name="decrypt_action_description">Расшифровка хеша пароля</string>
-    <string name="hash_saved_hint">Хеш сохранённого пароля</string>
     <string name="title_activity_settings">Настройки DroidFS</string>
     <string name="explorer">Проводник</string>
     <string name="settings_title_sort_order">Порядок сортировки</string>
@@ -135,7 +110,7 @@
     <string name="decrypt_files">Экспорт/расшифровка</string>
     <string name="copy_failed">Ошибка при копировании %s.</string>
     <string name="copy_success">Копирование выполнено!</string>
-    <string name="fab_dialog_title">Добавить</string>
+    <string name="add">Добавить</string>
     <string name="camera">Камера</string>
     <string name="picture_save_success">Изображение сохранено в %s</string>
     <string name="picture_save_failed">Невозможно сохранить изображение.</string>
@@ -150,12 +125,7 @@
     <string name="timer_empty_error_msg">Введите числовое значение.</string>
     <string name="path_from_uri_null_error_msg">Невозможно получить выбранный путь.</string>
     <string name="create_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте найти другое место.</string>
-    <string name="open_read_only">Открытие тома с доступом только для чтения.</string>
-    <string name="open_cant_write_warning">DroidFS не имеет доступа на запись по этому пути. Том открывается только для чтения.</string>
-    <string name="open_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте другой том.</string>
     <string name="sdcard_error_header">DroidFS может записывать на SD-карты только в:</string>
-    <string name="sdcard_error_footer">Используйте вложенную папку этого пути или внутреннее хранилище.</string>
-    <string name="change_pwd_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте переместить том в место, доступное для записи.</string>
     <string name="slideshow_stopped">Слайдшоу остановлено</string>
     <string name="slideshow_started">Слайдшоу началось</string>
     <string name="ask_save_img_rotated">Изображение было повёрнуто. Сохранить изменения и перезаписать исходное изображение?</string>
@@ -204,4 +174,6 @@
     <string name="thumbnails_summary">Показывать эскизы изображений и видео</string>
     <string name="seek_seconds_forward">+%d сек.</string>
     <string name="seek_seconds_backward">-%d сек.</string>
+    <string name="password_confirmation_hint">Повтор пароля</string>
+    <string name="new_password_hint">Новый пароль</string>
 </resources>

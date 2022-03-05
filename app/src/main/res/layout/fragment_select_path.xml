@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center_vertical">
+
+    <RelativeLayout
+        android:id="@+id/container_hidden_volume"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clickable="true"
+        android:focusable="true"
+        android:background="?attr/selectableItemBackground"
+        android:paddingHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:layout_marginBottom="@dimen/volume_operation_vertical_gap">
+
+        <ImageView
+            android:id="@+id/icon_hidden_volume"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_centerVertical="true"
+            android:src="@drawable/icon_hidden"
+            android:layout_marginEnd="@dimen/volume_operation_horizontal_gap" />
+
+        <LinearLayout
+            android:id="@+id/switch_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_toStartOf="@id/switch_hidden_volume"
+            android:layout_toEndOf="@id/icon_hidden_volume">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/hidden_volume"
+                android:textSize="@dimen/title_text_size" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/textColorSecondary"
+                android:text="@string/hidden_volume_description"/>
+
+        </LinearLayout>
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switch_hidden_volume"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap">
+
+        <TextView
+            android:id="@+id/text_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/volume_path_label"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <EditText
+                android:id="@+id/edit_volume_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:inputType="text"
+                android:maxLines="1"
+                android:importantForAutofill="no"
+                android:hint="@string/volume_path_hint"/>
+
+            <ImageButton
+                android:id="@+id/button_pick_directory"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                android:scaleType="fitCenter"
+                android:background="#00000000"
+                android:src="@drawable/icon_folder"
+                android:contentDescription="@string/pick_directory" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/text_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@color/textColorSecondary"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:visibility="gone"/>
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/button_action"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/volume_operation_button_height"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="@dimen/volume_operation_button_horizontal_margin"
+        android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        android:text="@string/add_volume" />
+
+</LinearLayout>

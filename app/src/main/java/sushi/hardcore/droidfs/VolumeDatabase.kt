@@ -18,7 +18,7 @@ class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
             val contentValues = ContentValues()
             contentValues.put(COLUMN_NAME, volume.name)
             contentValues.put(COLUMN_HIDDEN, volume.isHidden)
-            contentValues.put(COLUMN_HASH, volume.hash)
+            contentValues.put(COLUMN_HASH, volume.encryptedHash)
             contentValues.put(COLUMN_IV, volume.iv)
             return contentValues
         }
@@ -31,15 +31,19 @@ class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {}
 
-    fun isVolumeSaved(volumeName: String): Boolean {
-        val cursor = readableDatabase.query(TABLE_NAME, arrayOf(COLUMN_NAME), "$COLUMN_NAME=?", arrayOf(volumeName), null, null, null)
+    fun isVolumeSaved(volumeName: String, isHidden: Boolean): Boolean {
+        val cursor = readableDatabase.query(TABLE_NAME,
+            arrayOf(COLUMN_NAME), "$COLUMN_NAME=? AND $COLUMN_HIDDEN=?",
+            arrayOf(volumeName, (if (isHidden) 1 else 0).toString()),
+            null, null, null
+        )
         val result = cursor.count > 0
         cursor.close()
         return result
     }
 
     fun saveVolume(volume: Volume): Boolean {
-        if (!isVolumeSaved(volume.name)){
+        if (!isVolumeSaved(volume.name, volume.isHidden)) {
             return (writableDatabase.insert(TABLE_NAME, null, contentValuesFromVolume(volume)) == 0.toLong())
         }
         return false
@@ -65,8 +69,8 @@ class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
     fun isHashSaved(volumeName: String): Boolean {
         val cursor = readableDatabase.query(TABLE_NAME, arrayOf(COLUMN_NAME, COLUMN_HASH), "$COLUMN_NAME=?", arrayOf(volumeName), null, null, null)
         var isHashSaved = false
-        if (cursor.moveToNext()){
-            if (cursor.getBlob(cursor.getColumnIndex(COLUMN_HASH)) != null){
+        if (cursor.moveToNext()) {
+            if (cursor.getBlob(cursor.getColumnIndex(COLUMN_HASH)) != null) {
                 isHashSaved = true
             }
         }
@@ -90,7 +94,7 @@ class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
         ), "$COLUMN_NAME=?", arrayOf(volume.name)) > 0
     }
 
-    fun removeVolume(volume: Volume): Boolean {
-        return writableDatabase.delete(TABLE_NAME, "$COLUMN_NAME=?", arrayOf(volume.name)) > 0
+    fun removeVolume(volumeName: String): Boolean {
+        return writableDatabase.delete(TABLE_NAME, "$COLUMN_NAME=?", arrayOf(volumeName)) > 0
     }
 }

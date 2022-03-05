@@ -1,53 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
     <LinearLayout
         android:id="@+id/selectable_container"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/selectableItemBackground">
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        tools:ignore="UselessParent">
 
         <ImageView
-            android:id="@+id/icon_element"
+            android:id="@+id/image_icon"
             android:layout_width="50dp"
             android:layout_height="50dp"/>
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/text_element_name"
-                android:layout_width="match_parent"
+                android:id="@+id/text_volume_name"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:textSize="@dimen/adapter_text_size"/>
 
             <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_gravity="bottom">
+                android:layout_height="wrap_content">
 
                 <TextView
-                    android:id="@+id/text_element_mtime"
+                    android:id="@+id/text_path"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="@dimen/details_text_size"
-                    android:layout_marginEnd="7dp"/>
+                    android:layout_marginEnd="7dp"
+                    android:textSize="12sp"/>
 
                 <TextView
-                    android:id="@+id/text_element_size"
+                    android:id="@+id/text_info"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textSize="@dimen/details_text_size"/>
+                    android:visibility="gone"
+                    android:textSize="12sp"/>
 
             </LinearLayout>
-
 
         </LinearLayout>
 

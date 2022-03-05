@@ -15,6 +15,7 @@ class ConstValues {
         const val MAX_KERNEL_WRITE = 128*1024
         const val wipe_passes = 2
         const val slideshow_delay: Long = 4000
+        const val DEFAULT_THEME_VALUE = "dark_green"
         private val fileExtensions = mapOf(
             Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")),
             Pair("video", listOf("mp4", "webm", "mkv", "mov")),

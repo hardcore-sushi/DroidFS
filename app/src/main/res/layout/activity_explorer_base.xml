@@ -6,8 +6,6 @@
     android:orientation="vertical"
     tools:context="sushi.hardcore.droidfs.explorers.BaseExplorerActivity">
 
-    <include layout="@layout/toolbar"/>
-
     <include layout="@layout/explorer_info_bar"/>
 
     <RelativeLayout

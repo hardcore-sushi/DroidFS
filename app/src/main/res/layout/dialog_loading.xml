@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingHorizontal="20dp"
-    android:paddingTop="10dp"
+    android:paddingTop="@dimen/dialog_padding_top"
     android:paddingBottom="20dp">
 
     <ProgressBar

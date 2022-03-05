@@ -1,32 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
-    android:orientation="vertical">
+    android:fillViewport="true">
 
-    <include android:id="@+id/toolbar" layout="@layout/toolbar"/>
-
-    <HorizontalScrollView
-        android:layout_width="match_parent"
+    <ScrollView
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:fillViewport="true">
 
-        <ScrollView
+        <EditText
+            android:id="@+id/text_editor"
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:fillViewport="true">
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:textSize="15sp"
+            android:background="@null"
+            android:padding="5dp"
+            android:importantForAutofill="no"/>
 
-            <EditText
-                android:id="@+id/text_editor"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="top"
-                android:textSize="15sp"
-                android:background="@null"
-                android:padding="5dp"/>
+    </ScrollView>
 
-        </ScrollView>
-
-    </HorizontalScrollView>
-
-</LinearLayout>
+</HorizontalScrollView>

@@ -91,6 +91,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        supportActionBar?.hide()
         gocryptfsVolume = GocryptfsVolume(applicationContext, intent.getIntExtra("sessionID", -1))
         outputDirectory = intent.getStringExtra("path")!!
 

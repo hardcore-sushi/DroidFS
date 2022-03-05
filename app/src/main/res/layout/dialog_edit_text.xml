@@ -2,14 +2,14 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:paddingHorizontal="@dimen/dialog_horizontal_padding">
 
     <EditText
         android:id="@+id/dialog_edit_text"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:inputType="text"
-        android:layout_marginHorizontal="30dp"
         android:imeOptions="actionDone">
         <requestFocus/>
     </EditText>

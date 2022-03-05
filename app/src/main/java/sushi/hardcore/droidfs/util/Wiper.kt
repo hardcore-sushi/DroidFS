@@ -3,14 +3,11 @@ package sushi.hardcore.droidfs.util
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
-import android.widget.EditText
 import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
-import java.io.*
-import java.lang.Exception
-import java.lang.StringBuilder
-import java.lang.UnsupportedOperationException
+import java.io.File
+import java.io.FileOutputStream
 import java.util.*
 import kotlin.math.ceil
 
@@ -79,20 +76,6 @@ object Wiper {
             return null
         } catch (e: Exception) {
             return e.message
-        }
-    }
-    private fun randomString(minSize: Int, maxSize: Int): String {
-        val r = Random()
-        val sb = StringBuilder()
-        val length = r.nextInt(maxSize-minSize)+minSize
-        for (i in 0..length){
-            sb.append((r.nextInt(94)+32).toChar())
-        }
-        return sb.toString()
-    }
-    fun wipeEditText(editText: EditText){
-        if (editText.text.isNotEmpty()){
-            editText.setText(randomString(editText.text.length, editText.text.length*3))
         }
     }
 }

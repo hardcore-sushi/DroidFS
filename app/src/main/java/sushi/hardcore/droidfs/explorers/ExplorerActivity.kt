@@ -12,7 +12,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
-import sushi.hardcore.droidfs.OpenActivity
+import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
@@ -177,7 +177,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
                         when (adapter.getItem(which)){
                             "importFromOtherVolumes" -> {
-                                val intent = Intent(this, OpenActivity::class.java)
+                                val intent = Intent(this, MainActivity::class.java)
                                 intent.action = "pick"
                                 intent.putExtra("sessionID", gocryptfsVolume.sessionID)
                                 isStartingActivity = true
@@ -225,7 +225,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         }
                         thisDialog.dismiss()
                     }
-                    .setTitle(getString(R.string.fab_dialog_title))
+                    .setTitle(getString(R.string.add))
                     .setNegativeButton(R.string.cancel, null)
                     .show()
             }

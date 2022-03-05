@@ -8,13 +8,13 @@ import androidx.preference.PreferenceManager
 
 open class BaseActivity: AppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
-    protected lateinit var themeValue: String
-    protected var shouldCheckTheme = true
+    lateinit var themeValue: String
+    private var shouldCheckTheme = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         if (shouldCheckTheme) {
-            themeValue = sharedPrefs.getString("theme", "dark_green")!!
+            themeValue = sharedPrefs.getString("theme", ConstValues.DEFAULT_THEME_VALUE)!!
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)
                 "dark_red" -> setTheme(R.style.DarkRed)

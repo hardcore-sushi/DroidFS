@@ -61,7 +61,6 @@ open class BaseExplorerActivity : BaseActivity() {
     protected var isStartingActivity = false
     private var usf_open = false
     protected var usf_keep_open = false
-    private lateinit var toolbar: androidx.appcompat.widget.Toolbar
     private lateinit var titleText: TextView
     private lateinit var recycler_view_explorer: RecyclerView
     private lateinit var refresher: SwipeRefreshLayout
@@ -82,14 +81,16 @@ open class BaseExplorerActivity : BaseActivity() {
         mapFolders = sharedPrefs.getBoolean("map_folders", true)
         currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
         init()
-        toolbar = findViewById(R.id.toolbar)
-        titleText = findViewById(R.id.title_text)
         recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
         refresher = findViewById(R.id.refresher)
         textDirEmpty = findViewById(R.id.text_dir_empty)
         currentPathText = findViewById(R.id.current_path_text)
         totalSizeText = findViewById(R.id.total_size_text)
-        setSupportActionBar(toolbar)
+        supportActionBar?.apply {
+            setDisplayShowCustomEnabled(true)
+            setCustomView(R.layout.action_bar)
+            titleText = customView.findViewById(R.id.title_text)
+        }
         title = ""
         titleText.text = getString(R.string.volume, volumeName)
         explorerAdapter = ExplorerElementAdapter(
@@ -176,34 +177,31 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     protected open fun onExplorerItemClick(position: Int) {
-        val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         if (explorerAdapter.selectedItems.isEmpty()) {
-            if (!wasSelecting) {
-                val fullPath = explorerElements[position].fullPath
-                when {
-                    explorerElements[position].isDirectory -> {
-                        setCurrentPath(fullPath)
-                    }
-                    explorerElements[position].isParentFolder -> {
-                        setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
-                    }
-                    isImage(fullPath) -> {
-                        startFileViewer(ImageViewer::class.java, fullPath)
-                    }
-                    isVideo(fullPath) -> {
-                        startFileViewer(VideoPlayer::class.java, fullPath)
-                    }
-                    isText(fullPath) -> {
-                        startFileViewer(TextEditor::class.java, fullPath)
-                    }
-                    isPDF(fullPath) -> {
-                        startFileViewer(PdfViewer::class.java, fullPath)
-                    }
-                    isAudio(fullPath) -> {
-                        startFileViewer(AudioPlayer::class.java, fullPath)
-                    }
-                    else -> showOpenAsDialog(fullPath)
+            val fullPath = explorerElements[position].fullPath
+            when {
+                explorerElements[position].isDirectory -> {
+                    setCurrentPath(fullPath)
                 }
+                explorerElements[position].isParentFolder -> {
+                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                }
+                isImage(fullPath) -> {
+                    startFileViewer(ImageViewer::class.java, fullPath)
+                }
+                isVideo(fullPath) -> {
+                    startFileViewer(VideoPlayer::class.java, fullPath)
+                }
+                isText(fullPath) -> {
+                    startFileViewer(TextEditor::class.java, fullPath)
+                }
+                isPDF(fullPath) -> {
+                    startFileViewer(PdfViewer::class.java, fullPath)
+                }
+                isAudio(fullPath) -> {
+                    startFileViewer(AudioPlayer::class.java, fullPath)
+                }
+                else -> showOpenAsDialog(fullPath)
             }
         }
         invalidateOptionsMenu()
@@ -240,7 +238,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 )
             }
         }
-        textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.INVISIBLE
+        textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
         currentDirectoryPath = path
         currentPathText.text = getString(R.string.location, currentDirectoryPath)
         if (mapFolders) {
@@ -484,15 +482,12 @@ open class BaseExplorerActivity : BaseActivity() {
         val noItemSelected = explorerAdapter.selectedItems.isEmpty()
         val iconColor = ContextCompat.getColor(this, R.color.neutralIconTint)
         setMenuIconTint(menu, iconColor, R.id.sort, R.drawable.icon_sort)
-        setMenuIconTint(menu, iconColor, R.id.delete, R.drawable.icon_delete)
         setMenuIconTint(menu, iconColor, R.id.decrypt, R.drawable.icon_decrypt)
         setMenuIconTint(menu, iconColor, R.id.share, R.drawable.icon_share)
         menu.findItem(R.id.sort).isVisible = noItemSelected
         menu.findItem(R.id.close).isVisible = noItemSelected
-        if (noItemSelected){
-            toolbar.navigationIcon = null
-        } else {
-            toolbar.setNavigationIcon(R.drawable.icon_arrow_back)
+        supportActionBar?.setDisplayHomeAsUpEnabled(!noItemSelected)
+        if (!noItemSelected) {
             if (explorerAdapter.selectedItems.size == 1) {
                 menu.findItem(R.id.rename).isVisible = true
                 if (explorerElements[explorerAdapter.selectedItems[0]].isRegularFile) {

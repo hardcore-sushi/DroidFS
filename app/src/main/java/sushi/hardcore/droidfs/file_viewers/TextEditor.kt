@@ -6,11 +6,9 @@ import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.Toolbar
-import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.ByteArrayInputStream
 import java.io.File
@@ -18,8 +16,6 @@ import java.io.File
 class TextEditor: FileViewerActivity() {
     private lateinit var fileName: String
     private lateinit var editor: EditText
-    private lateinit var toolbar: Toolbar
-    private lateinit var titleText: TextView
     private var changedSinceLastSave = false
     private var wordWrap = true
     override fun hideSystemUi() {
@@ -51,11 +47,8 @@ class TextEditor: FileViewerActivity() {
         } else {
             setContentView(R.layout.activity_text_editor)
         }
-        toolbar = findViewById(R.id.toolbar)
-        setSupportActionBar(toolbar)
-        title = ""
-        titleText = findViewById(R.id.title_text)
-        titleText.text = fileName
+        title = fileName
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         editor = findViewById(R.id.text_editor)
         editor.setText(fileContent)
         editor.addTextChangedListener(object: TextWatcher {
@@ -67,7 +60,7 @@ class TextEditor: FileViewerActivity() {
                 if (!changedSinceLastSave){
                     changedSinceLastSave = true
                     @SuppressLint("SetTextI18n")
-                    titleText.text = "*$fileName"
+                    title = "*$fileName"
                 }
             }
         })
@@ -122,7 +115,6 @@ class TextEditor: FileViewerActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.text_editor, menu)
-        toolbar.setNavigationIcon(R.drawable.icon_arrow_back)
         menu.findItem(R.id.word_wrap).isChecked = wordWrap
         return true
     }
@@ -135,7 +127,7 @@ class TextEditor: FileViewerActivity() {
             R.id.menu_save -> {
                 if (save()){
                     changedSinceLastSave = false
-                    titleText.text = fileName
+                    title = fileName
                 }
             }
             R.id.word_wrap -> {

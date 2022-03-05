@@ -1,15 +1,10 @@
 <resources>
     <string name="app_name">DroidFS</string>
-    <string name="open_volume">Abrir um volume</string>
     <string name="create_volume">Criar um volume</string>
-    <string name="change_volume_password">Mudar a senha do volume</string>
     <string name="open">Abrir</string>
     <string name="create">Criar</string>
     <string name="change_password">Mudar a senha</string>
-    <string name="password">Senha:</string>
-    <string name="password_confirm">Senha (confirmação):</string>
-    <string name="volume_path">Localização do volume:</string>
-    <string name="volume_name">Nome do volume:</string>
+    <string name="password">Senha</string>
     <string name="import_files">Importar/Criptografar arquivos</string>
     <string name="import_folder">Importar/Criptografar pasta</string>
     <string name="discovering_files">Descobrindo arquivos…</string>
@@ -31,8 +26,6 @@
     <string name="remove_failed">Eliminação de %s falhou.</string>
     <string name="passwords_mismatch">As senhas não correspondem</string>
     <string name="dir_not_empty">A pasta selecionada não está vazia</string>
-    <string name="success_volume_create">Volume criado com sucesso!</string>
-    <string name="success_volume_create_msg">O volume foi criado com sucesso.</string>
     <string name="create_volume_failed">Falha ao criar o volume.</string>
     <string name="open_volume_failed">Não foi possível abrir</string>
     <string name="open_volume_failed_msg">Falha ao abrir o volume. Por favor, verifique sua senha.</string>
@@ -57,18 +50,10 @@
     <string name="ask_for_wipe">Você quer limpar os arquivos originais?</string>
     <string name="wipe_failed">Não foi possível limpar : %s</string>
     <string name="wipe_successful">Operação bem sucedida!</string>
-    <string name="create_password_warning">Aviso!\nEsta senha será a única maneira de descriptografar o volume e acessar os arquivos dentro.\nEscolha uma senha muito forte (não \"123456\" ou \"senha\"), não a perca e mantenha-a guardada (de preferência na sua memória).\n\nDroidFS não pode protegê-lo contra apps que capturam a tela, keyloggers, backdooring via apk, acessos comprometidos via root, despejos de memória, etc.\nNão digite as senhas em ambientes inseguros.</string>
-    <string name="open_activity_warning">Aviso!\nA abertura de volumes em ambientes inseguros pode levar a vazamentos de dados.\nDroidFS não pode protegê-lo contra apps que capturam a tela, keyloggers, backdooring via apk, acessos comprometidos via root, despejos de memória, etc.\nNão abra volumes contendo dados sensíveis a menos que você saiba exatamente o que está fazendo.</string>
     <string name="rename">Renomear</string>
     <string name="rename_title">Novo nome:</string>
     <string name="rename_failed">Falha ao renomear %s</string>
-    <string name="remember_volume_path">Lembrar a localização do volume</string>
     <string name="sort_order">Tipo de classificação:</string>
-    <string name="old_password">Senha antiga:</string>
-    <string name="new_password">Nova senha:</string>
-    <string name="new_password_confirmation">Nova senha (confirmação):</string>
-    <string name="success_change_password">Senha alterada com sucesso!</string>
-    <string name="success_change_password_msg">A senha do volume foi alterada com sucesso.</string>
     <string name="change_password_failed">A operação falhou. Por favor, verifique sua senha antiga.</string>
     <string name="share_menu_label">Criptografar via DroidFS</string>
     <string name="share_intent_parsing_failed">Falha ao processar o intento de compartilhamento.</string>
@@ -76,15 +61,6 @@
     <string name="fingerprint_save_checkbox_text">Salvar o hash da senha usando impressão digital</string>
     <string name="fingerprint_instruction">Por favor, toque no sensor da impressão digital</string>
     <string name="open_failed_hash_msg">Falha ao abrir o volume. A senha poderia ter mudado.</string>
-    <string name="authentication_failed">A autenticação falhou</string>
-    <string name="delete_hash_or_all">Excluir apenas o hash da senha ou o hash da senha com a localização salva? (Isto não excluirá o próprio volume)</string>
-    <string name="password_hash_and_path">Hash e local da senha</string>
-    <string name="password_hash">Hash da senha</string>
-    <string name="ask_delete_volume_path">Tem certeza que quer remover o local de volume? (Isto não excluirá o próprio volume)</string>
-    <string name="hidden_volume_delete_question_hash">Excluir somente o hash da senha, o hash da senha com a localização salva ou o volume COMPLETO (incluindo tudo conteúdo)?</string>
-    <string name="whole_volume">Volume completo</string>
-    <string name="hidden_volume_delete_question">Excluir somente o local ou o volume COMPLETO (incluindo tudo conteúdo)?</string>
-    <string name="path_only">Somente a localização</string>
     <string name="illegal_block_size_exception">IllegalBlockSizeException</string>
     <string name="illegal_block_size_exception_msg">Isto poderia ter acontecido, se você tiver adicionado uma nova impressão digital. Tente resetar o hash do armazenamento para resolver este problema.</string>
     <string name="reset_hash_storage">Resetar o hash do armazenamento</string>
@@ -92,7 +68,6 @@
     <string name="hash_storage_reset">O hash do armazenamento foi resetado com sucesso</string>
     <string name="encrypt_action_description">Criptografando e salvando o hash da senha.</string>
     <string name="decrypt_action_description">Descriptografando o hash da senha.</string>
-    <string name="hash_saved_hint">O hash da senha salvo</string>
     <string name="title_activity_settings">Configurações do DroidFS</string>
     <string name="explorer">Navegador</string>
     <string name="settings_title_sort_order">Padrão de classificação</string>
@@ -140,7 +115,7 @@
     <string name="decrypt_files">Exportar/Descriptografar</string>
     <string name="copy_failed">Falha ao copiar o %s .</string>
     <string name="copy_success">Cópia feita!</string>
-    <string name="fab_dialog_title">Adicionar</string>
+    <string name="add">Adicionar</string>
     <string name="camera">Câmera</string>
     <string name="picture_save_success">Foto salva em %s</string>
     <string name="picture_save_failed">Falha ao salvar esta imagem.</string>
@@ -154,13 +129,8 @@
     <string name="enter_timer_duration">Definir a duração do tempo (em s)</string>
     <string name="timer_empty_error_msg">Por favor, digite um valor numérico</string>
     <string name="path_from_uri_null_error_msg">Falha ao carregar a localização selecionada.</string>
-    <string name="open_read_only">Abrindo o volume com permissões somente de leitura.</string>
     <string name="create_cant_write_error_msg">DroidFS não pode salvar neste local. Por favor, tente algum outro.</string>
-    <string name="open_cant_write_warning">DroidFS não tem permissão para salvar neste local. Abrindo o volume apenas com acesso de leitura.</string>
-    <string name="open_cant_write_error_msg">DroidFS não tem permissão para salvar neste local. Por favor, tente outro volume.</string>
     <string name="sdcard_error_header">DroidFS só pode escrever em memórias SD removíveis sob:</string>
-    <string name="sdcard_error_footer">Por favor, use um subdiretório desta localização ou armazenamento interno.</string>
-    <string name="change_pwd_cant_write_error_msg">DroidFS não tem permissão para salvar neste local. Pode tentar mover o volume para um local com permissão de escrita.</string>
     <string name="slideshow_stopped">Apresentação parou</string>
     <string name="slideshow_started">Apresentação começou</string>
     <string name="ask_save_img_rotated">A imagem foi alternada. Você deseja salvar estas mudanças e substituir a imagem original?</string>
@@ -210,4 +180,6 @@
     <string name="thumbnails_summary">Mostrar imagens e vídeos em miniatura</string>
     <string name="seek_seconds_forward">+%d segundos</string>
     <string name="seek_seconds_backward">-%d segundos</string>
+    <string name="password_confirmation_hint">Senha (confirmação)</string>
+    <string name="new_password_hint">Nova senha</string>
 </resources>

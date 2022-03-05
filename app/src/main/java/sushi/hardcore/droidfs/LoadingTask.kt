@@ -1,7 +1,6 @@
 package sushi.hardcore.droidfs
 
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -19,7 +18,6 @@ abstract class LoadingTask(val activity: AppCompatActivity, themeValue: String, 
         startTask()
     }
     abstract fun doTask(activity: AppCompatActivity)
-    open fun doFinally(activity: AppCompatActivity){}
     private fun startTask() {
         dialogLoading.show()
         Thread {
@@ -27,7 +25,6 @@ abstract class LoadingTask(val activity: AppCompatActivity, themeValue: String, 
             if (!isStopped){
                 dialogLoading.dismiss()
             }
-            activity.runOnUiThread { doFinally(activity) }
         }.start()
     }
     fun stopTask(onUiThread: (() -> Unit)?){
@@ -38,8 +35,5 @@ abstract class LoadingTask(val activity: AppCompatActivity, themeValue: String, 
                 onUiThread()
             }
         }
-    }
-    protected fun stopTaskWithToast(stringId: Int){
-        stopTask { Toast.makeText(activity, stringId, Toast.LENGTH_SHORT).show() }
     }
 }
