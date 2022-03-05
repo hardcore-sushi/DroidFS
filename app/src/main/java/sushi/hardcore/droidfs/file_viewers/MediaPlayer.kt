@@ -9,6 +9,7 @@ import com.google.android.exoplayer2.video.VideoSize
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import java.io.File
 
 abstract class MediaPlayer: FileViewerActivity() {
     private lateinit var player: ExoPlayer
@@ -16,10 +17,11 @@ abstract class MediaPlayer: FileViewerActivity() {
     override fun viewFile() {
         supportActionBar?.hide()
         initializePlayer()
+        refreshFileName()
     }
 
     abstract fun bindPlayer(player: ExoPlayer)
-    protected open fun onPlaylistIndexChanged() {}
+    abstract fun onNewFileName(fileName: String)
     protected open fun onVideoSizeChanged(width: Int, height: Int) {}
 
     private fun createMediaSource(filePath: String): MediaSource {
@@ -60,7 +62,7 @@ abstract class MediaPlayer: FileViewerActivity() {
             override fun onPositionDiscontinuity(reason: Int) {
                 if (player.currentMediaItemIndex != currentPlaylistIndex) {
                     playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex+1) % mappedPlaylist.size)
-                    onPlaylistIndexChanged()
+                    refreshFileName()
                 }
             }
         })
@@ -72,5 +74,9 @@ abstract class MediaPlayer: FileViewerActivity() {
         if (::player.isInitialized) {
             player.release()
         }
+    }
+
+    private fun refreshFileName() {
+        onNewFileName(File(filePath).name)
     }
 }

@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:gravity="center"
-    android:layoutDirection="ltr"
     android:background="@color/fullScreenBackgroundColor">
 
     <FrameLayout
@@ -26,12 +24,32 @@
 
     </FrameLayout>
 
-    <ImageButton
-        android:id="@+id/rotate_button"
-        style="@style/ExoMediaButton"
-        android:layout_gravity="top|end"
-        android:layout_marginTop="15dp"
-        android:src="@drawable/icon_screen_rotation"
-        app:tint="@color/neutralIconTint"/>
+    <RelativeLayout
+        android:id="@+id/top_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginStart="20dp">
 
-</FrameLayout>
+        <TextView
+            android:id="@+id/text_file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:singleLine="true"
+            android:ellipsize="end"
+            android:textSize="@dimen/title_file_name_text_size"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@id/rotate_button"
+            android:layout_centerVertical="true"/>
+
+        <ImageButton
+            android:id="@+id/rotate_button"
+            style="@style/ExoMediaButton"
+            android:src="@drawable/icon_screen_rotation"
+            app:tint="@color/neutralIconTint"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"/>
+
+    </RelativeLayout>
+
+</RelativeLayout>

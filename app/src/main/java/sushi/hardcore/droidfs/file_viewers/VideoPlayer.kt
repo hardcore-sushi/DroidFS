@@ -21,7 +21,7 @@ class VideoPlayer: MediaPlayer() {
         binding.videoPlayer.player = player
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
         binding.videoPlayer.setControllerVisibilityListener { visibility ->
-            binding.rotateButton.visibility = visibility
+            binding.topBar.visibility = visibility
         }
         binding.rotateButton.setOnClickListener {
             requestedOrientation =
@@ -31,6 +31,10 @@ class VideoPlayer: MediaPlayer() {
                     ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
         }
 
+    }
+
+    override fun onNewFileName(fileName: String) {
+        binding.textFileName.text = fileName
     }
 
     override fun getFileType(): String {
