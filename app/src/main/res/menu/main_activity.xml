@@ -34,4 +34,9 @@
         android:visible="false"
         android:title="@string/change_password"/>
 
+    <item
+        android:id="@+id/copy"
+        app:showAsAction="never"
+        android:visible="false"/>
+
 </menu>

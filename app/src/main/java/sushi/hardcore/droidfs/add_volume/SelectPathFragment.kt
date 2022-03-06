@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.add_volume
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
@@ -40,7 +39,7 @@ class SelectPathFragment: Fragment() {
     private lateinit var binding: FragmentSelectPathBinding
     private val askStoragePermissions = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
         if (result[Manifest.permission.READ_EXTERNAL_STORAGE] == true && result[Manifest.permission.WRITE_EXTERNAL_STORAGE] == true)
-            safePickDirectory()
+            PathUtils.safePickDirectory(pickDirectory, requireContext(), themeValue)
         else
             CustomAlertDialogBuilder(requireContext(), themeValue)
                 .setTitle(R.string.storage_perm_denied)
@@ -87,7 +86,7 @@ class SelectPathFragment: Fragment() {
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                     ) == PackageManager.PERMISSION_GRANTED
                 )
-                    safePickDirectory()
+                    PathUtils.safePickDirectory(pickDirectory, requireContext(), themeValue)
                 else
                     askStoragePermissions.launch(
                         arrayOf(
@@ -96,7 +95,7 @@ class SelectPathFragment: Fragment() {
                         )
                     )
             } else
-                safePickDirectory()
+                PathUtils.safePickDirectory(pickDirectory, requireContext(), themeValue)
         }
         var isVolumeAlreadySaved = false
         var volumeAction: Action? = null
@@ -145,18 +144,6 @@ class SelectPathFragment: Fragment() {
         }
     }
 
-    private fun safePickDirectory() {
-        try {
-            pickDirectory.launch(null)
-        } catch (e: ActivityNotFoundException) {
-            CustomAlertDialogBuilder(requireContext(), themeValue)
-                .setTitle(R.string.error)
-                .setMessage(R.string.open_tree_failed)
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
-    }
-
     private fun onDirectoryPicked(uri: Uri) {
         val path = PathUtils.getFullPathFromTreeUri(uri, requireContext())
         if (path != null)
@@ -164,7 +151,7 @@ class SelectPathFragment: Fragment() {
         else
             CustomAlertDialogBuilder(requireContext(), themeValue)
                 .setTitle(R.string.error)
-                .setMessage(R.string.path_from_uri_null_error_msg)
+                .setMessage(R.string.path_error)
                 .setPositiveButton(R.string.ok, null)
                 .show()
     }

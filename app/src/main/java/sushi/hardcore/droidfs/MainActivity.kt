@@ -1,15 +1,22 @@
 package sushi.hardcore.droidfs
 
 import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.ServiceConnection
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
+import androidx.documentfile.provider.DocumentFile
 import androidx.recyclerview.widget.LinearLayoutManager
 import sushi.hardcore.droidfs.adapters.VolumeAdapter
 import sushi.hardcore.droidfs.add_volume.AddVolumeActivity
@@ -20,6 +27,7 @@ import sushi.hardcore.droidfs.databinding.DialogOpenVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
+import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -35,13 +43,7 @@ class MainActivity : BaseActivity() {
     private var usfKeepOpen: Boolean = false
     private var addVolume = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.resultCode) {
-            AddVolumeActivity.RESULT_VOLUME_ADDED -> {
-                volumeAdapter.apply {
-                    volumes = volumeDatabase.getVolumes()
-                    notifyItemInserted(volumes.size)
-                }
-                binding.textNoVolumes.visibility = View.GONE
-            }
+            AddVolumeActivity.RESULT_VOLUME_ADDED -> onVolumeAdded()
             AddVolumeActivity.RESULT_HASH_STORAGE_RESET -> {
                 volumeAdapter.refresh()
                 binding.textNoVolumes.visibility = View.GONE
@@ -50,12 +52,13 @@ class MainActivity : BaseActivity() {
     }
     private var changePasswordPosition: Int? = null
     private var changePassword = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        changePasswordPosition?.let {
-            volumeAdapter.selectedItems.remove(it)
-            volumeAdapter.onVolumeChanged(it)
-        }
-        invalidateOptionsMenu()
+        changePasswordPosition?.let { unselect(it) }
     }
+    private val pickDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null)
+            onDirectoryPicked(uri)
+    }
+    private lateinit var fileOperationService: FileOperationService
     private var pickMode = false
     private var dropMode = false
     private var shouldCloseVolume = true // used when launched to pick file from another volume
@@ -107,6 +110,14 @@ class MainActivity : BaseActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             fingerprintProtector = FingerprintProtector.new(this, themeValue, volumeDatabase)
         }
+        Intent(this, FileOperationService::class.java).also {
+            bindService(it, object : ServiceConnection {
+                override fun onServiceConnected(className: ComponentName, service: IBinder) {
+                    fileOperationService = (service as FileOperationService.LocalBinder).getService()
+                }
+                override fun onServiceDisconnected(arg0: ComponentName) {}
+            }, Context.BIND_AUTO_CREATE)
+        }
     }
 
     private fun onVolumeItemClick(volume: Volume, position: Int) {
@@ -120,8 +131,22 @@ class MainActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
+    private fun onVolumeAdded() {
+        volumeAdapter.apply {
+            volumes = volumeDatabase.getVolumes()
+            notifyItemInserted(volumes.size)
+        }
+        binding.textNoVolumes.visibility = View.GONE
+    }
+
     private fun unselectAll() {
         volumeAdapter.unSelectAll()
+        invalidateOptionsMenu()
+    }
+
+    private fun unselect(position: Int) {
+        volumeAdapter.selectedItems.remove(position)
+        volumeAdapter.onVolumeChanged(position)
         invalidateOptionsMenu()
     }
 
@@ -212,6 +237,32 @@ class MainActivity : BaseActivity() {
                 })
                 true
             }
+            R.id.copy -> {
+                val position = volumeAdapter.selectedItems.elementAt(0)
+                val volume = volumeAdapter.volumes[position]
+                when {
+                    volume.isHidden -> {
+                        PathUtils.safePickDirectory(pickDirectory, this, themeValue)
+                    }
+                    File(filesDir, volume.shortName).exists() -> {
+                        CustomAlertDialogBuilder(this, themeValue)
+                            .setTitle(R.string.error)
+                            .setMessage(R.string.hidden_volume_already_exists)
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    }
+                    else -> {
+                        unselect(position)
+                        copyVolume(
+                            DocumentFile.fromFile(File(volume.name)),
+                            DocumentFile.fromFile(filesDir),
+                        ) {
+                            Volume(volume.shortName, true, volume.encryptedHash, volume.iv)
+                        }
+                    }
+                }
+                true
+            }
             R.id.settings -> {
                 val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
@@ -241,8 +292,70 @@ class MainActivity : BaseActivity() {
             !pickMode && !dropMode &&
             volumeAdapter.selectedItems.size == 1 &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].canWrite(filesDir.path)
+        with(menu.findItem(R.id.copy)) {
+            isVisible = !pickMode && !dropMode && volumeAdapter.selectedItems.size == 1
+            if (isVisible) {
+                setTitle(if (volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].isHidden)
+                    R.string.copy_hidden_volume
+                else
+                    R.string.copy_external_volume
+                )
+            }
+        }
         supportActionBar?.setDisplayHomeAsUpEnabled(isSelecting || pickMode || dropMode)
         return true
+    }
+
+    private fun onDirectoryPicked(uri: Uri) {
+        val position = volumeAdapter.selectedItems.elementAt(0)
+        val volume = volumeAdapter.volumes[position]
+        unselect(position)
+        val dstDocumentFile = DocumentFile.fromTreeUri(this, uri)
+        if (dstDocumentFile == null) {
+            CustomAlertDialogBuilder(this, themeValue)
+                .setTitle(R.string.error)
+                .setMessage(R.string.path_error)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        } else {
+            copyVolume(
+                DocumentFile.fromFile(File(volume.getFullPath(filesDir.path))),
+                dstDocumentFile,
+            ) { dstRootDirectory ->
+                dstRootDirectory.name?.let { name ->
+                    val path = PathUtils.getFullPathFromTreeUri(dstRootDirectory.uri, this)
+                    if (path == null) null
+                    else Volume(
+                        PathUtils.pathJoin(path, name),
+                        false,
+                        volume.encryptedHash,
+                        volume.iv
+                    )
+                }
+            }
+        }
+    }
+
+    private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> Volume?) {
+        fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile) { dstRootDirectory, failedItem ->
+            runOnUiThread {
+                if (failedItem == null) {
+                    dstRootDirectory?.let {
+                        getResultVolume(it)?.let { volume ->
+                            volumeDatabase.saveVolume(volume)
+                            onVolumeAdded()
+                        }
+                    }
+                    Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
+                } else {
+                    CustomAlertDialogBuilder(this, themeValue)
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.copy_failed, failedItem.name))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                }
+            }
+        }
     }
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23

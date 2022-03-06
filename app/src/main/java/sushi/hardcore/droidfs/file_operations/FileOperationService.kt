@@ -1,9 +1,15 @@
 package sushi.hardcore.droidfs.file_operations
 
-import android.app.*
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.Service
 import android.content.Intent
 import android.net.Uri
-import android.os.*
+import android.os.Binder
+import android.os.Build
+import android.os.Bundle
+import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
@@ -383,6 +389,64 @@ class FileOperationService : Service() {
                 cancelNotification(notification)
                 callback(failedItem)
             }
+        }.start()
+    }
+
+    private fun recursiveCountChildElements(rootDirectory: DocumentFile): Int {
+        val children = rootDirectory.listFiles()
+        var count = children.size
+        for (child in children) {
+            if (child.isDirectory) {
+                count += recursiveCountChildElements(child)
+            }
+        }
+        return count
+    }
+
+    internal class ObjRef<T>(var value: T)
+
+    private fun recursiveCopyVolume(
+        src: DocumentFile,
+        dst: DocumentFile,
+        dstRootDirectory: ObjRef<DocumentFile?>?,
+        notification: FileOperationNotification,
+        total: Int,
+        progress: ObjRef<Int> = ObjRef(0)
+    ): DocumentFile? {
+        val dstDir = dst.createDirectory(src.name ?: return src) ?: return src
+        for (child in src.listFiles()) {
+            if (notifications[notification.notificationId]!!) {
+                cancelNotification(notification)
+                return null
+            }
+            if (child.isFile) {
+                val dstFile = dstDir.createFile("", child.name ?: return child) ?: return child
+                val outputStream = contentResolver.openOutputStream(dstFile.uri)
+                val inputStream = contentResolver.openInputStream(child.uri)
+                if (outputStream == null || inputStream == null) return child
+                val written = inputStream.copyTo(outputStream)
+                outputStream.close()
+                inputStream.close()
+                if (written != child.length()) return child
+            } else {
+                recursiveCopyVolume(child, dstDir, null, notification, total, progress)?.let { return it }
+            }
+            progress.value++
+            updateNotificationProgress(notification, progress.value, total)
+        }
+        dstRootDirectory?.let { it.value = dstDir }
+        return null
+    }
+
+    fun copyVolume(src: DocumentFile, dst: DocumentFile, callback: (DocumentFile?, DocumentFile?) -> Unit) {
+        Thread {
+            val notification = showNotification(R.string.copy_volume_notification, null)
+            val total = recursiveCountChildElements(src)
+            updateNotificationProgress(notification, 0, total)
+            val dstRootDirectory = ObjRef<DocumentFile?>(null)
+            val failedItem = recursiveCopyVolume(src, dst, dstRootDirectory, notification, total)
+            cancelNotification(notification)
+            callback(dstRootDirectory.value, failedItem)
         }.start()
     }
 }

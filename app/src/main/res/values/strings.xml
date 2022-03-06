@@ -128,7 +128,7 @@
     <string name="move_success">Move successful !</string>
     <string name="enter_timer_duration">Enter the timer duration (in s)</string>
     <string name="timer_empty_error_msg">Please enter a numeric value</string>
-    <string name="path_from_uri_null_error_msg">Failed to retrieve the selected path.</string>
+    <string name="path_error">Failed to retrieve the selected path.</string>
     <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
     <string name="add_read_only">Adding volume with read-only access.</string>
     <string name="add_cant_write_warning">DroidFS doesn\'t have write access to this path. Adding volume with read-only access.</string>
@@ -222,4 +222,8 @@
     <string name="new_password_hint">New password</string>
     <string name="new_password_confirmation_label">Repeat the new password:</string>
     <string name="error_marshmallow_required">This feature is only available on Android 6.0 (Marshmallow) or above.</string>
+    <string name="copy_hidden_volume">Copy to shared storage</string>
+    <string name="copy_external_volume">Make a hidden copy</string>
+    <string name="copy_volume_notification">Copying volume…</string>
+    <string name="hidden_volume_already_exists">A hidden volume with the same name already exists.</string>
 </resources>

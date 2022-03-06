@@ -1,11 +1,15 @@
 package sushi.hardcore.droidfs.util
 
+import android.content.ActivityNotFoundException
 import android.content.Context
 import android.net.Uri
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
+import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.text.DecimalFormat
 import kotlin.math.log10
@@ -186,5 +190,17 @@ object PathUtils {
             }
         }
         return rootDirectory.delete()
+    }
+
+     fun safePickDirectory(directoryPicker: ActivityResultLauncher<Uri>, context: Context, themeValue: String) {
+        try {
+            directoryPicker.launch(null)
+        } catch (e: ActivityNotFoundException) {
+            CustomAlertDialogBuilder(context, themeValue)
+                .setTitle(R.string.error)
+                .setMessage(R.string.open_tree_failed)
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
     }
 }
