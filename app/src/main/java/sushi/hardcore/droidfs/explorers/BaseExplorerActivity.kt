@@ -228,6 +228,15 @@ open class BaseExplorerActivity : BaseActivity() {
         sharedPrefsEditor.apply()
     }
 
+    private fun recursiveSetSize(directory: ExplorerElement) {
+        for (child in gocryptfsVolume.listDir(directory.fullPath)) {
+            if (child.isDirectory) {
+                recursiveSetSize(child)
+            }
+            directory.size += child.size
+        }
+    }
+
     protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) {
         synchronized(this) {
             explorerElements = gocryptfsVolume.listDir(path)
@@ -245,19 +254,11 @@ open class BaseExplorerActivity : BaseActivity() {
             Thread {
                 var totalSize: Long = 0
                 synchronized(this) {
-                    for (element in explorerElements){
-                        if (element.isDirectory){
-                            var dirSize: Long = 0
-                            for (subFile in gocryptfsVolume.recursiveMapFiles(element.fullPath)){
-                                if (subFile.isRegularFile){
-                                    dirSize += subFile.size
-                                }
-                            }
-                            element.size = dirSize
-                            totalSize += dirSize
-                        } else if (element.isRegularFile) {
-                            totalSize += element.size
+                    for (element in explorerElements) {
+                        if (element.isDirectory) {
+                            recursiveSetSize(element)
                         }
+                        totalSize += element.size
                     }
                 }
                 val totalSizeValue = PathUtils.formatSize(totalSize)
