@@ -226,4 +226,5 @@
     <string name="copy_external_volume">Make a hidden copy</string>
     <string name="copy_volume_notification">Copying volume…</string>
     <string name="hidden_volume_already_exists">A hidden volume with the same name already exists.</string>
+    <string name="pdf_document">PDF document</string>
 </resources>

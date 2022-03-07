@@ -3,7 +3,7 @@
 
     <style name="DarkGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">@color/secondary</item>
-        <item name="android:background">#333333</item>
+        <item name="android:background">@color/dialogDarkBackground</item>
     </style>
     <style name="DarkRedDialog" parent="DarkGreenDialog">
         <item name="colorAccent">@color/red</item>

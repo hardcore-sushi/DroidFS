@@ -16,4 +16,5 @@
     <color name="itemSelected">#66666666</color>
     <color name="playerDoubleTapTouch">#18FFFFFF</color>
     <color name="playerDoubleTapBackground">#20EEEEEE</color>
+    <color name="dialogDarkBackground">#333333</color>
 </resources>

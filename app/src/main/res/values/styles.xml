@@ -3,6 +3,7 @@
         <item name="android:textColor">@color/textColor</item>
         <item name="colorAccent">@color/secondary</item>
         <item name="colorPrimary">@color/primary</item>
+        <item name="colorSurface">@color/dialogDarkBackground</item>
         <item name="android:statusBarColor">@color/primary</item>
         <item name="infoBarBackgroundColor">#111111</item>
         <item name="buttonBackgroundColor">#5B5A5C</item>
