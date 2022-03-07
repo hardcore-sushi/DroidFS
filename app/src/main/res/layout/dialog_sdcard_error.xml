@@ -21,9 +21,10 @@
         android:layout_marginVertical="10dp"/>
 
     <TextView
+        android:id="@+id/footer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/add_read_only"
+        android:text="@string/sdcard_error_create_footer"
         android:textSize="@dimen/dialog_text_size"/>
 
 </LinearLayout>

@@ -130,9 +130,10 @@
     <string name="timer_empty_error_msg">Please enter a numeric value</string>
     <string name="path_error">Failed to retrieve the selected path.</string>
     <string name="create_cant_write_error_msg">DroidFS doesn\'t have write access to this path. Please try another location.</string>
-    <string name="add_read_only">Adding volume with read-only access.</string>
     <string name="add_cant_write_warning">DroidFS doesn\'t have write access to this path. Adding volume with read-only access.</string>
     <string name="sdcard_error_header">DroidFS can only write to removable SD cards under:</string>
+    <string name="sdcard_error_add_footer">Adding volume with read-only access.</string>
+    <string name="sdcard_error_create_footer">Please use a subdirectory of this path or internal storage.</string>
     <string name="slideshow_stopped">Slideshow stopped</string>
     <string name="slideshow_started">Slideshow started</string>
     <string name="ask_save_img_rotated">The image has been rotated. Do you want to save these changes and overwrite the original image ?</string>
