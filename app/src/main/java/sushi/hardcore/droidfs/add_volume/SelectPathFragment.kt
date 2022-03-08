@@ -237,6 +237,7 @@ class SelectPathFragment: Fragment() {
                             dialog.setView(
                                 DialogSdcardErrorBinding.inflate(layoutInflater).apply {
                                     path.text = PathUtils.getPackageDataFolder(requireContext())
+                                    footer.text = getString(R.string.sdcard_error_add_footer)
                                 }.root
                             )
                         else
@@ -250,6 +251,7 @@ class SelectPathFragment: Fragment() {
         }
     }
 
+    // called when the user tries to create a volume in a non-writable directory
     private fun errorDirectoryNotWritable(volumePath: String) {
         val dialog = CustomAlertDialogBuilder(requireContext(), themeValue)
             .setTitle(R.string.error)
@@ -257,9 +259,9 @@ class SelectPathFragment: Fragment() {
         @SuppressLint("InflateParams")
         if (PathUtils.isPathOnExternalStorage(volumePath, requireContext()))
             dialog.setView(
-                layoutInflater.inflate(R.layout.dialog_sdcard_error, null).apply {
-                    findViewById<TextView>(R.id.path).text = PathUtils.getPackageDataFolder(requireContext())
-                }
+                DialogSdcardErrorBinding.inflate(layoutInflater).apply {
+                    path.text = PathUtils.getPackageDataFolder(requireContext())
+                }.root
             )
         else
             dialog.setMessage(R.string.create_cant_write_error_msg)
