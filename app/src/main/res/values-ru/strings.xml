@@ -125,9 +125,10 @@
     <string name="timer_empty_error_msg">Введите числовое значение.</string>
     <string name="path_error">Невозможно получить выбранный путь.</string>
     <string name="create_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте найти другое место.</string>
-    <string name="add_read_only">Добавление тома с доступом только для чтения.</string>
     <string name="add_cant_write_warning">DroidFS не имеет доступа на запись по этому пути. Добавление тома с доступом только для чтения.</string>
     <string name="sdcard_error_header">DroidFS может записывать на SD-карты только в:</string>
+    <string name="sdcard_error_add_footer">Добавление тома с доступом только для чтения.</string>
+    <string name="sdcard_error_create_footer">Используйте подпапку этого пути или внутреннее хранилище.</string>
     <string name="slideshow_stopped">Слайдшоу остановлено</string>
     <string name="slideshow_started">Слайдшоу началось</string>
     <string name="ask_save_img_rotated">Изображение было повёрнуто. Сохранить изменения и перезаписать исходное изображение?</string>
@@ -219,4 +220,5 @@
     <string name="copy_external_volume">Создать скрытую копию</string>
     <string name="copy_volume_notification">Копирование тома…</string>
     <string name="hidden_volume_already_exists">Скрытый том с таким именем уже существует.</string>
+    <string name="pdf_document">Документ PDF</string>
 </resources>
