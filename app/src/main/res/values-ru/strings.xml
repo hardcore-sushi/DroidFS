@@ -221,4 +221,8 @@
     <string name="copy_volume_notification">Копирование тома…</string>
     <string name="hidden_volume_already_exists">Скрытый том с таким именем уже существует.</string>
     <string name="pdf_document">Документ PDF</string>
+    <string name="thumbnail_max_size">Максимальный размер для эскизов</string>
+    <string name="thumbnail_max_size_summary">Максимальный размер файла, для которого создаётся эскиз. Текущее значение: %s</string>
+    <string name="size_hint">Размер (в КБ)</string>
+    <string name="invalid_number">Неправильное значение</string>
 </resources>
