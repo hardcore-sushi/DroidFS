@@ -15,10 +15,11 @@
             android:textSize="@dimen/title_text_size"
             android:padding="10dp"/>
 
-        <com.google.android.exoplayer2.ui.PlayerControlView
+        <com.google.android.exoplayer2.ui.StyledPlayerControlView
             android:id="@+id/audio_controller"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            app:controller_layout_id="@layout/audio_exo_styled_player_control_view"
             app:show_timeout="0"
             app:show_shuffle_button="true"
             app:repeat_toggle_modes="all|one"/>

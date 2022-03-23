@@ -14,6 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:show_shuffle_button="true"
+            app:show_buffering="always"
             app:repeat_toggle_modes="all|one" />
 
         <sushi.hardcore.droidfs.widgets.DoubleTapOverlay

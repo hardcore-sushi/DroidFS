@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <color name="primary">#262626</color>
     <color name="secondary">#6CC341</color>
     <color name="black">#000000</color>
@@ -17,4 +17,5 @@
     <color name="playerDoubleTapTouch">#18FFFFFF</color>
     <color name="playerDoubleTapBackground">#20EEEEEE</color>
     <color name="dialogDarkBackground">#333333</color>
+    <color name="exo_black_opacity_60" tools:override="true">#38000000</color>
 </resources>

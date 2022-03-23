@@ -31,7 +31,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     }
 
     private fun initializePlayer(){
-        player = ExoPlayer.Builder(this).build()
+        player = ExoPlayer.Builder(this).setSeekForwardIncrementMs(5000).build()
         bindPlayer(player)
         createPlaylist()
         for (e in mappedPlaylist) {
