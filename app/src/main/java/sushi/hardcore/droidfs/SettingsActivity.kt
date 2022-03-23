@@ -1,13 +1,20 @@
 package sushi.hardcore.droidfs
 
+import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.inputmethod.EditorInfo
+import android.widget.Toast
 import androidx.preference.ListPreference
+import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
+import sushi.hardcore.droidfs.databinding.DialogEditTextBinding
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import java.lang.NumberFormatException
 
 class SettingsActivity : BaseActivity() {
 
@@ -20,7 +27,7 @@ class SettingsActivity : BaseActivity() {
         val fragment = if (screen == "UnsafeFeaturesSettingsFragment") {
             UnsafeFeaturesSettingsFragment()
         } else {
-            MainSettingsFragment()
+            MainSettingsFragment(sharedPrefs)
         }
         supportFragmentManager
                 .beginTransaction()
@@ -38,12 +45,70 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
-    class MainSettingsFragment : PreferenceFragmentCompat() {
+    class MainSettingsFragment(private val sharedPrefs: SharedPreferences) : PreferenceFragmentCompat() {
+        private lateinit var maxSizePreference: Preference
+
+        private fun setThumbnailMaxSize(input: String) {
+            val value: Long
+            try {
+                value = input.toLong()
+            } catch (e: NumberFormatException) {
+                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
+                showMaxSizeDialog()
+                return
+            }
+            val size = value*1000
+            if (size < 0) {
+                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
+                showMaxSizeDialog()
+            } else {
+                with(sharedPrefs.edit()) {
+                    putLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, value)
+                    apply()
+                }
+                maxSizePreference.summary = PathUtils.formatSize(size)
+            }
+        }
+
+        private fun showMaxSizeDialog() {
+            val dialogBinding = DialogEditTextBinding.inflate(layoutInflater)
+            with (dialogBinding.dialogEditText) {
+                inputType = EditorInfo.TYPE_CLASS_NUMBER
+                hint = getString(R.string.size_hint)
+            }
+            val dialog = CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).themeValue)
+                .setTitle(R.string.thumbnail_max_size)
+                .setView(dialogBinding.root)
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    setThumbnailMaxSize(dialogBinding.dialogEditText.text.toString())
+                }
+                .create()
+            dialogBinding.dialogEditText.setOnEditorActionListener { _, _, _ ->
+                dialog.dismiss()
+                setThumbnailMaxSize(dialogBinding.dialogEditText.text.toString())
+                true
+            }
+            dialog.show()
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
                 (activity as BaseActivity).onThemeChanged(newValue as String)
                 true
+            }
+            findPreference<Preference>(ConstValues.THUMBNAIL_MAX_SIZE_KEY)?.let {
+                maxSizePreference = it
+                maxSizePreference.summary = getString(
+                    R.string.thumbnail_max_size_summary,
+                    PathUtils.formatSize(sharedPrefs.getLong(
+                        ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE
+                    )*1000)
+                )
+                maxSizePreference.setOnPreferenceClickListener {
+                    showMaxSizeDialog()
+                    false
+                }
             }
         }
     }

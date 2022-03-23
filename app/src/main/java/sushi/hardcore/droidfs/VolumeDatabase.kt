@@ -6,7 +6,7 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
-    ConstValues.volumeDatabaseName, null, 3) {
+    ConstValues.VOLUME_DATABASE_NAME, null, 3) {
     companion object {
         const val TABLE_NAME = "Volumes"
         const val COLUMN_NAME = "name"

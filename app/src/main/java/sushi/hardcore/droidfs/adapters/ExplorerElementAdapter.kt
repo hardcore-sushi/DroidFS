@@ -23,7 +23,8 @@ class ExplorerElementAdapter(
     val activity: AppCompatActivity,
     val gocryptfsVolume: GocryptfsVolume?,
     val onExplorerElementClick: (Int) -> Unit,
-    val onExplorerElementLongClick: (Int) -> Unit
+    val onExplorerElementLongClick: (Int) -> Unit,
+    val thumbnailMaxSize: Long,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
@@ -127,7 +128,7 @@ class ExplorerElementAdapter(
                 adapter.gocryptfsVolume?.let { volume ->
                     displayThumbnail = true
                     Thread {
-                        volume.loadWholeFile(fullPath, maxSize = 50_000_000).first?.let {
+                        volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
                             if (displayThumbnail) {
                                 adapter.activity.runOnUiThread {
                                     if (displayThumbnail) {

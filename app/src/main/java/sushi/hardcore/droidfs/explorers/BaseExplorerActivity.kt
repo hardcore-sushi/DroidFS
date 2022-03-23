@@ -23,11 +23,11 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.ConstValues.Companion.isAudio
-import sushi.hardcore.droidfs.ConstValues.Companion.isImage
-import sushi.hardcore.droidfs.ConstValues.Companion.isPDF
-import sushi.hardcore.droidfs.ConstValues.Companion.isText
-import sushi.hardcore.droidfs.ConstValues.Companion.isVideo
+import sushi.hardcore.droidfs.ConstValues.isAudio
+import sushi.hardcore.droidfs.ConstValues.isImage
+import sushi.hardcore.droidfs.ConstValues.isPDF
+import sushi.hardcore.droidfs.ConstValues.isText
+import sushi.hardcore.droidfs.ConstValues.isVideo
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
@@ -79,7 +79,7 @@ open class BaseExplorerActivity : BaseActivity() {
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         mapFolders = sharedPrefs.getBoolean("map_folders", true)
-        currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.sort_order_key, "name"))
+        currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.SORT_ORDER_KEY, "name"))
         init()
         recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
         refresher = findViewById(R.id.refresher)
@@ -101,7 +101,8 @@ open class BaseExplorerActivity : BaseActivity() {
                 null
             },
             ::onExplorerItemClick,
-            ::onExplorerItemLongClick
+            ::onExplorerItemLongClick,
+            sharedPrefs.getLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
         )
         explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
@@ -224,7 +225,7 @@ open class BaseExplorerActivity : BaseActivity() {
         explorerAdapter.explorerElements = explorerElements
         unselectAll()
         val sharedPrefsEditor = sharedPrefs.edit()
-        sharedPrefsEditor.putString(ConstValues.sort_order_key, sortOrderValues[currentSortOrderIndex])
+        sharedPrefsEditor.putString(ConstValues.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
     }
 

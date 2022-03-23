@@ -52,6 +52,11 @@
             android:title="@string/thumbnails"
             android:summary="@string/thumbnails_summary"/>
 
+        <Preference
+            android:icon="@drawable/icon_image_crossed_out"
+            android:key="thumbnail_max_size"
+            android:title="@string/thumbnail_max_size"/>
+
         <SwitchPreferenceCompat
             android:defaultValue="true"
             app:icon="@drawable/icon_folder_search"

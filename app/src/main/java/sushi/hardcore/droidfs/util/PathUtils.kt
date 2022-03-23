@@ -88,7 +88,7 @@ object PathUtils {
         return result
     }
 
-    private val units = arrayOf("B", "kB", "MB", "GB", "TB")
+    private val units = arrayOf("B", "kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
     fun formatSize(size: Long): String {
         if (size <= 0) {
             return "0 B"

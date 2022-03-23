@@ -127,7 +127,7 @@ class CreateVolumeFragment: Fragment() {
                     var returnedHash: ByteArray? = null
                     if (binding.checkboxSavePassword.isChecked)
                         returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                    if (GocryptfsVolume.createVolume(volumePath, password, false, xchacha, GocryptfsVolume.ScryptDefaultLogN, ConstValues.creator, returnedHash)) {
+                    if (GocryptfsVolume.createVolume(volumePath, password, false, xchacha, GocryptfsVolume.ScryptDefaultLogN, ConstValues.CREATOR, returnedHash)) {
                         val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
                         val volume = Volume(volumeName, isHiddenVolume)
                         volumeDatabase.apply {

@@ -121,7 +121,7 @@ class ImageViewer: FileViewerActivity() {
         binding.imageButtonSlideshow.setOnClickListener {
             if (!slideshowActive){
                 slideshowActive = true
-                handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
+                handler.postDelayed(slideshowNext, ConstValues.SLIDESHOW_DELAY)
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 hideUI.run()
                 Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
@@ -204,7 +204,7 @@ class ImageViewer: FileViewerActivity() {
             if (!slideshowSwipe) { //reset slideshow delay if user swipes
                 handler.removeCallbacks(slideshowNext)
             }
-            handler.postDelayed(slideshowNext, ConstValues.slideshow_delay)
+            handler.postDelayed(slideshowNext, ConstValues.SLIDESHOW_DELAY)
         }
     }
 

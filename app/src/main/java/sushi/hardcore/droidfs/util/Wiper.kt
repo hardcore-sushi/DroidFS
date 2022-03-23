@@ -25,11 +25,11 @@ object Wiper {
                 val buff = ByteArray(buff_size)
                 Arrays.fill(buff, 0.toByte())
                 val writes = ceil(size.toDouble() / buff_size).toInt()
-                for (i in 0 until ConstValues.wipe_passes) {
+                for (i in 0 until ConstValues.WIPE_PASSES) {
                     for (j in 0 until writes) {
                         os.write(buff)
                     }
-                    if (i < ConstValues.wipe_passes - 1) {
+                    if (i < ConstValues.WIPE_PASSES - 1) {
                         //reopening to flush and seek
                         os.close()
                         os = context.contentResolver.openOutputStream(uri)!!
@@ -57,11 +57,11 @@ object Wiper {
             val buff = ByteArray(buff_size)
             Arrays.fill(buff, 0.toByte())
             val writes = ceil(size.toDouble() / buff_size).toInt()
-            for (i in 0 until ConstValues.wipe_passes) {
+            for (i in 0 until ConstValues.WIPE_PASSES) {
                 for (j in 0 until writes) {
                     os.write(buff)
                 }
-                if (i < ConstValues.wipe_passes - 1) {
+                if (i < ConstValues.WIPE_PASSES - 1) {
                     //reopening to flush and seek
                     os.close()
                     os = FileOutputStream(file)

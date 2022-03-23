@@ -21,7 +21,7 @@ class GocryptfsDataSource(private val gocryptfsVolume: GocryptfsVolume, private 
     }
 
     override fun getUri(): Uri {
-        return ConstValues.fakeUri
+        return ConstValues.FAKE_URI
     }
 
     override fun close() {

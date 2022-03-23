@@ -27,7 +27,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
         return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
-            .createMediaSource(MediaItem.fromUri(ConstValues.fakeUri))
+            .createMediaSource(MediaItem.fromUri(ConstValues.FAKE_URI))
     }
 
     private fun initializePlayer(){

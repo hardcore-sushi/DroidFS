@@ -30,13 +30,14 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
         const val DefaultBS = 4096
+        const val CONFIG_FILE_NAME = "gocryptfs.conf"
         external fun createVolume(root_cipher_dir: String, password: CharArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
         external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
 
         fun isGocryptfsVolume(path: File): Boolean {
             if (path.isDirectory){
-                return File(path, ConstValues.gocryptfsConfFilename).isFile
+                return File(path, CONFIG_FILE_NAME).isFile
             }
             return false
         }
