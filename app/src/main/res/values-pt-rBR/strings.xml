@@ -127,7 +127,6 @@
     <string name="move_failed">Transferência do arquivo %s falhou.</string>
     <string name="move_success">Transferência bem sucedida!</string>
     <string name="enter_timer_duration">Definir a duração do tempo (em s)</string>
-    <string name="timer_empty_error_msg">Por favor, digite um valor numérico</string>
     <string name="path_error">Falha ao carregar a localização selecionada.</string>
     <string name="create_cant_write_error_msg">DroidFS não pode salvar neste local. Por favor, tente algum outro.</string>
     <string name="sdcard_error_header">DroidFS só pode escrever em memórias SD removíveis sob:</string>

@@ -3,18 +3,17 @@ package sushi.hardcore.droidfs
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.MenuItem
-import android.view.inputmethod.EditorInfo
 import android.widget.Toast
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.SwitchPreference
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
-import sushi.hardcore.droidfs.databinding.DialogEditTextBinding
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import java.lang.NumberFormatException
+import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 class SettingsActivity : BaseActivity() {
 
@@ -71,24 +70,15 @@ class SettingsActivity : BaseActivity() {
         }
 
         private fun showMaxSizeDialog() {
-            val dialogBinding = DialogEditTextBinding.inflate(layoutInflater)
-            with (dialogBinding.dialogEditText) {
-                inputType = EditorInfo.TYPE_CLASS_NUMBER
-                hint = getString(R.string.size_hint)
-            }
-            val dialog = CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).themeValue)
-                .setTitle(R.string.thumbnail_max_size)
-                .setView(dialogBinding.root)
-                .setPositiveButton(R.string.ok) { _, _ ->
-                    setThumbnailMaxSize(dialogBinding.dialogEditText.text.toString())
+            with (EditTextDialog((requireActivity() as BaseActivity), R.string.thumbnail_max_size) {
+                setThumbnailMaxSize(it)
+            }) {
+                with (binding.dialogEditText) {
+                    inputType = InputType.TYPE_CLASS_NUMBER
+                    hint = getString(R.string.size_hint)
                 }
-                .create()
-            dialogBinding.dialogEditText.setOnEditorActionListener { _, _, _ ->
-                dialog.dismiss()
-                setThumbnailMaxSize(dialogBinding.dialogEditText.text.toString())
-                true
+                show()
             }
-            dialog.show()
         }
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

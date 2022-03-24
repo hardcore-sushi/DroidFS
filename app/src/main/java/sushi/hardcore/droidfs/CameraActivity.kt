@@ -13,11 +13,9 @@ import android.util.Size
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
-import android.view.WindowManager
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
-import android.widget.EditText
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
@@ -35,6 +33,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
@@ -161,29 +160,16 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
         }
         binding.imageTimer.setOnClickListener {
-            val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-            val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-            dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
-            val dialog = CustomAlertDialogBuilder(this, themeValue)
-                .setView(dialogEditTextView)
-                .setTitle(getString(R.string.enter_timer_duration))
-                .setPositiveButton(R.string.ok) { _, _ ->
-                    val enteredValue = dialogEditText.text.toString()
-                    if (enteredValue.isEmpty()){
-                        Toast.makeText(this, getString(R.string.timer_empty_error_msg), Toast.LENGTH_SHORT).show()
-                    } else {
-                        timerDuration = enteredValue.toInt()
-                    }
+            with (EditTextDialog(this, R.string.enter_timer_duration) {
+                try {
+                    timerDuration = it.toInt()
+                } catch (e: NumberFormatException) {
+                    Toast.makeText(this, R.string.invalid_number, Toast.LENGTH_SHORT).show()
                 }
-                .setNegativeButton(R.string.cancel, null)
-                .create()
-            dialogEditText.setOnEditorActionListener { _, _, _ ->
-                timerDuration = dialogEditText.text.toString().toInt()
-                dialog.dismiss()
-                true
+            }) {
+                binding.dialogEditText.inputType = InputType.TYPE_CLASS_NUMBER
+                show()
             }
-            dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-            dialog.show()
         }
         binding.imageFlash.setOnClickListener {
             binding.imageFlash.setImageResource(if (isInVideoMode) {
@@ -384,9 +370,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     runOnUiThread { binding.textTimer.text = i.toString() }
                     Thread.sleep(1000)
                 }
-                runOnUiThread {
-                    action()
-                    binding.textTimer.visibility = View.GONE
+                if (!isFinishing) {
+                    runOnUiThread {
+                        action()
+                        binding.textTimer.visibility = View.GONE
+                    }
                 }
                 isWaitingForTimer = false
             }.start()

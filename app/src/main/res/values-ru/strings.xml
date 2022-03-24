@@ -122,7 +122,6 @@
     <string name="move_failed">Ошибка при перемещении %s.</string>
     <string name="move_success">Перемещение выполнено!</string>
     <string name="enter_timer_duration">Введите время таймера (в сек.)</string>
-    <string name="timer_empty_error_msg">Введите числовое значение.</string>
     <string name="path_error">Невозможно получить выбранный путь.</string>
     <string name="create_cant_write_error_msg">DroidFS не имеет доступа на запись по этому пути. Попробуйте найти другое место.</string>
     <string name="add_cant_write_warning">DroidFS не имеет доступа на запись по этому пути. Добавление тома с доступом только для чтения.</string>

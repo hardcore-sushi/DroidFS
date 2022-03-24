@@ -30,6 +30,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
 import java.util.*
 
@@ -78,7 +79,12 @@ class MainActivity : BaseActivity() {
                     startActivity(intent)
                 }
                 .setNegativeButton(R.string.ok, null)
-                .setOnDismissListener { sharedPrefs.edit().putBoolean("applicationFirstOpening", false).apply() }
+                .setOnDismissListener {
+                    with (sharedPrefs.edit()) {
+                        putBoolean("applicationFirstOpening", false)
+                        apply()
+                    }
+                }
                 .show()
         }
         pickMode = intent.action == "pick"
@@ -263,6 +269,11 @@ class MainActivity : BaseActivity() {
                 }
                 true
             }
+            R.id.rename -> {
+                val position = volumeAdapter.selectedItems.elementAt(0)
+                renameVolume(volumeAdapter.volumes[position], position)
+                true
+            }
             R.id.settings -> {
                 val intent = Intent(this, SettingsActivity::class.java)
                 startActivity(intent)
@@ -288,10 +299,10 @@ class MainActivity : BaseActivity() {
             }
         }
         menu.findItem(R.id.forget_password).isVisible = showForgetPassword && !pickMode
-        menu.findItem(R.id.change_password).isVisible =
-            !pickMode && !dropMode &&
-            volumeAdapter.selectedItems.size == 1 &&
-            volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].canWrite(filesDir.path)
+        val onlyOneAndWriteable = !pickMode && !dropMode &&
+                volumeAdapter.selectedItems.size == 1 &&
+                volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].canWrite(filesDir.path)
+        menu.findItem(R.id.change_password).isVisible = onlyOneAndWriteable
         with(menu.findItem(R.id.copy)) {
             isVisible = !pickMode && !dropMode && volumeAdapter.selectedItems.size == 1
             if (isVisible) {
@@ -302,6 +313,7 @@ class MainActivity : BaseActivity() {
                 )
             }
         }
+        menu.findItem(R.id.rename).isVisible = onlyOneAndWriteable
         supportActionBar?.setDisplayHomeAsUpEnabled(isSelecting || pickMode || dropMode)
         return true
     }
@@ -356,6 +368,32 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
+    }
+
+    private fun renameVolume(volume: Volume, position: Int) {
+        EditTextDialog(this, R.string.new_volume_name) { newName ->
+            val srcPath = File(volume.getFullPath(filesDir.path))
+            val dstPath = File(srcPath.parent, newName).canonicalFile
+            val newDBName: String
+            val success = if (volume.isHidden) {
+                if (newName.contains("/")) {
+                    Toast.makeText(this, R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
+                    renameVolume(volume, position)
+                    return@EditTextDialog
+                }
+                newDBName = newName
+                srcPath.renameTo(dstPath)
+            } else {
+                newDBName = dstPath.path
+                DocumentFile.fromFile(srcPath).renameTo(newName)
+            }
+            if (success) {
+                volumeDatabase.renameVolume(volume.name, newDBName)
+                unselect(position)
+            } else {
+                Toast.makeText(this, R.string.volume_rename_failed, Toast.LENGTH_SHORT).show()
+            }
+        }.show()
     }
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23

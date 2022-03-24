@@ -8,7 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.R
 
-class CustomAlertDialogBuilder(context: Context, theme: String) : AlertDialog.Builder(
+open class CustomAlertDialogBuilder(context: Context, theme: String) : AlertDialog.Builder(
     context, when (theme) {
         "black_green" -> R.style.BlackGreenDialog
         "dark_red" -> R.style.DarkRedDialog

@@ -39,4 +39,10 @@
         app:showAsAction="never"
         android:visible="false"/>
 
+    <item
+        android:id="@+id/rename"
+        app:showAsAction="never"
+        android:visible="false"
+        android:title="@string/rename"/>
+
 </menu>

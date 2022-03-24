@@ -5,8 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
-import android.view.WindowManager
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
@@ -20,6 +18,7 @@ import sushi.hardcore.droidfs.databinding.ActivityExplorerBinding
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
 
 class ExplorerActivity : BaseExplorerActivity() {
@@ -192,25 +191,9 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
-                                val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-                                val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                                val dialog = CustomAlertDialogBuilder(this, themeValue)
-                                    .setView(dialogEditTextView)
-                                    .setTitle(getString(R.string.enter_file_name))
-                                    .setPositiveButton(R.string.ok) { _, _ ->
-                                        val fileName = dialogEditText.text.toString()
-                                        createNewFile(fileName)
-                                    }
-                                    .setNegativeButton(R.string.cancel, null)
-                                    .create()
-                                dialogEditText.setOnEditorActionListener { _, _, _ ->
-                                    val fileName = dialogEditText.text.toString()
-                                    dialog.dismiss()
-                                    createNewFile(fileName)
-                                    true
-                                }
-                                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-                                dialog.show()
+                                EditTextDialog(this, R.string.enter_file_name) {
+                                    createNewFile(it)
+                                }.show()
                             }
                             "createFolder" -> {
                                 openDialogCreateFolder()
@@ -343,6 +326,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             }
                         }
                         cancelItemAction()
+                        invalidateOptionsMenu()
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
                     mapFileForMove(itemsToProcess, itemsToProcess[0].explorerElement.parentPath)
@@ -364,6 +348,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             }
                         }
                         cancelItemAction()
+                        invalidateOptionsMenu()
                     }
                 }
                 true

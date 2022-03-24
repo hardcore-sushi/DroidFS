@@ -10,8 +10,6 @@ import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.view.WindowManager
-import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
@@ -39,6 +37,7 @@ import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_viewers.*
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 open class BaseExplorerActivity : BaseActivity() {
     private lateinit var sortOrderEntries: Array<String>
@@ -314,25 +313,9 @@ open class BaseExplorerActivity : BaseActivity() {
     }
 
     protected fun openDialogCreateFolder() {
-        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-        val dialog = CustomAlertDialogBuilder(this, themeValue)
-                .setView(dialogEditTextView)
-                .setTitle(R.string.enter_folder_name)
-                .setPositiveButton(R.string.ok) { _, _ ->
-                    val folderName = dialogEditText.text.toString()
-                    createFolder(folderName)
-                }
-                .setNegativeButton(R.string.cancel, null)
-                .create()
-        dialogEditText.setOnEditorActionListener { _, _, _ ->
-            val folderName = dialogEditText.text.toString()
-            dialog.dismiss()
-            createFolder(folderName)
-            true
-        }
-        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-        dialog.show()
+        EditTextDialog(this, R.string.enter_folder_name) {
+            createFolder(it)
+        }.show()
     }
 
     protected fun checkPathOverwrite(items: ArrayList<OperationFile>, dstDirectoryPath: String, callback: (ArrayList<OperationFile>?) -> Unit) {
@@ -363,36 +346,26 @@ open class BaseExplorerActivity : BaseActivity() {
                         checkPathOverwrite(items, dstDirectoryPath, callback)
                     }
                     .setNegativeButton(R.string.no) { _, _ ->
-                        val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
-                        val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                        dialogEditText.setText(items[i].explorerElement.name)
-                        dialogEditText.selectAll()
-                        val dialog = CustomAlertDialogBuilder(this, themeValue)
-                                .setView(dialogEditTextView)
-                                .setTitle(R.string.enter_new_name)
-                                .setPositiveButton(R.string.ok) { _, _ ->
-                                    items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), dialogEditText.text.toString())
-                                    if (items[i].explorerElement.isDirectory){
-                                        for (j in 0 until items.size){
-                                            if (PathUtils.isChildOf(items[j].explorerElement.fullPath, items[i].explorerElement.fullPath)){
-                                                items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].explorerElement.fullPath, items[j].explorerElement.fullPath))
-                                            }
-                                        }
+                        with(EditTextDialog(this, R.string.enter_new_name) {
+                            items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), it)
+                            if (items[i].explorerElement.isDirectory){
+                                for (j in 0 until items.size){
+                                    if (PathUtils.isChildOf(items[j].explorerElement.fullPath, items[i].explorerElement.fullPath)){
+                                        items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].explorerElement.fullPath, items[j].explorerElement.fullPath))
                                     }
-                                    checkPathOverwrite(items, dstDirectoryPath, callback)
                                 }
-                                .setOnCancelListener{
-                                    callback(null)
-                                }
-                                .create()
-                        dialogEditText.setOnEditorActionListener { _, _, _ ->
-                            dialog.dismiss()
-                            items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), dialogEditText.text.toString())
+                            }
                             checkPathOverwrite(items, dstDirectoryPath, callback)
-                            true
+                        }) {
+                            with (binding.dialogEditText) {
+                                setText(items[i].explorerElement.name)
+                                selectAll()
+                            }
+                            setOnCancelListener{
+                                callback(null)
+                            }
+                            show()
                         }
-                        dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-                        dialog.show()
                     }
                     .setOnCancelListener{
                         callback(null)
@@ -521,28 +494,16 @@ open class BaseExplorerActivity : BaseActivity() {
                 true
             }
             R.id.rename -> {
-                val dialogEditTextView = layoutInflater.inflate(R.layout.dialog_edit_text, null)
                 val oldName = explorerElements[explorerAdapter.selectedItems[0]].name
-                val dialogEditText = dialogEditTextView.findViewById<EditText>(R.id.dialog_edit_text)
-                dialogEditText.setText(oldName)
-                dialogEditText.selectAll()
-                val dialog = CustomAlertDialogBuilder(this, themeValue)
-                        .setView(dialogEditTextView)
-                        .setTitle(R.string.rename_title)
-                        .setPositiveButton(R.string.ok) { _, _ ->
-                            val newName = dialogEditText.text.toString()
-                            rename(oldName, newName)
-                        }
-                        .setNegativeButton(R.string.cancel, null)
-                        .create()
-                dialogEditText.setOnEditorActionListener { _, _, _ ->
-                    val newName = dialogEditText.text.toString()
-                    dialog.dismiss()
-                    rename(oldName, newName)
-                    true
+                with(EditTextDialog(this, R.string.rename_title) {
+                    rename(oldName, it)
+                }) {
+                    with(binding.dialogEditText) {
+                        setText(oldName)
+                        selectAll()
+                    }
+                    show()
                 }
-                dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
-                dialog.show()
                 true
             }
             R.id.open_as -> {

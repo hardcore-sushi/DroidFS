@@ -94,6 +94,15 @@ class VolumeDatabase(context: Context): SQLiteOpenHelper(context,
         ), "$COLUMN_NAME=?", arrayOf(volume.name)) > 0
     }
 
+    fun renameVolume(oldName: String, newName: String): Boolean {
+        return writableDatabase.update(TABLE_NAME,
+            ContentValues().apply {
+                put(COLUMN_NAME, newName)
+            },
+            "$COLUMN_NAME=?",arrayOf(oldName)
+        ) > 0
+    }
+
     fun removeVolume(volumeName: String): Boolean {
         return writableDatabase.delete(TABLE_NAME, "$COLUMN_NAME=?", arrayOf(volumeName)) > 0
     }
