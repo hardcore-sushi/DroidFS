@@ -17,7 +17,7 @@ object ConstValues {
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"
     const val DEFAULT_THUMBNAIL_MAX_SIZE = 10_000L
     private val FILE_EXTENSIONS = mapOf(
-        Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp")),
+        Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp", "heic")),
         Pair("video", listOf("mp4", "webm", "mkv", "mov")),
         Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac")),
         Pair("pdf", listOf("pdf")),
