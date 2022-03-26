@@ -2,7 +2,7 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.view.Menu
 import android.view.MenuItem
-import org.grapheneos.pdfviewer.PdfViewer
+import app.grapheneos.pdfviewer.PdfViewer
 import java.io.ByteArrayInputStream
 import java.io.File
 
