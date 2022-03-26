@@ -44,7 +44,6 @@
         <FrameLayout android:id="@id/exo_bottom_bar"
             android:layout_width="match_parent"
             android:layout_height="@dimen/exo_styled_bottom_bar_height"
-            android:layout_marginTop="@dimen/exo_styled_bottom_bar_margin_top"
             android:background="@color/exo_bottom_bar_background"
             android:layoutDirection="ltr">
 
