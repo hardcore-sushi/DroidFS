@@ -6,10 +6,7 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.preference.ListPreference
-import androidx.preference.Preference
-import androidx.preference.PreferenceFragmentCompat
-import androidx.preference.SwitchPreference
+import androidx.preference.*
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -26,7 +23,7 @@ class SettingsActivity : BaseActivity() {
         val fragment = if (screen == "UnsafeFeaturesSettingsFragment") {
             UnsafeFeaturesSettingsFragment()
         } else {
-            MainSettingsFragment(sharedPrefs)
+            MainSettingsFragment()
         }
         supportFragmentManager
                 .beginTransaction()
@@ -44,7 +41,8 @@ class SettingsActivity : BaseActivity() {
         }
     }
 
-    class MainSettingsFragment(private val sharedPrefs: SharedPreferences) : PreferenceFragmentCompat() {
+    class MainSettingsFragment : PreferenceFragmentCompat() {
+        private lateinit var sharedPrefs: SharedPreferences
         private lateinit var maxSizePreference: Preference
 
         private fun setThumbnailMaxSize(input: String) {
@@ -83,6 +81,7 @@ class SettingsActivity : BaseActivity() {
 
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
+            sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
             findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
                 (activity as BaseActivity).onThemeChanged(newValue as String)
                 true
