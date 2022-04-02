@@ -426,7 +426,11 @@ class MainActivity : BaseActivity() {
                             }
                         }
                         override fun onPasswordHashSaved() {}
-                        override fun onFailed(pending: Boolean) {}
+                        override fun onFailed(pending: Boolean) {
+                            if (!pending) {
+                                askForPassword(volume, position)
+                            }
+                        }
                     }
                     fingerprintProtector.loadPasswordHash(volume.shortName, encryptedHash, iv)
                 }
@@ -450,7 +454,7 @@ class MainActivity : BaseActivity() {
 
     private fun askForPassword(volume: Volume, position: Int) {
         val dialogBinding = DialogOpenVolumeBinding.inflate(layoutInflater)
-        if (!usfFingerprint || fingerprintProtector == null) {
+        if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
         }
         val dialog = CustomAlertDialogBuilder(this, themeValue)
