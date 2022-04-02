@@ -1,0 +1,25 @@
+<resources>
+    <string-array name="sort_orders_entries">
+        <item>Nombre</item>
+        <item>Tamaño</item>
+        <item>Fecha</item>
+        <item>Nombre (desc)</item>
+        <item>Tamaño (desc)</item>
+        <item>Fecha (desc)</item>
+    </string-array>
+
+    <string-array name="themes_entries">
+        <item>Verde Oscuro</item>
+        <item>Verde Negro</item>
+        <item>Rojo Oscuro</item>
+        <item>Rojo Negro</item>
+        <item>Azul Oscuro</item>
+        <item>Azul Negro</item>
+        <item>Amarillo Oscuro</item>
+        <item>Amarillo Negro</item>
+        <item>Naranja Oscuro</item>
+        <item>Naranja Negro</item>
+        <item>Morado Oscuro</item>
+        <item>Morado Negro</item>
+    </string-array>
+</resources>
