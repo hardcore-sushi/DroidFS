@@ -145,8 +145,8 @@ class MainActivity : BaseActivity() {
         binding.textNoVolumes.visibility = View.GONE
     }
 
-    private fun unselectAll() {
-        volumeAdapter.unSelectAll()
+    private fun unselectAll(notifyChange: Boolean = true) {
+        volumeAdapter.unSelectAll(notifyChange)
         invalidateOptionsMenu()
     }
 
@@ -233,7 +233,7 @@ class MainActivity : BaseActivity() {
                     if (volumeDatabase.removeHash(volumeAdapter.volumes[i]))
                         volumeAdapter.onVolumeChanged(i)
                 }
-                unselectAll()
+                unselectAll(false)
                 true
             }
             R.id.change_password -> {

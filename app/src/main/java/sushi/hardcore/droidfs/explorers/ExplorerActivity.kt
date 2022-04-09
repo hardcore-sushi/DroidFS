@@ -362,7 +362,10 @@ class ExplorerActivity : BaseExplorerActivity() {
                 if (size > 1) {
                     dialog.setMessage(getString(R.string.multiple_delete_confirm, explorerAdapter.selectedItems.size.toString()))
                 } else {
-                    dialog.setMessage(getString(R.string.single_delete_confirm, explorerAdapter.explorerElements[explorerAdapter.selectedItems[0]].name))
+                    dialog.setMessage(getString(
+                        R.string.single_delete_confirm,
+                        explorerAdapter.explorerElements[explorerAdapter.selectedItems.first()].name
+                    ))
                 }
                 dialog.show()
                 true

@@ -1,6 +1,5 @@
 package sushi.hardcore.droidfs.adapters
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -12,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.Volume
 import sushi.hardcore.droidfs.VolumeDatabase
-import java.io.File
 
 class VolumeAdapter(
     private val context: Context,
@@ -24,7 +22,7 @@ class VolumeAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     lateinit var volumes: List<Volume>
-    val selectedItems: MutableSet<Int> = HashSet()
+    var selectedItems: MutableSet<Int> = HashSet()
 
     init {
         reloadVolumes()
@@ -69,24 +67,30 @@ class VolumeAdapter(
         notifyItemChanged(position)
     }
 
-    @SuppressLint("NotifyDataSetChanged")
     fun selectAll() {
         for (i in volumes.indices) {
-            if (!selectedItems.contains(i))
+            if (!selectedItems.contains(i)) {
                 selectedItems.add(i)
+                notifyItemChanged(i)
+            }
         }
-        notifyDataSetChanged()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun unSelectAll() {
-        selectedItems.clear()
-        notifyDataSetChanged()
+    fun unSelectAll(notifyChange: Boolean) {
+        if (notifyChange) {
+            val whatWasSelected = selectedItems
+            selectedItems = HashSet()
+            whatWasSelected.forEach {
+                notifyItemChanged(it)
+            }
+        } else {
+            selectedItems.clear()
+        }
     }
 
     fun refresh() {
         reloadVolumes()
-        unSelectAll()
+        unSelectAll(true)
     }
 
     inner class VolumeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

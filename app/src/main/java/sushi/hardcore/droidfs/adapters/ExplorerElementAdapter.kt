@@ -1,12 +1,16 @@
 package sushi.hardcore.droidfs.adapters
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.graphics.drawable.toBitmap
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.DrawableImageViewTarget
@@ -18,6 +22,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
 import java.text.DateFormat
 import java.util.*
+import kotlin.collections.HashSet
 
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
@@ -28,8 +33,21 @@ class ExplorerElementAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
-    val selectedItems: MutableList<Int> = ArrayList()
+    @SuppressLint("NotifyDataSetChanged")
+    set(value) {
+        field = value
+        thumbnailsCache?.evictAll()
+        notifyDataSetChanged()
+    }
+    var selectedItems: MutableSet<Int> = HashSet()
     var isUsingListLayout = true
+    private var thumbnailsCache: LruCache<String, Bitmap>? = null
+
+    init {
+        if (gocryptfsVolume != null) {
+            thumbnailsCache = LruCache((Runtime.getRuntime().maxMemory() / 1024 / 8).toInt())
+        }
+    }
 
     override fun getItemCount(): Int {
         return explorerElements.size
@@ -64,14 +82,21 @@ class ExplorerElementAdapter(
         for (i in explorerElements.indices) {
             if (!selectedItems.contains(i) && !explorerElements[i].isParentFolder) {
                 selectedItems.add(i)
+                notifyItemChanged(i)
             }
         }
-        notifyDataSetChanged()
     }
 
-    fun unSelectAll() {
-        selectedItems.clear()
-        notifyDataSetChanged()
+    fun unSelectAll(notifyChange: Boolean) {
+        if (notifyChange) {
+            val whatWasSelected = selectedItems
+            selectedItems = HashSet()
+            whatWasSelected.forEach {
+                notifyItemChanged(it)
+            }
+        } else {
+            selectedItems.clear()
+        }
     }
 
     open class ExplorerElementViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -124,50 +149,69 @@ class ExplorerElementAdapter(
         var displayThumbnail = true
         var target: DrawableImageViewTarget? = null
 
-        private fun loadThumbnail(fullPath: String) {
-            (bindingAdapter as ExplorerElementAdapter?)?.let { adapter ->
-                adapter.gocryptfsVolume?.let { volume ->
-                    displayThumbnail = true
-                    Thread {
-                        volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
-                            if (displayThumbnail) {
-                                adapter.activity.runOnUiThread {
-                                    if (displayThumbnail) {
-                                        target = Glide.with(adapter.activity).load(it).into(object : DrawableImageViewTarget(icon) {
-                                            override fun onResourceReady(
-                                                resource: Drawable,
-                                                transition: Transition<in Drawable>?
-                                            ) {
-                                                super.onResourceReady(resource, transition)
-                                                target = null
-                                            }
-                                        })
-                                    }
+        private fun loadThumbnail(fullPath: String, adapter: ExplorerElementAdapter) {
+            adapter.gocryptfsVolume?.let { volume ->
+                displayThumbnail = true
+                Thread {
+                    volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
+                        if (displayThumbnail) {
+                            adapter.activity.runOnUiThread {
+                                if (displayThumbnail && !adapter.activity.isFinishing) {
+                                    target = Glide.with(adapter.activity).load(it).skipMemoryCache(true).into(object : DrawableImageViewTarget(icon) {
+                                        override fun onResourceReady(
+                                            resource: Drawable,
+                                            transition: Transition<in Drawable>?
+                                        ) {
+                                            val bitmap = resource.toBitmap()
+                                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config, true))
+                                            super.onResourceReady(resource, transition)
+                                            target = null
+                                        }
+                                    })
                                 }
                             }
                         }
-                    }.start()
-                }
+                    }
+                }.start()
             }
         }
+
+        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int) {
+            var setDefaultIcon = true
+            (bindingAdapter as ExplorerElementAdapter?)?.let { adapter ->
+                adapter.thumbnailsCache?.let {
+                    val thumbnail = it.get(fullPath)
+                    if (thumbnail != null) {
+                        icon.setImageBitmap(thumbnail)
+                        setDefaultIcon = false
+                    } else {
+                        loadThumbnail(fullPath, adapter)
+                    }
+                }
+            }
+            if (setDefaultIcon) {
+                icon.setImageResource(defaultIconId)
+            }
+        }
+
         override fun bind(explorerElement: ExplorerElement, position: Int, isSelected: Boolean) {
             super.bind(explorerElement, position, isSelected)
-            icon.setImageResource(
-                when {
-                    ConstValues.isImage(explorerElement.name) -> {
-                        loadThumbnail(explorerElement.fullPath)
-                        R.drawable.icon_file_image
-                    }
-                    ConstValues.isVideo(explorerElement.name) -> {
-                        loadThumbnail(explorerElement.fullPath)
-                        R.drawable.icon_file_video
-                    }
-                    ConstValues.isText(explorerElement.name) -> R.drawable.icon_file_text
-                    ConstValues.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
-                    ConstValues.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
-                    else -> R.drawable.icon_file_unknown
+            when {
+                ConstValues.isImage(explorerElement.name) -> {
+                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_image)
                 }
-            )
+                ConstValues.isVideo(explorerElement.name) -> {
+                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video)
+                }
+                else -> icon.setImageResource(
+                    when {
+                        ConstValues.isText(explorerElement.name) -> R.drawable.icon_file_text
+                        ConstValues.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
+                        ConstValues.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
+                        else -> R.drawable.icon_file_unknown
+                    }
+                )
+            }
         }
     }
 

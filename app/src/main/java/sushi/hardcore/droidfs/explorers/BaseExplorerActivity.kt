@@ -240,8 +240,8 @@ open class BaseExplorerActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
-    protected fun unselectAll(){
-        explorerAdapter.unSelectAll()
+    protected fun unselectAll(notifyChange: Boolean = true) {
+        explorerAdapter.unSelectAll(notifyChange)
         invalidateOptionsMenu()
     }
 
@@ -250,8 +250,8 @@ open class BaseExplorerActivity : BaseActivity() {
         synchronized(this) {
             ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         }
+        unselectAll(false)
         explorerAdapter.explorerElements = explorerElements
-        unselectAll()
         val sharedPrefsEditor = sharedPrefs.edit()
         sharedPrefsEditor.putString(ConstValues.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
@@ -494,7 +494,7 @@ open class BaseExplorerActivity : BaseActivity() {
         if (!noItemSelected) {
             if (explorerAdapter.selectedItems.size == 1) {
                 menu.findItem(R.id.rename).isVisible = true
-                if (explorerElements[explorerAdapter.selectedItems[0]].isRegularFile) {
+                if (explorerElements[explorerAdapter.selectedItems.first()].isRegularFile) {
                     menu.findItem(R.id.open_as)?.isVisible = true
                     if (usf_open) {
                         menu.findItem(R.id.external_open)?.isVisible = true
@@ -523,7 +523,7 @@ open class BaseExplorerActivity : BaseActivity() {
                 true
             }
             R.id.rename -> {
-                val oldName = explorerElements[explorerAdapter.selectedItems[0]].name
+                val oldName = explorerElements[explorerAdapter.selectedItems.first()].name
                 with(EditTextDialog(this, R.string.rename_title) {
                     rename(oldName, it)
                 }) {
@@ -536,12 +536,22 @@ open class BaseExplorerActivity : BaseActivity() {
                 true
             }
             R.id.open_as -> {
-                showOpenAsDialog(PathUtils.pathJoin(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
+                showOpenAsDialog(
+                    PathUtils.pathJoin(
+                        currentDirectoryPath,
+                        explorerElements[explorerAdapter.selectedItems.first()].name
+                    )
+                )
                 true
             }
             R.id.external_open -> {
                 if (usf_open){
-                    openWithExternalApp(PathUtils.pathJoin(currentDirectoryPath, explorerElements[explorerAdapter.selectedItems[0]].name))
+                    openWithExternalApp(
+                        PathUtils.pathJoin(
+                            currentDirectoryPath,
+                            explorerElements[explorerAdapter.selectedItems.first()].name
+                        )
+                    )
                     unselectAll()
                 }
                 true
