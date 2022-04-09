@@ -22,7 +22,6 @@ import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
 import java.text.DateFormat
 import java.util.*
-import kotlin.collections.HashSet
 
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
@@ -30,7 +29,7 @@ class ExplorerElementAdapter(
     val onExplorerElementClick: (Int) -> Unit,
     val onExplorerElementLongClick: (Int) -> Unit,
     val thumbnailMaxSize: Long,
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : SelectableAdapter<ExplorerElement>() {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
     @SuppressLint("NotifyDataSetChanged")
@@ -39,7 +38,6 @@ class ExplorerElementAdapter(
         thumbnailsCache?.evictAll()
         notifyDataSetChanged()
     }
-    var selectedItems: MutableSet<Int> = HashSet()
     var isUsingListLayout = true
     private var thumbnailsCache: LruCache<String, Bitmap>? = null
 
@@ -49,54 +47,30 @@ class ExplorerElementAdapter(
         }
     }
 
-    override fun getItemCount(): Int {
-        return explorerElements.size
+    override fun getItems(): List<ExplorerElement> {
+        return explorerElements
     }
 
-    private fun toggleSelection(position: Int): Boolean {
-        if (!explorerElements[position].isParentFolder) {
-            if (selectedItems.contains(position)) {
-                selectedItems.remove(position)
-            } else {
-                selectedItems.add(position)
-                return true
-            }
-        }
-        return false
-    }
-
-    private fun onItemClick(position: Int): Boolean {
-        onExplorerElementClick(position)
-        if (selectedItems.isNotEmpty()) {
-            return toggleSelection(position)
-        }
-        return false
-    }
-
-    private fun onItemLongClick(position: Int): Boolean {
-        onExplorerElementLongClick(position)
-        return toggleSelection(position)
-    }
-
-    fun selectAll() {
-        for (i in explorerElements.indices) {
-            if (!selectedItems.contains(i) && !explorerElements[i].isParentFolder) {
-                selectedItems.add(i)
-                notifyItemChanged(i)
-            }
-        }
-    }
-
-    fun unSelectAll(notifyChange: Boolean) {
-        if (notifyChange) {
-            val whatWasSelected = selectedItems
-            selectedItems = HashSet()
-            whatWasSelected.forEach {
-                notifyItemChanged(it)
-            }
+    override fun toggleSelection(position: Int): Boolean {
+        return if (!explorerElements[position].isParentFolder) {
+            super.toggleSelection(position)
         } else {
-            selectedItems.clear()
+            false
         }
+    }
+
+    override fun onItemClick(position: Int): Boolean {
+        onExplorerElementClick(position)
+        return super.onItemClick(position)
+    }
+
+    override fun onItemLongClick(position: Int): Boolean {
+        onExplorerElementLongClick(position)
+        return super.onItemLongClick(position)
+    }
+
+    override fun isSelectable(position: Int): Boolean {
+        return !explorerElements[position].isParentFolder
     }
 
     open class ExplorerElementViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -116,21 +90,9 @@ class ExplorerElementAdapter(
             itemView.findViewById(R.id.selectable_container)
         }
 
-        protected fun setBackground(isSelected: Boolean) {
-            itemView.setBackgroundResource(if (isSelected) { R.color.itemSelected } else { 0 })
-        }
-
         open fun bind(explorerElement: ExplorerElement, position: Int) {
             textElementName.text = explorerElement.name
-            (bindingAdapter as ExplorerElementAdapter?)?.let { adapter ->
-                selectableContainer.setOnClickListener {
-                    setBackground(adapter.onItemClick(position))
-                }
-                selectableContainer.setOnLongClickListener {
-                    setBackground(adapter.onItemLongClick(position))
-                    true
-                }
-            }
+            (bindingAdapter as ExplorerElementAdapter?)?.setSelectable(selectableContainer, itemView, position)
         }
     }
 
@@ -141,7 +103,6 @@ class ExplorerElementAdapter(
             (bindingAdapter as ExplorerElementAdapter?)?.let {
                 textElementMtime.text = it.dateFormat.format(explorerElement.mTime)
             }
-            setBackground(isSelected)
         }
     }
 

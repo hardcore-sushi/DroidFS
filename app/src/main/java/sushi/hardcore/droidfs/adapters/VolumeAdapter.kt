@@ -19,13 +19,16 @@ class VolumeAdapter(
     private val showReadOnly: Boolean,
     private val onVolumeItemClick: (Volume, Int) -> Unit,
     private val onVolumeItemLongClick: () -> Unit,
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+) : SelectableAdapter<Volume>() {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     lateinit var volumes: List<Volume>
-    var selectedItems: MutableSet<Int> = HashSet()
 
     init {
         reloadVolumes()
+    }
+
+    override fun getItems(): List<Volume> {
+        return volumes
     }
 
     private fun reloadVolumes() {
@@ -36,28 +39,19 @@ class VolumeAdapter(
         }
     }
 
-    private fun toggleSelection(position: Int): Boolean {
-        return if (selectedItems.contains(position)) {
-            selectedItems.remove(position)
-            false
-        } else {
-            selectedItems.add(position)
-            true
-        }
-    }
-
-    private fun onItemClick(position: Int): Boolean {
+    override fun onItemClick(position: Int): Boolean {
         onVolumeItemClick(volumes[position], position)
-        if (allowSelection && selectedItems.isNotEmpty()) {
-            return toggleSelection(position)
+        return if (allowSelection) {
+            super.onItemClick(position)
+        } else {
+            false
         }
-        return false
     }
 
-    private fun onItemLongClick(position: Int): Boolean {
+    override fun onItemLongClick(position: Int): Boolean {
         onVolumeItemLongClick()
         return if (allowSelection)
-            toggleSelection(position)
+            super.onItemLongClick(position)
         else
             false
     }
@@ -67,37 +61,12 @@ class VolumeAdapter(
         notifyItemChanged(position)
     }
 
-    fun selectAll() {
-        for (i in volumes.indices) {
-            if (!selectedItems.contains(i)) {
-                selectedItems.add(i)
-                notifyItemChanged(i)
-            }
-        }
-    }
-
-    fun unSelectAll(notifyChange: Boolean) {
-        if (notifyChange) {
-            val whatWasSelected = selectedItems
-            selectedItems = HashSet()
-            whatWasSelected.forEach {
-                notifyItemChanged(it)
-            }
-        } else {
-            selectedItems.clear()
-        }
-    }
-
     fun refresh() {
         reloadVolumes()
         unSelectAll(true)
     }
 
     inner class VolumeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-
-        private fun setBackground(isSelected: Boolean) {
-            itemView.setBackgroundResource(if (isSelected) R.color.itemSelected else 0)
-        }
 
         fun bind(position: Int) {
             val volume = volumes[position]
@@ -123,18 +92,7 @@ class VolumeAdapter(
                     visibility = View.VISIBLE
                 }
             }
-            (bindingAdapter as VolumeAdapter?)?.let { adapter ->
-                itemView.findViewById<LinearLayout>(R.id.selectable_container).apply {
-                    setOnClickListener {
-                        setBackground(adapter.onItemClick(layoutPosition))
-                    }
-                    setOnLongClickListener {
-                        setBackground(adapter.onItemLongClick(layoutPosition))
-                        true
-                    }
-                }
-            }
-            setBackground(selectedItems.contains(position))
+            setSelectable(itemView.findViewById<LinearLayout>(R.id.selectable_container), itemView, layoutPosition)
         }
     }
 
@@ -145,9 +103,5 @@ class VolumeAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         (holder as VolumeViewHolder).bind(position)
-    }
-
-    override fun getItemCount(): Int {
-        return volumes.size
     }
 }
