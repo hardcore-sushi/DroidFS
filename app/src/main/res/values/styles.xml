@@ -59,6 +59,5 @@
         <item name="android:ellipsize">start</item>
         <item name="android:singleLine">true</item>
         <item name="android:textSize">15sp</item>
-        <item name="android:textAlignment">center</item>
     </style>
 </resources>

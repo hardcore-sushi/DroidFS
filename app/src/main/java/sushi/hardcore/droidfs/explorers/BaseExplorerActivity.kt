@@ -10,12 +10,14 @@ import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -60,6 +62,9 @@ open class BaseExplorerActivity : BaseActivity() {
     protected var isStartingActivity = false
     private var usf_open = false
     protected var usf_keep_open = false
+    private lateinit var linearLayoutManager: LinearLayoutManager
+    private var isUsingListLayout = true
+    private lateinit var layoutIcon: ImageButton
     private lateinit var titleText: TextView
     private lateinit var recycler_view_explorer: RecyclerView
     private lateinit var refresher: SwipeRefreshLayout
@@ -103,12 +108,22 @@ open class BaseExplorerActivity : BaseActivity() {
             ::onExplorerItemLongClick,
             sharedPrefs.getLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
         )
-        explorerViewModel= ViewModelProvider(this).get(ExplorerViewModel::class.java)
+        explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
         setCurrentPath(currentDirectoryPath)
-        recycler_view_explorer.apply {
-            adapter = explorerAdapter
-            layoutManager = LinearLayoutManager(this@BaseExplorerActivity)
+        linearLayoutManager = LinearLayoutManager(this@BaseExplorerActivity)
+        recycler_view_explorer.adapter = explorerAdapter
+        isUsingListLayout = sharedPrefs.getBoolean("useListLayout", true)
+        layoutIcon = findViewById(R.id.layout_icon)
+        setRecyclerViewLayout()
+        layoutIcon.setOnClickListener {
+            isUsingListLayout = !isUsingListLayout
+            setRecyclerViewLayout()
+            recycler_view_explorer.recycledViewPool.clear()
+            with (sharedPrefs.edit()) {
+                putBoolean("useListLayout", isUsingListLayout)
+                apply()
+            }
         }
         refresher.setOnRefreshListener {
             setCurrentPath(currentDirectoryPath)
@@ -119,6 +134,20 @@ open class BaseExplorerActivity : BaseActivity() {
 
     class ExplorerViewModel: ViewModel() {
         var currentDirectoryPath = ""
+    }
+
+    private fun setRecyclerViewLayout() {
+        layoutIcon.setImageResource(if (isUsingListLayout) {
+            recycler_view_explorer.layoutManager = linearLayoutManager
+            explorerAdapter.isUsingListLayout = true
+            R.drawable.icon_view_list
+        } else {
+            val displayMetrics = resources.displayMetrics
+            val columnsNumber = (displayMetrics.widthPixels / displayMetrics.density / 200 + 0.5).toInt()
+            recycler_view_explorer.layoutManager = GridLayoutManager(this, columnsNumber)
+            explorerAdapter.isUsingListLayout = false
+            R.drawable.icon_view_grid
+        })
     }
 
     protected open fun init() {

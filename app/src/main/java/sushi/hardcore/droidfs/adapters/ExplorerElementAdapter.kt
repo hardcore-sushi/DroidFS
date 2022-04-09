@@ -29,6 +29,7 @@ class ExplorerElementAdapter(
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
     val selectedItems: MutableList<Int> = ArrayList()
+    var isUsingListLayout = true
 
     override fun getItemCount(): Int {
         return explorerElements.size
@@ -197,7 +198,13 @@ class ExplorerElementAdapter(
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
-        val view = activity.layoutInflater.inflate(R.layout.adapter_explorer_element, parent, false)
+        val view = activity.layoutInflater.inflate(
+            if (isUsingListLayout) {
+                R.layout.adapter_explorer_element_list
+            } else {
+                R.layout.adapter_explorer_element_grid
+            }, parent, false
+        )
         return when (viewType) {
             ExplorerElement.REGULAR_FILE_TYPE -> FileViewHolder(view)
             ExplorerElement.DIRECTORY_TYPE -> DirectoryViewHolder(view)

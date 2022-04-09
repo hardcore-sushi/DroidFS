@@ -233,4 +233,5 @@
     <string name="invalid_number">Invalid number</string>
     <string name="new_volume_name">New volume name:</string>
     <string name="volume_rename_failed">Failed to rename volume</string>
+    <string name="switch_display_layout">Switch display layout</string>
 </resources>
