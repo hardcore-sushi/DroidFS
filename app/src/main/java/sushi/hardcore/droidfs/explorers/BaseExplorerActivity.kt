@@ -70,6 +70,8 @@ open class BaseExplorerActivity : BaseActivity() {
     private lateinit var refresher: SwipeRefreshLayout
     private lateinit var textDirEmpty: TextView
     private lateinit var currentPathText: TextView
+    private lateinit var numberOfFilesText: TextView
+    private lateinit var numberOfFoldersText: TextView
     private lateinit var totalSizeText: TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +91,8 @@ open class BaseExplorerActivity : BaseActivity() {
         refresher = findViewById(R.id.refresher)
         textDirEmpty = findViewById(R.id.text_dir_empty)
         currentPathText = findViewById(R.id.current_path_text)
+        numberOfFilesText = findViewById(R.id.number_of_files_text)
+        numberOfFoldersText = findViewById(R.id.number_of_folders_text)
         totalSizeText = findViewById(R.id.total_size_text)
         supportActionBar?.apply {
             setDisplayShowCustomEnabled(true)
@@ -140,13 +144,13 @@ open class BaseExplorerActivity : BaseActivity() {
         layoutIcon.setImageResource(if (isUsingListLayout) {
             recycler_view_explorer.layoutManager = linearLayoutManager
             explorerAdapter.isUsingListLayout = true
-            R.drawable.icon_view_list
+            R.drawable.icon_view_grid
         } else {
             val displayMetrics = resources.displayMetrics
             val columnsNumber = (displayMetrics.widthPixels / displayMetrics.density / 200 + 0.5).toInt()
             recycler_view_explorer.layoutManager = GridLayoutManager(this, columnsNumber)
             explorerAdapter.isUsingListLayout = false
-            R.drawable.icon_view_grid
+            R.drawable.icon_view_list
         })
     }
 
@@ -266,6 +270,21 @@ open class BaseExplorerActivity : BaseActivity() {
         }
     }
 
+    private fun displayNumberOfElements(textView: TextView, stringIdSingular: Int, stringIdPlural: Int, count: Int) {
+        with(textView) {
+            visibility = if (count == 0) {
+                View.GONE
+            } else {
+                text = if (count == 1) {
+                    getString(stringIdSingular)
+                } else {
+                    getString(stringIdPlural, count)
+                }
+                View.VISIBLE
+            }
+        }
+    }
+
     protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) {
         synchronized(this) {
             explorerElements = gocryptfsVolume.listDir(path)
@@ -279,6 +298,8 @@ open class BaseExplorerActivity : BaseActivity() {
         textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
         currentDirectoryPath = path
         currentPathText.text = getString(R.string.location, currentDirectoryPath)
+        displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
+        displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
         if (mapFolders) {
             Thread {
                 var totalSize: Long = 0

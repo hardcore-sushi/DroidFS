@@ -234,4 +234,8 @@
     <string name="new_volume_name">New volume name:</string>
     <string name="volume_rename_failed">Failed to rename volume</string>
     <string name="switch_display_layout">Switch display layout</string>
+    <string name="one_file">1 file</string>
+    <string name="multiple_files">%d files</string>
+    <string name="one_folder">1 folder</string>
+    <string name="multiple_folders">%d folders</string>
 </resources>
