@@ -39,7 +39,6 @@
     <string name="multiple_delete_confirm">Удалить %s элементов?</string>
     <string name="location">Путь: /%s</string>
     <string name="total_size">Общий размер: %s</string>
-    <string name="default_total_size">—</string>
     <string name="import_from_other_volume">Импорт из другого тома</string>
     <string name="read_file_failed">Невозможно открыть файл.</string>
     <string name="volume">Том: %s</string>

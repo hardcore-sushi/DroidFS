@@ -41,7 +41,6 @@
     <string name="multiple_delete_confirm">Are you sure you want to delete these %s items ?</string>
     <string name="location">Location: /%s</string>
     <string name="total_size">Total size: %s</string>
-    <string name="default_total_size">N/A</string>
     <string name="import_from_other_volume">Import from another volume</string>
     <string name="read_file_failed">Failed to open this file.</string>
     <string name="volume">Volume: %s</string>

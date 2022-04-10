@@ -41,7 +41,6 @@
     <string name="multiple_delete_confirm">¿Estás seguro de que quiere borrar %s objetos?</string>
     <string name="location">Ubicación: /%s</string>
     <string name="total_size">Tamaño total: %s</string>
-    <string name="default_total_size">N/D</string>
     <string name="import_from_other_volume">Importar desde otro volumen</string>
     <string name="read_file_failed">No se ha podido abrir este archivo.</string>
     <string name="volume">Volumen: %s</string>
@@ -233,4 +232,8 @@
     <string name="invalid_number">Número inválido</string>
     <string name="new_volume_name">Nuevo nombre del volumen:</string>
     <string name="volume_rename_failed">Fallo al renombrar el volumen</string>
+    <string name="one_file">1 archivo</string>
+    <string name="multiple_files">%d archivos</string>
+    <string name="one_folder">1 carpeta</string>
+    <string name="multiple_folders">%d carpetas</string>
 </resources>

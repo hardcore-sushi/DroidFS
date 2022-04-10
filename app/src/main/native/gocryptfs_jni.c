@@ -251,11 +251,11 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1list_1dir(JNIEnv *env, jobje
 
     struct gcf_list_dir_return elements = gcf_list_dir(sessionID, go_plain_dir);
 
-    jclass java_ArrayList = (*env)->NewGlobalRef(env, (*env)->FindClass(env, "java/util/ArrayList"));
+    jclass java_ArrayList = (*env)->NewLocalRef(env, (*env)->FindClass(env, "java/util/ArrayList"));
     jmethodID java_ArrayList_init = (*env)->GetMethodID(env, java_ArrayList, "<init>", "(I)V");
     jmethodID java_ArrayList_add = (*env)->GetMethodID(env, java_ArrayList, "add", "(Ljava/lang/Object;)Z");
 
-    jclass classExplorerElement = (*env)->NewGlobalRef(env, (*env)->FindClass(env, "sushi/hardcore/droidfs/explorers/ExplorerElement"));
+    jclass classExplorerElement = (*env)->NewLocalRef(env, (*env)->FindClass(env, "sushi/hardcore/droidfs/explorers/ExplorerElement"));
     jmethodID explorerElement_new = (*env)->GetStaticMethodID(env, classExplorerElement, "new", "(Ljava/lang/String;SJJLjava/lang/String;)Lsushi/hardcore/droidfs/explorers/ExplorerElement;");
     jobject element_list = (*env)->NewObject(env, java_ArrayList, java_ArrayList_init, elements.r2);
     unsigned int c = 0;

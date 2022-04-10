@@ -41,7 +41,6 @@
     <string name="multiple_delete_confirm">Você realmente deseja excluir estos %s itens?</string>
     <string name="location">Localização: /%s</string>
     <string name="total_size">Tamanho total: %s</string>
-    <string name="default_total_size">N/A</string>
     <string name="import_from_other_volume">Importar do outro volume</string>
     <string name="read_file_failed">Falha ao abrir este arquivo.</string>
     <string name="volume">Volume: %s</string>
@@ -228,4 +227,8 @@
     <string name="invalid_number">Número inválido</string>
     <string name="new_volume_name">Novo nome do volume:</string>
     <string name="volume_rename_failed">Falha ao renomear o volume</string>
+    <string name="one_file">1 arquivo</string>
+    <string name="multiple_files">%d arquivos</string>
+    <string name="one_folder">1 pasta</string>
+    <string name="multiple_folders">%d pastas</string>
 </resources>

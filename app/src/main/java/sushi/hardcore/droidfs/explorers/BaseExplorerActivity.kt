@@ -249,8 +249,8 @@ open class BaseExplorerActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
-    private fun displayExplorerElements(totalSizeValue: String) {
-        totalSizeText.text = getString(R.string.total_size, totalSizeValue)
+    private fun displayExplorerElements(totalSize: Long) {
+        totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
         synchronized(this) {
             ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         }
@@ -311,14 +311,13 @@ open class BaseExplorerActivity : BaseActivity() {
                         totalSize += element.size
                     }
                 }
-                val totalSizeValue = PathUtils.formatSize(totalSize)
                 runOnUiThread {
-                    displayExplorerElements(totalSizeValue)
+                    displayExplorerElements(totalSize)
                     onDisplayed?.invoke()
                 }
             }.start()
         } else {
-            displayExplorerElements(getString(R.string.default_total_size))
+            displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.size })
             onDisplayed?.invoke()
         }
     }
