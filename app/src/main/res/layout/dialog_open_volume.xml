@@ -12,6 +12,7 @@
         android:inputType="textPassword"
         android:maxLines="1"
         android:autofillHints="password"
+        android:hint="@string/password"
         android:imeOptions="actionDone">
         <requestFocus/>
     </EditText>
@@ -20,7 +21,12 @@
         android:id="@+id/checkbox_save_password"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
         android:text="@string/fingerprint_save_checkbox_text"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_default_open"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/default_open"/>
 
 </LinearLayout>

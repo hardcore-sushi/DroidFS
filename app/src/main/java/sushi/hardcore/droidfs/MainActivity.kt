@@ -33,8 +33,13 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
 import java.util.*
+import kotlin.NoSuchElementException
 
 class MainActivity : BaseActivity() {
+
+    companion object {
+        const val DEFAULT_VOLUME_KEY = "default_volume"
+    }
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var volumeDatabase: VolumeDatabase
@@ -42,6 +47,7 @@ class MainActivity : BaseActivity() {
     private var fingerprintProtector: FingerprintProtector? = null
     private var usfFingerprint: Boolean = false
     private var usfKeepOpen: Boolean = false
+    private var defaultVolumeName: String? = null
     private var addVolume = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         when (result.resultCode) {
             AddVolumeActivity.RESULT_VOLUME_ADDED -> onVolumeAdded()
@@ -116,6 +122,15 @@ class MainActivity : BaseActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             fingerprintProtector = FingerprintProtector.new(this, themeValue, volumeDatabase)
         }
+        defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
+        defaultVolumeName?.let { name ->
+            try {
+                val (position, volume) = volumeAdapter.volumes.withIndex().first { it.value.name == name }
+                openVolume(volume, position)
+            } catch (e: NoSuchElementException) {
+                unsetDefaultVolume()
+            }
+        }
         Intent(this, FileOperationService::class.java).also {
             bindService(it, object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -124,6 +139,12 @@ class MainActivity : BaseActivity() {
                 override fun onServiceDisconnected(arg0: ComponentName) {}
             }, Context.BIND_AUTO_CREATE)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        // refresh this in case another instance of MainActivity changes its value
+        defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     }
 
     private fun onVolumeItemClick(volume: Volume, position: Int) {
@@ -206,6 +227,14 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun unsetDefaultVolume() {
+        with (sharedPrefs.edit()) {
+            remove(DEFAULT_VOLUME_KEY)
+            apply()
+        }
+        defaultVolumeName = null
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
@@ -241,6 +270,11 @@ class MainActivity : BaseActivity() {
                 changePassword.launch(Intent(this, ChangePasswordActivity::class.java).apply {
                     putExtra("volume", volumeAdapter.volumes[changePasswordPosition!!])
                 })
+                true
+            }
+            R.id.remove_default_open -> {
+                unsetDefaultVolume()
+                unselect(volumeAdapter.selectedItems.first())
                 true
             }
             R.id.copy -> {
@@ -287,24 +321,21 @@ class MainActivity : BaseActivity() {
         menuInflater.inflate(R.menu.main_activity, menu)
         menu.findItem(R.id.settings).isVisible = !pickMode && !dropMode
         val isSelecting = volumeAdapter.selectedItems.isNotEmpty()
-        menu.findItem(R.id.select_all).isVisible = isSelecting && !pickMode && !dropMode
-        menu.findItem(R.id.remove).isVisible = isSelecting && !pickMode && !dropMode
-        var showForgetPassword = isSelecting
-        if (isSelecting) {
-            for (volume in volumeAdapter.selectedItems.map { i -> volumeAdapter.volumes[i] }) {
-                if (volume.encryptedHash == null) {
-                    showForgetPassword = false
-                    break
-                }
-            }
-        }
-        menu.findItem(R.id.forget_password).isVisible = showForgetPassword && !pickMode
-        val onlyOneAndWriteable = !pickMode && !dropMode &&
-                volumeAdapter.selectedItems.size == 1 &&
-                volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].canWrite(filesDir.path)
+        menu.findItem(R.id.select_all).isVisible = isSelecting
+        menu.findItem(R.id.remove).isVisible = isSelecting
+        menu.findItem(R.id.forget_password).isVisible =
+            isSelecting &&
+            !volumeAdapter.selectedItems.any { i -> volumeAdapter.volumes[i].encryptedHash == null }
+        val onlyOneSelected = volumeAdapter.selectedItems.size == 1
+        val onlyOneAndWriteable =
+            onlyOneSelected &&
+            volumeAdapter.volumes[volumeAdapter.selectedItems.first()].canWrite(filesDir.path)
         menu.findItem(R.id.change_password).isVisible = onlyOneAndWriteable
+        menu.findItem(R.id.remove_default_open).isVisible =
+            onlyOneSelected &&
+            volumeAdapter.volumes[volumeAdapter.selectedItems.first()].name == defaultVolumeName
         with(menu.findItem(R.id.copy)) {
-            isVisible = !pickMode && !dropMode && volumeAdapter.selectedItems.size == 1
+            isVisible = onlyOneSelected
             if (isVisible) {
                 setTitle(if (volumeAdapter.volumes[volumeAdapter.selectedItems.elementAt(0)].isHidden)
                     R.string.copy_hidden_volume
@@ -390,6 +421,13 @@ class MainActivity : BaseActivity() {
             if (success) {
                 volumeDatabase.renameVolume(volume.name, newDBName)
                 unselect(position)
+                if (volume.name == defaultVolumeName) {
+                    with (sharedPrefs.edit()) {
+                        putString(DEFAULT_VOLUME_KEY, newDBName)
+                        apply()
+                    }
+                    defaultVolumeName = newDBName
+                }
             } else {
                 Toast.makeText(this, R.string.volume_rename_failed, Toast.LENGTH_SHORT).show()
             }
@@ -441,6 +479,18 @@ class MainActivity : BaseActivity() {
     }
 
     private fun onPasswordSubmitted(volume: Volume, position: Int, dialogBinding: DialogOpenVolumeBinding) {
+        if (dialogBinding.checkboxDefaultOpen.isChecked xor (defaultVolumeName == volume.name)) {
+            with (sharedPrefs.edit()) {
+                defaultVolumeName = if (dialogBinding.checkboxDefaultOpen.isChecked) {
+                    putString(DEFAULT_VOLUME_KEY, volume.name)
+                    volume.name
+                } else {
+                    remove(DEFAULT_VOLUME_KEY)
+                    null
+                }
+                apply()
+            }
+        }
         val password = CharArray(dialogBinding.editPassword.text.length)
         dialogBinding.editPassword.text.getChars(0, password.size, password, 0)
         // openVolumeWithPassword is responsible for wiping the password
@@ -457,8 +507,9 @@ class MainActivity : BaseActivity() {
         if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
         }
+        dialogBinding.checkboxDefaultOpen.isChecked = defaultVolumeName == volume.name
         val dialog = CustomAlertDialogBuilder(this, themeValue)
-            .setTitle(R.string.open_dialog_title)
+            .setTitle(getString(R.string.open_dialog_title, volume.shortName))
             .setView(dialogBinding.root)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.open) { _, _ ->

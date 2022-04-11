@@ -184,7 +184,7 @@
     <string name="add_volume">Add volume</string>
     <string name="pick_directory">Pick directory</string>
     <string name="volume_alread_saved">Volume already saved</string>
-    <string name="open_dialog_title">Enter your password:</string>
+    <string name="open_dialog_title">Opening %s:</string>
     <string name="remove">Remove</string>
     <string name="settings">Settings</string>
     <string name="select_all">Select All</string>
@@ -237,4 +237,6 @@
     <string name="multiple_files">%d files</string>
     <string name="one_folder">1 folder</string>
     <string name="multiple_folders">%d folders</string>
+    <string name="default_open">Open this volume when launching the application</string>
+    <string name="remove_default_open">Don\'t open by default</string>
 </resources>

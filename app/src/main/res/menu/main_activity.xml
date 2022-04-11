@@ -35,6 +35,12 @@
         android:title="@string/change_password"/>
 
     <item
+        android:id="@+id/remove_default_open"
+        app:showAsAction="never"
+        android:visible="false"
+        android:title="@string/remove_default_open"/>
+
+    <item
         android:id="@+id/copy"
         app:showAsAction="never"
         android:visible="false"/>

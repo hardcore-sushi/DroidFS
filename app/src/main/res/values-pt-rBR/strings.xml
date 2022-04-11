@@ -179,7 +179,6 @@
     <string name="seek_seconds_forward">+%d segundos</string>
     <string name="seek_seconds_backward">-%d segundos</string>
     <string name="volume_alread_saved">O volume já está salvo</string>
-    <string name="open_dialog_title">Digite sua senha:</string>
     <string name="remove">Remover</string>
     <string name="settings">Configurações</string>
     <string name="select_all">Selecionar tudo</string>

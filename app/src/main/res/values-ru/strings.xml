@@ -178,7 +178,6 @@
     <string name="add_volume">Добавить том</string>
     <string name="pick_directory">Выбрать папку</string>
     <string name="volume_alread_saved">Том уже сохранён</string>
-    <string name="open_dialog_title">Введите пароль:</string>
     <string name="remove">Удалить</string>
     <string name="settings">Настройки</string>
     <string name="select_all">Выбрать все</string>
