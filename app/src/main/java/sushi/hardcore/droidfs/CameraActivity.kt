@@ -78,6 +78,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private var camera: Camera? = null
     private var resolutions: List<Size>? = null
     private var currentResolutionIndex: Int = 0
+    private var currentResolution: Size? = null
     private var captureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
     private var isBackCamera = true
     private var isInVideoMode = false
@@ -139,7 +140,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     if (newCaptureMode != captureMode) {
                         captureMode = newCaptureMode
                         binding.imageCaptureMode.setImageResource(resId)
-                        setupCamera()
+                        if (!isInVideoMode) {
+                            cameraProvider.unbind(imageCapture)
+                            refreshImageCapture()
+                            cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
+                        }
                     }
                     dialog.dismiss()
                 }
@@ -151,9 +156,10 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.choose_resolution)
                     .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
-                        setupCamera(resolutions!![which])
-                        dialog.dismiss()
+                        currentResolution = resolutions!![which]
                         currentResolutionIndex = which
+                        setupCamera()
+                        dialog.dismiss()
                     }
                     .setNegativeButton(R.string.cancel, null)
                     .show()
@@ -204,6 +210,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageModeSwitch.setOnClickListener {
             isInVideoMode = !isInVideoMode
+            setupCamera()
             binding.imageFlash.setImageResource(if (isInVideoMode) {
                 binding.recordVideoButton.visibility = View.VISIBLE
                 binding.takePhotoButton.visibility = View.GONE
@@ -239,6 +246,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 }
                 true
             }
+            resolutions = null
             setupCamera()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
@@ -301,52 +309,67 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     private fun adaptPreviewSize(resolution: Size) {
         val screenWidth = resources.displayMetrics.widthPixels
-        binding.cameraPreview.layoutParams = if (screenWidth < resolution.width) {
-            RelativeLayout.LayoutParams(
-                screenWidth,
-                (resolution.height * (screenWidth.toFloat() / resolution.width)).toInt()
-            )
-        } else {
-            RelativeLayout.LayoutParams(resolution.width, resolution.height)
+        val screenHeight = resources.displayMetrics.heightPixels
+
+        var height = (resolution.height * (screenWidth.toFloat() / resolution.width)).toInt()
+        var width = screenWidth
+        if (height > screenHeight) {
+            width = (width * (screenHeight.toFloat() / height)).toInt()
+            height = screenHeight
         }
-        (binding.cameraPreview.layoutParams as RelativeLayout.LayoutParams).addRule(RelativeLayout.CENTER_IN_PARENT)
+        binding.cameraPreview.layoutParams = RelativeLayout.LayoutParams(width, height).apply {
+            addRule(RelativeLayout.CENTER_IN_PARENT)
+        }
+    }
+
+    private fun refreshImageCapture() {
+        imageCapture = ImageCapture.Builder()
+            .setCaptureMode(captureMode)
+            .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
+            .apply {
+                currentResolution?.let {
+                    setTargetResolution(it)
+                }
+            }
+            .build()
+    }
+
+    private fun refreshVideoCapture() {
+        videoCapture = VideoCapture.Builder().apply {
+            currentResolution?.let {
+                setTargetResolution(it)
+            }
+        }.build()
     }
 
     @SuppressLint("RestrictedApi")
-    private fun setupCamera(resolution: Size? = null){
+    private fun setupCamera() {
         if (permissionsGranted && ::extensionsManager.isInitialized && ::cameraProvider.isInitialized) {
-            imageCapture = ImageCapture.Builder()
-                .setCaptureMode(captureMode)
-                .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
-                .apply {
-                    resolution?.let {
-                        setTargetResolution(it)
-                    }
-                }
-                .build()
-
-            videoCapture = VideoCapture.Builder().apply {
-                resolution?.let {
-                    setTargetResolution(it)
-                }
-            }.build()
-
             cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
-            if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.HDR)) {
-                cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.HDR)
+            if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.AUTO)) {
+                cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.AUTO)
             }
 
             cameraProvider.unbindAll()
-            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture, videoCapture)
 
-            adaptPreviewSize(resolution ?: imageCapture!!.attachedSurfaceResolution!!.swap())
+            val currentUseCase = (if (isInVideoMode) {
+                refreshVideoCapture()
+                camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, videoCapture)
+                videoCapture
+            } else {
+                refreshImageCapture()
+                camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
+                imageCapture
+            })!!
+
+            adaptPreviewSize(currentResolution ?: currentUseCase.attachedSurfaceResolution!!.swap())
 
             if (resolutions == null) {
                 val info = Camera2CameraInfo.from(camera!!.cameraInfo)
                 val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
                 val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
                 characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
-                    resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat).map { it.swap() }
+                    resolutions = streamConfigurationMap.getOutputSizes(currentUseCase.imageFormat).map { it.swap() }
                 }
             }
         }

@@ -41,7 +41,6 @@ import static androidx.camera.core.internal.ThreadConfig.OPTION_BACKGROUND_EXECU
 import static androidx.camera.core.internal.UseCaseEventConfig.OPTION_USE_CASE_EVENT_CALLBACK;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.media.AudioFormat;
 import android.media.AudioRecord;
 import android.media.CamcorderProfile;
@@ -76,6 +75,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.camera.core.AspectRatio;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.CameraXThreads;
+import androidx.camera.core.ImageCapture;
 import androidx.camera.core.Logger;
 import androidx.camera.core.UseCase;
 import androidx.camera.core.impl.CameraInternal;
@@ -121,7 +121,6 @@ import java.util.concurrent.atomic.AtomicReference;
  * @hide
  */
 @RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
-@SuppressLint("RestrictedApi")
 public final class VideoCapture extends UseCase {
 
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -280,7 +279,9 @@ public final class VideoCapture extends UseCase {
     @Nullable
     public UseCaseConfig<?> getDefaultConfig(boolean applyDefaultConfig,
             @NonNull UseCaseConfigFactory factory) {
-        Config captureConfig = factory.getConfig(UseCaseConfigFactory.CaptureType.VIDEO_CAPTURE);
+        Config captureConfig = factory.getConfig(
+                UseCaseConfigFactory.CaptureType.VIDEO_CAPTURE,
+                ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY);
 
         if (applyDefaultConfig) {
             captureConfig = Config.mergeConfigs(captureConfig, DEFAULT_CONFIG.getConfig());
