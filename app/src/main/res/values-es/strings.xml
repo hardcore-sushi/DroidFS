@@ -184,6 +184,7 @@
     <string name="add_volume">Añadir volumen</string>
     <string name="pick_directory">Selecciona el directorio</string>
     <string name="volume_alread_saved">Volumen ya guardado</string>
+    <string name="open_dialog_title">Abriendo %s:</string>
     <string name="remove">Eliminar</string>
     <string name="settings">Ajustes</string>
     <string name="select_all">Seleccionar todo</string>
@@ -231,8 +232,11 @@
     <string name="invalid_number">Número inválido</string>
     <string name="new_volume_name">Nuevo nombre del volumen:</string>
     <string name="volume_rename_failed">Fallo al renombrar el volumen</string>
+    <string name="switch_display_layout">Cambiar tipo de vista</string>
     <string name="one_file">1 archivo</string>
     <string name="multiple_files">%d archivos</string>
     <string name="one_folder">1 carpeta</string>
     <string name="multiple_folders">%d carpetas</string>
+    <string name="default_open">Abrir este volumen cuando se inicia la aplicación</string>
+    <string name="remove_default_open">No abrir por defecto</string>
 </resources>
