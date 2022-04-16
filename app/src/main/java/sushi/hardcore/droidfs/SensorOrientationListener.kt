@@ -5,6 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.view.Surface
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -15,8 +16,8 @@ class SensorOrientationListener(context: Context) {
         mSensorEventListener = NotifierSensorEventListener()
         mSensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
     }
-    private val mListeners = ArrayList<WeakReference<Listener?>>(3)
-    private var orientation = 0
+    private val mListeners = ArrayList<WeakReference<Listener?>>(1)
+    private var orientation = Surface.ROTATION_0
 
     private fun onResume() {
         mSensorManager.registerListener(
@@ -35,10 +36,10 @@ class SensorOrientationListener(context: Context) {
             val x = event.values[0]
             val y = event.values[1]
             var newOrientation: Int = orientation
-            if (x < 5 && x > -5 && y > 5) newOrientation = 0
-            else if (x < -5 && y < 5 && y > -5) newOrientation = 90
-            else if (x < 5 && x > -5 && y < -5) newOrientation = 180
-            else if (x > 5 && y < 5 && y > -5) newOrientation = 270
+            if (x < 5 && x > -5 && y > 5) newOrientation = Surface.ROTATION_0
+            else if (x < -5 && y < 5 && y > -5) newOrientation = Surface.ROTATION_270
+            else if (x < 5 && x > -5 && y < -5) newOrientation = Surface.ROTATION_180
+            else if (x > 5 && y < 5 && y > -5) newOrientation = Surface.ROTATION_90
 
             if (orientation != newOrientation) {
                 orientation = newOrientation

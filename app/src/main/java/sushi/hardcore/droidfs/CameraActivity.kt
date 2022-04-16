@@ -10,9 +10,7 @@ import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.Size
-import android.view.MotionEvent
-import android.view.ScaleGestureDetector
-import android.view.View
+import android.view.*
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
@@ -511,21 +509,24 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     }
 
     override fun onOrientationChange(newOrientation: Int) {
-        val reversedOrientation = when (newOrientation){
-            90 -> 270
-            270 -> 90
-            else -> newOrientation
-        }.toFloat()
+        val realOrientation = when (newOrientation) {
+            Surface.ROTATION_0 -> 0f
+            Surface.ROTATION_90 -> 90f
+            Surface.ROTATION_180 -> 180f
+            else -> 270f
+        }
         val rotateAnimation = RotateAnimation(previousOrientation, when {
-            reversedOrientation - previousOrientation > 180 -> reversedOrientation - 360
-            reversedOrientation - previousOrientation < -180 -> reversedOrientation + 360
-            else -> reversedOrientation
+            realOrientation - previousOrientation > 180 -> realOrientation - 360
+            realOrientation - previousOrientation < -180 -> realOrientation + 360
+            else -> realOrientation
         }, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f)
         rotateAnimation.duration = 300
         rotateAnimation.interpolator = LinearInterpolator()
         rotateAnimation.fillAfter = true
         orientedIcons.map { it.startAnimation(rotateAnimation) }
-        previousOrientation = reversedOrientation
+        previousOrientation = realOrientation
+        imageCapture?.targetRotation = newOrientation
+        videoCapture?.setTargetRotation(newOrientation)
     }
 }
 
