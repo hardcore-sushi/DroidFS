@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
+import android.text.InputType
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -524,10 +525,15 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 onPasswordSubmitted(volume, position, dialogBinding)
             }
             .create()
-        dialogBinding.editPassword.setOnEditorActionListener { _, _, _ ->
-            dialog.dismiss()
-            onPasswordSubmitted(volume, position, dialogBinding)
-            true
+        dialogBinding.editPassword.apply {
+            setOnEditorActionListener { _, _, _ ->
+                dialog.dismiss()
+                onPasswordSubmitted(volume, position, dialogBinding)
+                true
+            }
+            if (sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false)) {
+                inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            }
         }
         dialog.window?.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE)
         dialog.show()

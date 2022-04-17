@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.add_volume
 import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Bundle
+import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -22,12 +23,14 @@ class CreateVolumeFragment: Fragment() {
         private const val KEY_THEME_VALUE = "theme"
         private const val KEY_VOLUME_PATH = "path"
         private const val KEY_IS_HIDDEN = "hidden"
+        private const val KEY_PIN_PASSWORDS = ConstValues.PIN_PASSWORDS_KEY
         private const val KEY_USF_FINGERPRINT = "fingerprint"
 
         fun newInstance(
             themeValue: String,
             volumePath: String,
             isHidden: Boolean,
+            pinPasswords: Boolean,
             usfFingerprint: Boolean,
         ): CreateVolumeFragment {
             return CreateVolumeFragment().apply {
@@ -35,6 +38,7 @@ class CreateVolumeFragment: Fragment() {
                     putString(KEY_THEME_VALUE, themeValue)
                     putString(KEY_VOLUME_PATH, volumePath)
                     putBoolean(KEY_IS_HIDDEN, isHidden)
+                    putBoolean(KEY_PIN_PASSWORDS, pinPasswords)
                     putBoolean(KEY_USF_FINGERPRINT, usfFingerprint)
                 }
             }
@@ -60,11 +64,12 @@ class CreateVolumeFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        requireArguments().let { arguments ->
+        val pinPasswords = requireArguments().let { arguments ->
             arguments.getString(KEY_THEME_VALUE)?.let { themeValue = it }
             volumePath = arguments.getString(KEY_VOLUME_PATH)!!
             isHiddenVolume = arguments.getBoolean(KEY_IS_HIDDEN)
             usfFingerprint = arguments.getBoolean(KEY_USF_FINGERPRINT)
+            arguments.getBoolean(KEY_PIN_PASSWORDS)
         }
         volumeDatabase = VolumeDatabase(requireContext())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -72,6 +77,11 @@ class CreateVolumeFragment: Fragment() {
         }
         if (!usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
+        }
+        if (pinPasswords) {
+            arrayOf(binding.editPassword, binding.editPasswordConfirm).forEach {
+                it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            }
         }
         binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
             createVolume()

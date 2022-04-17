@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.add_volume
 import android.os.Bundle
 import android.view.MenuItem
 import sushi.hardcore.droidfs.BaseActivity
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityAddVolumeBinding
 
@@ -68,6 +69,7 @@ class AddVolumeActivity: BaseActivity() {
                     themeValue,
                     volumePath,
                     isHidden,
+                    sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false),
                     sharedPrefs.getBoolean("usf_fingerprint", false),
                 )
             )

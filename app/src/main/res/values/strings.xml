@@ -240,4 +240,6 @@
     <string name="default_open">Open this volume when launching the application</string>
     <string name="remove_default_open">Don\'t open by default</string>
     <string name="elements_selected">%d/%d selected</string>
+    <string name="pin_passwords_title">Numeric keypad layout</string>
+    <string name="pin_passwords_summary">Use a numeric keypad layout when entering volume passwords</string>
 </resources>

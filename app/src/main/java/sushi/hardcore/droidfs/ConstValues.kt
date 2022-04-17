@@ -16,6 +16,7 @@ object ConstValues {
     const val DEFAULT_THEME_VALUE = "dark_green"
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"
     const val DEFAULT_THUMBNAIL_MAX_SIZE = 10_000L
+    const val PIN_PASSWORDS_KEY = "pin_passwords"
     private val FILE_EXTENSIONS = mapOf(
         Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp", "heic")),
         Pair("video", listOf("mp4", "webm", "mkv", "mov")),

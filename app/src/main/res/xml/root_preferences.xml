@@ -26,6 +26,13 @@
             android:defaultValue="false"
             android:icon="@drawable/icon_mod"/>
 
+        <SwitchPreferenceCompat
+            android:title="@string/pin_passwords_title"
+            android:summary="@string/pin_passwords_summary"
+            android:key="pin_passwords"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_num_pad"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/explorer">
