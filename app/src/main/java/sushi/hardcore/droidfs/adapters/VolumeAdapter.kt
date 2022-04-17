@@ -17,14 +17,19 @@ class VolumeAdapter(
     private val volumeDatabase: VolumeDatabase,
     private val allowSelection: Boolean,
     private val showReadOnly: Boolean,
-    private val onVolumeItemClick: (Volume, Int) -> Unit,
-    private val onVolumeItemLongClick: () -> Unit,
-) : SelectableAdapter<Volume>() {
+    private val listener: Listener,
+) : SelectableAdapter<Volume>(listener::onSelectionChanged) {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
     lateinit var volumes: List<Volume>
 
     init {
         reloadVolumes()
+    }
+
+    interface Listener {
+        fun onSelectionChanged(size: Int)
+        fun onVolumeItemClick(volume: Volume, position: Int)
+        fun onVolumeItemLongClick()
     }
 
     override fun getItems(): List<Volume> {
@@ -40,7 +45,7 @@ class VolumeAdapter(
     }
 
     override fun onItemClick(position: Int): Boolean {
-        onVolumeItemClick(volumes[position], position)
+        listener.onVolumeItemClick(volumes[position], position)
         return if (allowSelection) {
             super.onItemClick(position)
         } else {
@@ -49,7 +54,7 @@ class VolumeAdapter(
     }
 
     override fun onItemLongClick(position: Int): Boolean {
-        onVolumeItemLongClick()
+        listener.onVolumeItemLongClick()
         return if (allowSelection)
             super.onItemLongClick(position)
         else

@@ -4,7 +4,7 @@ import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import sushi.hardcore.droidfs.R
 
-abstract class SelectableAdapter<T> : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+abstract class SelectableAdapter<T>(private val onSelectionChanged: (Int) -> Unit) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var selectedItems: MutableSet<Int> = HashSet()
 
     protected abstract fun getItems(): List<T>
@@ -14,13 +14,15 @@ abstract class SelectableAdapter<T> : RecyclerView.Adapter<RecyclerView.ViewHold
     }
 
     protected open fun toggleSelection(position: Int): Boolean {
-        return if (selectedItems.contains(position)) {
+        val isSelected = if (selectedItems.contains(position)) {
             selectedItems.remove(position)
             false
         } else {
             selectedItems.add(position)
             true
         }
+        onSelectionChanged(selectedItems.size)
+        return isSelected
     }
 
     protected open fun onItemClick(position: Int): Boolean {
@@ -45,6 +47,7 @@ abstract class SelectableAdapter<T> : RecyclerView.Adapter<RecyclerView.ViewHold
                 notifyItemChanged(i)
             }
         }
+        onSelectionChanged(selectedItems.size)
     }
 
     fun unSelectAll(notifyChange: Boolean) {
@@ -57,6 +60,7 @@ abstract class SelectableAdapter<T> : RecyclerView.Adapter<RecyclerView.ViewHold
         } else {
             selectedItems.clear()
         }
+        onSelectionChanged(selectedItems.size)
     }
 
     private fun setBackground(rootView: View, isSelected: Boolean) {

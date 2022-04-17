@@ -21,7 +21,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         //don't bind
     }
 
-    override fun onExplorerItemClick(position: Int) {
+    override fun onExplorerElementClick(position: Int) {
         val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         if (explorerAdapter.selectedItems.isEmpty()) {
             if (!wasSelecting) {

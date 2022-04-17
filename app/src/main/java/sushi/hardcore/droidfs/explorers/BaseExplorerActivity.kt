@@ -41,7 +41,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
-open class BaseExplorerActivity : BaseActivity() {
+open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listener {
     private lateinit var sortOrderEntries: Array<String>
     private lateinit var sortOrderValues: Array<String>
     private var foldersFirst = true
@@ -100,7 +100,7 @@ open class BaseExplorerActivity : BaseActivity() {
             titleText = customView.findViewById(R.id.title_text)
         }
         title = ""
-        titleText.text = getString(R.string.volume, volumeName)
+        setVolumeNameTitle()
         explorerAdapter = ExplorerElementAdapter(
             this,
             if (sharedPrefs.getBoolean("thumbnails", true)) {
@@ -108,8 +108,7 @@ open class BaseExplorerActivity : BaseActivity() {
             } else {
                 null
             },
-            ::onExplorerItemClick,
-            ::onExplorerItemLongClick,
+            this,
             sharedPrefs.getLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
@@ -209,7 +208,19 @@ open class BaseExplorerActivity : BaseActivity() {
             .show()
     }
 
-    protected open fun onExplorerItemClick(position: Int) {
+    private fun setVolumeNameTitle() {
+        titleText.text = getString(R.string.volume, volumeName)
+    }
+
+    override fun onSelectionChanged(size: Int) {
+        if (size == 0) {
+            setVolumeNameTitle()
+        } else {
+            titleText.text = getString(R.string.elements_selected, size, explorerElements.count { !it.isParentFolder })
+        }
+    }
+
+    override fun onExplorerElementClick(position: Int) {
         if (explorerAdapter.selectedItems.isEmpty()) {
             val fullPath = explorerElements[position].fullPath
             when {
@@ -240,7 +251,7 @@ open class BaseExplorerActivity : BaseActivity() {
         invalidateOptionsMenu()
     }
 
-    protected open fun onExplorerItemLongClick(position: Int) {
+    override fun onExplorerElementLongClick(position: Int) {
         invalidateOptionsMenu()
     }
 

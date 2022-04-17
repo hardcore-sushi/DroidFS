@@ -217,8 +217,8 @@ class ExplorerActivity : BaseExplorerActivity() {
         usf_share = sharedPrefs.getBoolean("usf_share", false)
     }
 
-    override fun onExplorerItemLongClick(position: Int) {
-        super.onExplorerItemLongClick(position)
+    override fun onExplorerElementLongClick(position: Int) {
+        super.onExplorerElementLongClick(position)
         cancelItemAction()
     }
 

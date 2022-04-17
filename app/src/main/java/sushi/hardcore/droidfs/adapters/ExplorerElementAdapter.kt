@@ -26,10 +26,9 @@ import java.util.*
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
     val gocryptfsVolume: GocryptfsVolume?,
-    val onExplorerElementClick: (Int) -> Unit,
-    val onExplorerElementLongClick: (Int) -> Unit,
+    private val listener: Listener,
     val thumbnailMaxSize: Long,
-) : SelectableAdapter<ExplorerElement>() {
+) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
     @SuppressLint("NotifyDataSetChanged")
@@ -47,6 +46,12 @@ class ExplorerElementAdapter(
         }
     }
 
+    interface Listener {
+        fun onSelectionChanged(size: Int)
+        fun onExplorerElementClick(position: Int)
+        fun onExplorerElementLongClick(position: Int)
+    }
+
     override fun getItems(): List<ExplorerElement> {
         return explorerElements
     }
@@ -60,12 +65,12 @@ class ExplorerElementAdapter(
     }
 
     override fun onItemClick(position: Int): Boolean {
-        onExplorerElementClick(position)
+        listener.onExplorerElementClick(position)
         return super.onItemClick(position)
     }
 
     override fun onItemLongClick(position: Int): Boolean {
-        onExplorerElementLongClick(position)
+        listener.onExplorerElementLongClick(position)
         return super.onItemLongClick(position)
     }
 

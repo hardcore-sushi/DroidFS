@@ -35,7 +35,7 @@ import java.io.File
 import java.util.*
 import kotlin.NoSuchElementException
 
-class MainActivity : BaseActivity() {
+class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     companion object {
         const val DEFAULT_VOLUME_KEY = "default_volume"
@@ -101,8 +101,7 @@ class MainActivity : BaseActivity() {
             volumeDatabase,
             !pickMode && !dropMode,
             !dropMode,
-            ::onVolumeItemClick,
-            ::onVolumeItemLongClick,
+            this,
         )
         binding.recyclerViewVolumes.adapter = volumeAdapter
         binding.recyclerViewVolumes.layoutManager = LinearLayoutManager(this)
@@ -147,14 +146,22 @@ class MainActivity : BaseActivity() {
         defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     }
 
-    private fun onVolumeItemClick(volume: Volume, position: Int) {
+    override fun onSelectionChanged(size: Int) {
+        title = if (size == 0) {
+            getString(R.string.app_name)
+        } else {
+            getString(R.string.elements_selected, size, volumeAdapter.volumes.size)
+        }
+    }
+
+    override fun onVolumeItemClick(volume: Volume, position: Int) {
         if (volumeAdapter.selectedItems.isEmpty())
             openVolume(volume, position)
         else
             invalidateOptionsMenu()
     }
 
-    private fun onVolumeItemLongClick() {
+    override fun onVolumeItemLongClick() {
         invalidateOptionsMenu()
     }
 
@@ -174,6 +181,7 @@ class MainActivity : BaseActivity() {
     private fun unselect(position: Int) {
         volumeAdapter.selectedItems.remove(position)
         volumeAdapter.onVolumeChanged(position)
+        onSelectionChanged(0) // unselect() is always called when only one element is selected
         invalidateOptionsMenu()
     }
 
