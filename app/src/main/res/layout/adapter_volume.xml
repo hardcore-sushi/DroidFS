@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/selectable_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -20,7 +20,9 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_toEndOf="@id/image_icon"
+            android:layout_toStartOf="@id/icon_fingerprint">
 
             <TextView
                 android:id="@+id/text_volume_name"
@@ -45,13 +47,14 @@
                     app:layout_constrainedWidth="true"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/text_info"
+                    app:layout_constraintEnd_toStartOf="@id/text_read_only"
                     android:textSize="12sp"/>
 
                 <TextView
-                    android:id="@+id/text_info"
+                    android:id="@+id/text_read_only"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="@string/read_only"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toEndOf="@id/text_path"
                     app:layout_constraintEnd_toEndOf="parent"
@@ -62,6 +65,17 @@
 
         </LinearLayout>
 
-    </LinearLayout>
+        <ImageView
+            android:id="@+id/icon_fingerprint"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:src="@drawable/icon_fingerprint"
+            android:contentDescription="@string/password_hash_saved"
+            android:visibility="gone"
+            android:layout_alignParentEnd="true"
+            android:layout_marginTop="11dp"
+            android:layout_marginEnd="5dp"/>
+
+    </RelativeLayout>
 
 </LinearLayout>

@@ -203,7 +203,7 @@
     <string name="password_confirmation_label">Repite la contraseña:</string>
     <string name="password_confirmation_hint">Contraseña (confirmación)</string>
     <string name="password_hash_saved">hash de la contraseña guardada</string>
-    <string name="read_only">Sólo lectura</string>
+    <string name="read_only">(Sólo lectura)</string>
     <string name="no_volumes_text">No se ha guardado el volumen, añada algo haciendo clic en el botón +.</string>
     <string name="fingerprint_error_msg">La autenticación por huella dactilar no puede ser utilizada: %s.</string>
     <string name="keyguard_not_secure">keyguard no seguro</string>

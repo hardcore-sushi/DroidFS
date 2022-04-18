@@ -198,7 +198,7 @@
     <string name="password_confirmation_label">Repita a senha:</string>
     <string name="password_confirmation_hint">Senha (confirmação)</string>
     <string name="password_hash_saved">O hash da senha foi salvo</string>
-    <string name="read_only">somente leitura</string>
+    <string name="read_only">(somente leitura)</string>
     <string name="no_volumes_text">Nenhum volume salvo, adicione algum clicando no botão +</string>
     <string name="fingerprint_error_msg">A autenticação por impressão digital não pode ser usada: %s.</string>
     <string name="keyguard_not_secure">chave de segurança não é segura</string>

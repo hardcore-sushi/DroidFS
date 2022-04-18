@@ -204,7 +204,7 @@
     <string name="password_confirmation_label">Repeat the password:</string>
     <string name="password_confirmation_hint">Password (confirmation)</string>
     <string name="password_hash_saved">password hash saved</string>
-    <string name="read_only">read-only</string>
+    <string name="read_only">(read-only)</string>
     <string name="no_volumes_text">No volume saved, add some by clicking on the + button</string>
     <string name="fingerprint_error_msg">Fingerprint authentication can\'t be used: %s.</string>
     <string name="keyguard_not_secure">keyguard not secure</string>

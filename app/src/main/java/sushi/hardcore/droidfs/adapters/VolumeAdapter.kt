@@ -84,20 +84,16 @@ class VolumeAdapter(
                 context.getString(R.string.hidden_volume)
             else
                 volume.name
-            val canWrite = volume.canWrite(context.filesDir.path)
-            val infoString: String? = if (volume.encryptedHash == null)
-                if (canWrite) null else '(' + context.getString(R.string.read_only) + ')'
-            else
-                '(' +
-                        (if (canWrite) "" else context.getString(R.string.read_only) + ", ") +
-                        context.getString(R.string.password_hash_saved) +
-                ')'
-            itemView.findViewById<TextView>(R.id.text_info).apply {
-                if (infoString == null)
-                    visibility = View.GONE
+            itemView.findViewById<ImageView>(R.id.icon_fingerprint).visibility = if (volume.encryptedHash == null) {
+                View.GONE
+            } else {
+                View.VISIBLE
+            }
+            itemView.findViewById<TextView>(R.id.text_read_only).apply {
+                visibility = if (volume.canWrite(context.filesDir.path))
+                    View.GONE
                 else {
-                    text = infoString
-                    visibility = View.VISIBLE
+                    View.VISIBLE
                 }
             }
             setSelectable(itemView.findViewById<LinearLayout>(R.id.selectable_container), itemView, layoutPosition)

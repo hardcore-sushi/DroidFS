@@ -196,7 +196,7 @@
     <string name="password_confirmation_label">Повтор пароля:</string>
     <string name="password_confirmation_hint">Подтверждение пароля</string>
     <string name="password_hash_saved">хеш пароля сохранён</string>
-    <string name="read_only">только для чтения</string>
+    <string name="read_only">(только для чтения)</string>
     <string name="no_volumes_text">Том не создан, добавьте его, нажав кнопку \"+\"</string>
     <string name="fingerprint_error_msg">Невозможно использовать аутентификацию по отпечатку пальца: %s.</string>
     <string name="keyguard_not_secure">хранилище ключей не защищено</string>
