@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.adapters
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
@@ -66,9 +67,11 @@ class VolumeAdapter(
         notifyItemChanged(position)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     fun refresh() {
         reloadVolumes()
-        unSelectAll(true)
+        unSelectAll(false)
+        notifyDataSetChanged()
     }
 
     inner class VolumeViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

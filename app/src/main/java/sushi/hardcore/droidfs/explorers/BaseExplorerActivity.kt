@@ -417,10 +417,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                             }
                             checkPathOverwrite(items, dstDirectoryPath, callback)
                         }) {
-                            with (binding.dialogEditText) {
-                                setText(items[i].explorerElement.name)
-                                selectAll()
-                            }
+                            setSelectedText(items[i].explorerElement.name)
                             setOnCancelListener{
                                 callback(null)
                             }
@@ -558,10 +555,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 with(EditTextDialog(this, R.string.rename_title) {
                     rename(oldName, it)
                 }) {
-                    with(binding.dialogEditText) {
-                        setText(oldName)
-                        selectAll()
-                    }
+                    setSelectedText(oldName)
                     show()
                 }
                 true

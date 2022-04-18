@@ -411,7 +411,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     private fun renameVolume(volume: Volume, position: Int) {
-        EditTextDialog(this, R.string.new_volume_name) { newName ->
+        with (EditTextDialog(this, R.string.new_volume_name) { newName ->
             val srcPath = File(volume.getFullPath(filesDir.path))
             val dstPath = File(srcPath.parent, newName).canonicalFile
             val newDBName: String
@@ -440,7 +440,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             } else {
                 Toast.makeText(this, R.string.volume_rename_failed, Toast.LENGTH_SHORT).show()
             }
-        }.show()
+        }) {
+            setSelectedText(volume.shortName)
+            show()
+        }
     }
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23

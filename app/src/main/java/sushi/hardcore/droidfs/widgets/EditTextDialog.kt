@@ -13,6 +13,13 @@ class EditTextDialog(
 ): CustomAlertDialogBuilder(activity, activity.themeValue) {
     val binding = DialogEditTextBinding.inflate(activity.layoutInflater)
 
+    fun setSelectedText(text: CharSequence) {
+        with (binding.dialogEditText) {
+            setText(text)
+            selectAll()
+        }
+    }
+
     override fun create(): AlertDialog {
         setTitle(titleId)
         setView(binding.root)
