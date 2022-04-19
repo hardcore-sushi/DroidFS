@@ -178,6 +178,7 @@
     <string name="add_volume">Добавить том</string>
     <string name="pick_directory">Выбрать папку</string>
     <string name="volume_alread_saved">Том уже сохранён</string>
+    <string name="open_dialog_title">Открытие \"%s\":</string>
     <string name="remove">Удалить</string>
     <string name="settings">Настройки</string>
     <string name="select_all">Выбрать все</string>
@@ -224,4 +225,14 @@
     <string name="invalid_number">Неправильное значение</string>
     <string name="new_volume_name">Новое имя тома:</string>
     <string name="volume_rename_failed">Невозможно переименовать том</string>
+    <string name="switch_display_layout">Переключить компоновку экрана</string>
+    <string name="one_file">Файлов: 1</string>
+    <string name="multiple_files">Файлов: %d</string>
+    <string name="one_folder">Папок: 1</string>
+    <string name="multiple_folders">Папок: %d</string>
+    <string name="default_open">Открывать этот том при запуске приложения</string>
+    <string name="remove_default_open">Не открывать по умолчанию</string>
+    <string name="elements_selected">Выбрано: %d/%d</string>
+    <string name="pin_passwords_title">Цифровая клавиатура</string>
+    <string name="pin_passwords_summary">Использовать цифровую раскладку клавиатуры при вводе паролей томов</string>
 </resources>
