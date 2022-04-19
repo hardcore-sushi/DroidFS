@@ -1,0 +1,25 @@
+DroidFS est une autre façon d'utiliser des systèmes de fichiers superposés chiffrés sur Android, utilisant son propre explorateur de fichiers interne au lieu de monter des volumes virtuels. Cela vous permet de stocker des fichiers dans des volumes virtuels chiffrés que d'autres applications ne peuvent pas déchiffrer.
+Actuellement, DroidFS ne prend en charge que <b>gocryptfs</b>. Cet algorithme protège le contenu et les noms des fichiers, mais ne masque pas la structure des répertoires ni la taille des fichiers. Si vous voulez plus de détails, jetez un œil à leur dépôt GitHub: https://github.com/rfjakob/gocryptfs
+
+<b>Fonctionnalités :</b>
+- Volumes entièrement compatibles avec l'implémentation algorithmique d'origine
+- Ouverture interne des fichiers images, vidéos, audios et texte
+- Opérations courantes sur les fichiers et les dossiers: copier, déplacer, renommer, supprimer
+- Modification du mot de passe du volume
+- Prise en charge du stockage interne et partagé
+- Importations croisées
+- Caméra interne pour prendre des photos ou des vidéos chiffrées
+- Couleur du thème entièrement personnalisable
+
+<b>Autorisations :</b>
+<b>Accès en lecture et en écriture au stockage partagé :</b> requis pour créer, ouvrir et modifier des volumes et importer/exporter des fichiers vers/depuis des volumes.
+<b>Matériel biométrique/d'empreintes digitales :</b> nécessaire pour chiffrer/déchiffrer les hachages de mots de passe à l'aide d'une clé protégée par empreintes digitales.
+<b>Appareil photo :</b> requis pour prendre des photos ou des vidéos chiffrées directement à partir de DroidFS. Vous pouvez refuser cette autorisation si vous ne souhaitez pas utiliser cette fonctionnalité.
+<b>Enregistrement audio :</b> requis si vous voulez du son sur les vidéos enregistrées via DroidFS.
+
+DroidFS est gratuit, le code source est ouvert et les référentiels du projet sont disponibles :
+- sur GitHub : https://github.com/hardcore-sushi/DroidFS
+- sur l'instance Gitea du projet Chapril : https://forge.chapril.org/hardcoresushi/DroidFS
+
+<b>Mise en garde !</b>
+La sécurité est relative. DroidFS n'est assorti d'aucune garantie et ne doit pas être considéré comme un moyen absolument sûr de stocker des fichiers.
