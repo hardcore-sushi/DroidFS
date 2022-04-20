@@ -8,6 +8,8 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.MainActivity
@@ -67,19 +69,18 @@ class ExplorerActivity : BaseExplorerActivity() {
                         if (items == null) {
                             remoteGocryptfsVolume.close()
                         } else {
-                            fileOperationService.copyElements(items, remoteGocryptfsVolume){ failedItem ->
-                                runOnUiThread {
-                                    if (failedItem == null){
-                                        Toast.makeText(this, R.string.success_import, Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        CustomAlertDialogBuilder(this, themeValue)
-                                            .setTitle(R.string.error)
-                                            .setMessage(getString(R.string.import_failed, failedItem))
-                                            .setPositiveButton(R.string.ok, null)
-                                            .show()
-                                    }
-                                    setCurrentPath(currentDirectoryPath)
+                            lifecycleScope.launch {
+                                val failedItem = fileOperationService.copyElements(items, remoteGocryptfsVolume)
+                                if (failedItem == null) {
+                                    Toast.makeText(this@ExplorerActivity, R.string.success_import, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                        .setTitle(R.string.error)
+                                        .setMessage(getString(R.string.import_failed, failedItem))
+                                        .setPositiveButton(R.string.ok, null)
+                                        .show()
                                 }
+                                setCurrentPath(currentDirectoryPath)
                                 remoteGocryptfsVolume.close()
                             }
                         }
@@ -99,14 +100,15 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
     private val pickExportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
-            fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] }){ failedItem ->
-                runOnUiThread {
-                    if (failedItem == null){
-                        Toast.makeText(this, R.string.success_export, Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                val result = fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] })
+                if (!result.cancelled) {
+                    if (result.failedItem == null) {
+                        Toast.makeText(this@ExplorerActivity, R.string.success_export, Toast.LENGTH_SHORT).show()
                     } else {
-                        CustomAlertDialogBuilder(this, themeValue)
+                        CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
                             .setTitle(R.string.error)
-                            .setMessage(getString(R.string.export_failed, failedItem))
+                            .setMessage(getString(R.string.export_failed, result.failedItem))
                             .setPositiveButton(R.string.ok, null)
                             .show()
                     }
@@ -117,7 +119,20 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
     private val pickImportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { rootUri ->
         rootUri?.let {
-            importDirectory(it, ::onImportComplete)
+            val tree = DocumentFile.fromTreeUri(this, it)!! //non-null after Lollipop
+            val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, parentPath = currentDirectoryPath))
+            checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
+                checkedOperation?.let {
+                    lifecycleScope.launch {
+                        val result = fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree)
+                        if (result.taskResult.cancelled) {
+                            setCurrentPath(currentDirectoryPath)
+                        } else {
+                            onImportComplete(result.taskResult.failedItem, result.uris, tree)
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -130,17 +145,16 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 ${getString(R.string.ask_for_wipe)}
                                 """.trimIndent())
                 .setPositiveButton(R.string.yes) { _, _ ->
-                    fileOperationService.wipeUris(urisToWipe, rootFile) { errorMsg ->
-                        runOnUiThread {
-                            if (errorMsg == null){
-                                Toast.makeText(this, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
-                            } else {
-                                CustomAlertDialogBuilder(this, themeValue)
-                                    .setTitle(R.string.error)
-                                    .setMessage(getString(R.string.wipe_failed, errorMsg))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
+                    lifecycleScope.launch {
+                        val errorMsg = fileOperationService.wipeUris(urisToWipe, rootFile)
+                        if (errorMsg == null) {
+                            Toast.makeText(this@ExplorerActivity, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
+                        } else {
+                            CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                .setTitle(R.string.error)
+                                .setMessage(getString(R.string.wipe_failed, errorMsg))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
                         }
                     }
                 }
@@ -310,16 +324,17 @@ class ExplorerActivity : BaseExplorerActivity() {
                 if (currentItemAction == ItemsActions.COPY){
                     checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
                         items?.let {
-                            fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
-                                runOnUiThread {
-                                    if (failedItem == null){
-                                        Toast.makeText(this, R.string.copy_success, Toast.LENGTH_SHORT).show()
+                            lifecycleScope.launch {
+                                val failedItem = fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>)
+                                if (!isFinishing) {
+                                    if (failedItem == null) {
+                                        Toast.makeText(this@ExplorerActivity, R.string.copy_success, Toast.LENGTH_SHORT).show()
                                     } else {
-                                        CustomAlertDialogBuilder(this, themeValue)
-                                                .setTitle(R.string.error)
-                                                .setMessage(getString(R.string.copy_failed, failedItem))
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
+                                        CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                            .setTitle(R.string.error)
+                                            .setMessage(getString(R.string.copy_failed, failedItem))
+                                            .setPositiveButton(R.string.ok, null)
+                                            .show()
                                     }
                                     setCurrentPath(currentDirectoryPath)
                                 }
@@ -332,19 +347,18 @@ class ExplorerActivity : BaseExplorerActivity() {
                     mapFileForMove(itemsToProcess, itemsToProcess[0].explorerElement.parentPath)
                     checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
                         items?.let {
-                            fileOperationService.moveElements(it.toMutableList() as ArrayList<OperationFile>){ failedItem ->
-                                runOnUiThread {
-                                    if (failedItem == null){
-                                        Toast.makeText(this, R.string.move_success, Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        CustomAlertDialogBuilder(this, themeValue)
-                                                .setTitle(R.string.error)
-                                                .setMessage(getString(R.string.move_failed, failedItem))
-                                                .setPositiveButton(R.string.ok, null)
-                                                .show()
-                                    }
-                                    setCurrentPath(currentDirectoryPath)
+                            lifecycleScope.launch {
+                                val failedItem = fileOperationService.moveElements(it.toMutableList() as ArrayList<OperationFile>)
+                                if (failedItem == null) {
+                                    Toast.makeText(this@ExplorerActivity, R.string.move_success, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                            .setTitle(R.string.error)
+                                            .setMessage(getString(R.string.move_failed, failedItem))
+                                            .setPositiveButton(R.string.ok, null)
+                                            .show()
                                 }
+                                setCurrentPath(currentDirectoryPath)
                             }
                         }
                         cancelItemAction()

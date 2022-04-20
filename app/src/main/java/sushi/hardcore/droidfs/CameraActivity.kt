@@ -25,6 +25,9 @@ import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.util.PathUtils
@@ -386,19 +389,17 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         if (timerDuration > 0){
             binding.textTimer.visibility = View.VISIBLE
             isWaitingForTimer = true
-            Thread{
+            lifecycleScope.launch {
                 for (i in timerDuration downTo 1){
-                    runOnUiThread { binding.textTimer.text = i.toString() }
-                    Thread.sleep(1000)
+                    binding.textTimer.text = i.toString()
+                    delay(1000)
                 }
                 if (!isFinishing) {
-                    runOnUiThread {
-                        action()
-                        binding.textTimer.visibility = View.GONE
-                    }
+                    action()
+                    binding.textTimer.visibility = View.GONE
                 }
                 isWaitingForTimer = false
-            }.start()
+            }
         } else {
             action()
         }

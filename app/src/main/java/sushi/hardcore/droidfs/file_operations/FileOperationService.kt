@@ -13,6 +13,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -30,7 +31,7 @@ class FileOperationService : Service() {
     private val binder = LocalBinder()
     private lateinit var gocryptfsVolume: GocryptfsVolume
     private lateinit var notificationManager: NotificationManagerCompat
-    private var notifications = HashMap<Int, Boolean>()
+    private val tasks = HashMap<Int, Job>()
     private var lastNotificationId = 0
 
     inner class LocalBinder : Binder() {
@@ -88,7 +89,6 @@ class FileOperationService : Service() {
                 .setContentText(getString(R.string.discovering_files))
                 .setProgress(0, 0, true)
         }
-        notifications[lastNotificationId] = false
         notificationManager.notify(lastNotificationId, notificationBuilder.build())
         return FileOperationNotification(notificationBuilder, lastNotificationId)
     }
@@ -105,7 +105,20 @@ class FileOperationService : Service() {
     }
 
     fun cancelOperation(notificationId: Int){
-        notifications[notificationId] = true
+        tasks[notificationId]?.cancel()
+    }
+
+    open class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
+
+    private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<T> {
+        tasks[notification.notificationId] = task
+        return try {
+            TaskResult(false, task.await())
+        } catch (e: CancellationException) {
+            TaskResult(true, null)
+        } finally {
+            cancelNotification(notification)
+        }
     }
 
     private fun copyFile(srcPath: String, dstPath: String, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume): Boolean {
@@ -137,110 +150,105 @@ class FileOperationService : Service() {
         return success
     }
 
-    fun copyElements(items: ArrayList<OperationFile>, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume, callback: (String?) -> Unit){
-        Thread {
-            val notification = showNotification(R.string.file_op_copy_msg, items.size)
+    suspend fun copyElements(
+        items: ArrayList<OperationFile>,
+        remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume
+    ): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_copy_msg, items.size)
+        val task = async {
             var failedItem: String? = null
-            for (i in 0 until items.size){
-                if (notifications[notification.notificationId]!!){
-                    cancelNotification(notification)
-                    return@Thread
-                }
-                if (items[i].explorerElement.isDirectory){
-                    if (!gocryptfsVolume.pathExists(items[i].dstPath!!)) {
-                        if (!gocryptfsVolume.mkdir(items[i].dstPath!!)) {
+            for (i in 0 until items.size) {
+                withContext(Dispatchers.IO) {
+                    if (items[i].explorerElement.isDirectory) {
+                        if (!gocryptfsVolume.pathExists(items[i].dstPath!!)) {
+                            if (!gocryptfsVolume.mkdir(items[i].dstPath!!)) {
+                                failedItem = items[i].explorerElement.fullPath
+                            }
+                        }
+                    } else {
+                        if (!copyFile(items[i].explorerElement.fullPath, items[i].dstPath!!, remoteGocryptfsVolume)) {
                             failedItem = items[i].explorerElement.fullPath
                         }
                     }
-                } else {
-                    if (!copyFile(items[i].explorerElement.fullPath, items[i].dstPath!!, remoteGocryptfsVolume)){
-                        failedItem = items[i].explorerElement.fullPath
-                    }
                 }
-                if (failedItem == null){
-                    updateNotificationProgress(notification, i, items.size)
+                if (failedItem == null) {
+                    updateNotificationProgress(notification, i+1, items.size)
                 } else {
                     break
                 }
             }
-            cancelNotification(notification)
-            callback(failedItem)
-        }.start()
+            failedItem
+        }
+        // treat cancellation as success
+        waitForTask(notification, task).failedItem
     }
 
-    fun moveElements(items: ArrayList<OperationFile>, callback: (String?) -> Unit){
-        Thread {
-            val notification = showNotification(R.string.file_op_move_msg, items.size)
-            val mergedFolders = ArrayList<String>()
+    suspend fun moveElements(items: ArrayList<OperationFile>): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_move_msg, items.size)
+        val task = async {
             var failedItem: String? = null
-            for (i in 0 until items.size){
-                if (notifications[notification.notificationId]!!){
-                    cancelNotification(notification)
-                    return@Thread
-                }
-                if (items[i].explorerElement.isDirectory && gocryptfsVolume.pathExists(items[i].dstPath!!)){ //folder will be merged
-                    mergedFolders.add(items[i].explorerElement.fullPath)
-                } else {
-                    if (!gocryptfsVolume.rename(items[i].explorerElement.fullPath, items[i].dstPath!!)){
-                        failedItem = items[i].explorerElement.fullPath
-                        break
+            withContext(Dispatchers.IO) {
+                val mergedFolders = ArrayList<String>()
+                for (i in 0 until items.size) {
+                    if (items[i].explorerElement.isDirectory && gocryptfsVolume.pathExists(items[i].dstPath!!)) { //folder will be merged
+                        mergedFolders.add(items[i].explorerElement.fullPath)
                     } else {
-                        updateNotificationProgress(notification, i, items.size)
+                        if (!gocryptfsVolume.rename(items[i].explorerElement.fullPath, items[i].dstPath!!)) {
+                            failedItem = items[i].explorerElement.fullPath
+                            break
+                        } else {
+                            updateNotificationProgress(notification, i+1, items.size)
+                        }
+                    }
+                }
+                if (failedItem == null) {
+                    for (i in 0 until mergedFolders.size) {
+                        if (!gocryptfsVolume.rmdir(mergedFolders[i])) {
+                            failedItem = mergedFolders[i]
+                            break
+                        } else {
+                            updateNotificationProgress(notification, items.size-(mergedFolders.size-i), items.size)
+                        }
                     }
                 }
             }
-            if (failedItem == null){
-                for (i in 0 until mergedFolders.size) {
-                    if (notifications[notification.notificationId]!!){
-                        cancelNotification(notification)
-                        return@Thread
-                    }
-                    if (!gocryptfsVolume.rmdir(mergedFolders[i])){
-                        failedItem = mergedFolders[i]
-                        break
-                    } else {
-                        updateNotificationProgress(notification, items.size-(mergedFolders.size-i), items.size)
-                    }
-                }
-            }
-            cancelNotification(notification)
-            callback(failedItem)
-        }.start()
+            failedItem
+        }
+        // treat cancellation as success
+        waitForTask(notification, task).failedItem
     }
 
-    private fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>, reuseNotification: FileOperationNotification? = null, callback: (String?) -> Unit){
-        val notification = reuseNotification ?: showNotification(R.string.file_op_import_msg, dstPaths.size)
+    private suspend fun importFilesFromUris(
+        dstPaths: List<String>,
+        uris: List<Uri>,
+        notification: FileOperationNotification,
+    ): String? {
         var failedIndex = -1
         for (i in dstPaths.indices) {
-            if (notifications[notification.notificationId]!!){
-                cancelNotification(notification)
-                return
-            }
-            try {
-                if (!gocryptfsVolume.importFile(this, uris[i], dstPaths[i])) {
+            withContext(Dispatchers.IO) {
+                try {
+                    if (!gocryptfsVolume.importFile(this@FileOperationService, uris[i], dstPaths[i])) {
+                        failedIndex = i
+                    }
+                } catch (e: FileNotFoundException) {
                     failedIndex = i
                 }
-            } catch (e: FileNotFoundException){
-                failedIndex = i
             }
             if (failedIndex == -1) {
-                updateNotificationProgress(notification, i, dstPaths.size)
+                updateNotificationProgress(notification, i+1, dstPaths.size)
             } else {
-                cancelNotification(notification)
-                callback(uris[failedIndex].toString())
-                break
+                return uris[failedIndex].toString()
             }
         }
-        if (failedIndex == -1){
-            cancelNotification(notification)
-            callback(null)
-        }
+        return null
     }
 
-    fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>, callback: (String?) -> Unit) {
-        Thread {
-            importFilesFromUris(dstPaths, uris, null, callback)
-        }.start()
+    suspend fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>): TaskResult<String?> = coroutineScope {
+        val notification = showNotification(R.string.file_op_import_msg, dstPaths.size)
+        val task = async {
+            importFilesFromUris(dstPaths, uris, notification)
+        }
+        waitForTask(notification, task)
     }
 
     /**
@@ -256,18 +264,17 @@ class FileOperationService : Service() {
         dstFiles: ArrayList<String>,
         srcUris: ArrayList<Uri>,
         dstDirs: ArrayList<String>,
-        notification: FileOperationNotification
+        scope: CoroutineScope,
     ): Boolean {
         dstDirs.add(rootDstPath)
         for (child in rootSrcDir.listFiles()) {
-            if (notifications[notification.notificationId]!!) {
-                cancelNotification(notification)
+            if (!scope.isActive) {
                 return false
             }
             child.name?.let { name ->
                 val subPath = PathUtils.pathJoin(rootDstPath, name)
                 if (child.isDirectory) {
-                    if (!recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs, notification)) {
+                    if (!recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs, scope)) {
                         return false
                     }
                 }
@@ -280,48 +287,50 @@ class FileOperationService : Service() {
         return true
     }
 
-    fun importDirectory(rootDstPath: String, rootSrcDir: DocumentFile, callback: (String?, List<Uri>) -> Unit) {
-        Thread {
-            val notification = showNotification(R.string.file_op_import_msg, null)
+    class ImportDirectoryResult(val taskResult: TaskResult<String?>, val uris: List<Uri>)
 
+    suspend fun importDirectory(
+        rootDstPath: String,
+        rootSrcDir: DocumentFile,
+    ): ImportDirectoryResult = coroutineScope {
+        val notification = showNotification(R.string.file_op_import_msg, null)
+        val srcUris = arrayListOf<Uri>()
+        val task = async {
+            var failedItem: String? = null
             val dstFiles = arrayListOf<String>()
-            val srcUris = arrayListOf<Uri>()
             val dstDirs = arrayListOf<String>()
-            if (!recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs, notification)) {
-                return@Thread
-            }
 
-            // create destination folders so the new files can use them
-            for (dir in dstDirs) {
-                if (notifications[notification.notificationId]!!) {
-                    cancelNotification(notification)
-                    return@Thread
+            withContext(Dispatchers.IO) {
+                if (!recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs, this)) {
+                    return@withContext
                 }
-                if (!gocryptfsVolume.mkdir(dir)) {
-                    cancelNotification(notification)
-                    callback(dir, srcUris)
-                    break
+
+                // create destination folders so the new files can use them
+                for (dir in dstDirs) {
+                    if (!gocryptfsVolume.mkdir(dir)) {
+                        failedItem = dir
+                        break
+                    }
                 }
             }
-
-            importFilesFromUris(dstFiles, srcUris, notification) { failedItem ->
-                callback(failedItem, srcUris)
+            if (failedItem == null) {
+                failedItem = importFilesFromUris(dstFiles, srcUris, notification)
             }
-        }.start()
+            failedItem
+        }
+        ImportDirectoryResult(waitForTask(notification, task), srcUris)
     }
 
-    fun wipeUris(uris: List<Uri>, rootFile: DocumentFile? = null, callback: (String?) -> Unit){
-        Thread {
-            val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
+    suspend fun wipeUris(uris: List<Uri>, rootFile: DocumentFile? = null): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
+        val task = async {
             var errorMsg: String? = null
             for (i in uris.indices) {
-                if (notifications[notification.notificationId]!!){
-                    cancelNotification(notification)
-                    return@Thread
+                withContext(Dispatchers.IO) {
+                    errorMsg = Wiper.wipe(this@FileOperationService, uris[i])
                 }
-                errorMsg = Wiper.wipe(this, uris[i])
                 if (errorMsg == null) {
-                    updateNotificationProgress(notification, i, uris.size)
+                    updateNotificationProgress(notification, i+1, uris.size)
                 } else {
                     break
                 }
@@ -329,9 +338,10 @@ class FileOperationService : Service() {
             if (errorMsg == null) {
                 rootFile?.delete()
             }
-            cancelNotification(notification)
-            callback(errorMsg)
-        }.start()
+            errorMsg
+        }
+        // treat cancellation as success
+        waitForTask(notification, task).failedItem
     }
 
     private fun exportFileInto(srcPath: String, treeDocumentFile: DocumentFile): Boolean {
@@ -345,13 +355,20 @@ class FileOperationService : Service() {
         }
     }
 
-    private fun recursiveExportDirectory(plain_directory_path: String, treeDocumentFile: DocumentFile): String? {
+    private fun recursiveExportDirectory(
+        plain_directory_path: String,
+        treeDocumentFile: DocumentFile,
+        scope: CoroutineScope
+    ): String? {
         treeDocumentFile.createDirectory(File(plain_directory_path).name)?.let { childTree ->
             val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
             for (e in explorerElements) {
+                if (!scope.isActive) {
+                    return null
+                }
                 val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
                 if (e.isDirectory) {
-                    val failedItem = recursiveExportDirectory(fullPath, childTree)
+                    val failedItem = recursiveExportDirectory(fullPath, childTree, scope)
                     failedItem?.let { return it }
                 } else {
                     if (!exportFileInto(fullPath, childTree)){
@@ -364,40 +381,40 @@ class FileOperationService : Service() {
         return treeDocumentFile.name
     }
 
-    fun exportFiles(uri: Uri, items: List<ExplorerElement>, callback: (String?) -> Unit){
-        Thread {
+    suspend fun exportFiles(uri: Uri, items: List<ExplorerElement>): TaskResult<String?> = coroutineScope {
+        val notification = showNotification(R.string.file_op_export_msg, items.size)
+        val task = async {
             contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-            DocumentFile.fromTreeUri(this, uri)?.let { treeDocumentFile ->
-                val notification = showNotification(R.string.file_op_export_msg, items.size)
-                var failedItem: String? = null
-                for (i in items.indices) {
-                    if (notifications[notification.notificationId]!!){
-                        cancelNotification(notification)
-                        return@Thread
-                    }
+            val treeDocumentFile = DocumentFile.fromTreeUri(this@FileOperationService, uri)!!
+            var failedItem: String? = null
+            for (i in items.indices) {
+                withContext(Dispatchers.IO) {
                     failedItem = if (items[i].isDirectory) {
-                        recursiveExportDirectory(items[i].fullPath, treeDocumentFile)
+                        recursiveExportDirectory(items[i].fullPath, treeDocumentFile, this)
                     } else {
                         if (exportFileInto(items[i].fullPath, treeDocumentFile)) null else items[i].fullPath
                     }
-                    if (failedItem == null) {
-                        updateNotificationProgress(notification, i, items.size)
-                    } else {
-                        break
-                    }
                 }
-                cancelNotification(notification)
-                callback(failedItem)
+                if (failedItem == null) {
+                    updateNotificationProgress(notification, i+1, items.size)
+                } else {
+                    break
+                }
             }
-        }.start()
+            failedItem
+        }
+        waitForTask(notification, task)
     }
 
-    private fun recursiveCountChildElements(rootDirectory: DocumentFile): Int {
+    private fun recursiveCountChildElements(rootDirectory: DocumentFile, scope: CoroutineScope): Int {
+        if (!scope.isActive) {
+            return 0
+        }
         val children = rootDirectory.listFiles()
         var count = children.size
         for (child in children) {
             if (child.isDirectory) {
-                count += recursiveCountChildElements(child)
+                count += recursiveCountChildElements(child, scope)
             }
         }
         return count
@@ -411,12 +428,13 @@ class FileOperationService : Service() {
         dstRootDirectory: ObjRef<DocumentFile?>?,
         notification: FileOperationNotification,
         total: Int,
+        scope: CoroutineScope,
         progress: ObjRef<Int> = ObjRef(0)
     ): DocumentFile? {
         val dstDir = dst.createDirectory(src.name ?: return src) ?: return src
+        dstRootDirectory?.let { it.value = dstDir }
         for (child in src.listFiles()) {
-            if (notifications[notification.notificationId]!!) {
-                cancelNotification(notification)
+            if (!scope.isActive) {
                 return null
             }
             if (child.isFile) {
@@ -429,24 +447,29 @@ class FileOperationService : Service() {
                 inputStream.close()
                 if (written != child.length()) return child
             } else {
-                recursiveCopyVolume(child, dstDir, null, notification, total, progress)?.let { return it }
+                recursiveCopyVolume(child, dstDir, null, notification, total, scope, progress)?.let { return it }
             }
             progress.value++
             updateNotificationProgress(notification, progress.value, total)
         }
-        dstRootDirectory?.let { it.value = dstDir }
         return null
     }
 
-    fun copyVolume(src: DocumentFile, dst: DocumentFile, callback: (DocumentFile?, DocumentFile?) -> Unit) {
-        Thread {
-            val notification = showNotification(R.string.copy_volume_notification, null)
-            val total = recursiveCountChildElements(src)
-            updateNotificationProgress(notification, 0, total)
-            val dstRootDirectory = ObjRef<DocumentFile?>(null)
-            val failedItem = recursiveCopyVolume(src, dst, dstRootDirectory, notification, total)
-            cancelNotification(notification)
-            callback(dstRootDirectory.value, failedItem)
-        }.start()
+    class CopyVolumeResult(val taskResult: TaskResult<DocumentFile?>, val dstRootDirectory: DocumentFile?)
+
+    suspend fun copyVolume(src: DocumentFile, dst: DocumentFile): CopyVolumeResult = coroutineScope {
+        val notification = showNotification(R.string.copy_volume_notification, null)
+        val dstRootDirectory = ObjRef<DocumentFile?>(null)
+        val task = async(Dispatchers.IO) {
+            val total = recursiveCountChildElements(src, this)
+            if (isActive) {
+                updateNotificationProgress(notification, 0, total)
+                recursiveCopyVolume(src, dst, dstRootDirectory, notification, total, this)
+            } else {
+                null
+            }
+        }
+        // treat cancellation as success
+        CopyVolumeResult(waitForTask(notification, task), dstRootDirectory.value)
     }
 }

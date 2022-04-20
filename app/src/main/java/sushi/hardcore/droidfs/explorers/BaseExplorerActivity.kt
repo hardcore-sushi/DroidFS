@@ -14,13 +14,16 @@ import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.ConstValues.isAudio
@@ -312,21 +315,21 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
         displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
         if (mapFolders) {
-            Thread {
+            lifecycleScope.launch {
                 var totalSize: Long = 0
-                synchronized(this) {
-                    for (element in explorerElements) {
-                        if (element.isDirectory) {
-                            recursiveSetSize(element)
+                withContext(Dispatchers.IO) {
+                    synchronized(this@BaseExplorerActivity) {
+                        for (element in explorerElements) {
+                            if (element.isDirectory) {
+                                recursiveSetSize(element)
+                            }
+                            totalSize += element.size
                         }
-                        totalSize += element.size
                     }
                 }
-                runOnUiThread {
-                    displayExplorerElements(totalSize)
-                    onDisplayed?.invoke()
-                }
-            }.start()
+                displayExplorerElements(totalSize)
+                onDisplayed?.invoke()
+            }
         } else {
             displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.size })
             onDisplayed?.invoke()
@@ -455,24 +458,13 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (items.size > 0) {
             checkPathOverwrite(items, currentDirectoryPath) { checkedItems ->
                 checkedItems?.let {
-                    fileOperationService.importFilesFromUris(checkedItems.map { it.dstPath!! }, uris){ failedItem ->
-                        runOnUiThread {
-                            callback(failedItem)
+                    lifecycleScope.launch {
+                        val taskResult = fileOperationService.importFilesFromUris(checkedItems.map { it.dstPath!! }, uris)
+                        if (taskResult.cancelled) {
+                            setCurrentPath(currentDirectoryPath)
+                        } else {
+                            callback(taskResult.failedItem)
                         }
-                    }
-                }
-            }
-        }
-    }
-
-    fun importDirectory(sourceUri: Uri, callback: (String?, List<Uri>, DocumentFile) -> Unit) {
-        val tree = DocumentFile.fromTreeUri(this, sourceUri)!! //non-null after Lollipop
-        val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, parentPath = currentDirectoryPath))
-        checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
-            checkedOperation?.let {
-                fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree) { failedItem, uris ->
-                    runOnUiThread {
-                        callback(failedItem, uris, tree)
                     }
                 }
             }
@@ -627,7 +619,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 finish()
             } else {
                 isStartingActivity = false
-                ExternalProvider.removeFiles(this)
+                ExternalProvider.removeFilesAsync(this)
                 setCurrentPath(currentDirectoryPath)
             }
         }

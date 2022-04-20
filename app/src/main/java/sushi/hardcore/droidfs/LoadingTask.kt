@@ -1,39 +1,34 @@
 package sushi.hardcore.droidfs
 
-import android.widget.TextView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import sushi.hardcore.droidfs.databinding.DialogLoadingBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
-abstract class LoadingTask(val activity: AppCompatActivity, themeValue: String, loadingMessageResId: Int) {
-    private val dialogLoadingView = activity.layoutInflater.inflate(R.layout.dialog_loading, null)
-    private val dialogLoading: AlertDialog = CustomAlertDialogBuilder(activity, themeValue)
-        .setView(dialogLoadingView)
+abstract class LoadingTask<T>(val activity: AppCompatActivity, themeValue: String, loadingMessageResId: Int) {
+    private val dialogLoading = CustomAlertDialogBuilder(activity, themeValue)
+        .setView(
+            DialogLoadingBinding.inflate(activity.layoutInflater).apply {
+                textMessage.text = activity.getString(loadingMessageResId)
+            }.root
+        )
         .setTitle(R.string.loading)
         .setCancelable(false)
         .create()
-    private var isStopped = false
-    init {
-        dialogLoadingView.findViewById<TextView>(R.id.text_message).text = activity.getString(loadingMessageResId)
-        startTask()
-    }
-    abstract fun doTask(activity: AppCompatActivity)
-    private fun startTask() {
+
+    abstract suspend fun doTask(): T
+
+    fun startTask(scope: CoroutineScope, onDone: (T) -> Unit) {
         dialogLoading.show()
-        Thread {
-            doTask(activity)
-            if (!isStopped){
-                dialogLoading.dismiss()
+        scope.launch {
+            val result = withContext(Dispatchers.IO) {
+                doTask()
             }
-        }.start()
-    }
-    fun stopTask(onUiThread: (() -> Unit)?){
-        isStopped = true
-        dialogLoading.dismiss()
-        onUiThread?.let {
-            activity.runOnUiThread {
-                onUiThread()
-            }
+            dialogLoading.dismiss()
+            onDone(result)
         }
     }
 }

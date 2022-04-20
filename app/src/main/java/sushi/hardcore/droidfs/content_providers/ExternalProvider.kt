@@ -5,6 +5,10 @@ import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.R
@@ -13,7 +17,7 @@ import java.io.File
 
 object ExternalProvider {
     private const val content_type_all = "*/*"
-    private var storedFiles: MutableList<Uri> = ArrayList()
+    private var storedFiles = HashSet<Uri>()
     private fun getContentType(filename: String, previous_content_type: String?): String {
         if (content_type_all != previous_content_type) {
             var contentType = MimeTypeMap.getSingleton().getMimeTypeFromExtension(File(filename).extension)
@@ -42,26 +46,23 @@ object ExternalProvider {
     }
 
     fun share(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
-        object : LoadingTask(activity, themeValue, R.string.loading_msg_export) {
-            override fun doTask(activity: AppCompatActivity) {
-                var contentType: String? = null
-                val uris = ArrayList<Uri>()
+        var contentType: String? = null
+        val uris = ArrayList<Uri>(file_paths.size)
+        object : LoadingTask<String?>(activity, themeValue, R.string.loading_msg_export) {
+            override suspend fun doTask(): String? {
                 for (path in file_paths) {
                     val result = exportFile(activity, gocryptfsVolume, path, contentType)
                     contentType = if (result.first != null) {
                         uris.add(result.first!!)
                         result.second
                     } else {
-                        stopTask {
-                            CustomAlertDialogBuilder(activity, themeValue)
-                                .setTitle(R.string.error)
-                                .setMessage(activity.getString(R.string.export_failed, path))
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                        return
+                        return path
                     }
                 }
+                return null
+            }
+        }.startTask(activity.lifecycleScope) { failedItem ->
+            if (failedItem == null) {
                 val shareIntent = Intent()
                 shareIntent.type = contentType
                 if (uris.size == 1) {
@@ -71,45 +72,51 @@ object ExternalProvider {
                     shareIntent.action = Intent.ACTION_SEND_MULTIPLE
                     shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
                 }
-                stopTask {
-                    activity.startActivity(Intent.createChooser(shareIntent, activity.getString(R.string.share_chooser)))
-                }
+                activity.startActivity(Intent.createChooser(shareIntent, activity.getString(R.string.share_chooser)))
+            } else {
+                CustomAlertDialogBuilder(activity, themeValue)
+                    .setTitle(R.string.error)
+                    .setMessage(activity.getString(R.string.export_failed, failedItem))
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
             }
         }
     }
 
     fun open(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_path: String) {
-        object : LoadingTask(activity, themeValue, R.string.loading_msg_export) {
-            override fun doTask(activity: AppCompatActivity) {
+        object : LoadingTask<Intent?>(activity, themeValue, R.string.loading_msg_export) {
+            override suspend fun doTask(): Intent? {
                 val result = exportFile(activity, gocryptfsVolume, file_path, null)
-                if (result.first != null) {
-                    val openIntent = Intent(Intent.ACTION_VIEW)
-                    openIntent.setDataAndType(result.first, result.second)
-                    stopTask { activity.startActivity(openIntent) }
-                } else {
-                    stopTask {
-                        CustomAlertDialogBuilder(activity, themeValue)
-                            .setTitle(R.string.error)
-                            .setMessage(activity.getString(R.string.export_failed, file_path))
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
+                return if (result.first != null) {
+                    Intent(Intent.ACTION_VIEW).apply {
+                        setDataAndType(result.first, result.second)
                     }
+                } else {
+                    null
                 }
+            }
+        }.startTask(activity.lifecycleScope) { openIntent ->
+            if (openIntent == null) {
+                CustomAlertDialogBuilder(activity, themeValue)
+                    .setTitle(R.string.error)
+                    .setMessage(activity.getString(R.string.export_failed, file_path))
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else {
+                activity.startActivity(openIntent)
             }
         }
     }
 
-    fun removeFiles(context: Context) {
-        Thread{
-            val success = ArrayList<Uri>()
-            for (uri in storedFiles){
-                if (context.contentResolver.delete(uri, null, null) == 1){
-                    success.add(uri)
-                }
+    fun removeFilesAsync(context: Context) = GlobalScope.launch(Dispatchers.IO) {
+        val success = HashSet<Uri>(storedFiles.size)
+        for (uri in storedFiles) {
+            if (context.contentResolver.delete(uri, null, null) == 1) {
+                success.add(uri)
             }
-            for (uri in success){
-                storedFiles.remove(uri)
-            }
-        }.start()
+        }
+        for (uri in success) {
+            storedFiles.remove(uri)
+        }
     }
 }
