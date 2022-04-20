@@ -12,6 +12,7 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -123,9 +124,14 @@ class CreateVolumeFragment: Fragment() {
         if (!password.contentEquals(passwordConfirm)) {
             Toast.makeText(requireContext(), R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
             Arrays.fill(password, 0.toChar())
+            Arrays.fill(passwordConfirm, 0.toChar())
         } else {
-            object: LoadingTask(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
-                override fun doTask(activity: AppCompatActivity) {
+            Arrays.fill(passwordConfirm, 0.toChar())
+            var returnedHash: ByteArray? = null
+            if (binding.checkboxSavePassword.isChecked)
+                returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+            object: LoadingTask<Volume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
+                override suspend fun doTask(): Volume? {
                     val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
                         0 -> 0
                         1 -> 1
@@ -134,10 +140,16 @@ class CreateVolumeFragment: Fragment() {
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    var returnedHash: ByteArray? = null
-                    if (binding.checkboxSavePassword.isChecked)
-                        returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                    if (GocryptfsVolume.createVolume(volumePath, password, false, xchacha, GocryptfsVolume.ScryptDefaultLogN, ConstValues.CREATOR, returnedHash)) {
+                    val volume = if (GocryptfsVolume.createVolume(
+                            volumePath,
+                            password,
+                            false,
+                            xchacha,
+                            GocryptfsVolume.ScryptDefaultLogN,
+                            ConstValues.CREATOR,
+                            returnedHash
+                        )
+                    ) {
                         val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
                         val volume = Volume(volumeName, isHiddenVolume)
                         volumeDatabase.apply {
@@ -145,46 +157,48 @@ class CreateVolumeFragment: Fragment() {
                                 removeVolume(volumeName)
                             saveVolume(volume)
                         }
-                        stopTask {
-                            @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
-                            if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
-                                fingerprintProtector!!.let {
-                                    it.listener = object : FingerprintProtector.Listener {
-                                        override fun onHashStorageReset() {
-                                            hashStorageReset = true
-                                            // retry
-                                            it.savePasswordHash(volume, returnedHash)
-                                        }
-                                        override fun onPasswordHashDecrypted(hash: ByteArray) {} // shouldn't happen here
-                                        override fun onPasswordHashSaved() {
-                                            Arrays.fill(returnedHash, 0)
-                                            onVolumeCreated()
-                                        }
-                                        override fun onFailed(pending: Boolean) {
-                                            if (!pending) {
-                                                Arrays.fill(returnedHash, 0)
-                                                onVolumeCreated()
-                                            }
-                                        }
-                                    }
-                                    it.savePasswordHash(volume, returnedHash)
-                                }
-                            } else onVolumeCreated()
-                        }
+                        volume
                     } else {
-                        stopTask {
-                            CustomAlertDialogBuilder(activity, themeValue)
-                                .setTitle(R.string.error)
-                                .setMessage(R.string.create_volume_failed)
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
+                        null
                     }
                     Arrays.fill(password, 0.toChar())
+                    return volume
+                }
+            }.startTask(lifecycleScope) { volume ->
+                if (volume == null) {
+                    CustomAlertDialogBuilder(requireContext(), themeValue)
+                        .setTitle(R.string.error)
+                        .setMessage(R.string.create_volume_failed)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                } else {
+                    @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
+                    if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
+                        fingerprintProtector!!.let {
+                            it.listener = object : FingerprintProtector.Listener {
+                                override fun onHashStorageReset() {
+                                    hashStorageReset = true
+                                    // retry
+                                    it.savePasswordHash(volume, returnedHash)
+                                }
+                                override fun onPasswordHashDecrypted(hash: ByteArray) {} // shouldn't happen here
+                                override fun onPasswordHashSaved() {
+                                    Arrays.fill(returnedHash, 0)
+                                    onVolumeCreated()
+                                }
+                                override fun onFailed(pending: Boolean) {
+                                    if (!pending) {
+                                        Arrays.fill(returnedHash, 0)
+                                        onVolumeCreated()
+                                    }
+                                }
+                            }
+                            it.savePasswordHash(volume, returnedHash)
+                        }
+                    } else onVolumeCreated()
                 }
             }
         }
-        Arrays.fill(passwordConfirm, 0.toChar())
     }
 
     private fun onVolumeCreated() {

@@ -7,7 +7,7 @@ import android.text.InputType
 import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
@@ -105,55 +105,21 @@ class ChangePasswordActivity: BaseActivity() {
     }
 
     private fun changeVolumePassword(newPassword: CharArray, givenHash: ByteArray? = null) {
-        object : LoadingTask(this, themeValue, R.string.loading_msg_change_password) {
-            override fun doTask(activity: AppCompatActivity) {
-                var returnedHash: ByteArray? = null
-                if (binding.checkboxSavePassword.isChecked) {
-                    returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-                }
-                var currentPassword: CharArray? = null
-                if (givenHash == null) {
-                    currentPassword = CharArray(binding.editCurrentPassword.text.length)
-                    binding.editCurrentPassword.text.getChars(0, currentPassword.size, currentPassword, 0)
-                }
-                if (GocryptfsVolume.changePassword(volume.getFullPath(filesDir.path), currentPassword, givenHash, newPassword, returnedHash)) {
+        var returnedHash: ByteArray? = null
+        if (binding.checkboxSavePassword.isChecked) {
+            returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+        }
+        var currentPassword: CharArray? = null
+        if (givenHash == null) {
+            currentPassword = CharArray(binding.editCurrentPassword.text.length)
+            binding.editCurrentPassword.text.getChars(0, currentPassword.size, currentPassword, 0)
+        }
+        object : LoadingTask<Boolean>(this, themeValue, R.string.loading_msg_change_password) {
+            override suspend fun doTask(): Boolean {
+                val success = GocryptfsVolume.changePassword(volume.getFullPath(filesDir.path), currentPassword, givenHash, newPassword, returnedHash)
+                if (success) {
                     if (volumeDatabase.isHashSaved(volume.name)) {
                         volumeDatabase.removeHash(volume)
-                    }
-                    stopTask {
-                        @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
-                        if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
-                            fingerprintProtector!!.let {
-                                it.listener = object : FingerprintProtector.Listener {
-                                    override fun onHashStorageReset() {
-                                        // retry
-                                        it.savePasswordHash(volume, returnedHash)
-                                    }
-                                    override fun onPasswordHashDecrypted(hash: ByteArray) {}
-                                    override fun onPasswordHashSaved() {
-                                        Arrays.fill(returnedHash, 0)
-                                        finish()
-                                    }
-                                    override fun onFailed(pending: Boolean) {
-                                        if (!pending) {
-                                            Arrays.fill(returnedHash, 0)
-                                            finish()
-                                        }
-                                    }
-                                }
-                                it.savePasswordHash(volume, returnedHash)
-                            }
-                        } else {
-                            finish()
-                        }
-                    }
-                } else {
-                    stopTask {
-                        CustomAlertDialogBuilder(activity, themeValue)
-                            .setTitle(R.string.error)
-                            .setMessage(R.string.change_password_failed)
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
                     }
                 }
                 if (currentPassword != null)
@@ -161,6 +127,41 @@ class ChangePasswordActivity: BaseActivity() {
                 Arrays.fill(newPassword, 0.toChar())
                 if (givenHash != null)
                     Arrays.fill(givenHash, 0)
+                return success
+            }
+        }.startTask(lifecycleScope) { success ->
+            if (success) {
+                @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
+                if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
+                    fingerprintProtector!!.let {
+                        it.listener = object : FingerprintProtector.Listener {
+                            override fun onHashStorageReset() {
+                                // retry
+                                it.savePasswordHash(volume, returnedHash)
+                            }
+                            override fun onPasswordHashDecrypted(hash: ByteArray) {}
+                            override fun onPasswordHashSaved() {
+                                Arrays.fill(returnedHash, 0)
+                                finish()
+                            }
+                            override fun onFailed(pending: Boolean) {
+                                if (!pending) {
+                                    Arrays.fill(returnedHash, 0)
+                                    finish()
+                                }
+                            }
+                        }
+                        it.savePasswordHash(volume, returnedHash)
+                    }
+                } else {
+                    finish()
+                }
+            } else {
+                CustomAlertDialogBuilder(this, themeValue)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.change_password_failed)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
             }
         }
     }

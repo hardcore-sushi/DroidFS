@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.transition.Transition
+import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
@@ -112,33 +113,40 @@ class ExplorerElementAdapter(
     }
 
     class FileViewHolder(itemView: View) : RegularElementViewHolder(itemView) {
-        var displayThumbnail = true
-        var target: DrawableImageViewTarget? = null
+        private var target: DrawableImageViewTarget? = null
+        private var job: Job? = null
+        private val scope = CoroutineScope(Dispatchers.IO)
 
         private fun loadThumbnail(fullPath: String, adapter: ExplorerElementAdapter) {
             adapter.gocryptfsVolume?.let { volume ->
-                displayThumbnail = true
-                Thread {
+                job = scope.launch {
                     volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
-                        if (displayThumbnail) {
-                            adapter.activity.runOnUiThread {
-                                if (displayThumbnail && !adapter.activity.isFinishing) {
+                        if (isActive) {
+                            withContext(Dispatchers.Main) {
+                                if (isActive && !adapter.activity.isFinishing) {
                                     target = Glide.with(adapter.activity).load(it).skipMemoryCache(true).into(object : DrawableImageViewTarget(icon) {
                                         override fun onResourceReady(
                                             resource: Drawable,
                                             transition: Transition<in Drawable>?
                                         ) {
+                                            target = null
                                             val bitmap = resource.toBitmap()
                                             adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config, true))
                                             super.onResourceReady(resource, transition)
-                                            target = null
                                         }
                                     })
                                 }
                             }
                         }
                     }
-                }.start()
+                }
+            }
+        }
+
+        fun cancelThumbnailLoading(adapter: ExplorerElementAdapter) {
+            job?.cancel()
+            target?.let {
+                Glide.with(adapter.activity).clear(it)
             }
         }
 
@@ -199,11 +207,7 @@ class ExplorerElementAdapter(
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         if (holder is FileViewHolder) {
-            //cancel pending thumbnail display
-            holder.displayThumbnail = false
-            holder.target?.let {
-                Glide.with(activity).clear(it)
-            }
+            holder.cancelThumbnailLoading(this)
         }
     }
 
