@@ -48,93 +48,63 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
     }
 
     fun close() {
-        synchronized(applicationContext) {
-            native_close(sessionID)
-        }
+        native_close(sessionID)
     }
 
     fun isClosed(): Boolean {
-        synchronized(applicationContext) {
-            return native_is_closed(sessionID)
-        }
+        return native_is_closed(sessionID)
     }
 
     fun listDir(dir_path: String): MutableList<ExplorerElement> {
-        synchronized(applicationContext) {
-            return native_list_dir(sessionID, dir_path)
-        }
+        return native_list_dir(sessionID, dir_path)
     }
 
     fun mkdir(dir_path: String): Boolean {
-        synchronized(applicationContext) {
-            return native_mkdir(sessionID, dir_path, ConstValues.DIRECTORY_MODE)
-        }
+        return native_mkdir(sessionID, dir_path, ConstValues.DIRECTORY_MODE)
     }
 
     fun rmdir(dir_path: String): Boolean {
-        synchronized(applicationContext) {
-            return native_rmdir(sessionID, dir_path)
-        }
+        return native_rmdir(sessionID, dir_path)
     }
 
     fun removeFile(file_path: String): Boolean {
-        synchronized(applicationContext) {
-            return native_remove_file(sessionID, file_path)
-        }
+        return native_remove_file(sessionID, file_path)
     }
 
     fun pathExists(file_path: String): Boolean {
-        synchronized(applicationContext) {
-            return native_path_exists(sessionID, file_path)
-        }
+        return native_path_exists(sessionID, file_path)
     }
 
     fun getSize(file_path: String): Long {
-        synchronized(applicationContext) {
-            return native_get_size(sessionID, file_path)
-        }
+        return native_get_size(sessionID, file_path)
     }
 
     fun closeFile(handleID: Int) {
-        synchronized(applicationContext) {
-            native_close_file(sessionID, handleID)
-        }
+        native_close_file(sessionID, handleID)
     }
 
     fun openReadMode(file_path: String): Int {
-        synchronized(applicationContext) {
-            return native_open_read_mode(sessionID, file_path)
-        }
+        return native_open_read_mode(sessionID, file_path)
     }
 
     fun openWriteMode(file_path: String): Int {
-        synchronized(applicationContext) {
-            return native_open_write_mode(sessionID, file_path, ConstValues.FILE_MODE)
-        }
+        return native_open_write_mode(sessionID, file_path, ConstValues.FILE_MODE)
     }
 
     fun readFile(handleID: Int, offset: Long, buff: ByteArray): Int {
-        synchronized(applicationContext) {
-            return native_read_file(sessionID, handleID, offset, buff)
-        }
+        return native_read_file(sessionID, handleID, offset, buff)
     }
 
     fun writeFile(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
-        synchronized(applicationContext) {
-            return native_write_file(sessionID, handleID, offset, buff, buff_size)
-        }
+        return native_write_file(sessionID, handleID, offset, buff, buff_size)
     }
 
     fun truncate(handleID: Int, offset: Long): Boolean {
-        synchronized(this) {
-            return native_truncate(sessionID, handleID, offset)
-        }
+        return native_truncate(sessionID, handleID, offset)
     }
 
     fun rename(old_path: String, new_path: String): Boolean {
-        synchronized(this) {
-            return native_rename(sessionID, old_path, new_path)
-        }
+        return native_rename(sessionID, old_path, new_path)
     }
 
     fun exportFile(handleID: Int, os: OutputStream): Boolean {
