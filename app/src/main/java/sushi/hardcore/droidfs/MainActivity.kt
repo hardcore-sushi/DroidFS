@@ -520,10 +520,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         )
     }
 
-    private fun askForPassword(volume: Volume, position: Int) {
+    private fun askForPassword(volume: Volume, position: Int, savePasswordHash: Boolean = false) {
         val dialogBinding = DialogOpenVolumeBinding.inflate(layoutInflater)
         if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
+        } else {
+            dialogBinding.checkboxSavePassword.isChecked = savePasswordHash
         }
         dialogBinding.checkboxDefaultOpen.isChecked = defaultVolumeName == volume.name
         val dialog = CustomAlertDialogBuilder(this, themeValue)
@@ -594,7 +596,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     .setMessage(R.string.open_volume_failed_msg)
                     .setPositiveButton(R.string.ok, null)
                     .setOnDismissListener {
-                        askForPassword(volume, position)
+                        askForPassword(volume, position, savePasswordHash)
                     }
                     .show()
             }
