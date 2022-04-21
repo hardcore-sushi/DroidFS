@@ -205,7 +205,7 @@
     <string name="password_confirmation_hint">Contraseña (confirmación)</string>
     <string name="password_hash_saved">hash de la contraseña guardada</string>
     <string name="read_only">(Sólo lectura)</string>
-    <string name="no_volumes_text">No se ha guardado el volumen, añada algo haciendo clic en el botón +.</string>
+    <string name="no_volumes_text">No se ha guardado ningún volumen, añada uno haciendo clic en el botón +</string>
     <string name="fingerprint_error_msg">La autenticación por huella dactilar no puede ser utilizada: %s.</string>
     <string name="keyguard_not_secure">keyguard no seguro</string>
     <string name="no_hardware">no se ha encontrado el hardware adecuado</string>
@@ -227,7 +227,7 @@
     <string name="hidden_volume_already_exists">Ya existe un volumen oculto con el mismo nombre.</string>
     <string name="pdf_document">Documento PDF</string>
     <string name="thumbnail_max_size">Tamaño máximo de miniatura</string>
-    <string name="thumbnail_max_size_summary">Tamaño máximo de archivo para el que cargar una miniatura. Valor actual: %s</string>
+    <string name="thumbnail_max_size_summary">Tamaño máximo de archivo en el que se cargarán las miniaturas. Valor actual: %s</string>
     <string name="size_hint">Tamaño (en KB)</string>
     <string name="invalid_number">Número inválido</string>
     <string name="new_volume_name">Nuevo nombre del volumen:</string>
@@ -239,4 +239,7 @@
     <string name="multiple_folders">%d carpetas</string>
     <string name="default_open">Abrir este volumen cuando se inicia la aplicación</string>
     <string name="remove_default_open">No abrir por defecto</string>
+    <string name="elements_selected">%d/%d Seleccionados</string>
+    <string name="pin_passwords_title">Diseño de teclado numérico</string>
+    <string name="pin_passwords_summary">Usar el diseño de teclado numérico para ingresar las contraseñas de los volumenes</string>
 </resources>
