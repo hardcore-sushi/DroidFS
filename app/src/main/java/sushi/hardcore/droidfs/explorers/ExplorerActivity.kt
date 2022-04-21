@@ -344,22 +344,29 @@ class ExplorerActivity : BaseExplorerActivity() {
                         invalidateOptionsMenu()
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
-                    mapFileForMove(itemsToProcess, itemsToProcess[0].explorerElement.parentPath)
-                    checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
-                        items?.let {
-                            lifecycleScope.launch {
-                                val failedItem = fileOperationService.moveElements(it.toMutableList() as ArrayList<OperationFile>)
-                                if (failedItem == null) {
-                                    Toast.makeText(this@ExplorerActivity, R.string.move_success, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
-                                            .setTitle(R.string.error)
-                                            .setMessage(getString(R.string.move_failed, failedItem))
-                                            .setPositiveButton(R.string.ok, null)
-                                            .show()
-                                }
-                                setCurrentPath(currentDirectoryPath)
+                    itemsToProcess.forEach {
+                        it.dstPath = PathUtils.pathJoin(currentDirectoryPath, it.explorerElement.name)
+                        it.overwriteConfirmed = false // reset the field in case of a previous cancelled move
+                    }
+                    val toMove = ArrayList<OperationFile>(itemsToProcess.size)
+                    val toClean = ArrayList<ExplorerElement>()
+                    prepareFilesForMove(
+                        itemsToProcess,
+                        toMove,
+                        toClean,
+                    ) {
+                        lifecycleScope.launch {
+                            val failedItem = fileOperationService.moveElements(toMove, toClean)
+                            if (failedItem == null) {
+                                Toast.makeText(this@ExplorerActivity, R.string.move_success, Toast.LENGTH_SHORT).show()
+                            } else {
+                                CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                    .setTitle(R.string.error)
+                                    .setMessage(getString(R.string.move_failed, failedItem))
+                                    .setPositiveButton(R.string.ok, null)
+                                    .show()
                             }
+                            setCurrentPath(currentDirectoryPath)
                         }
                         cancelItemAction()
                         invalidateOptionsMenu()
@@ -403,22 +410,85 @@ class ExplorerActivity : BaseExplorerActivity() {
         }
     }
 
-    private fun mapFileForMove(items: ArrayList<OperationFile>, srcDirectoryPath: String): ArrayList<OperationFile> {
-        val newItems = ArrayList<OperationFile>()
-        items.forEach {
-            if (it.explorerElement.isDirectory){
-                if (gocryptfsVolume.pathExists(PathUtils.pathJoin(currentDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, it.explorerElement.fullPath)))){
-                    newItems.addAll(
-                        mapFileForMove(
-                            gocryptfsVolume.listDir(it.explorerElement.fullPath).map { e -> OperationFile.fromExplorerElement(e) } as ArrayList<OperationFile>,
-                            srcDirectoryPath
+    /**
+     * Ask the user what to do if an item would overwrite another item in case of a move.
+     *
+     * All [OperationFile] must have a non-null [dstPath][OperationFile.dstPath].
+     */
+    private fun checkMoveOverwrite(items: List<OperationFile>, callback: (List<OperationFile>?) -> Unit) {
+        for (item in items) {
+            if (gocryptfsVolume.pathExists(item.dstPath!!) && !item.overwriteConfirmed) {
+                CustomAlertDialogBuilder(this, themeValue)
+                    .setTitle(R.string.warning)
+                    .setMessage(
+                        getString(
+                            if (item.explorerElement.isDirectory) {
+                                R.string.dir_overwrite_question
+                            } else {
+                                R.string.file_overwrite_question
+                            },
+                            item.dstPath!!
                         )
                     )
+                    .setPositiveButton(R.string.yes) {_, _ ->
+                        item.overwriteConfirmed = true
+                        checkMoveOverwrite(items, callback)
+                    }
+                    .setNegativeButton(R.string.no) { _, _ ->
+                        with(EditTextDialog(this, R.string.enter_new_name) {
+                            item.dstPath = PathUtils.pathJoin(PathUtils.getParentPath(item.dstPath!!), it)
+                            checkMoveOverwrite(items, callback)
+                        }) {
+                            setSelectedText(item.explorerElement.name)
+                            show()
+                        }
+                    }
+                    .show()
+                return
+            }
+        }
+        callback(items)
+    }
+
+    /**
+     * Check for destination overwriting in case of a move operation.
+     *
+     * If the user decides to merge the content of a folder, the function recursively tests all
+     * children of the source folder to see if they will overwrite.
+     *
+     * The items to be moved are stored in [toMove]. We also need to keep track of the merged
+     * folders to delete them after the move. These folders are stored in [toClean].
+     */
+    private fun prepareFilesForMove(
+        items: List<OperationFile>,
+        toMove: ArrayList<OperationFile>,
+        toClean: ArrayList<ExplorerElement>,
+        onReady: () -> Unit
+    ) {
+        checkMoveOverwrite(items) { checkedItems ->
+            checkedItems?.let {
+                for (item in checkedItems) {
+                    if (!item.overwriteConfirmed || !item.explorerElement.isDirectory) {
+                        toMove.add(item)
+                    }
+                }
+                val toCheck = mutableListOf<OperationFile>()
+                for (item in checkedItems) {
+                    if (item.overwriteConfirmed && item.explorerElement.isDirectory) {
+                        val children = gocryptfsVolume.listDir(item.explorerElement.fullPath)
+                        toCheck.addAll(children.map {
+                            OperationFile(it, PathUtils.pathJoin(item.dstPath!!, it.name))
+                        })
+                        toClean.add(item.explorerElement)
+                    }
+                }
+                if (toCheck.isEmpty()) {
+                    onReady()
+                } else {
+                    prepareFilesForMove(toCheck, toMove, toClean, onReady)
                 }
             }
         }
-        items.addAll(newItems)
-        return items
     }
 
     private fun cancelItemAction() {

@@ -183,32 +183,26 @@ class FileOperationService : Service() {
         waitForTask(notification, task).failedItem
     }
 
-    suspend fun moveElements(items: ArrayList<OperationFile>): String? = coroutineScope {
-        val notification = showNotification(R.string.file_op_move_msg, items.size)
-        val task = async {
+    suspend fun moveElements(toMove: List<OperationFile>, toClean: List<ExplorerElement>): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_move_msg, toMove.size)
+        val task = async(Dispatchers.IO) {
+            val total = toMove.size+toClean.size
             var failedItem: String? = null
-            withContext(Dispatchers.IO) {
-                val mergedFolders = ArrayList<String>()
-                for (i in 0 until items.size) {
-                    if (items[i].explorerElement.isDirectory && gocryptfsVolume.pathExists(items[i].dstPath!!)) { //folder will be merged
-                        mergedFolders.add(items[i].explorerElement.fullPath)
-                    } else {
-                        if (!gocryptfsVolume.rename(items[i].explorerElement.fullPath, items[i].dstPath!!)) {
-                            failedItem = items[i].explorerElement.fullPath
-                            break
-                        } else {
-                            updateNotificationProgress(notification, i+1, items.size)
-                        }
-                    }
+            for ((i, item) in toMove.withIndex()) {
+                if (!gocryptfsVolume.rename(item.explorerElement.fullPath, item.dstPath!!)) {
+                    failedItem = item.explorerElement.fullPath
+                    break
+                } else {
+                    updateNotificationProgress(notification, i+1, total)
                 }
-                if (failedItem == null) {
-                    for (i in 0 until mergedFolders.size) {
-                        if (!gocryptfsVolume.rmdir(mergedFolders[i])) {
-                            failedItem = mergedFolders[i]
-                            break
-                        } else {
-                            updateNotificationProgress(notification, items.size-(mergedFolders.size-i), items.size)
-                        }
+            }
+            if (failedItem == null) {
+                for ((i, folder) in toClean.asReversed().withIndex()) {
+                    if (!gocryptfsVolume.rmdir(folder.fullPath)) {
+                        failedItem = folder.fullPath
+                        break
+                    } else {
+                        updateNotificationProgress(notification, toMove.size+i+1, total)
                     }
                 }
             }
