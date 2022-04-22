@@ -594,8 +594,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.open_volume_failed)
                     .setMessage(R.string.open_volume_failed_msg)
-                    .setPositiveButton(R.string.ok, null)
-                    .setOnDismissListener {
+                    .setPositiveButton(R.string.ok) { _, _ ->
                         askForPassword(volume, position, savePasswordHash)
                     }
                     .show()

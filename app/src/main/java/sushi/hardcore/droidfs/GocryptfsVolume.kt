@@ -141,32 +141,28 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
         return false
     }
 
-    fun importFile(inputStream: InputStream, handleID: Int): Boolean {
-        var offset: Long = 0
-        val ioBuffer = ByteArray(DefaultBS)
-        var length: Int
-        while (inputStream.read(ioBuffer).also { length = it } > 0) {
-            val written = writeFile(handleID, offset, ioBuffer, length).toLong()
-            if (written == length.toLong()) {
-                 offset += written
-            } else {
-                inputStream.close()
-                return false
-            }
-        }
-        closeFile(handleID)
-        inputStream.close()
-        return true
-    }
-
     fun importFile(inputStream: InputStream, dst_path: String): Boolean {
-        var success = false
         val dstHandleId = openWriteMode(dst_path)
         if (dstHandleId != -1) {
-            success = importFile(inputStream, dstHandleId)
+            var success = true
+            var offset: Long = 0
+            val ioBuffer = ByteArray(DefaultBS)
+            var length: Int
+            while (inputStream.read(ioBuffer).also { length = it } > 0) {
+                val written = writeFile(dstHandleId, offset, ioBuffer, length).toLong()
+                if (written == length.toLong()) {
+                    offset += written
+                } else {
+                    inputStream.close()
+                    success = false
+                    break
+                }
+            }
             closeFile(dstHandleId)
+            inputStream.close()
+            return success
         }
-        return success
+        return false
     }
 
     fun importFile(context: Context, src_uri: Uri, dst_path: String): Boolean {
