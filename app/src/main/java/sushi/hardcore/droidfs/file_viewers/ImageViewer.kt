@@ -200,6 +200,7 @@ class ImageViewer: FileViewerActivity() {
             }
             fileName = File(filePath).name
             binding.textFilename.text = fileName
+            binding.textFilename.isSelected = true
             rotationAngle = originalOrientation
         }
     }

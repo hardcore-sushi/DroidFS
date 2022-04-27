@@ -35,6 +35,7 @@ class VideoPlayer: MediaPlayer() {
 
     override fun onNewFileName(fileName: String) {
         binding.textFileName.text = fileName
+        binding.textFileName.isSelected = true
     }
 
     override fun getFileType(): String {
