@@ -163,3 +163,4 @@ Thanks to these open source projects that DroidFS uses:
 ### Libraries:
 - [Glide](https://github.com/bumptech/glide/) to display pictures
 - [ExoPlayer](https://github.com/google/ExoPlayer) to play media files
+- [AndroidFastScroll](https://github.com/zhanghai/AndroidFastScroll) to handle fast scrolling

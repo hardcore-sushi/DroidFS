@@ -24,6 +24,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.zhanghai.android.fastscroll.FastScrollerBuilder
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.ConstValues.isAudio
@@ -119,6 +120,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         setCurrentPath(currentDirectoryPath)
         linearLayoutManager = LinearLayoutManager(this@BaseExplorerActivity)
         recycler_view_explorer.adapter = explorerAdapter
+        FastScrollerBuilder(recycler_view_explorer).useMd2Style().build()
         isUsingListLayout = sharedPrefs.getBoolean("useListLayout", true)
         layoutIcon = findViewById(R.id.layout_icon)
         setRecyclerViewLayout()
