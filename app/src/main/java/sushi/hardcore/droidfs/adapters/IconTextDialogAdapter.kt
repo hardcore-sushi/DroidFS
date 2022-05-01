@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
 
 open class IconTextDialogAdapter(private val context: Context): BaseAdapter() {
@@ -19,7 +19,7 @@ open class IconTextDialogAdapter(private val context: Context): BaseAdapter() {
         val text = view.findViewById<TextView>(R.id.text)
         text.text = context.getString(items[position][1] as Int)
         val icon = view.findViewById<ImageView>(R.id.icon)
-        icon.setImageDrawable(AppCompatResources.getDrawable(context, items[position][2] as Int))
+        icon.setImageDrawable(ContextCompat.getDrawable(context, items[position][2] as Int))
         return view
     }
 
