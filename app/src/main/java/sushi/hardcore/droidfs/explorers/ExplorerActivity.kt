@@ -258,11 +258,12 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer, menu)
+        val result = super.onCreateOptionsMenu(menu)
         if (currentItemAction != ItemsActions.NONE) {
             menu.findItem(R.id.validate).isVisible = true
             menu.findItem(R.id.close).isVisible = false
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
         } else {
-            handleMenuItems(menu)
             if (usf_share){
                 menu.findItem(R.id.share).isVisible = false
             }
@@ -285,7 +286,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
             }
         }
-        return true
+        return result
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

@@ -21,9 +21,9 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.explorer_drop, menu)
-        handleMenuItems(menu)
+        val result = super.onCreateOptionsMenu(menu)
         menu.findItem(R.id.validate).isVisible = explorerAdapter.selectedItems.isEmpty()
-        return true
+        return result
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

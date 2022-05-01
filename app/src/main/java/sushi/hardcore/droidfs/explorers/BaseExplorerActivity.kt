@@ -497,7 +497,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun handleMenuItems(menu: Menu){
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menu.findItem(R.id.rename).isVisible = false
         menu.findItem(R.id.open_as)?.isVisible = false
         if (usf_open){
@@ -522,6 +522,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 }
             }
         }
+        return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
