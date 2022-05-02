@@ -1,0 +1,56 @@
+﻿<resources>
+    <string-array name="encryption_cipher">
+        <item>AES-GCM</item>
+        <item>XChaCha20-Poly1305</item>
+        <item>@string/auto</item>
+    </string-array>
+
+    <string-array name="sort_orders_entries">
+        <item>اسم</item>
+        <item>حجم</item>
+        <item>تاريخ</item>
+        <item>اسم (وصف)</item>
+        <item>حجم (وصف)</item>
+        <item>تاريخ (وصف)</item>
+    </string-array>
+
+    <string-array name="themes_entries">
+        <item>داكن أخضر</item>
+        <item>أسود أخضر</item>
+        <item>داكن أحمر</item>
+        <item>أسود أحمر</item>
+        <item>داكن أزرق</item>
+        <item>أسود أزرق</item>
+        <item>داكن أصفر</item>
+        <item>أسود أصفر</item>
+        <item>داكن برتقالي</item>
+        <item>أسود برتقالي</item>
+        <item>داكن بنفسجي</item>
+        <item>أسود بنفسجي</item>
+    </string-array>
+
+    <!-- don't translate the following otherwise the app will crash -->
+    <string-array name="sort_orders_values">
+        <item>name</item>
+        <item>size</item>
+        <item>date</item>
+        <item>name_desc</item>
+        <item>size_desc</item>
+        <item>date_desc</item>
+    </string-array>
+
+    <string-array name="themes_values">
+        <item>dark_green</item>
+        <item>black_green</item>
+        <item>dark_red</item>
+        <item>black_red</item>
+        <item>dark_blue</item>
+        <item>black_blue</item>
+        <item>dark_yellow</item>
+        <item>black_yellow</item>
+        <item>dark_orange</item>
+        <item>black_orange</item>
+        <item>dark_purple</item>
+        <item>black_purple</item>
+    </string-array>
+</resources>
