@@ -5,7 +5,7 @@
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSurface">@color/dialogDarkBackground</item>
         <item name="android:statusBarColor">@color/primary</item>
-        <item name="infoBarBackgroundColor">#111111</item>
+        <item name="infoBarBackgroundColor">#181818</item>
         <item name="buttonBackgroundColor">#5B5A5C</item>
         <item name="buttonStyle">@style/DarkButton</item>
     </style>
