@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import androidx.core.view.WindowInsetsCompat
@@ -45,17 +46,36 @@ abstract class FileViewerActivity: BaseActivity() {
         viewFile()
     }
 
+    open fun showPartialSystemUi() {
+        if (legacyMod) {
+            @Suppress("Deprecation")
+            this.window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LOW_PROFILE or
+                        View.SYSTEM_UI_FLAG_FULLSCREEN or
+                        View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        } else {
+            windowInsetsController.show(WindowInsetsCompat.Type.navigationBars())
+        }
+    }
+
     open fun hideSystemUi() {
         if (legacyMod) {
             @Suppress("Deprecation")
-            window.decorView.systemUiVisibility =
+            this.window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
         } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
             windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+            }
         }
     }
 

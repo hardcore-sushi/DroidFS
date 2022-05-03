@@ -25,124 +25,132 @@
         android:layout_height="0dp"
         android:background="@color/exo_black_opacity_60"/>
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:fitsSystemWindows="true">
 
-        <FrameLayout
-            android:id="@+id/center_controls_external"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal">
-
-            <include layout="@layout/exo_center_controls"/>
-
-        </FrameLayout>
-
-        <FrameLayout android:id="@id/exo_bottom_bar"
+        <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="@dimen/exo_styled_bottom_bar_height"
-            android:background="@color/exo_bottom_bar_background"
-            android:layoutDirection="ltr">
-
-            <LinearLayout android:id="@id/exo_time"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:paddingStart="@dimen/exo_styled_bottom_bar_time_padding"
-                android:paddingEnd="@dimen/exo_styled_bottom_bar_time_padding"
-                android:paddingLeft="@dimen/exo_styled_bottom_bar_time_padding"
-                android:paddingRight="@dimen/exo_styled_bottom_bar_time_padding"
-                android:layout_gravity="center_vertical|start"
-                android:layoutDirection="ltr">
-
-                <TextView android:id="@id/exo_position"
-                    style="@style/ExoStyledControls.TimeText.Position"/>
-
-                <TextView
-                    style="@style/ExoStyledControls.TimeText.Separator"/>
-
-                <TextView android:id="@id/exo_duration"
-                    style="@style/ExoStyledControls.TimeText.Duration"/>
-
-            </LinearLayout>
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:orientation="vertical">
 
             <FrameLayout
-                android:id="@+id/center_controls_bar"
+                android:id="@+id/center_controls_external"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"/>
+                android:layout_gravity="bottom|center_horizontal">
 
-            <LinearLayout android:id="@id/exo_basic_controls"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
+                <include layout="@layout/exo_center_controls"/>
+
+            </FrameLayout>
+
+            <FrameLayout android:id="@id/exo_bottom_bar"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/exo_styled_bottom_bar_height"
+                android:background="@color/exo_bottom_bar_background"
                 android:layoutDirection="ltr">
 
-                <ImageButton android:id="@id/exo_vr"
-                    style="@style/ExoStyledControls.Button.Bottom.VR"/>
-
-                <ImageButton android:id="@id/exo_shuffle"
-                    style="@style/ExoStyledControls.Button.Bottom.Shuffle"/>
-
-                <ImageButton android:id="@id/exo_repeat_toggle"
-                    style="@style/ExoStyledControls.Button.Bottom.RepeatToggle"/>
-
-                <ImageButton android:id="@id/exo_subtitle"
-                    style="@style/ExoStyledControls.Button.Bottom.CC"/>
-
-                <ImageButton android:id="@id/exo_settings"
-                    style="@style/ExoStyledControls.Button.Bottom.Settings"/>
-
-                <ImageButton android:id="@id/exo_fullscreen"
-                    style="@style/ExoStyledControls.Button.Bottom.FullScreen"/>
-
-                <ImageButton android:id="@id/exo_overflow_show"
-                    style="@style/ExoStyledControls.Button.Bottom.OverflowShow"/>
-
-            </LinearLayout>
-
-            <HorizontalScrollView android:id="@id/exo_extra_controls_scroll_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical|end"
-                android:visibility="invisible">
-
-                <LinearLayout android:id="@id/exo_extra_controls"
+                <LinearLayout android:id="@id/exo_time"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:paddingStart="@dimen/exo_styled_bottom_bar_time_padding"
+                    android:paddingEnd="@dimen/exo_styled_bottom_bar_time_padding"
+                    android:paddingLeft="@dimen/exo_styled_bottom_bar_time_padding"
+                    android:paddingRight="@dimen/exo_styled_bottom_bar_time_padding"
+                    android:layout_gravity="center_vertical|start"
                     android:layoutDirection="ltr">
 
-                    <ImageButton android:id="@id/exo_overflow_hide"
-                        style="@style/ExoStyledControls.Button.Bottom.OverflowHide"/>
+                    <TextView android:id="@id/exo_position"
+                        style="@style/ExoStyledControls.TimeText.Position"/>
+
+                    <TextView
+                        style="@style/ExoStyledControls.TimeText.Separator"/>
+
+                    <TextView android:id="@id/exo_duration"
+                        style="@style/ExoStyledControls.TimeText.Duration"/>
 
                 </LinearLayout>
 
-            </HorizontalScrollView>
+                <FrameLayout
+                    android:id="@+id/center_controls_bar"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"/>
 
-        </FrameLayout>
+                <LinearLayout android:id="@id/exo_basic_controls"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:layoutDirection="ltr">
 
-    </LinearLayout>
+                    <ImageButton android:id="@id/exo_vr"
+                        style="@style/ExoStyledControls.Button.Bottom.VR"/>
 
-    <View android:id="@id/exo_progress_placeholder"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/exo_styled_progress_layout_height"
-        android:layout_gravity="bottom"
-        android:layout_marginBottom="@dimen/exo_styled_progress_margin_bottom"/>
+                    <ImageButton android:id="@id/exo_shuffle"
+                        style="@style/ExoStyledControls.Button.Bottom.Shuffle"/>
 
-    <LinearLayout android:id="@id/exo_minimal_controls"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_marginBottom="@dimen/exo_styled_minimal_controls_margin_bottom"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layoutDirection="ltr">
+                    <ImageButton android:id="@id/exo_repeat_toggle"
+                        style="@style/ExoStyledControls.Button.Bottom.RepeatToggle"/>
 
-        <ImageButton android:id="@id/exo_minimal_fullscreen"
-            style="@style/ExoStyledControls.Button.Bottom.FullScreen"/>
+                    <ImageButton android:id="@id/exo_subtitle"
+                        style="@style/ExoStyledControls.Button.Bottom.CC"/>
 
-    </LinearLayout>
+                    <ImageButton android:id="@id/exo_settings"
+                        style="@style/ExoStyledControls.Button.Bottom.Settings"/>
+
+                    <ImageButton android:id="@id/exo_fullscreen"
+                        style="@style/ExoStyledControls.Button.Bottom.FullScreen"/>
+
+                    <ImageButton android:id="@id/exo_overflow_show"
+                        style="@style/ExoStyledControls.Button.Bottom.OverflowShow"/>
+
+                </LinearLayout>
+
+                <HorizontalScrollView android:id="@id/exo_extra_controls_scroll_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical|end"
+                    android:visibility="invisible">
+
+                    <LinearLayout android:id="@id/exo_extra_controls"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layoutDirection="ltr">
+
+                        <ImageButton android:id="@id/exo_overflow_hide"
+                            style="@style/ExoStyledControls.Button.Bottom.OverflowHide"/>
+
+                    </LinearLayout>
+
+                </HorizontalScrollView>
+
+            </FrameLayout>
+
+        </LinearLayout>
+
+        <View android:id="@id/exo_progress_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/exo_styled_progress_layout_height"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="@dimen/exo_styled_progress_margin_bottom"/>
+
+        <LinearLayout android:id="@id/exo_minimal_controls"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="@dimen/exo_styled_minimal_controls_margin_bottom"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layoutDirection="ltr">
+
+            <ImageButton android:id="@id/exo_minimal_fullscreen"
+                style="@style/ExoStyledControls.Button.Bottom.FullScreen"/>
+
+        </LinearLayout>
+    </FrameLayout>
 
 </merge>
