@@ -71,9 +71,9 @@
     <string name="explorer">مستكشف</string>
     <string name="settings_title_sort_order">تصنيف الترتيب الإفتراضي</string>
     <string name="usf_decrypt">السماح بتصدير / فك تشفير الملفات</string>
-    <string name="usf_share">السماح بمشاركة الملفات عبر قائمة مشاركة</string>
+    <string name="usf_share">السماح بمشاركة الملفات عبر قائمة المشاركة</string>
     <string name="usf_open">السماح بفتح الملفات مع التطبيقات الأخرى</string>
-    <string name="usf_screenshot">السماح بلقطات الشاشة</string>
+    <string name="usf_screenshot">السماح بلقطة شاشة</string>
     <string name="usf_fingerprint">السماح بحفظ تجزئة كلمة المرور باستخدام بصمة الإصبع</string>
     <string name="usf_volume_management">إدارة مجلد التشفير</string>
     <string name="usf_keep_open">إبقاء مجلد التشفير مفتوحاً عند الخروج من التطبيق</string>
@@ -167,8 +167,8 @@
     <string name="close_volume">إغلاق المجلد المشفر</string>
     <string name="sort_by">تصنيف حسب</string>
     <string name="cut">قص</string>
-    <string name="map_folders">معانية المجلدات</string>
-    <string name="map_folders_summary">معانية المجلدات لحساب أحجامها (يجب تعطيل هذا عند فتحك للمجلدات كبيرة)</string>
+    <string name="map_folders">معاينة المجلدات</string>
+    <string name="map_folders_summary">معاينة المجلدات لحساب أحجامها (يجب تعطيل هذا عند فتحك للمجلدات كبيرة)</string>
     <string name="camera_optimization">تحسينات الكاميرا</string>
     <string name="maximize_quality">دقة أعلى</string>
     <string name="minimize_latency">أداء أفضل</string>
@@ -178,7 +178,7 @@
     <string name="theme">سمة</string>
     <string name="theme_summary">تخصيص سمة التطبيق</string>
     <string name="thumbnails">صور مصغرة</string>
-    <string name="thumbnails_summary">عرض الصور المصغرة للصور ومقاطع الفيديو</string>
+    <string name="thumbnails_summary">عرض صور مصغرة للصور ومقاطع الفيديو</string>
     <string name="seek_seconds_forward">+%d ثواني</string>
     <string name="seek_seconds_backward">-%d ثواني</string>
     <string name="add_volume">أضف مجلد مشفر</string>
@@ -194,7 +194,7 @@
     <string name="delete_hidden_volume_question">%s مخفي ، هل تريد فقط نسيان مسار المجلد أو حذف كل محتوياته أيضًا?</string>
     <string name="forget_only">نسيان المجلد بدون حذفه</string>
     <string name="delete_volume">حذف المجلد المشفر</string>
-    <string name="hidden_volume_description">قم بتخزين المجلد المشفر في وحدة التخزين DroidFS الداخلية</string>
+    <string name="hidden_volume_description">قم بتخزين المجلد المشفر في وحدة تخزين DroidFS الداخلية</string>
     <string name="error_is_file">خطأ: الملف موجود بالفعل</string>
     <string name="volume_path_label">حدد المسار الخاص بالمجلد المشفر:</string>
     <string name="volume_name_label">أدخل اسم المجلد المشفر:</string>
@@ -226,7 +226,7 @@
     <string name="copy_volume_notification">يتم نسخ المجلد المشفر…</string>
     <string name="hidden_volume_already_exists">هنالك مجلد مشفر مخفي بنفس الأسم.</string>
     <string name="pdf_document">مستند PDF</string>
-    <string name="thumbnail_max_size">الحجم الأفصى للصور المصغرة</string>
+    <string name="thumbnail_max_size">الحجم الأقصى للصور المصغرة</string>
     <string name="thumbnail_max_size_summary">الحجم الأقصى لتحميل صورة مصغرة لملف ما. القيمة الحالية: %s</string>
     <string name="size_hint">الحجم (بل KB)</string>
     <string name="invalid_number">رقم غير صالح</string>
