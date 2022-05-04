@@ -46,6 +46,7 @@ class ImageViewer: FileViewerActivity() {
     private val hideUI = Runnable {
         binding.actionButtons.visibility = View.GONE
         binding.topBar.visibility = View.GONE
+        hideSystemUi()
     }
     private val slideshowNext = Runnable {
         if (slideshowActive){
@@ -63,6 +64,7 @@ class ImageViewer: FileViewerActivity() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
+        showPartialSystemUi()
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
@@ -70,6 +72,7 @@ class ImageViewer: FileViewerActivity() {
                 if (binding.actionButtons.visibility == View.GONE) {
                     binding.actionButtons.visibility = View.VISIBLE
                     binding.topBar.visibility = View.VISIBLE
+                    showPartialSystemUi()
                     handler.postDelayed(hideUI, hideDelay)
                 } else {
                     hideUI.run()

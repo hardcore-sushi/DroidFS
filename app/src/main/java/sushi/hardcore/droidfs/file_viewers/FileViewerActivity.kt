@@ -42,7 +42,6 @@ abstract class FileViewerActivity: BaseActivity() {
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
         }
-        hideSystemUi()
         viewFile()
     }
 
@@ -50,13 +49,15 @@ abstract class FileViewerActivity: BaseActivity() {
         if (legacyMod) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
         } else {
+            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
             windowInsetsController.show(WindowInsetsCompat.Type.navigationBars())
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+            }
         }
     }
 
