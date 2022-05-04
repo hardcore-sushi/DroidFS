@@ -49,7 +49,7 @@ abstract class FileViewerActivity: BaseActivity() {
     open fun showPartialSystemUi() {
         if (legacyMod) {
             @Suppress("Deprecation")
-            this.window.decorView.systemUiVisibility =
+            window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
@@ -63,7 +63,7 @@ abstract class FileViewerActivity: BaseActivity() {
     open fun hideSystemUi() {
         if (legacyMod) {
             @Suppress("Deprecation")
-            this.window.decorView.systemUiVisibility =
+            window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
                 View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
@@ -82,13 +82,6 @@ abstract class FileViewerActivity: BaseActivity() {
 
     abstract fun getFileType(): String
     abstract fun viewFile()
-
-    override fun onUserInteraction() {
-        super.onUserInteraction()
-        if (windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
-            hideSystemUi()
-        }
-    }
 
     protected fun loadWholeFile(path: String, fileSize: Long? = null): ByteArray? {
         val result = gocryptfsVolume.loadWholeFile(path, size = fileSize)
