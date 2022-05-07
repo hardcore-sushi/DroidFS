@@ -26,6 +26,7 @@
         android:layout_gravity="center_horizontal"
         android:background="@android:color/transparent"
         android:gravity="center"
+        android:layoutDirection="ltr"
         android:padding="@dimen/exo_styled_controls_padding"
         android:layout_marginBottom="-40dp"
         android:clipToPadding="false">

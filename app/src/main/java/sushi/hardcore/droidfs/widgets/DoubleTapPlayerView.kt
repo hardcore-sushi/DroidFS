@@ -88,7 +88,7 @@ class DoubleTapPlayerView @JvmOverloads constructor(
 
     init {
         if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            updateButtonSize(Configuration.ORIENTATION_LANDSCAPE)
+            handleOrientationChange(Configuration.ORIENTATION_LANDSCAPE)
         }
     }
 
@@ -151,16 +151,19 @@ class DoubleTapPlayerView @JvmOverloads constructor(
         }
     }
 
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
+    private fun handleOrientationChange(orientation: Int) {
         val centerControls = findViewById<LinearLayout>(R.id.exo_center_controls)
         (centerControls.parent as ViewGroup).removeView(centerControls)
-        findViewById<FrameLayout>(
-            if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE)
-                R.id.center_controls_bar
-            else
-                R.id.center_controls_external
-        ).addView(centerControls)
-        updateButtonSize(newConfig.orientation)
+        findViewById<FrameLayout>(if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            R.id.center_controls_bar
+        } else {
+            R.id.center_controls_external
+        }).addView(centerControls)
+        updateButtonSize(orientation)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        handleOrientationChange(newConfig.orientation)
     }
 }
