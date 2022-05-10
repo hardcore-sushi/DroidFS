@@ -158,8 +158,6 @@
     <string name="folders_first_summary">Mostrar pastas no início da lista</string>
     <string name="auto_fit_title">Girar automaticamente a tela ao reproduzir vídeo</string>
     <string name="auto_fit_summary">Girar automaticamente a tela para encaixar em dimensões de vídeo</string>
-    <string name="legacy_mod_title">Modo legado de tela completa</string>
-    <string name="legacy_mod_summary">Tente isto se windowInsetsController não funciona corretamente no seu dispositivo (geralmente não é necessário)</string>
     <string name="open_tree_failed">Não foi possível encontrar gerenciador de arquivos. Instale o app e tente novamente.</string>
     <string name="close_volume">Fechar o volume</string>
     <string name="sort_by">Ordenar por</string>

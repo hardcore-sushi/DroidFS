@@ -26,9 +26,7 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
-    private val legacyMod by lazy {
-        sharedPrefs.getBoolean("legacyMod", false)
-    }
+    private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +44,7 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     open fun showPartialSystemUi() {
-        if (legacyMod) {
+        if (isLegacyFullscreen) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_FULLSCREEN or
@@ -62,7 +60,7 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     open fun hideSystemUi() {
-        if (legacyMod) {
+        if (isLegacyFullscreen) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
