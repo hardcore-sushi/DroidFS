@@ -16,7 +16,7 @@
     <string name="cancel">إلغاء</string>
     <string name="enter_folder_name">اسم المجلد:</string>
     <string name="error">خطأ</string>
-    <string name="error_filename_empty">الرجاء إدخال اسم</string>
+    <string name="error_filename_empty">رجاءاً أدخل اسماً</string>
     <string name="error_mkdir">فشل إنشاء المجلد.</string>
     <string name="success_import">نجاح الإستيراد !</string>
     <string name="success_import_msg">لقد تم إستيراد الملفات المحددة بنجاح.</string>
@@ -34,8 +34,8 @@
     <string name="storage_perm_denied_msg">إن DroidFS لا يمكنه العمل بدون صلاحبات التخزين.</string>
     <string name="get_size_failed">لقد فشلت عملية استرداد حجم الملف.</string>
     <string name="parent_folder">المجلد الأصلي</string>
-    <string name="enter_volume_path">الرجاء إدخال مسار المجلد المشفر</string>
-    <string name="enter_volume_name">الرجاء إدخال اسم المجلد المشفر</string>
+    <string name="enter_volume_path">رجاءاً أدخل مسار المجلد المشفر</string>
+    <string name="enter_volume_name">رجاءاً أدخل اسم المجلد المشفر</string>
     <string name="external_open">فتح بتطبيق خارجي</string>
     <string name="single_delete_confirm">هل أنت متأكد من حذف %s ?</string>
     <string name="multiple_delete_confirm">هل أنت متأكد من حذف هذه %s العناصر ?</string>
@@ -95,7 +95,7 @@
     <string name="save">حفظ</string>
     <string name="discard">تجاهل</string>
     <string name="word_wrap">التفاف الكلمات</string>
-    <string name="outofmemoryerror_msg">OutOfMemoryError: هذا الملف كبير جدًا بحيث لا يمكن تحميله في الذاكرة.</string>
+    <string name="outofmemoryerror_msg">خطأ عدم وجود ذاكرة كافية: هذا الملف كبير جدًا بحيث لا يمكن تحميله في الذاكرة.</string>
     <string name="new_file">إنشاء ملف جديد</string>
     <string name="enter_file_name">اسم الملف:</string>
     <string name="file_creation_failed">فشلت عملية إنشاء الملف.</string>
