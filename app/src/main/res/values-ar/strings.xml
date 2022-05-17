@@ -161,8 +161,6 @@
     <string name="folders_first_summary">إظهار المجلدات في بداية القائمة</string>
     <string name="auto_fit_title">التدوير التلقائي لشاشة مشغل الفيديو</string>
     <string name="auto_fit_summary">تدوير الشاشة تلقائيًا لتناسب أبعاد الفيديو</string>
-    <string name="legacy_mod_title">وضع ملء الشاشة القديم</string>
-    <string name="legacy_mod_summary">فعل هذا الخيار كان windowInsetsController لا يعمل بشكل صحيح على جهازك (عادة لا تكون هناك حاجة)</string>
     <string name="open_tree_failed">لم يتم العثور على مستكشف للملفات. رجاء ثبت واحد ثم أعد المحاولة.</string>
     <string name="close_volume">إغلاق المجلد المشفر</string>
     <string name="sort_by">تصنيف حسب</string>
