@@ -29,8 +29,7 @@
         android:id="@+id/top_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginStart="20dp">
+        android:layout_alignParentTop="true">
 
         <TextView
             android:id="@+id/text_file_name"
