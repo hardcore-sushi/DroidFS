@@ -26,7 +26,7 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
-    private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q
+    private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.R
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
