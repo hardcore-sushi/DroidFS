@@ -282,7 +282,19 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1list_1dir(JNIEnv *env, jobje
             type = 1; //regular file
         }
         jstring jname = (*env)->NewStringUTF(env, name);
-        jobject explorerElement = (*env)->CallStaticObjectMethod(env, classExplorerElement, explorerElement_new, jname, type, (long long)attrs.r0, attrs.r1, jplain_dir);(*env)->CallBooleanMethod(env, element_list, java_ArrayList_add, explorerElement);
+        jobject explorerElement = (*env)->CallStaticObjectMethod(
+                env,
+                classExplorerElement,
+                explorerElement_new,
+                jname,
+                type,
+                (long long) attrs.r0,
+                attrs.r1,
+                jplain_dir
+        );
+        (*env)->CallBooleanMethod(env, element_list, java_ArrayList_add, explorerElement);
+        (*env)->DeleteLocalRef(env, explorerElement);
+        (*env)->DeleteLocalRef(env, jname);
         c += name_len+1;
     }
 
