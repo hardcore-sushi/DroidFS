@@ -36,6 +36,9 @@ class VideoPlayer: MediaPlayer() {
                     ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                 }
         }
+
+        setTopBarLayoutSize(getCurrentScreenOrientation())
+
         super.viewFile()
     }
 
@@ -63,32 +66,51 @@ class VideoPlayer: MediaPlayer() {
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)
-        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+
+        setTopBarLayoutSize(newConfig.orientation)
+    }
+
+    private fun setTopBarLayoutSize(screenOrientation: Int) {
+        val statusBarHeight = getStatusBarHeight()
+        if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
             val navigationBarHeight = getNavigationBarHeight()
-            binding.topBar.layoutParams = createTopBarLayoutParams(navigationBarHeight, navigationBarHeight)
+            binding.topBar.layoutParams = createTopBarLayoutParams(statusBarHeight, navigationBarHeight, navigationBarHeight)
         } else {
-            binding.topBar.layoutParams = createTopBarLayoutParams(20, 0)
+            binding.topBar.layoutParams = createTopBarLayoutParams(statusBarHeight, 20, 20)
         }
     }
 
     private fun getNavigationBarHeight() : Int {
+        return getIdentifierDimensionPixelSize("navigation_bar_height")
+    }
+
+    private fun getStatusBarHeight() : Int {
+        return getIdentifierDimensionPixelSize("status_bar_height")
+    }
+
+    private fun getIdentifierDimensionPixelSize(name: String) : Int {
         return resources.getDimensionPixelSize(
             resources.getIdentifier(
-                "navigation_bar_height",
+                name,
                 "dimen",
                 "android"
             )
         )
     }
 
-    private fun createTopBarLayoutParams(marginStart: Int, marginEnd: Int) : RelativeLayout.LayoutParams {
+    private fun createTopBarLayoutParams(topMargin: Int, leftMargin: Int, rightMargin: Int) : RelativeLayout.LayoutParams {
         val layoutParams = RelativeLayout.LayoutParams(
             RelativeLayout.LayoutParams.MATCH_PARENT,
             RelativeLayout.LayoutParams.WRAP_CONTENT
         )
-        layoutParams.marginStart = marginStart
-        layoutParams.marginEnd = marginEnd
+        layoutParams.topMargin = topMargin
+        layoutParams.leftMargin = leftMargin
+        layoutParams.rightMargin = rightMargin
 
         return layoutParams
+    }
+
+    private fun getCurrentScreenOrientation() : Int {
+        return resources.configuration.orientation
     }
 }
