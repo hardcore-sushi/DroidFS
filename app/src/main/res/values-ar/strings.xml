@@ -5,8 +5,8 @@
     <string name="create">إنشاء</string>
     <string name="change_password">تغيير كلمة المرور</string>
     <string name="password">كلمة المرور</string>
-    <string name="import_files">إستيراد/تشفير ملفات</string>
-    <string name="import_folder">إستيراد/تشفير مجلدات</string>
+    <string name="import_files">استيراد/تشفير ملفات</string>
+    <string name="import_folder">استيراد/تشفير مجلدات</string>
     <string name="discovering_files">جار اكتشاف الملفات…</string>
     <string name="mkdir">إنشاء مجلد</string>
     <string name="dir_empty">مجلد فارغ</string>
@@ -18,8 +18,8 @@
     <string name="error">خطأ</string>
     <string name="error_filename_empty">رجاءاً أدخل اسماً</string>
     <string name="error_mkdir">فشل إنشاء المجلد.</string>
-    <string name="success_import">نجاح الإستيراد !</string>
-    <string name="success_import_msg">لقد تم إستيراد الملفات المحددة بنجاح.</string>
+    <string name="success_import">نجاح الاستيراد !</string>
+    <string name="success_import_msg">لقد تم استيراد الملفات المحددة بنجاح.</string>
     <string name="import_failed">إن استيراد %s فشل.</string>
     <string name="export_failed">إن تصدير %s فشل.</string>
     <string name="success_export">نجاح التصدير !</string>
@@ -41,7 +41,7 @@
     <string name="multiple_delete_confirm">هل أنت متأكد من حذف هذه %s العناصر ?</string>
     <string name="location">موقع: /%s</string>
     <string name="total_size">الحجم الكلي: %s</string>
-    <string name="import_from_other_volume">إستيراد من مجلد مشفر آخر</string>
+    <string name="import_from_other_volume">استيراد من مجلد مشفر آخر</string>
     <string name="read_file_failed">لقد فشل فتح هذا الملف.</string>
     <string name="volume">مجلد مشفر: %s</string>
     <string name="yes">نعم</string>
@@ -153,7 +153,7 @@
     <string name="choose_resolution">اختر دقة</string>
     <string name="file_operations">عمليات الملف</string>
     <string name="file_op_copy_msg">يتم نسخ الملفات…</string>
-    <string name="file_op_import_msg">يتم إستيراد الملفات…</string>
+    <string name="file_op_import_msg">يتم استيراد الملفات…</string>
     <string name="file_op_export_msg">يتم تصدير الملفات …</string>
     <string name="file_op_move_msg">يتم نقل الملفات…</string>
     <string name="file_op_wiping_msg">يتم مسح الملفات…</string>
