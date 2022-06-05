@@ -18,4 +18,7 @@
     <color name="playerDoubleTapBackground">#20EEEEEE</color>
     <color name="dialogDarkBackground">#333333</color>
     <color name="exo_black_opacity_60" tools:override="true">#38000000</color>
+    <color name="white_50">#80FFFFFF</color>
+    <color name="white_20">#33FFFFFF</color>
+    <color name="transparent">#00000000</color>
 </resources>

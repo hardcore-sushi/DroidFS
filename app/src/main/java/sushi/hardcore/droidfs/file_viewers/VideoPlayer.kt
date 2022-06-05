@@ -3,8 +3,10 @@ package sushi.hardcore.droidfs.file_viewers
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.view.View
-import android.widget.RelativeLayout
+import android.widget.ImageButton
+import android.widget.TextView
 import com.google.android.exoplayer2.ExoPlayer
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
@@ -18,9 +20,8 @@ class VideoPlayer: MediaPlayer() {
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
-        binding.videoPlayer.setControllerVisibilityListener { visibility ->
-            binding.topBar.visibility = visibility
 
+        binding.videoPlayer.setControllerVisibilityListener { visibility ->
             if (visibility == View.VISIBLE) {
                 showPartialSystemUi()
             }
@@ -28,7 +29,9 @@ class VideoPlayer: MediaPlayer() {
                 hideSystemUi()
             }
         }
-        binding.rotateButton.setOnClickListener {
+
+        val rotateButton = findViewById<ImageButton>(R.id.rotate_button)
+        rotateButton.setOnClickListener {
             requestedOrientation =
                 if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
@@ -36,8 +39,6 @@ class VideoPlayer: MediaPlayer() {
                     ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
                 }
         }
-
-        setTopBarLayoutSize(getCurrentScreenOrientation())
 
         super.viewFile()
     }
@@ -47,7 +48,8 @@ class VideoPlayer: MediaPlayer() {
     }
 
     override fun onNewFileName(fileName: String) {
-        binding.textFileName.text = fileName
+        val textFileName = findViewById<TextView>(R.id.text_file_name)
+        textFileName.text = fileName
     }
 
     override fun getFileType(): String {
@@ -62,55 +64,5 @@ class VideoPlayer: MediaPlayer() {
                 ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
             firstPlay = false
         }
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-
-        setTopBarLayoutSize(newConfig.orientation)
-    }
-
-    private fun setTopBarLayoutSize(screenOrientation: Int) {
-        val statusBarHeight = getStatusBarHeight()
-        if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-            val navigationBarHeight = getNavigationBarHeight()
-            binding.topBar.layoutParams = createTopBarLayoutParams(statusBarHeight, navigationBarHeight, navigationBarHeight)
-        } else {
-            binding.topBar.layoutParams = createTopBarLayoutParams(statusBarHeight, 20, 20)
-        }
-    }
-
-    private fun getNavigationBarHeight() : Int {
-        return getIdentifierDimensionPixelSize("navigation_bar_height")
-    }
-
-    private fun getStatusBarHeight() : Int {
-        return getIdentifierDimensionPixelSize("status_bar_height")
-    }
-
-    private fun getIdentifierDimensionPixelSize(name: String) : Int {
-        return resources.getDimensionPixelSize(
-            resources.getIdentifier(
-                name,
-                "dimen",
-                "android"
-            )
-        )
-    }
-
-    private fun createTopBarLayoutParams(topMargin: Int, leftMargin: Int, rightMargin: Int) : RelativeLayout.LayoutParams {
-        val layoutParams = RelativeLayout.LayoutParams(
-            RelativeLayout.LayoutParams.MATCH_PARENT,
-            RelativeLayout.LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.topMargin = topMargin
-        layoutParams.leftMargin = leftMargin
-        layoutParams.rightMargin = rightMargin
-
-        return layoutParams
-    }
-
-    private fun getCurrentScreenOrientation() : Int {
-        return resources.configuration.orientation
     }
 }
