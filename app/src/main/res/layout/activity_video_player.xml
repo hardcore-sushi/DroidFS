@@ -15,8 +15,7 @@
             android:layout_height="match_parent"
             app:show_shuffle_button="true"
             app:show_buffering="always"
-            app:repeat_toggle_modes="all|one"
-            app:controller_layout_id="@layout/layout_exoplayer_control_views"/>
+            app:repeat_toggle_modes="all|one" />
 
         <sushi.hardcore.droidfs.widgets.DoubleTapOverlay
             android:id="@+id/double_tap_overlay"
