@@ -11,7 +11,6 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -19,6 +18,7 @@ import androidx.fragment.app.Fragment
 import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.databinding.DialogSdcardErrorBinding
 import sushi.hardcore.droidfs.databinding.FragmentSelectPathBinding
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -158,7 +158,7 @@ class SelectPathFragment: Fragment() {
 
     private fun getCurrentVolumePath(): String {
         return if (binding.switchHiddenVolume.isChecked)
-            PathUtils.pathJoin(requireContext().filesDir.path, binding.editVolumeName.text.toString())
+            SavedVolume.getHiddenVolumeFullPath(requireContext().filesDir.path, binding.editVolumeName.text.toString())
         else
             binding.editVolumeName.text.toString()
     }
@@ -222,7 +222,8 @@ class SelectPathFragment: Fragment() {
                         (activity as AddVolumeActivity).createVolume(volumePath, isHidden)
                 }
                 Action.ADD -> {
-                    if (!GocryptfsVolume.isGocryptfsVolume(File(volumePath))) {
+                    val volumeType = EncryptedVolume.getVolumeType(volumePath)
+                    if (volumeType < 0) {
                         CustomAlertDialogBuilder(requireContext(), themeValue)
                             .setTitle(R.string.error)
                             .setMessage(R.string.error_not_a_volume)
@@ -232,7 +233,7 @@ class SelectPathFragment: Fragment() {
                         val dialog = CustomAlertDialogBuilder(requireContext(), themeValue)
                             .setTitle(R.string.warning)
                             .setCancelable(false)
-                            .setPositiveButton(R.string.ok) { _, _ -> addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden) }
+                            .setPositiveButton(R.string.ok) { _, _ -> addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType) }
                         if (PathUtils.isPathOnExternalStorage(volumePath, requireContext()))
                             dialog.setView(
                                 DialogSdcardErrorBinding.inflate(layoutInflater).apply {
@@ -244,7 +245,7 @@ class SelectPathFragment: Fragment() {
                             dialog.setMessage(R.string.add_cant_write_warning)
                         dialog.show()
                     } else {
-                        addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden)
+                        addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType)
                     }
                 }
             }
@@ -268,8 +269,8 @@ class SelectPathFragment: Fragment() {
         dialog.show()
     }
 
-    private fun addVolume(volumeName: String, isHidden: Boolean) {
-        volumeDatabase.saveVolume(Volume(volumeName, isHidden))
+    private fun addVolume(volumeName: String, isHidden: Boolean, volumeType: Byte) {
+        volumeDatabase.saveVolume(SavedVolume(volumeName, isHidden, volumeType))
         (activity as AddVolumeActivity).onVolumeAdded(false)
     }
 }

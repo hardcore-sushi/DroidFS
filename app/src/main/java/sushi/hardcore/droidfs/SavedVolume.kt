@@ -5,11 +5,12 @@ import android.os.Parcelable
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 
-class Volume(val name: String, val isHidden: Boolean = false, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
+class SavedVolume(val name: String, val isHidden: Boolean = false, val type: Byte, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
         parcel.readByte() != 0.toByte(),
+        parcel.readByte(),
         parcel.createByteArray(),
         parcel.createByteArray()
     )
@@ -20,7 +21,7 @@ class Volume(val name: String, val isHidden: Boolean = false, var encryptedHash:
 
     fun getFullPath(filesDir: String): String {
         return if (isHidden)
-            PathUtils.pathJoin(filesDir, name)
+            getHiddenVolumeFullPath(filesDir, name)
         else
             name
     }
@@ -37,18 +38,23 @@ class Volume(val name: String, val isHidden: Boolean = false, var encryptedHash:
         with (dest) {
             writeString(name)
             writeByte(if (isHidden) 1 else 0)
+            writeByte(type)
             writeByteArray(encryptedHash)
             writeByteArray(iv)
         }
     }
 
-    companion object CREATOR : Parcelable.Creator<Volume> {
-        override fun createFromParcel(parcel: Parcel): Volume {
-            return Volume(parcel)
+    companion object {
+        const val VOLUMES_DIRECTORY = "volumes"
+
+        @JvmField
+        val CREATOR = object : Parcelable.Creator<SavedVolume> {
+            override fun createFromParcel(parcel: Parcel) = SavedVolume(parcel)
+            override fun newArray(size: Int) = arrayOfNulls<SavedVolume>(size)
         }
 
-        override fun newArray(size: Int): Array<Volume?> {
-            return arrayOfNulls(size)
+        fun getHiddenVolumeFullPath(filesDir: String, name: String): String {
+            return PathUtils.pathJoin(filesDir, VOLUMES_DIRECTORY, name)
         }
     }
 }

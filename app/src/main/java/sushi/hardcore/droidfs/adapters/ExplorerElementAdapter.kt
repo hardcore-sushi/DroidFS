@@ -17,16 +17,17 @@ import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.transition.Transition
 import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import java.text.DateFormat
 import java.util.*
 
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
-    val gocryptfsVolume: GocryptfsVolume?,
+    val encryptedVolume: EncryptedVolume?,
     private val listener: Listener,
     val thumbnailMaxSize: Long,
 ) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
@@ -42,7 +43,7 @@ class ExplorerElementAdapter(
     private var thumbnailsCache: LruCache<String, Bitmap>? = null
 
     init {
-        if (gocryptfsVolume != null) {
+        if (encryptedVolume != null) {
             thumbnailsCache = LruCache((Runtime.getRuntime().maxMemory() / 1024 / 8).toInt())
         }
     }
@@ -105,9 +106,9 @@ class ExplorerElementAdapter(
     open class RegularElementViewHolder(itemView: View) : ExplorerElementViewHolder(itemView) {
         open fun bind(explorerElement: ExplorerElement, position: Int, isSelected: Boolean) {
             super.bind(explorerElement, position)
-            textElementSize.text = PathUtils.formatSize(explorerElement.size)
+            textElementSize.text = PathUtils.formatSize(explorerElement.stat.size)
             (bindingAdapter as ExplorerElementAdapter?)?.let {
-                textElementMtime.text = it.dateFormat.format(explorerElement.mTime)
+                textElementMtime.text = it.dateFormat.format(explorerElement.stat.mTime)
             }
         }
     }
@@ -118,7 +119,7 @@ class ExplorerElementAdapter(
         private val scope = CoroutineScope(Dispatchers.IO)
 
         private fun loadThumbnail(fullPath: String, adapter: ExplorerElementAdapter) {
-            adapter.gocryptfsVolume?.let { volume ->
+            adapter.encryptedVolume?.let { volume ->
                 job = scope.launch {
                     volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
                         if (isActive) {
@@ -220,9 +221,9 @@ class ExplorerElementAdapter(
             }, parent, false
         )
         return when (viewType) {
-            ExplorerElement.REGULAR_FILE_TYPE -> FileViewHolder(view)
-            ExplorerElement.DIRECTORY_TYPE -> DirectoryViewHolder(view)
-            ExplorerElement.PARENT_FOLDER_TYPE -> ParentFolderViewHolder(view)
+            Stat.S_IFREG -> FileViewHolder(view)
+            Stat.S_IFDIR -> DirectoryViewHolder(view)
+            Stat.PARENT_FOLDER_TYPE -> ParentFolderViewHolder(view)
             else -> throw IllegalArgumentException()
         }
     }
@@ -237,6 +238,6 @@ class ExplorerElementAdapter(
     }
 
     override fun getItemViewType(position: Int): Int {
-        return explorerElements[position].elementType.toInt()
+        return explorerElements[position].stat.type
     }
 }

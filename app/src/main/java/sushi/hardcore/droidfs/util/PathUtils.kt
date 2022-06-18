@@ -6,6 +6,7 @@ import android.net.Uri
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
@@ -19,16 +20,16 @@ object PathUtils {
     fun getParentPath(path: String): String {
         return if (path.endsWith("/")) {
             val a = path.substring(0, path.length - 2)
-            if (a.contains("/")) {
-                a.substring(0, a.lastIndexOf("/"))
+            if (a.count { it == '/' } == 1) {
+                "/"
             } else {
-                ""
+                a.substring(0, a.lastIndexOf("/"))
             }
         } else {
-            if (path.contains("/")) {
-                path.substring(0, path.lastIndexOf("/"))
+            if (path.count { it == '/' } == 1) {
+                "/"
             } else {
-                ""
+                path.substring(0, path.lastIndexOf("/"))
             }
         }
     }

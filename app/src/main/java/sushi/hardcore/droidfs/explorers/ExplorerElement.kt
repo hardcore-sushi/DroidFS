@@ -1,33 +1,31 @@
 package sushi.hardcore.droidfs.explorers
 
 import sushi.hardcore.droidfs.collation.getCollationKeyForFileName
+import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import java.text.Collator
-import java.util.*
 
-class ExplorerElement(val name: String, val elementType: Short, var size: Long = -1, mTime: Long = -1, val parentPath: String) {
-    val mTime = Date((mTime * 1000).toString().toLong())
+class ExplorerElement(val name: String, val stat: Stat, val parentPath: String) {
     val fullPath: String = PathUtils.pathJoin(parentPath, name)
     val collationKey = Collator.getInstance().getCollationKeyForFileName(fullPath)
 
     val isDirectory: Boolean
-        get() = elementType.toInt() == DIRECTORY_TYPE
-
-    val isParentFolder: Boolean
-        get() = elementType.toInt() == PARENT_FOLDER_TYPE
+        get() = stat.type == Stat.S_IFDIR
 
     val isRegularFile: Boolean
-        get() = elementType.toInt() == REGULAR_FILE_TYPE
+        get() = stat.type == Stat.S_IFREG
+
+    val isSymlink: Boolean
+        get() = stat.type == Stat.S_IFLNK
+
+    val isParentFolder: Boolean
+        get() = stat.type == Stat.PARENT_FOLDER_TYPE
 
     companion object {
-        const val DIRECTORY_TYPE = 0
-        const val PARENT_FOLDER_TYPE = -1
-        const val REGULAR_FILE_TYPE = 1
-
         @JvmStatic
         //this function is needed because I had some problems calling the constructor from JNI, probably due to arguments with default values
-        fun new(name: String, elementType: Short, size: Long, mTime: Long, parentPath: String): ExplorerElement {
-            return ExplorerElement(name, elementType, size, mTime, parentPath)
+        fun new(name: String, elementType: Int, size: Long, mTime: Long, parentPath: String): ExplorerElement {
+            return ExplorerElement(name, Stat(elementType, size, mTime*1000), parentPath)
         }
 
         private fun foldersFirst(a: ExplorerElement, b: ExplorerElement, default: () -> Int): Int {
@@ -61,12 +59,12 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
                 }
                 "size" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { (a.size - b.size).toInt() }
+                        doSort(a, b, foldersFirst) { (a.stat.size - b.stat.size).toInt() }
                     }
                 }
                 "date" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { a.mTime.compareTo(b.mTime) }
+                        doSort(a, b, foldersFirst) { a.stat.mTime.compareTo(b.stat.mTime) }
                     }
                 }
                 "name_desc" -> {
@@ -76,12 +74,12 @@ class ExplorerElement(val name: String, val elementType: Short, var size: Long =
                 }
                 "size_desc" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { (b.size - a.size).toInt() }
+                        doSort(a, b, foldersFirst) { (b.stat.size - a.stat.size).toInt() }
                     }
                 }
                 "date_desc" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { b.mTime.compareTo(a.mTime) }
+                        doSort(a, b, foldersFirst) { b.stat.mTime.compareTo(a.stat.mTime) }
                     }
                 }
             }

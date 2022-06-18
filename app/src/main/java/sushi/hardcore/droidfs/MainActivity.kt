@@ -30,10 +30,13 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivity
 import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.file_operations.FileOperationService
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
+import java.nio.CharBuffer
+import java.nio.charset.StandardCharsets
 import java.util.*
 
 class MainActivity : BaseActivity(), VolumeAdapter.Listener {
@@ -155,7 +158,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
     }
 
-    override fun onVolumeItemClick(volume: Volume, position: Int) {
+    override fun onVolumeItemClick(volume: SavedVolume, position: Int) {
         if (volumeAdapter.selectedItems.isEmpty())
             openVolume(volume, position)
         else
@@ -186,7 +189,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         invalidateOptionsMenu()
     }
 
-    private fun removeVolumes(volumes: List<Volume>, i: Int = 0, doDeleteVolumeContent: Boolean? = null) {
+    private fun removeVolumes(volumes: List<SavedVolume>, i: Int = 0, doDeleteVolumeContent: Boolean? = null) {
         if (i < volumes.size) {
             if (volumes[i].isHidden) {
                 if (doDeleteVolumeContent == null) {
@@ -306,7 +309,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                             DocumentFile.fromFile(File(volume.name)),
                             DocumentFile.fromFile(filesDir),
                         ) {
-                            Volume(volume.shortName, true, volume.encryptedHash, volume.iv)
+                            SavedVolume(volume.shortName, true, volume.type, volume.encryptedHash, volume.iv)
                         }
                     }
                 }
@@ -377,9 +380,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 dstRootDirectory.name?.let { name ->
                     val path = PathUtils.getFullPathFromTreeUri(dstRootDirectory.uri, this)
                     if (path == null) null
-                    else Volume(
+                    else SavedVolume(
                         PathUtils.pathJoin(path, name),
                         false,
+                        volume.type,
                         volume.encryptedHash,
                         volume.iv
                     )
@@ -388,7 +392,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
     }
 
-    private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> Volume?) {
+    private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> SavedVolume?) {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
             when {
@@ -415,7 +419,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
     }
 
-    private fun renameVolume(volume: Volume, position: Int) {
+    private fun renameVolume(volume: SavedVolume, position: Int) {
         with (EditTextDialog(this, R.string.new_volume_name) { newName ->
             val srcPath = File(volume.getFullPath(filesDir.path))
             val dstPath = File(srcPath.parent, newName).canonicalFile
@@ -452,7 +456,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
-    private fun openVolume(volume: Volume, position: Int) {
+    private fun openVolume(volume: SavedVolume, position: Int) {
         var askForPassword = true
         fingerprintProtector?.let { fingerprintProtector ->
             volume.encryptedHash?.let { encryptedHash ->
@@ -463,21 +467,21 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                             volumeAdapter.refresh()
                         }
                         override fun onPasswordHashDecrypted(hash: ByteArray) {
-                            object : LoadingTask<Int>(this@MainActivity, themeValue, R.string.loading_msg_open) {
-                                override suspend fun doTask(): Int {
-                                    val sessionId = GocryptfsVolume.init(volume.getFullPath(filesDir.path), null, hash, null)
+                            object : LoadingTask<EncryptedVolume?>(this@MainActivity, themeValue, R.string.loading_msg_open) {
+                                override suspend fun doTask(): EncryptedVolume? {
+                                    val encryptedVolume = EncryptedVolume.init(volume, filesDir.path, null, hash, null)
                                     Arrays.fill(hash, 0)
-                                    return sessionId
+                                    return encryptedVolume
                                 }
-                            }.startTask(lifecycleScope) { sessionId ->
-                                if (sessionId != -1) {
-                                    startExplorer(sessionId, volume.shortName)
-                                } else {
+                            }.startTask(lifecycleScope) { encryptedVolume ->
+                                if (encryptedVolume == null) {
                                     CustomAlertDialogBuilder(this@MainActivity, themeValue)
                                         .setTitle(R.string.open_volume_failed)
                                         .setMessage(R.string.open_failed_hash_msg)
                                         .setPositiveButton(R.string.ok, null)
                                         .show()
+                                } else {
+                                    startExplorer(encryptedVolume, volume.shortName)
                                 }
                             }
                         }
@@ -496,7 +500,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             askForPassword(volume, position)
     }
 
-    private fun onPasswordSubmitted(volume: Volume, position: Int, dialogBinding: DialogOpenVolumeBinding) {
+    private fun onPasswordSubmitted(volume: SavedVolume, position: Int, dialogBinding: DialogOpenVolumeBinding) {
         if (dialogBinding.checkboxDefaultOpen.isChecked xor (defaultVolumeName == volume.name)) {
             with (sharedPrefs.edit()) {
                 defaultVolumeName = if (dialogBinding.checkboxDefaultOpen.isChecked) {
@@ -515,12 +519,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         openVolumeWithPassword(
             volume,
             position,
-            password,
+            StandardCharsets.UTF_8.encode(CharBuffer.wrap(password)).array(),
             dialogBinding.checkboxSavePassword.isChecked,
         )
     }
 
-    private fun askForPassword(volume: Volume, position: Int, savePasswordHash: Boolean = false) {
+    private fun askForPassword(volume: SavedVolume, position: Int, savePasswordHash: Boolean = false) {
         val dialogBinding = DialogOpenVolumeBinding.inflate(layoutInflater)
         if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
@@ -550,20 +554,28 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         dialog.show()
     }
 
-    private fun openVolumeWithPassword(volume: Volume, position: Int, password: CharArray, savePasswordHash: Boolean) {
+    private fun openVolumeWithPassword(volume: SavedVolume, position: Int, password: ByteArray, savePasswordHash: Boolean) {
         val usfFingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         var returnedHash: ByteArray? = null
         if (savePasswordHash && usfFingerprint) {
             returnedHash = ByteArray(GocryptfsVolume.KeyLen)
         }
-        object : LoadingTask<Int>(this, themeValue, R.string.loading_msg_open) {
-            override suspend fun doTask(): Int {
-                val sessionId = GocryptfsVolume.init(volume.getFullPath(filesDir.path), password, null, returnedHash)
-                Arrays.fill(password, 0.toChar())
-                return sessionId
+        object : LoadingTask<EncryptedVolume?>(this, themeValue, R.string.loading_msg_open) {
+            override suspend fun doTask(): EncryptedVolume? {
+                val encryptedVolume = EncryptedVolume.init(volume, filesDir.path, password, null, returnedHash)
+                Arrays.fill(password, 0)
+                return encryptedVolume
             }
-        }.startTask(lifecycleScope) { sessionId ->
-            if (sessionId != -1) {
+        }.startTask(lifecycleScope) { encryptedVolume ->
+            if (encryptedVolume == null) {
+                CustomAlertDialogBuilder(this, themeValue)
+                    .setTitle(R.string.open_volume_failed)
+                    .setMessage(R.string.open_volume_failed_msg)
+                    .setPositiveButton(R.string.ok) { _, _ ->
+                        askForPassword(volume, position, savePasswordHash)
+                    }
+                    .show()
+            } else {
                 val fingerprintProtector = fingerprintProtector
                 @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
                 if (savePasswordHash && returnedHash != null && fingerprintProtector != null) {
@@ -575,12 +587,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         override fun onPasswordHashSaved() {
                             Arrays.fill(returnedHash, 0)
                             volumeAdapter.onVolumeChanged(position)
-                            startExplorer(sessionId, volume.shortName)
+                            startExplorer(encryptedVolume, volume.shortName)
                         }
                         private var isClosed = false
                         override fun onFailed(pending: Boolean) {
                             if (!isClosed) {
-                                GocryptfsVolume(this@MainActivity, sessionId).close()
+                                encryptedVolume.close()
                                 isClosed = true
                             }
                             Arrays.fill(returnedHash, 0)
@@ -588,21 +600,13 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     }
                     fingerprintProtector.savePasswordHash(volume, returnedHash)
                 } else {
-                    startExplorer(sessionId, volume.shortName)
+                    startExplorer(encryptedVolume, volume.shortName)
                 }
-            } else {
-                CustomAlertDialogBuilder(this, themeValue)
-                    .setTitle(R.string.open_volume_failed)
-                    .setMessage(R.string.open_volume_failed_msg)
-                    .setPositiveButton(R.string.ok) { _, _ ->
-                        askForPassword(volume, position, savePasswordHash)
-                    }
-                    .show()
             }
         }
     }
 
-    private fun startExplorer(sessionId: Int, volumeShortName: String) {
+    private fun startExplorer(encryptedVolume: EncryptedVolume, volumeShortName: String) {
         var explorerIntent: Intent? = null
         if (dropMode) { //import via android share menu
             explorerIntent = Intent(this, ExplorerActivityDrop::class.java)
@@ -610,13 +614,13 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             explorerIntent.putExtras(intent.extras!!) //forward extras
         } else if (pickMode) {
             explorerIntent = Intent(this, ExplorerActivityPick::class.java)
-            explorerIntent.putExtra("originalSessionID", intent.getIntExtra("sessionID", -1))
+            explorerIntent.putExtra("destinationVolume", intent.getParcelableExtra<EncryptedVolume>("volume")!!)
             explorerIntent.flags = Intent.FLAG_ACTIVITY_FORWARD_RESULT
         }
         if (explorerIntent == null) {
             explorerIntent = Intent(this, ExplorerActivity::class.java) //default opening
         }
-        explorerIntent.putExtra("sessionID", sessionId)
+        explorerIntent.putExtra("volume", encryptedVolume)
         explorerIntent.putExtra("volume_name", volumeShortName)
         startActivity(explorerIntent)
         if (pickMode)
@@ -642,7 +646,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             if (shouldCloseVolume) {
                 val sessionID = intent.getIntExtra("sessionID", -1)
                 if (sessionID != -1) {
-                    GocryptfsVolume(this, sessionID).close()
+                    GocryptfsVolume(sessionID).close()
                     RestrictedFileProvider.wipeAll(this)
                 }
             }

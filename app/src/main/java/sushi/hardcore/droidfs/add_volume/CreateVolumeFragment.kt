@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -130,8 +131,8 @@ class CreateVolumeFragment: Fragment() {
             var returnedHash: ByteArray? = null
             if (binding.checkboxSavePassword.isChecked)
                 returnedHash = ByteArray(GocryptfsVolume.KeyLen)
-            object: LoadingTask<Volume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
-                override suspend fun doTask(): Volume? {
+            object: LoadingTask<SavedVolume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
+                override suspend fun doTask(): SavedVolume? {
                     val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
                         0 -> 0
                         1 -> 1
@@ -151,7 +152,7 @@ class CreateVolumeFragment: Fragment() {
                         )
                     ) {
                         val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
-                        val volume = Volume(volumeName, isHiddenVolume)
+                        val volume = SavedVolume(volumeName, isHiddenVolume, EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                         volumeDatabase.apply {
                             if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
                                 removeVolume(volumeName)

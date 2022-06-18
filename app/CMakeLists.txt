@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/libcryfs/)
+
 add_library(
         gocryptfs
         SHARED
@@ -22,6 +24,10 @@ target_link_libraries(
         gocryptfs_jni
         gocryptfs
 )
+
+add_library(cryfs_jni SHARED src/main/native/libcryfs.c)
+#file(GLOB CRYFS_STATIC_LIBRARIES ${PROJECT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/lib*.a)
+target_link_libraries(cryfs_jni fspp-fuse)#${CRYFS_STATIC_LIBRARIES})
 
 add_library(
         avformat

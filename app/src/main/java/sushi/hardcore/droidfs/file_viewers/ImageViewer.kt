@@ -99,7 +99,7 @@ class ImageViewer: FileViewerActivity() {
                 .setTitle(R.string.warning)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     createPlaylist() //be sure the playlist is created before deleting if there is only one image
-                    if (gocryptfsVolume.removeFile(filePath)) {
+                    if (encryptedVolume.deleteFile(filePath)) {
                         playlistNext(true)
                         refreshPlaylist()
                         if (mappedPlaylist.size == 0) { //deleted all images of the playlist
@@ -275,7 +275,7 @@ class ImageViewer: FileViewerActivity() {
                                     Bitmap.CompressFormat.JPEG
                                 }, 100, outputStream) == true
                         ){
-                            if (gocryptfsVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)){
+                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)){
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
                                 callback()
                             } else {

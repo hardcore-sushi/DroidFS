@@ -2,10 +2,12 @@ package sushi.hardcore.droidfs.explorers
 
 import android.app.Activity
 import android.content.Intent
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.util.*
 
@@ -14,7 +16,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     private var isFinishingIntentionally = false
     override fun init() {
         super.init()
-        resultIntent.putExtra("sessionID", gocryptfsVolume.sessionID)
+        resultIntent.putExtra("volume", encryptedVolume)
     }
 
     override fun bindFileOperationService() {
@@ -65,7 +67,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
                 for (i in explorerAdapter.selectedItems) {
                     val e = explorerElements[i]
                     paths.add(PathUtils.pathJoin(currentDirectoryPath, e.name))
-                    types.add(e.elementType.toInt())
+                    types.add(e.stat.type)
                 }
                 resultIntent.putStringArrayListExtra("paths", paths)
                 resultIntent.putIntegerArrayListExtra("types", types)
@@ -84,10 +86,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     override fun closeVolumeOnDestroy() {
         if (!isFinishingIntentionally && !usf_keep_open){
-            val sessionID = intent.getIntExtra("originalSessionID", -1)
-            if (sessionID != -1){
-                GocryptfsVolume(applicationContext, sessionID).close()
-            }
+            intent.getParcelableExtra<EncryptedVolume>("destinationVolume")?.let { it.close() }
             super.closeVolumeOnDestroy()
         }
     }

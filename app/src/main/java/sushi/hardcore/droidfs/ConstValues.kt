@@ -5,8 +5,6 @@ import java.io.File
 
 object ConstValues {
     const val CREATOR = "DroidFS"
-    const val FILE_MODE = 384 //0600
-    const val DIRECTORY_MODE = 448 //0700
     const val VOLUME_DATABASE_NAME = "SavedVolumes"
     const val SORT_ORDER_KEY = "sort_order"
     val FAKE_URI: Uri = Uri.parse("fakeuri://droidfs")

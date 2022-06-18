@@ -133,7 +133,7 @@ class FingerprintProtector private constructor(
     private lateinit var cipher: Cipher
     private var isCipherReady = false
     private var cipherActionMode: Int? = null
-    private lateinit var volume: Volume
+    private lateinit var volume: SavedVolume
     private lateinit var dataToProcess: ByteArray
 
     private fun resetHashStorage() {
@@ -207,7 +207,7 @@ class FingerprintProtector private constructor(
             .show()
     }
 
-    fun savePasswordHash(volume: Volume, plainText: ByteArray) {
+    fun savePasswordHash(volume: SavedVolume, plainText: ByteArray) {
         this.volume = volume
         val biometricPromptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle(activity.getString(R.string.encrypt_action_description))

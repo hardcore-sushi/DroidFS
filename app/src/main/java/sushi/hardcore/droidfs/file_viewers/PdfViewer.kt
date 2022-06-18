@@ -21,7 +21,7 @@ class PdfViewer: FileViewerActivity() {
         pdfViewer = PdfViewer(this)
         val fileName = File(filePath).name
         title = fileName
-        val fileSize = gocryptfsVolume.getSize(filePath)
+        val fileSize = encryptedVolume.getAttr(filePath)?.size
         loadWholeFile(filePath, fileSize)?.let {
             pdfViewer.loadPdf(ByteArrayInputStream(it), fileName, fileSize)
         }

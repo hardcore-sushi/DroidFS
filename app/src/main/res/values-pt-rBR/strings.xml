@@ -39,7 +39,7 @@
     <string name="external_open">Abrir com app externo</string>
     <string name="single_delete_confirm">Você tem certeza que quer excluir %s?</string>
     <string name="multiple_delete_confirm">Você realmente deseja excluir estos %s itens?</string>
-    <string name="location">Localização: /%s</string>
+    <string name="location">Localização: %s</string>
     <string name="total_size">Tamanho total: %s</string>
     <string name="import_from_other_volume">Importar do outro volume</string>
     <string name="read_file_failed">Falha ao abrir este arquivo.</string>

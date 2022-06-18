@@ -7,6 +7,7 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -40,6 +41,8 @@ import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_viewers.*
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -50,7 +53,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private var foldersFirst = true
     private var mapFolders = true
     private var currentSortOrderIndex = 0
-    protected lateinit var gocryptfsVolume: GocryptfsVolume
+    protected lateinit var encryptedVolume: EncryptedVolume
     private lateinit var volumeName: String
     private lateinit var explorerViewModel: ExplorerViewModel
     protected var currentDirectoryPath: String = ""
@@ -82,8 +85,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         volumeName = intent.getStringExtra("volume_name") ?: ""
-        val sessionID = intent.getIntExtra("sessionID", -1)
-        gocryptfsVolume = GocryptfsVolume(applicationContext, sessionID)
+        encryptedVolume = intent.getParcelableExtra("volume")!!
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
@@ -107,7 +109,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         explorerAdapter = ExplorerElementAdapter(
             this,
             if (sharedPrefs.getBoolean("thumbnails", true)) {
-                gocryptfsVolume
+                encryptedVolume
             } else {
                 null
             },
@@ -139,7 +141,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     class ExplorerViewModel: ViewModel() {
-        var currentDirectoryPath = ""
+        var currentDirectoryPath = "/"
     }
 
     private fun setRecyclerViewLayout() {
@@ -166,7 +168,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
                     val binder = service as FileOperationService.LocalBinder
                     fileOperationService = binder.getService()
-                    binder.setGocryptfsVolume(gocryptfsVolume)
+                    binder.setEncryptedVolume(encryptedVolume)
                 }
                 override fun onServiceDisconnected(arg0: ComponentName) {
 
@@ -178,7 +180,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private fun startFileViewer(cls: Class<*>, filePath: String){
         val intent = Intent(this, cls).apply {
             putExtra("path", filePath)
-            putExtra("sessionID", gocryptfsVolume.sessionID)
+            putExtra("volume", encryptedVolume)
             putExtra("sortOrder", sortOrderValues[currentSortOrderIndex])
         }
         isStartingActivity = true
@@ -187,7 +189,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     private fun openWithExternalApp(fullPath: String){
         isStartingActivity = true
-        ExternalProvider.open(this, themeValue, gocryptfsVolume, fullPath)
+        ExternalProvider.open(this, themeValue, encryptedVolume, fullPath)
     }
 
     private fun showOpenAsDialog(path: String) {
@@ -276,11 +278,11 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     private fun recursiveSetSize(directory: ExplorerElement) {
-        for (child in gocryptfsVolume.listDir(directory.fullPath)) {
+        for (child in encryptedVolume.readDir(directory.fullPath) ?: return) {
             if (child.isDirectory) {
                 recursiveSetSize(child)
             }
-            directory.size += child.size
+            directory.stat.size += child.stat.size
         }
     }
 
@@ -301,11 +303,11 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) {
         synchronized(this) {
-            explorerElements = gocryptfsVolume.listDir(path)
-            if (path.isNotEmpty()) { //not root
+            explorerElements = encryptedVolume.readDir(path) ?: return
+            if (path != "/") {
                 explorerElements.add(
                     0,
-                    ExplorerElement("..", (-1).toShort(), parentPath = currentDirectoryPath)
+                    ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
                 )
             }
         }
@@ -323,7 +325,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                             if (element.isDirectory) {
                                 recursiveSetSize(element)
                             }
-                            totalSize += element.size
+                            totalSize += element.stat.size
                         }
                     }
                 }
@@ -331,7 +333,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 onDisplayed?.invoke()
             }
         } else {
-            displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.size })
+            displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
             onDisplayed?.invoke()
         }
     }
@@ -362,7 +364,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (folderName.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folderName))) {
+            if (!encryptedVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folderName))) {
                 CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
@@ -382,27 +384,27 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     protected fun checkPathOverwrite(items: ArrayList<OperationFile>, dstDirectoryPath: String, callback: (ArrayList<OperationFile>?) -> Unit) {
-        val srcDirectoryPath = items[0].explorerElement.parentPath
+        val srcDirectoryPath = items[0].parentPath
         var ready = true
         for (i in 0 until items.size) {
             val testDstPath: String
             if (items[i].dstPath == null){
-                testDstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.fullPath))
-                if (gocryptfsVolume.pathExists(testDstPath)){
+                testDstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].srcPath))
+                if (encryptedVolume.pathExists(testDstPath)) {
                     ready = false
                 } else {
                     items[i].dstPath = testDstPath
                 }
             } else {
                 testDstPath = items[i].dstPath!!
-                if (gocryptfsVolume.pathExists(testDstPath) && !items[i].overwriteConfirmed){
+                if (encryptedVolume.pathExists(testDstPath) && !items[i].overwriteConfirmed) {
                     ready = false
                 }
             }
             if (!ready){
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.warning)
-                    .setMessage(getString(if (items[i].explorerElement.isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, testDstPath))
+                    .setMessage(getString(if (items[i].isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, testDstPath))
                     .setPositiveButton(R.string.yes) {_, _ ->
                         items[i].dstPath = testDstPath
                         items[i].overwriteConfirmed = true
@@ -410,17 +412,17 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                     }
                     .setNegativeButton(R.string.no) { _, _ ->
                         with(EditTextDialog(this, R.string.enter_new_name) {
-                            items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].explorerElement.parentPath), it)
-                            if (items[i].explorerElement.isDirectory){
+                            items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].parentPath), it)
+                            if (items[i].isDirectory) {
                                 for (j in 0 until items.size){
-                                    if (PathUtils.isChildOf(items[j].explorerElement.fullPath, items[i].explorerElement.fullPath)){
-                                        items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].explorerElement.fullPath, items[j].explorerElement.fullPath))
+                                    if (PathUtils.isChildOf(items[j].srcPath, items[i].srcPath)) {
+                                        items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].srcPath, items[j].srcPath))
                                     }
                                 }
                             }
                             checkPathOverwrite(items, dstDirectoryPath, callback)
                         }) {
-                            setSelectedText(items[i].explorerElement.name)
+                            setSelectedText(items[i].name)
                             setOnCancelListener{
                                 callback(null)
                             }
@@ -452,7 +454,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 items.clear()
                 break
             } else {
-                items.add(OperationFile.fromExplorerElement(ExplorerElement(fileName, 1, parentPath = currentDirectoryPath)))
+                items.add(OperationFile(PathUtils.pathJoin(fileName, currentDirectoryPath), Stat.S_IFREG))
             }
         }
         if (items.size > 0) {
@@ -475,7 +477,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (new_name.isEmpty()) {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
-            if (!gocryptfsVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
+            if (!encryptedVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
                 CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
@@ -587,8 +589,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     protected open fun closeVolumeOnDestroy() {
-        if (!gocryptfsVolume.isClosed()){
-            gocryptfsVolume.close()
+        if (!encryptedVolume.isClosed()){
+            encryptedVolume.close()
         }
         RestrictedFileProvider.wipeAll(this) //additional security
     }
@@ -616,7 +618,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (isCreating){
             isCreating = false
         } else {
-            if (gocryptfsVolume.isClosed()){
+            if (encryptedVolume.isClosed()){
                 finish()
             } else {
                 isStartingActivity = false

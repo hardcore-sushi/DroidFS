@@ -39,7 +39,7 @@
     <string name="external_open">Abrir con una aplicación externa</string>
     <string name="single_delete_confirm">¿Estás seguro de que quieres borrar %s ?</string>
     <string name="multiple_delete_confirm">¿Estás seguro de que quiere borrar %s objetos?</string>
-    <string name="location">Ubicación: /%s</string>
+    <string name="location">Ubicación: %s</string>
     <string name="total_size">Tamaño total: %s</string>
     <string name="import_from_other_volume">Importar desde otro volumen</string>
     <string name="read_file_failed">No se ha podido abrir este archivo.</string>

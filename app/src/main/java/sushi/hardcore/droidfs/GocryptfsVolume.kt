@@ -1,15 +1,11 @@
 package sushi.hardcore.droidfs
 
-import android.content.Context
-import android.net.Uri
+import android.os.Parcel
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.util.PathUtils
-import java.io.File
-import java.io.FileOutputStream
-import java.io.InputStream
-import java.io.OutputStream
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.Stat
 
-class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
+class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     private external fun native_close(sessionID: Int)
     private external fun native_is_closed(sessionID: Int): Boolean
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>
@@ -17,13 +13,12 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
     private external fun native_open_write_mode(sessionID: Int, file_path: String, mode: Int): Int
     private external fun native_read_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray): Int
     private external fun native_write_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int
-    private external fun native_truncate(sessionID: Int, handleID: Int, offset: Long): Boolean
-    private external fun native_path_exists(sessionID: Int, file_path: String): Boolean
-    private external fun native_get_size(sessionID: Int, file_path: String): Long
+    private external fun native_truncate(sessionID: Int, path: String, offset: Long): Boolean
     private external fun native_close_file(sessionID: Int, handleID: Int)
     private external fun native_remove_file(sessionID: Int, file_path: String): Boolean
     private external fun native_mkdir(sessionID: Int, dir_path: String, mode: Int): Boolean
     private external fun native_rmdir(sessionID: Int, dir_path: String): Boolean
+    private external fun native_get_attr(sessionID: Int, file_path: String): Stat?
     private external fun native_rename(sessionID: Int, old_path: String, new_path: String): Boolean
 
     companion object {
@@ -32,14 +27,16 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
         const val DefaultBS = 4096
         const val CONFIG_FILE_NAME = "gocryptfs.conf"
         external fun createVolume(root_cipher_dir: String, password: CharArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
-        external fun init(root_cipher_dir: String, password: CharArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
+        external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
 
-        fun isGocryptfsVolume(path: File): Boolean {
-            if (path.isDirectory){
-                return File(path, CONFIG_FILE_NAME).isFile
+        fun init(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): GocryptfsVolume? {
+            val sessionId = nativeInit(root_cipher_dir, password, givenHash, returnedHash)
+            return if (sessionId == -1) {
+                null
+            } else {
+                GocryptfsVolume(sessionId)
             }
-            return false
         }
 
         init {
@@ -47,197 +44,63 @@ class GocryptfsVolume(val applicationContext: Context, var sessionID: Int) {
         }
     }
 
-    fun close() {
+    constructor(parcel: Parcel) : this(parcel.readInt())
+
+    override fun openFile(path: String): Long {
+        return native_open_write_mode(sessionID, path, 0).toLong()
+    }
+
+    override fun read(fileHandle: Long, buffer: ByteArray, offset: Long): Int {
+        return native_read_file(sessionID, fileHandle.toInt(), offset, buffer)
+    }
+
+    override fun readDir(path: String): MutableList<ExplorerElement>? {
+        return native_list_dir(sessionID, path)
+    }
+
+    override fun getAttr(path: String): Stat? {
+        return native_get_attr(sessionID, path)
+    }
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) = with(parcel) {
+        writeByte(GOCRYPTFS_VOLUME_TYPE)
+        writeInt(sessionID)
+    }
+
+    override fun close() {
         native_close(sessionID)
     }
 
-    fun isClosed(): Boolean {
+    override fun isClosed(): Boolean {
         return native_is_closed(sessionID)
     }
 
-    fun listDir(dir_path: String): MutableList<ExplorerElement> {
-        return native_list_dir(sessionID, dir_path)
+    override fun mkdir(path: String): Boolean {
+        return native_mkdir(sessionID, path, 0)
     }
 
-    fun mkdir(dir_path: String): Boolean {
-        return native_mkdir(sessionID, dir_path, ConstValues.DIRECTORY_MODE)
+    override fun rmdir(path: String): Boolean {
+        return native_rmdir(sessionID, path)
     }
 
-    fun rmdir(dir_path: String): Boolean {
-        return native_rmdir(sessionID, dir_path)
-    }
-
-    fun removeFile(file_path: String): Boolean {
-        return native_remove_file(sessionID, file_path)
-    }
-
-    fun pathExists(file_path: String): Boolean {
-        return native_path_exists(sessionID, file_path)
-    }
-
-    fun getSize(file_path: String): Long {
-        return native_get_size(sessionID, file_path)
-    }
-
-    fun closeFile(handleID: Int) {
-        native_close_file(sessionID, handleID)
-    }
-
-    fun openReadMode(file_path: String): Int {
-        return native_open_read_mode(sessionID, file_path)
-    }
-
-    fun openWriteMode(file_path: String): Int {
-        return native_open_write_mode(sessionID, file_path, ConstValues.FILE_MODE)
-    }
-
-    fun readFile(handleID: Int, offset: Long, buff: ByteArray): Int {
-        return native_read_file(sessionID, handleID, offset, buff)
-    }
-
-    fun writeFile(handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int {
-        return native_write_file(sessionID, handleID, offset, buff, buff_size)
-    }
-
-    fun truncate(handleID: Int, offset: Long): Boolean {
-        return native_truncate(sessionID, handleID, offset)
-    }
-
-    fun rename(old_path: String, new_path: String): Boolean {
-        return native_rename(sessionID, old_path, new_path)
-    }
-
-    fun exportFile(handleID: Int, os: OutputStream): Boolean {
-        var offset: Long = 0
-        val ioBuffer = ByteArray(DefaultBS)
-        var length: Int
-        while (readFile(handleID, offset, ioBuffer).also { length = it } > 0){
-            os.write(ioBuffer, 0, length)
-            offset += length.toLong()
-        }
-        os.close()
+    override fun closeFile(fileHandle: Long): Boolean {
+        native_close_file(sessionID, fileHandle.toInt())
         return true
     }
 
-    fun exportFile(src_path: String, os: OutputStream): Boolean {
-        var success = false
-        val srcHandleId = openReadMode(src_path)
-        if (srcHandleId != -1) {
-            success = exportFile(srcHandleId, os)
-            closeFile(srcHandleId)
-        }
-        return success
+    override fun write(fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int {
+        return native_write_file(sessionID, fileHandle.toInt(), offset, buffer, size)
     }
 
-    fun exportFile(src_path: String, dst_path: String): Boolean {
-        return exportFile(src_path, FileOutputStream(dst_path))
+    override fun truncate(path: String, size: Long): Boolean {
+        return native_truncate(sessionID, path, size)
     }
 
-    fun exportFile(context: Context, src_path: String, output_path: Uri): Boolean {
-        val os = context.contentResolver.openOutputStream(output_path)
-        if (os != null){
-            return exportFile(src_path, os)
-        }
-        return false
+    override fun deleteFile(path: String): Boolean {
+        return native_remove_file(sessionID, path)
     }
 
-    fun importFile(inputStream: InputStream, dst_path: String): Boolean {
-        val dstHandleId = openWriteMode(dst_path)
-        if (dstHandleId != -1) {
-            var success = true
-            var offset: Long = 0
-            val ioBuffer = ByteArray(DefaultBS)
-            var length: Int
-            while (inputStream.read(ioBuffer).also { length = it } > 0) {
-                val written = writeFile(dstHandleId, offset, ioBuffer, length).toLong()
-                if (written == length.toLong()) {
-                    offset += written
-                } else {
-                    inputStream.close()
-                    success = false
-                    break
-                }
-            }
-            closeFile(dstHandleId)
-            inputStream.close()
-            return success
-        }
-        return false
-    }
-
-    fun importFile(context: Context, src_uri: Uri, dst_path: String): Boolean {
-        val inputStream = context.contentResolver.openInputStream(src_uri)
-        if (inputStream != null){
-            return importFile(inputStream, dst_path)
-        }
-        return false
-    }
-
-    fun recursiveMapFiles(rootPath: String): MutableList<ExplorerElement> {
-        val result = mutableListOf<ExplorerElement>()
-        val explorerElements = listDir(rootPath)
-        result.addAll(explorerElements)
-        for (e in explorerElements){
-            if (e.isDirectory){
-                result.addAll(recursiveMapFiles(e.fullPath))
-            }
-        }
-        return result
-    }
-
-    fun recursiveRemoveDirectory(plain_directory_path: String): String? {
-        val explorerElements = listDir(plain_directory_path)
-        for (e in explorerElements) {
-            val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
-            if (e.isDirectory) {
-                val result = recursiveRemoveDirectory(fullPath)
-                result?.let { return it }
-            } else {
-                if (!removeFile(fullPath)) {
-                    return fullPath
-                }
-            }
-        }
-        return if (!rmdir(plain_directory_path)) {
-            plain_directory_path
-        } else {
-            null
-        }
-    }
-
-    fun loadWholeFile(fullPath: String, size: Long? = null, maxSize: Long? = null): Pair<ByteArray?, Int> {
-        val fileSize = size ?: getSize(fullPath)
-        return if (fileSize >= 0) {
-            maxSize?.let {
-                if (fileSize > it) {
-                    return Pair(null, 0)
-                }
-            }
-            try {
-                val fileBuff = ByteArray(fileSize.toInt())
-                val handleID = openReadMode(fullPath)
-                if (handleID == -1) {
-                    Pair(null, 3)
-                } else {
-                    var offset: Long = 0
-                    val ioBuffer = ByteArray(DefaultBS)
-                    var length: Int
-                    while (readFile(handleID, offset, ioBuffer).also { length = it } > 0) {
-                        System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
-                        offset += length.toLong()
-                    }
-                    closeFile(handleID)
-                    if (offset == fileBuff.size.toLong()) {
-                        Pair(fileBuff, 0)
-                    } else {
-                        Pair(null, 4)
-                    }
-                }
-            } catch (e: OutOfMemoryError) {
-                Pair(null, 2)
-            }
-        } else {
-            Pair(null, 1)
-        }
+    override fun rename(srcPath: String, dstPath: String): Boolean {
+        return native_rename(sessionID, srcPath, dstPath)
     }
 }

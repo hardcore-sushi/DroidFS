@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.explorers
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -18,6 +19,8 @@ import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
 import sushi.hardcore.droidfs.databinding.ActivityExplorerBinding
 import sushi.hardcore.droidfs.file_operations.OperationFile
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -36,8 +39,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
-                val remoteSessionID = resultIntent.getIntExtra("sessionID", -1)
-                val remoteGocryptfsVolume = GocryptfsVolume(applicationContext, remoteSessionID)
+                val remoteEncryptedVolume = resultIntent.getParcelableExtra<EncryptedVolume>("volume")!!
                 val path = resultIntent.getStringExtra("path")
                 val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements
@@ -46,12 +48,10 @@ class ExplorerActivity : BaseExplorerActivity() {
                     if (types != null && paths != null){
                         for (i in paths.indices) {
                             operationFiles.add(
-                                OperationFile.fromExplorerElement(
-                                    ExplorerElement(File(paths[i]).name, types[i].toShort(), parentPath = PathUtils.getParentPath(paths[i]))
-                                )
+                                OperationFile(paths[i], types[i])
                             )
-                            if (types[i] == 0){ //directory
-                                remoteGocryptfsVolume.recursiveMapFiles(paths[i]).forEach {
+                            if (types[i] == Stat.S_IFDIR) {
+                                remoteEncryptedVolume.recursiveMapFiles(paths[i])?.forEach {
                                     operationFiles.add(OperationFile.fromExplorerElement(it))
                                 }
                             }
@@ -59,18 +59,16 @@ class ExplorerActivity : BaseExplorerActivity() {
                     }
                 } else {
                     operationFiles.add(
-                        OperationFile.fromExplorerElement(
-                            ExplorerElement(File(path).name, 1, parentPath = PathUtils.getParentPath(path))
-                        )
+                        OperationFile(path, Stat.S_IFREG)
                     )
                 }
                 if (operationFiles.size > 0){
                     checkPathOverwrite(operationFiles, currentDirectoryPath) { items ->
                         if (items == null) {
-                            remoteGocryptfsVolume.close()
+                            remoteEncryptedVolume.close()
                         } else {
                             lifecycleScope.launch {
-                                val failedItem = fileOperationService.copyElements(items, remoteGocryptfsVolume)
+                                val failedItem = fileOperationService.copyElements(items, remoteEncryptedVolume)
                                 if (failedItem == null) {
                                     Toast.makeText(this@ExplorerActivity, R.string.success_import, Toast.LENGTH_SHORT).show()
                                 } else {
@@ -81,12 +79,12 @@ class ExplorerActivity : BaseExplorerActivity() {
                                         .show()
                                 }
                                 setCurrentPath(currentDirectoryPath)
-                                remoteGocryptfsVolume.close()
+                                remoteEncryptedVolume.close()
                             }
                         }
                     }
                 } else {
-                    remoteGocryptfsVolume.close()
+                    remoteEncryptedVolume.close()
                 }
             }
         }
@@ -120,7 +118,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickImportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { rootUri ->
         rootUri?.let {
             val tree = DocumentFile.fromTreeUri(this, it)!! //non-null after Lollipop
-            val operation = OperationFile.fromExplorerElement(ExplorerElement(tree.name!!, 0, parentPath = currentDirectoryPath))
+            val operation = OperationFile(PathUtils.pathJoin(tree.name!!, currentDirectoryPath), Stat.S_IFDIR)
             checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
                 checkedOperation?.let {
                     lifecycleScope.launch {
@@ -175,7 +173,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         setContentView(binding.root)
         binding.fab.setOnClickListener {
             if (currentItemAction != ItemsActions.NONE){
-                openDialogCreateFolder()
+                //openDialogCreateFolder()
             } else {
                 val adapter = IconTextDialogAdapter(this)
                 adapter.items = listOf(
@@ -192,7 +190,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "importFromOtherVolumes" -> {
                                 val intent = Intent(this, MainActivity::class.java)
                                 intent.action = "pick"
-                                intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                                intent.putExtra("volume", encryptedVolume)
                                 isStartingActivity = true
                                 pickFromOtherVolumes.launch(intent)
                             }
@@ -215,7 +213,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "camera" -> {
                                 val intent = Intent(this, CameraActivity::class.java)
                                 intent.putExtra("path", currentDirectoryPath)
-                                intent.putExtra("sessionID", gocryptfsVolume.sessionID)
+                                intent.putExtra("volume", encryptedVolume)
                                 isStartingActivity = true
                                 startActivity(intent)
                             }
@@ -241,15 +239,15 @@ class ExplorerActivity : BaseExplorerActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
-            val handleID = gocryptfsVolume.openWriteMode(filePath) //don't check overwrite because openWriteMode open in read-write (doesn't erase content)
-            if (handleID == -1) {
+            val handleID = encryptedVolume.openFile(filePath)
+            if (handleID == -1L) {
                 CustomAlertDialogBuilder(this, themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.file_creation_failed)
                         .setPositiveButton(R.string.ok, null)
                         .show()
             } else {
-                gocryptfsVolume.closeFile(handleID)
+                encryptedVolume.closeFile(handleID)
                 setCurrentPath(currentDirectoryPath)
                 invalidateOptionsMenu()
             }
@@ -312,7 +310,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 for (i in explorerAdapter.selectedItems){
                     itemsToProcess.add(OperationFile.fromExplorerElement(explorerElements[i]))
                     if (explorerElements[i].isDirectory){
-                        gocryptfsVolume.recursiveMapFiles(explorerElements[i].fullPath).forEach {
+                        encryptedVolume.recursiveMapFiles(explorerElements[i].fullPath)?.forEach {
                             itemsToProcess.add(OperationFile.fromExplorerElement(it))
                         }
                     }
@@ -346,11 +344,11 @@ class ExplorerActivity : BaseExplorerActivity() {
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
                     itemsToProcess.forEach {
-                        it.dstPath = PathUtils.pathJoin(currentDirectoryPath, it.explorerElement.name)
+                        it.dstPath = PathUtils.pathJoin(currentDirectoryPath, it.name)
                         it.overwriteConfirmed = false // reset the field in case of a previous cancelled move
                     }
                     val toMove = ArrayList<OperationFile>(itemsToProcess.size)
-                    val toClean = ArrayList<ExplorerElement>()
+                    val toClean = ArrayList<String>()
                     prepareFilesForMove(
                         itemsToProcess,
                         toMove,
@@ -398,7 +396,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     paths.add(explorerElements[i].fullPath)
                 }
                 isStartingActivity = true
-                ExternalProvider.share(this, themeValue, gocryptfsVolume, paths)
+                ExternalProvider.share(this, themeValue, encryptedVolume, paths)
                 unselectAll()
                 true
             }
@@ -418,12 +416,12 @@ class ExplorerActivity : BaseExplorerActivity() {
      */
     private fun checkMoveOverwrite(items: List<OperationFile>, callback: (List<OperationFile>?) -> Unit) {
         for (item in items) {
-            if (gocryptfsVolume.pathExists(item.dstPath!!) && !item.overwriteConfirmed) {
+            if (encryptedVolume.pathExists(item.dstPath!!) && !item.overwriteConfirmed) {
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.warning)
                     .setMessage(
                         getString(
-                            if (item.explorerElement.isDirectory) {
+                            if (item.isDirectory) {
                                 R.string.dir_overwrite_question
                             } else {
                                 R.string.file_overwrite_question
@@ -440,7 +438,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             item.dstPath = PathUtils.pathJoin(PathUtils.getParentPath(item.dstPath!!), it)
                             checkMoveOverwrite(items, callback)
                         }) {
-                            setSelectedText(item.explorerElement.name)
+                            setSelectedText(item.name)
                             show()
                         }
                     }
@@ -463,24 +461,24 @@ class ExplorerActivity : BaseExplorerActivity() {
     private fun prepareFilesForMove(
         items: List<OperationFile>,
         toMove: ArrayList<OperationFile>,
-        toClean: ArrayList<ExplorerElement>,
+        toClean: ArrayList<String>,
         onReady: () -> Unit
     ) {
         checkMoveOverwrite(items) { checkedItems ->
             checkedItems?.let {
                 for (item in checkedItems) {
-                    if (!item.overwriteConfirmed || !item.explorerElement.isDirectory) {
+                    if (!item.overwriteConfirmed || !item.isDirectory) {
                         toMove.add(item)
                     }
                 }
                 val toCheck = mutableListOf<OperationFile>()
                 for (item in checkedItems) {
-                    if (item.overwriteConfirmed && item.explorerElement.isDirectory) {
-                        val children = gocryptfsVolume.listDir(item.explorerElement.fullPath)
-                        toCheck.addAll(children.map {
-                            OperationFile(it, PathUtils.pathJoin(item.dstPath!!, it.name))
-                        })
-                        toClean.add(item.explorerElement)
+                    if (item.overwriteConfirmed && item.isDirectory) {
+                        val children = encryptedVolume.readDir(item.srcPath)
+                        children?.map {
+                            OperationFile(it.fullPath, it.stat.type, PathUtils.pathJoin(item.dstPath!!, it.name))
+                        }?.let { toCheck.addAll(it) }
+                        toClean.add(item.srcPath)
                     }
                 }
                 if (toCheck.isEmpty()) {
@@ -514,10 +512,10 @@ class ExplorerActivity : BaseExplorerActivity() {
             val element = explorerAdapter.explorerElements[i]
             val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
             if (element.isDirectory) {
-                val result = gocryptfsVolume.recursiveRemoveDirectory(fullPath)
+                val result = encryptedVolume.recursiveRemoveDirectory(fullPath)
                 result?.let{ failedItem = it }
             } else {
-                if (!gocryptfsVolume.removeFile(fullPath)) {
+                if (!encryptedVolume.deleteFile(fullPath)) {
                     failedItem = fullPath
                 }
             }

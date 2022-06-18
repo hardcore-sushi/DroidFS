@@ -39,7 +39,7 @@
     <string name="external_open">فتح بتطبيق خارجي</string>
     <string name="single_delete_confirm">هل أنت متأكد من حذف %s ?</string>
     <string name="multiple_delete_confirm">هل أنت متأكد من حذف هذه %s العناصر ?</string>
-    <string name="location">موقع: /%s</string>
+    <string name="location">موقع: %s</string>
     <string name="total_size">الحجم الكلي: %s</string>
     <string name="import_from_other_volume">إستيراد من مجلد مشفر آخر</string>
     <string name="read_file_failed">لقد فشل فتح هذا الملف.</string>
