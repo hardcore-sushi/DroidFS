@@ -4,3 +4,7 @@
 [submodule "libpdfviewer"]
 	path = libpdfviewer
 	url = https://forge.chapril.org/hardcoresushi/libpdfviewer.git
+[submodule "app/libcryfs"]
+	path = app/libcryfs
+	url = https://github.com/hardcore-sushi/libcryfs.git
+	branch = genesis
