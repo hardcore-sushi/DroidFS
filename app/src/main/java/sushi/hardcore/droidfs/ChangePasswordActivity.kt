@@ -9,13 +9,14 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
+import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 
 class ChangePasswordActivity: BaseActivity() {
 
     private lateinit var binding: ActivityChangePasswordBinding
-    private lateinit var volume: Volume
+    private lateinit var volume: SavedVolume
     private lateinit var volumeDatabase: VolumeDatabase
     private var fingerprintProtector: FingerprintProtector? = null
     private var usfFingerprint: Boolean = false

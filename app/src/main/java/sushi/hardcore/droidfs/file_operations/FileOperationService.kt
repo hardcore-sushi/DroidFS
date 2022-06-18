@@ -14,9 +14,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
@@ -29,15 +30,15 @@ class FileOperationService : Service() {
     }
 
     private val binder = LocalBinder()
-    private lateinit var gocryptfsVolume: GocryptfsVolume
+    private lateinit var encryptedVolume: EncryptedVolume
     private lateinit var notificationManager: NotificationManagerCompat
     private val tasks = HashMap<Int, Job>()
     private var lastNotificationId = 0
 
     inner class LocalBinder : Binder() {
         fun getService(): FileOperationService = this@FileOperationService
-        fun setGocryptfsVolume(g: GocryptfsVolume) {
-            gocryptfsVolume = g
+        fun setEncryptedVolume(volume: EncryptedVolume) {
+            encryptedVolume = volume
         }
     }
 
@@ -121,17 +122,17 @@ class FileOperationService : Service() {
         }
     }
 
-    private fun copyFile(srcPath: String, dstPath: String, remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume): Boolean {
+    private fun copyFile(srcPath: String, dstPath: String, remoteEncryptedVolume: EncryptedVolume = encryptedVolume): Boolean {
         var success = true
-        val srcHandleId = remoteGocryptfsVolume.openReadMode(srcPath)
-        if (srcHandleId != -1){
-            val dstHandleId = gocryptfsVolume.openWriteMode(dstPath)
-            if (dstHandleId != -1){
+        val srcFileHandle = remoteEncryptedVolume.openFile(srcPath)
+        if (srcFileHandle != -1L) {
+            val dstFileHandle = encryptedVolume.openFile(dstPath)
+            if (dstFileHandle != -1L) {
                 var offset: Long = 0
-                val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+                val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
                 var length: Int
-                while (remoteGocryptfsVolume.readFile(srcHandleId, offset, ioBuffer).also { length = it } > 0) {
-                    val written = gocryptfsVolume.writeFile(dstHandleId, offset, ioBuffer, length).toLong()
+                while (remoteEncryptedVolume.read(srcFileHandle, ioBuffer, offset).also { length = it } > 0) {
+                    val written = encryptedVolume.write(dstFileHandle, offset, ioBuffer, length).toLong()
                     if (written == length.toLong()) {
                         offset += written
                     } else {
@@ -139,11 +140,11 @@ class FileOperationService : Service() {
                         break
                     }
                 }
-                gocryptfsVolume.closeFile(dstHandleId)
+                encryptedVolume.closeFile(dstFileHandle)
             } else {
                 success = false
             }
-            remoteGocryptfsVolume.closeFile(srcHandleId)
+            remoteEncryptedVolume.closeFile(srcFileHandle)
         } else {
             success = false
         }
@@ -152,22 +153,22 @@ class FileOperationService : Service() {
 
     suspend fun copyElements(
         items: ArrayList<OperationFile>,
-        remoteGocryptfsVolume: GocryptfsVolume = gocryptfsVolume
+        remoteEncryptedVolume: EncryptedVolume = encryptedVolume
     ): String? = coroutineScope {
         val notification = showNotification(R.string.file_op_copy_msg, items.size)
         val task = async {
             var failedItem: String? = null
             for (i in 0 until items.size) {
                 withContext(Dispatchers.IO) {
-                    if (items[i].explorerElement.isDirectory) {
-                        if (!gocryptfsVolume.pathExists(items[i].dstPath!!)) {
-                            if (!gocryptfsVolume.mkdir(items[i].dstPath!!)) {
-                                failedItem = items[i].explorerElement.fullPath
+                    if (items[i].isDirectory) {
+                        if (!encryptedVolume.pathExists(items[i].dstPath!!)) {
+                            if (!encryptedVolume.mkdir(items[i].dstPath!!)) {
+                                failedItem = items[i].srcPath
                             }
                         }
                     } else {
-                        if (!copyFile(items[i].explorerElement.fullPath, items[i].dstPath!!, remoteGocryptfsVolume)) {
-                            failedItem = items[i].explorerElement.fullPath
+                        if (!copyFile(items[i].srcPath, items[i].dstPath!!, remoteEncryptedVolume)) {
+                            failedItem = items[i].srcPath
                         }
                     }
                 }
@@ -183,23 +184,23 @@ class FileOperationService : Service() {
         waitForTask(notification, task).failedItem
     }
 
-    suspend fun moveElements(toMove: List<OperationFile>, toClean: List<ExplorerElement>): String? = coroutineScope {
+    suspend fun moveElements(toMove: List<OperationFile>, toClean: List<String>): String? = coroutineScope {
         val notification = showNotification(R.string.file_op_move_msg, toMove.size)
         val task = async(Dispatchers.IO) {
             val total = toMove.size+toClean.size
             var failedItem: String? = null
             for ((i, item) in toMove.withIndex()) {
-                if (!gocryptfsVolume.rename(item.explorerElement.fullPath, item.dstPath!!)) {
-                    failedItem = item.explorerElement.fullPath
+                if (!encryptedVolume.rename(item.srcPath, item.dstPath!!)) {
+                    failedItem = item.srcPath
                     break
                 } else {
                     updateNotificationProgress(notification, i+1, total)
                 }
             }
             if (failedItem == null) {
-                for ((i, folder) in toClean.asReversed().withIndex()) {
-                    if (!gocryptfsVolume.rmdir(folder.fullPath)) {
-                        failedItem = folder.fullPath
+                for ((i, folderPath) in toClean.asReversed().withIndex()) {
+                    if (!encryptedVolume.rmdir(folderPath)) {
+                        failedItem = folderPath
                         break
                     } else {
                         updateNotificationProgress(notification, toMove.size+i+1, total)
@@ -221,7 +222,7 @@ class FileOperationService : Service() {
         for (i in dstPaths.indices) {
             withContext(Dispatchers.IO) {
                 try {
-                    if (!gocryptfsVolume.importFile(this@FileOperationService, uris[i], dstPaths[i])) {
+                    if (!encryptedVolume.importFile(this@FileOperationService, uris[i], dstPaths[i])) {
                         failedIndex = i
                     }
                 } catch (e: FileNotFoundException) {
@@ -301,7 +302,7 @@ class FileOperationService : Service() {
 
                 // create destination folders so the new files can use them
                 for (dir in dstDirs) {
-                    if (!gocryptfsVolume.mkdir(dir)) {
+                    if (!encryptedVolume.mkdir(dir)) {
                         failedItem = dir
                         break
                     }
@@ -345,7 +346,7 @@ class FileOperationService : Service() {
         return if (outputStream == null) {
             false
         } else {
-            gocryptfsVolume.exportFile(srcPath, outputStream)
+            encryptedVolume.exportFile(srcPath, outputStream)
         }
     }
 
@@ -355,7 +356,7 @@ class FileOperationService : Service() {
         scope: CoroutineScope
     ): String? {
         treeDocumentFile.createDirectory(File(plain_directory_path).name)?.let { childTree ->
-            val explorerElements = gocryptfsVolume.listDir(plain_directory_path)
+            val explorerElements = encryptedVolume.readDir(plain_directory_path) ?: return null
             for (e in explorerElements) {
                 if (!scope.isActive) {
                     return null

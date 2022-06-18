@@ -39,7 +39,7 @@
     <string name="external_open">فتح بتطبيق خارجي</string>
     <string name="single_delete_confirm">هل أنت متأكد من حذف %s ?</string>
     <string name="multiple_delete_confirm">هل أنت متأكد من حذف هذه %s العناصر ?</string>
-    <string name="location">موقع: /%s</string>
+    <string name="location">موقع: %s</string>
     <string name="total_size">الحجم الكلي: %s</string>
     <string name="import_from_other_volume">استيراد من مجلد مشفر آخر</string>
     <string name="read_file_failed">لقد فشل فتح هذا الملف.</string>
@@ -138,7 +138,6 @@
     <string name="image_saved_successfully">تم حفظ تغييرات الصورة بنجاح.</string>
     <string name="bitmap_compress_failed">فشل ضغط الصورة النقطية.</string>
     <string name="file_write_failed">فشل كتابة الملف.</string>
-    <string name="error_not_a_volume">لم يتم التعرف على مجلد التشفير Gocryptfs. يرجى التحقق من المسار المحدد.</string>
     <string name="version">إصدار</string>
     <string name="error_cipher_null">تشفير الخطأ فارغ</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -173,7 +172,6 @@
     <string name="maximize_quality">دقة أعلى</string>
     <string name="minimize_latency">أداء أفضل</string>
     <string name="auto">تلقائي</string>
-    <string name="xchacha_warning">XChaCha20-Poly1305 مدعوم فقط منذ إصدار gocryptfs v2.2.0. لن تتمكن الإصدارات الأقدم من فتح وحدة تخزين بناءً على هذا التشفير.</string>
     <string name="encryption_cipher_label">خوارزمية التشفير:</string>
     <string name="theme">سمة</string>
     <string name="theme_summary">تخصيص سمة التطبيق</string>

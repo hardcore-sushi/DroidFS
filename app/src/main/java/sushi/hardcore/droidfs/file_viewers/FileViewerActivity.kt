@@ -6,15 +6,15 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
-    protected lateinit var gocryptfsVolume: GocryptfsVolume
+    protected lateinit var encryptedVolume: EncryptedVolume
     protected lateinit var filePath: String
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
@@ -33,8 +33,7 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
-        val sessionID = intent.getIntExtra("sessionID", -1)
-        gocryptfsVolume = GocryptfsVolume(applicationContext, sessionID)
+        encryptedVolume = intent.getParcelableExtra("volume")!!
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
@@ -67,7 +66,7 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     protected fun loadWholeFile(path: String, fileSize: Long? = null): ByteArray? {
-        val result = gocryptfsVolume.loadWholeFile(path, size = fileSize)
+        val result = encryptedVolume.loadWholeFile(path, size = fileSize)
         if (result.second != 0) {
             val dialog = CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.error)
@@ -85,10 +84,12 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected fun createPlaylist() {
         if (!wasMapped){
-            for (e in gocryptfsVolume.recursiveMapFiles(originalParentPath)) {
-                if (e.isRegularFile) {
-                    if (ConstValues.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
-                        mappedPlaylist.add(e)
+            encryptedVolume.recursiveMapFiles(originalParentPath)?.let { elements ->
+                for (e in elements) {
+                    if (e.isRegularFile) {
+                        if (ConstValues.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
+                            mappedPlaylist.add(e)
+                        }
                     }
                 }
             }
@@ -133,7 +134,7 @@ abstract class FileViewerActivity: BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         if (!isFinishingIntentionally) {
-            gocryptfsVolume.close()
+            encryptedVolume.close()
             RestrictedFileProvider.wipeAll(this)
         }
     }

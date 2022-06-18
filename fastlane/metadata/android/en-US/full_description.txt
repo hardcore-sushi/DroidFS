@@ -1,15 +1,15 @@
 DroidFS is an alternative way to use encrypted overlay file-systems on Android that uses its own internal file explorer instead of mounting virtual volumes. This allows you to store files in encrypted virtual volumes that other apps can't decrypt.
-Currently, DroidFS supports only <b>gocryptfs</b>. This algorithm protects file contents and file names but doesn't hide directory structure or file sizes. If you want more details, take a look at their GitHub repository: https://github.com/rfjakob/gocryptfs
+Currently, DroidFS supports the following encrypted containers:
+- gocryptfs (https://github.com/rfjakob/gocryptfs): encrypts file contents and file names but doesn't hide directory structure or file sizes.
+- CryFS (https://github.com/cryfs/cryfs): slower, but encrypts everything and obfuscates file sizes.
 
 <b>Features:</b>
-- Volumes fully compatibles with their original algorithm implementation
-- Internal opening of images, videos, audios and text files
-- Common file and folder operations: copy, move, rename, delete
-- Volume password changing
+- Volumes fully compatibles with their original implementations
+- Internal opening of images, videos, audios, PDF and text files
+- Common file manager operations: copy, move, rename, create, delete
 - Internal and shared storage support
 - Cross-volume imports
-- Internal camera to take encrypted pictures or videos
-- Theme color fully customizable
+- Internal camera to take encrypted pictures and videos
 
 <b>Permissions:</b>
 <b>Read & write access to shared storage:</b> required to create, open and modify volumes and import/export files to/from volumes.

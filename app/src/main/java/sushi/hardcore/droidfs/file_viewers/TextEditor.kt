@@ -7,7 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
-import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.ByteArrayInputStream
@@ -68,14 +68,14 @@ class TextEditor: FileViewerActivity() {
     private fun save(): Boolean{
         var success = false
         val content = editor.text.toString().toByteArray()
-        val handleID = gocryptfsVolume.openWriteMode(filePath)
-        if (handleID != -1){
+        val fileHandle = encryptedVolume.openFile(filePath)
+        if (fileHandle != -1L) {
             val buff = ByteArrayInputStream(content)
             var offset: Long = 0
-            val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
             var length: Int
             while (buff.read(ioBuffer).also { length = it } > 0) {
-                val written = gocryptfsVolume.writeFile(handleID, offset, ioBuffer, length).toLong()
+                val written = encryptedVolume.write(fileHandle, offset, ioBuffer, length).toLong()
                 if (written == length.toLong()) {
                     offset += written
                 } else {
@@ -83,9 +83,9 @@ class TextEditor: FileViewerActivity() {
                 }
             }
             if (offset == content.size.toLong()){
-                success = gocryptfsVolume.truncate(handleID, offset)
+                success = encryptedVolume.truncate(filePath, offset)
             }
-            gocryptfsVolume.closeFile(handleID)
+            encryptedVolume.closeFile(fileHandle)
             buff.close()
         }
         if (success){

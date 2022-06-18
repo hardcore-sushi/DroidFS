@@ -30,6 +30,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
@@ -64,7 +65,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var sensorOrientationListener: SensorOrientationListener
     private var previousOrientation: Float = 0f
     private lateinit var orientedIcons: List<ImageView>
-    private lateinit var gocryptfsVolume: GocryptfsVolume
+    private lateinit var encryptedVolume: EncryptedVolume
     private lateinit var outputDirectory: String
     private var isFinishingIntentionally = false
     private var isAskingPermissions = false
@@ -93,7 +94,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-        gocryptfsVolume = GocryptfsVolume(applicationContext, intent.getIntExtra("sessionID", -1))
+        encryptedVolume = intent.getParcelableExtra("volume")!!
         outputDirectory = intent.getStringExtra("path")!!
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -378,11 +379,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     private fun getOutputPath(isVideo: Boolean): String {
         val baseName = if (isVideo) {"VID"} else {"IMG"}+'_'+dateFormat.format(Date())+'_'
-        var fileName: String
+        var outputPath: String
         do {
-            fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+'.'+ if (isVideo) {"mp4"} else {"jpg"}
-        } while (gocryptfsVolume.pathExists(fileName))
-        return PathUtils.pathJoin(outputDirectory, fileName)
+            val fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+'.'+ if (isVideo) {"mp4"} else {"jpg"}
+            outputPath = PathUtils.pathJoin(outputDirectory, fileName)
+        } while (encryptedVolume.pathExists(outputPath))
+        return outputPath
     }
 
     private fun startTimerThen(action: () -> Unit) {
@@ -415,7 +417,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     imageCapture.takePicture(outputOptions, executor, object : ImageCapture.OnImageSavedCallback {
                         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
                             binding.takePhotoButton.onPhotoTaken()
-                            if (gocryptfsVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)) {
+                            if (encryptedVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)) {
                                 Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
                             } else {
                                 CustomAlertDialogBuilder(this@CameraActivity, themeValue)
@@ -447,17 +449,17 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         } else if (!isWaitingForTimer) {
             val path = getOutputPath(true)
             startTimerThen {
-                val handleId = gocryptfsVolume.openWriteMode(path)
+                val fileHandle = encryptedVolume.openFile(path)
                 videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
                     var offset = 0L
                     override fun write(byteArray: ByteArray) {
-                        offset += gocryptfsVolume.writeFile(handleId, offset, byteArray, byteArray.size)
+                        offset += encryptedVolume.write(fileHandle, offset, byteArray, byteArray.size)
                     }
                     override fun seek(offset: Long) {
                         this.offset = offset
                     }
                     override fun close() {
-                        gocryptfsVolume.closeFile(handleId)
+                        encryptedVolume.closeFile(fileHandle)
                     }
                 }), executor, object : VideoCapture.OnVideoSavedCallback {
                     override fun onVideoSaved() {
@@ -479,7 +481,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     override fun onDestroy() {
         super.onDestroy()
         if (!isFinishingIntentionally) {
-            gocryptfsVolume.close()
+            encryptedVolume.close()
             RestrictedFileProvider.wipeAll(this)
         }
     }

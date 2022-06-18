@@ -25,7 +25,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     protected open fun onVideoSizeChanged(width: Int, height: Int) {}
 
     private fun createMediaSource(filePath: String): MediaSource {
-        val dataSourceFactory = GocryptfsDataSource.Factory(gocryptfsVolume, filePath)
+        val dataSourceFactory = EncryptedVolumeDataSource.Factory(encryptedVolume, filePath)
         return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
             .createMediaSource(MediaItem.fromUri(ConstValues.FAKE_URI))
     }

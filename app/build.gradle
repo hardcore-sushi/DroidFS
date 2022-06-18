@@ -1,6 +1,18 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+if (hasProperty("disableCryFS")) {
+    ext.disableCryFS = getProperty("disableCryFS")
+} else {
+    ext.disableCryFS = false
+}
+
+if (hasProperty("disableGocryptfs")) {
+    ext.disableGocryptfs = getProperty("disableGocryptfs")
+} else {
+    ext.disableGocryptfs = false
+}
+
 android {
     compileSdkVersion 31
     buildToolsVersion "31"
@@ -15,11 +27,20 @@ android {
         minSdkVersion 21
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 29
-        versionCode 27
-        versionName "1.10.1"
+        versionCode 28
+        versionName "2.0.0-alpha1"
 
         ndk {
             abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+        }
+
+        externalNativeBuild.cmake {
+            if (project.ext.disableGocryptfs) {
+                arguments "-DGOCRYPTFS=OFF"
+            }
+            if (project.ext.disableCryFS) {
+                arguments "-DCRYFS=OFF"
+            }
         }
     }
 
@@ -34,6 +55,8 @@ android {
 
     applicationVariants.all { variant ->
         variant.resValue "string", "versionName", variant.versionName
+        buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
+        buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"
     }
 
     buildFeatures {
@@ -42,9 +65,13 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled true
-            shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            postprocessing {
+                removeUnusedCode true
+                removeUnusedResources true
+                obfuscate false
+                optimizeCode true
+                proguardFiles 'proguard-rules.pro'
+            }
         }
     }
 

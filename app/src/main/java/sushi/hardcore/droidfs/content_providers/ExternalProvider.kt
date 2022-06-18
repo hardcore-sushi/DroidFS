@@ -9,9 +9,9 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
@@ -33,25 +33,25 @@ object ExternalProvider {
         return previous_content_type
     }
 
-    private fun exportFile(context: Context, gocryptfsVolume: GocryptfsVolume, file_path: String, previous_content_type: String?): Pair<Uri?, String?> {
+    private fun exportFile(context: Context, encryptedVolume: EncryptedVolume, file_path: String, previous_content_type: String?): Pair<Uri?, String?> {
         val fileName = File(file_path).name
         val tmpFileUri = RestrictedFileProvider.newFile(fileName)
         if (tmpFileUri != null){
             storedFiles.add(tmpFileUri)
-            if (gocryptfsVolume.exportFile(context, file_path, tmpFileUri)) {
+            if (encryptedVolume.exportFile(context, file_path, tmpFileUri)) {
                 return Pair(tmpFileUri, getContentType(fileName, previous_content_type))
             }
         }
         return Pair(null, null)
     }
 
-    fun share(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_paths: List<String>) {
+    fun share(activity: AppCompatActivity, themeValue: String, encryptedVolume: EncryptedVolume, file_paths: List<String>) {
         var contentType: String? = null
         val uris = ArrayList<Uri>(file_paths.size)
         object : LoadingTask<String?>(activity, themeValue, R.string.loading_msg_export) {
             override suspend fun doTask(): String? {
                 for (path in file_paths) {
-                    val result = exportFile(activity, gocryptfsVolume, path, contentType)
+                    val result = exportFile(activity, encryptedVolume, path, contentType)
                     contentType = if (result.first != null) {
                         uris.add(result.first!!)
                         result.second
@@ -83,10 +83,10 @@ object ExternalProvider {
         }
     }
 
-    fun open(activity: AppCompatActivity, themeValue: String, gocryptfsVolume: GocryptfsVolume, file_path: String) {
+    fun open(activity: AppCompatActivity, themeValue: String, encryptedVolume: EncryptedVolume, file_path: String) {
         object : LoadingTask<Intent?>(activity, themeValue, R.string.loading_msg_export) {
             override suspend fun doTask(): Intent? {
-                val result = exportFile(activity, gocryptfsVolume, file_path, null)
+                val result = exportFile(activity, encryptedVolume, file_path, null)
                 return if (result.first != null) {
                     Intent(Intent.ACTION_VIEW).apply {
                         setDataAndType(result.first, result.second)

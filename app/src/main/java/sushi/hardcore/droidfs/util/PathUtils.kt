@@ -13,23 +13,22 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.text.DecimalFormat
 import kotlin.math.log10
+import kotlin.math.max
 import kotlin.math.pow
 
 object PathUtils {
+    const val SEPARATOR = '/'
+
     fun getParentPath(path: String): String {
-        return if (path.endsWith("/")) {
-            val a = path.substring(0, path.length - 2)
-            if (a.contains("/")) {
-                a.substring(0, a.lastIndexOf("/"))
-            } else {
-                ""
-            }
+        val strippedPath = if (path.endsWith(SEPARATOR)) {
+            path.substring(0, max(1, path.length - 1))
         } else {
-            if (path.contains("/")) {
-                path.substring(0, path.lastIndexOf("/"))
-            } else {
-                ""
-            }
+            path
+        }
+        return if (strippedPath.count { it == SEPARATOR } <= 1) {
+            SEPARATOR.toString()
+        } else {
+            strippedPath.substring(0, strippedPath.lastIndexOf(SEPARATOR))
         }
     }
 
@@ -37,27 +36,21 @@ object PathUtils {
         val result = StringBuilder()
         for (element in strings) {
             if (element.isNotEmpty()) {
-                result.append(element)
-                if (!element.endsWith("/")) {
-                    result.append("/")
+                if (!element.startsWith(SEPARATOR) && result.last() != SEPARATOR) {
+                    result.append(SEPARATOR)
                 }
+                result.append(element)
             }
         }
-        return result.substring(0, result.length - 1)
+        return result.toString()
     }
 
     fun getRelativePath(parentPath: String, childPath: String): String {
-        return when {
-            parentPath.isEmpty() -> {
-                childPath
-            }
-            parentPath.length == childPath.length -> {
-                ""
-            }
-            else -> {
-                childPath.substring(parentPath.length + 1)
-            }
-        }
+        return childPath.substring(parentPath.length + if (parentPath.endsWith(SEPARATOR) || childPath.length == parentPath.length) {
+            0
+        } else {
+            1
+        })
     }
 
     fun isChildOf(childPath: String, parentPath: String): Boolean {
@@ -79,7 +72,7 @@ object PathUtils {
         if (result == null) {
             result = uri.path
             result?.let {
-                val cut = it.lastIndexOf('/')
+                val cut = it.lastIndexOf(SEPARATOR)
                 if (cut != -1) {
                     result = it.substring(cut + 1)
                 }
