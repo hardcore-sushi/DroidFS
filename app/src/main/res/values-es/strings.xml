@@ -138,7 +138,6 @@
     <string name="image_saved_successfully">Cambios de la imagen guardados con éxito.</string>
     <string name="bitmap_compress_failed">Fallo al comprimir el mapa de bits.</string>
     <string name="file_write_failed">No se ha podido escribir el archivo.</string>
-    <string name="error_not_a_volume">No se reconoce el volumen Gocryptfs. Por favor, comprueba la ruta seleccionada.</string>
     <string name="version">Versión</string>
     <string name="error_cipher_null">Error de cifrado núlo</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -173,7 +172,6 @@
     <string name="maximize_quality">Maximizar la calidad</string>
     <string name="minimize_latency">Minimizar la latencia</string>
     <string name="auto">Automático</string>
-    <string name="xchacha_warning">XChaCha20-Poly1305 sólo está soportado desde gocryptfs v2.2.0. Las versiones anteriores no podrán abrir un volumen basado en este cifrado.</string>
     <string name="encryption_cipher_label">Cifrado de encriptación:</string>
     <string name="theme">Tema</string>
     <string name="theme_summary">Personalizar el tema de la aplicación</string>

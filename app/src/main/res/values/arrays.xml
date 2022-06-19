@@ -1,8 +1,27 @@
 <resources>
-    <string-array name="encryption_cipher">
+    <string-array name="volume_types">
+        <item>Gocryptfs</item>
+        <item>CryFS</item>
+    </string-array>
+
+    <string-array name="gocryptfs_encryption_ciphers">
         <item>AES-GCM</item>
         <item>XChaCha20-Poly1305</item>
         <item>@string/auto</item>
+    </string-array>
+
+    <string-array name="cryfs_encryption_ciphers">
+        <item>xchacha20-poly1305</item>
+        <item>aes-256-gcm</item>
+        <item>aes-128-gcm</item>
+        <item>twofish-256-gcm</item>
+        <item>twofish-128-gcm</item>
+        <item>serpent-256-gcm</item>
+        <item>serpent-128-gcm</item>
+        <item>cast-256-gcm</item>
+        <item>mars-448-gcm</item>
+        <item>mars-256-gcm</item>
+        <item>mars-128-gcm</item>
     </string-array>
 
     <string-array name="sort_orders_entries">

@@ -15,7 +15,9 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
+import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -80,6 +82,37 @@ class CreateVolumeFragment: Fragment() {
         if (!usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
         }
+        binding.spinnerVolumeType.adapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            resources.getStringArray(R.array.volume_types)
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        val encryptionCipherAdapter = ArrayAdapter(
+            requireContext(),
+            android.R.layout.simple_spinner_item,
+            resources.getStringArray(R.array.gocryptfs_encryption_ciphers).toMutableList()
+        ).apply {
+            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        }
+        binding.spinnerVolumeType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val ciphersArray = if (position == 0) { // Gocryptfs
+                    binding.checkboxSavePassword.visibility = View.VISIBLE
+                    R.array.gocryptfs_encryption_ciphers
+                } else {
+                    binding.checkboxSavePassword.visibility = View.GONE
+                    R.array.cryfs_encryption_ciphers
+                }
+                with(encryptionCipherAdapter) {
+                    clear()
+                    addAll(resources.getStringArray(ciphersArray).asList())
+                }
+            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+        binding.spinnerCipher.adapter = encryptionCipherAdapter
         if (pinPasswords) {
             arrayOf(binding.editPassword, binding.editPasswordConfirm).forEach {
                 it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
@@ -88,24 +121,6 @@ class CreateVolumeFragment: Fragment() {
         binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
             createVolume()
             true
-        }
-        binding.spinnerXchacha.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            resources.getStringArray(R.array.encryption_cipher)
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        }
-        binding.spinnerXchacha.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                if (position == 1)
-                    CustomAlertDialogBuilder(requireContext(), themeValue)
-                        .setTitle(R.string.warning)
-                        .setMessage(R.string.xchacha_warning)
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-            }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         binding.buttonCreate.setOnClickListener {
             createVolume()
@@ -117,31 +132,45 @@ class CreateVolumeFragment: Fragment() {
         (activity as AddVolumeActivity).onFragmentLoaded(false)
     }
 
+    private fun saveVolume(success: Boolean, volumeType: Byte): SavedVolume? {
+        return if (success) {
+            val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
+            val volume = SavedVolume(volumeName, isHiddenVolume, volumeType)
+            volumeDatabase.apply {
+                if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
+                    removeVolume(volumeName)
+                saveVolume(volume)
+            }
+            volume
+        } else {
+            null
+        }
+    }
+
     private fun createVolume() {
-        val password = CharArray(binding.editPassword.text.length)
-        binding.editPassword.text.getChars(0, password.size, password, 0)
-        val passwordConfirm = CharArray(binding.editPasswordConfirm.text.length)
-        binding.editPasswordConfirm.text.getChars(0, passwordConfirm.size, passwordConfirm, 0)
+        val password = WidgetUtil.editTextContentEncode(binding.editPassword)
+        val passwordConfirm = WidgetUtil.editTextContentEncode(binding.editPasswordConfirm)
         if (!password.contentEquals(passwordConfirm)) {
             Toast.makeText(requireContext(), R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
-            Arrays.fill(password, 0.toChar())
-            Arrays.fill(passwordConfirm, 0.toChar())
+            Arrays.fill(password, 0)
+            Arrays.fill(passwordConfirm, 0)
         } else {
-            Arrays.fill(passwordConfirm, 0.toChar())
+            Arrays.fill(passwordConfirm, 0)
             var returnedHash: ByteArray? = null
             if (binding.checkboxSavePassword.isChecked)
                 returnedHash = ByteArray(GocryptfsVolume.KeyLen)
             object: LoadingTask<SavedVolume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
                 override suspend fun doTask(): SavedVolume? {
-                    val xchacha = when (binding.spinnerXchacha.selectedItemPosition) {
-                        0 -> 0
-                        1 -> 1
-                        else -> -1
-                    }
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    val volume = if (GocryptfsVolume.createVolume(
+                    val volume = if (binding.spinnerVolumeType.selectedItem == 0) { // Gocryptfs
+                        val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
+                            0 -> 0
+                            1 -> 1
+                            else -> -1
+                        }
+                        saveVolume(GocryptfsVolume.createVolume(
                             volumePath,
                             password,
                             false,
@@ -149,20 +178,16 @@ class CreateVolumeFragment: Fragment() {
                             GocryptfsVolume.ScryptDefaultLogN,
                             ConstValues.CREATOR,
                             returnedHash
-                        )
-                    ) {
-                        val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
-                        val volume = SavedVolume(volumeName, isHiddenVolume, EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
-                        volumeDatabase.apply {
-                            if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
-                                removeVolume(volumeName)
-                            saveVolume(volume)
-                        }
-                        volume
+                        ), EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                     } else {
-                        null
+                        saveVolume(CryfsVolume.create(
+                            volumePath,
+                            CryfsVolume.getLocalStateDir(activity.filesDir.path),
+                            password,
+                            resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition]
+                        ), EncryptedVolume.CRYFS_VOLUME_TYPE)
                     }
-                    Arrays.fill(password, 0.toChar())
+                    Arrays.fill(password, 0)
                     return volume
                 }
             }.startTask(lifecycleScope) { volume ->

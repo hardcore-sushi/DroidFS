@@ -138,7 +138,7 @@
     <string name="image_saved_successfully">Image changes successfully saved.</string>
     <string name="bitmap_compress_failed">Failed to compress the bitmap.</string>
     <string name="file_write_failed">Failed to write the file.</string>
-    <string name="error_not_a_volume">Gocryptfs volume not recognized. Please check the selected path.</string>
+    <string name="error_not_a_volume">Encrypted volume not recognized. Please check the selected path.</string>
     <string name="version">Version</string>
     <string name="error_cipher_null">Error cipher is null</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -173,7 +173,6 @@
     <string name="maximize_quality">Maximize quality</string>
     <string name="minimize_latency">Minimize latency</string>
     <string name="auto">Auto</string>
-    <string name="xchacha_warning">XChaCha20-Poly1305 is only supported since gocryptfs v2.2.0. Older versions won\'t be able to open a volume based on this cipher.</string>
     <string name="encryption_cipher_label">Encryption cipher:</string>
     <string name="theme">Theme</string>
     <string name="theme_summary">Customize app theme</string>
@@ -242,4 +241,5 @@
     <string name="elements_selected">%d/%d selected</string>
     <string name="pin_passwords_title">Numeric keypad layout</string>
     <string name="pin_passwords_summary">Use a numeric keypad layout when entering volume passwords</string>
+    <string name="volume_type_label">Volume type:</string>
 </resources>

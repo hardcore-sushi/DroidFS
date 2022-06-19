@@ -133,7 +133,6 @@
     <string name="image_saved_successfully">Изменения изображения успешно сохранены.</string>
     <string name="bitmap_compress_failed">Невозможно сжать растровое изображение.</string>
     <string name="file_write_failed">Невозможно записать файл.</string>
-    <string name="error_not_a_volume">Том GocryptFS не распознан. Проверьте выбранный путь.</string>
     <string name="version">Версия</string>
     <string name="error_cipher_null">Шифр ошибки нулевой</string>
     <string name="key_permanently_invalidated_exception_msg">Похоже, вы добавили новый отпечаток пальца. Сохранённый хеш паролей стал непригодным для использования.</string>
@@ -167,7 +166,6 @@
     <string name="maximize_quality">Максимальное качество</string>
     <string name="minimize_latency">Минимальная задержка</string>
     <string name="auto">Авто</string>
-    <string name="xchacha_warning">Шифр XChaCha20-Poly1305 поддерживается только с версии GocryptFS 2.2.0. Более старые версии не смогут открыть том, использующий данный шифр.</string>
     <string name="encryption_cipher_label">Шифр:</string>
     <string name="theme">Тема</string>
     <string name="theme_summary">Настройка темы приложения</string>

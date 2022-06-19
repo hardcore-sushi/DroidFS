@@ -9,6 +9,18 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:text="@string/volume_type_label"/>
+
+    <Spinner
+        android:id="@+id/spinner_volume_type"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginVertical="@dimen/volume_operation_vertical_gap"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:text="@string/password_label"/>
 
     <EditText
@@ -44,11 +56,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/encryption_cipher_label"
-            android:layout_toStartOf="@id/spinner_xchacha"
+            android:layout_toStartOf="@id/spinner_cipher"
             android:layout_alignParentStart="true"/>
 
         <Spinner
-            android:id="@+id/spinner_xchacha"
+            android:id="@+id/spinner_cipher"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentEnd="true" />

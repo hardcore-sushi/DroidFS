@@ -135,7 +135,6 @@
     <string name="image_saved_successfully">Mudanças na imagem salva com sucesso.</string>
     <string name="bitmap_compress_failed">Falha ao compactar o bitmap.</string>
     <string name="file_write_failed">Falha ao salvar o arquivo.</string>
-    <string name="error_not_a_volume">O volume do Gocryptfs não foi reconhecido. Por favor, verifique a localização selecionada.</string>
     <string name="version">Versão</string>
     <string name="error_cipher_null">Erro, o cipher é nulo</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -170,7 +169,6 @@
     <string name="maximize_quality">Maximizar a qualidade</string>
     <string name="minimize_latency">Minimizar a latência</string>
     <string name="auto">Autom</string>
-    <string name="xchacha_warning">XChaCha20-Poly1305 só tem suporte desde gocryptfs v2.2.0. Versões mais antigas não podem abrir um volume baseado neste cipher.</string>
     <string name="encryption_cipher_label">Cipher de criptografia:</string>
     <string name="theme">Tema</string>
     <string name="theme_summary">Personalizar o tema do app</string>

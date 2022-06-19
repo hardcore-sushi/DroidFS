@@ -31,7 +31,8 @@ void jbyteArray_to_unsignedCharArray(const jbyte* src, unsigned char* dst, const
 
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
-                                                                             jstring jroot_cipher_dir, jcharArray jpassword,
+                                                                             jstring jroot_cipher_dir,
+                                                                             jbyteArray jpassword,
                                                                              jboolean plainTextNames,
                                                                              jint xchacha,
                                                                              jint logN,
@@ -42,9 +43,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
     GoString gofilename = {root_cipher_dir, strlen(root_cipher_dir)}, gocreator = {creator, strlen(creator)};
 
     const size_t password_len = (*env)->GetArrayLength(env, jpassword);
-    jchar* jchar_password = (*env)->GetCharArrayElements(env, jpassword, NULL);
-    char password[password_len];
-    jcharArray_to_charArray(jchar_password, password, password_len);
+    char* password = (char*)(*env)->GetByteArrayElements(env, jpassword, NULL);
     GoSlice go_password = {password, password_len, password_len};
 
     size_t returned_hash_len;
@@ -65,7 +64,7 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_00024Companion_createVolume(JNIEnv *
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
     (*env)->ReleaseStringUTFChars(env, jcreator, creator);
     wipe(password, password_len);
-    (*env)->ReleaseCharArrayElements(env, jpassword, jchar_password, 0);
+    (*env)->ReleaseByteArrayElements(env, jpassword, (jbyte*)password, 0);
 
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
         unsignedCharArray_to_jbyteArray(returned_hash, jbyte_returned_hash, returned_hash_len);
@@ -260,15 +259,11 @@ Java_sushi_hardcore_droidfs_GocryptfsVolume_native_1list_1dir(JNIEnv *env, jobje
         size_t name_len = strlen(name);
 
         const char gcf_full_path[plain_dir_len+name_len+2];
-        if (plain_dir_len > 0){
-            strcpy(gcf_full_path, plain_dir);
-            if (plain_dir[-2] != '/') {
-                strcat(gcf_full_path, "/");
-            }
-            strcat(gcf_full_path, name);
-        } else {
-            strcpy(gcf_full_path, name);
+        strcpy(gcf_full_path, plain_dir);
+        if (plain_dir[-2] != '/') {
+            strcat(gcf_full_path, "/");
         }
+        strcat(gcf_full_path, name);
 
         GoString go_name = {gcf_full_path, strlen(gcf_full_path)};
         struct gcf_get_attrs_return attrs = gcf_get_attrs(sessionID, go_name);

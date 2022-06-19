@@ -1,7 +1,7 @@
 #include <sys/stat.h>
 #include <jni.h>
 
-jlong cryfs_init(JNIEnv* env, jstring jbaseDir, jstring jlocalSateDir, jbyteArray jpassword);
+jlong cryfs_init(JNIEnv* env, jstring jbaseDir, jstring jlocalSateDir, jbyteArray jpassword, jboolean createBaseDir, jstring jcipher);
 jlong cryfs_create(JNIEnv* env, jlong fusePtr, jstring jpath, mode_t mode);
 jlong cryfs_open(JNIEnv* env, jlong fusePtr, jstring jpath, jint flags);
 jint cryfs_read(JNIEnv* env, jlong fusePtr, jlong fileHandle, jbyteArray jbuffer, jlong offset);
@@ -20,8 +20,9 @@ jboolean cryfs_is_closed(jlong fusePtr);
 JNIEXPORT jlong JNICALL
 Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeInit(JNIEnv *env, jobject thiz,
                                                                jstring base_dir, jstring jlocalStateDir,
-                                                               jbyteArray password) {
-    return cryfs_init(env, base_dir, jlocalStateDir, password);
+                                                               jbyteArray password, jboolean createBaseDir,
+                                                               jstring cipher) {
+    return cryfs_init(env, base_dir, jlocalStateDir, password, createBaseDir, cipher);
 }
 
 JNIEXPORT jlong JNICALL

@@ -32,6 +32,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
@@ -342,7 +343,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         val onlyOneAndWriteable =
             onlyOneSelected &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].canWrite(filesDir.path)
-        menu.findItem(R.id.change_password).isVisible = onlyOneAndWriteable
+        menu.findItem(R.id.change_password).isVisible =
+            onlyOneAndWriteable &&
+            // Only gocryptfs volumes support password change
+            volumeAdapter.volumes[volumeAdapter.selectedItems.first()].type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
         menu.findItem(R.id.remove_default_open).isVisible =
             onlyOneSelected &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].name == defaultVolumeName
@@ -513,20 +517,18 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 apply()
             }
         }
-        val password = CharArray(dialogBinding.editPassword.text.length)
-        dialogBinding.editPassword.text.getChars(0, password.size, password, 0)
         // openVolumeWithPassword is responsible for wiping the password
         openVolumeWithPassword(
             volume,
             position,
-            StandardCharsets.UTF_8.encode(CharBuffer.wrap(password)).array(),
+            WidgetUtil.editTextContentEncode(dialogBinding.editPassword),
             dialogBinding.checkboxSavePassword.isChecked,
         )
     }
 
     private fun askForPassword(volume: SavedVolume, position: Int, savePasswordHash: Boolean = false) {
         val dialogBinding = DialogOpenVolumeBinding.inflate(layoutInflater)
-        if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
+        if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null || volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
         } else {
             dialogBinding.checkboxSavePassword.isChecked = savePasswordHash

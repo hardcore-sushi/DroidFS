@@ -1,10 +1,4 @@
 ﻿<resources>
-    <string-array name="encryption_cipher">
-        <item>AES-GCM</item>
-        <item>XChaCha20-Poly1305</item>
-        <item>@string/auto</item>
-    </string-array>
-
     <string-array name="sort_orders_entries">
         <item>اسم</item>
         <item>حجم</item>

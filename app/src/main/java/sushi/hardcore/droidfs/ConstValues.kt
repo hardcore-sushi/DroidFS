@@ -6,6 +6,7 @@ import java.io.File
 object ConstValues {
     const val CREATOR = "DroidFS"
     const val VOLUME_DATABASE_NAME = "SavedVolumes"
+    const val CRYFS_LOCAL_STATE_DIR = "cryfsLocalState"
     const val SORT_ORDER_KEY = "sort_order"
     val FAKE_URI: Uri = Uri.parse("fakeuri://droidfs")
     const val MAX_KERNEL_WRITE = 128*1024

@@ -454,7 +454,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 items.clear()
                 break
             } else {
-                items.add(OperationFile(PathUtils.pathJoin(fileName, currentDirectoryPath), Stat.S_IFREG))
+                items.add(OperationFile(PathUtils.pathJoin(currentDirectoryPath, fileName), Stat.S_IFREG))
             }
         }
         if (items.size > 0) {

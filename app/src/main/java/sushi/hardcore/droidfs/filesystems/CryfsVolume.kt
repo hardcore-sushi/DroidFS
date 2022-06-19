@@ -1,7 +1,10 @@
 package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
+import android.util.Log
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.PathUtils
 
 class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
     companion object {
@@ -11,7 +14,13 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
 
         const val CONFIG_FILE_NAME = "cryfs.config"
 
-        private external fun nativeInit(baseDir: String, localStateDir: String, password: ByteArray): Long
+        private external fun nativeInit(
+            baseDir: String,
+            localStateDir: String,
+            password: ByteArray,
+            createBaseDir: Boolean,
+            cipher: String?
+        ): Long
         private external fun nativeCreate(fusePtr: Long, path: String, mode: Int): Long
         private external fun nativeOpen(fusePtr: Long, path: String, flags: Int): Long
         private external fun nativeRead(fusePtr: Long, fileHandle: Long, buffer: ByteArray, offset: Long): Int
@@ -27,9 +36,25 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         private external fun nativeClose(fusePtr: Long)
         private external fun nativeIsClosed(fusePtr: Long): Boolean
 
-        fun init(baseDir: String, localStateDir: String, password: ByteArray): CryfsVolume {
-            val fusePtr = nativeInit(baseDir, localStateDir, password)
-            return CryfsVolume(fusePtr)
+        fun getLocalStateDir(filesDir: String): String {
+            return PathUtils.pathJoin(filesDir, ConstValues.CRYFS_LOCAL_STATE_DIR)
+        }
+
+        private fun init(baseDir: String, localStateDir: String, password: ByteArray, createBaseDir: Boolean, cipher: String?): CryfsVolume? {
+            val fusePtr = nativeInit(baseDir, localStateDir, password, createBaseDir, cipher)
+            return if (fusePtr == 0L) {
+                null
+            } else {
+                CryfsVolume(fusePtr)
+            }
+        }
+
+        fun create(baseDir: String, localStateDir: String, password: ByteArray, cipher: String?): Boolean {
+            return init(baseDir, localStateDir, password, true, cipher)?.also { it.close() } != null
+        }
+
+        fun init(baseDir: String, localStateDir: String, password: ByteArray): CryfsVolume? {
+            return init(baseDir, localStateDir, password, false, null)
         }
     }
 

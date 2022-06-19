@@ -379,11 +379,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     private fun getOutputPath(isVideo: Boolean): String {
         val baseName = if (isVideo) {"VID"} else {"IMG"}+'_'+dateFormat.format(Date())+'_'
-        var fileName: String
+        var outputPath: String
         do {
-            fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+'.'+ if (isVideo) {"mp4"} else {"jpg"}
-        } while (encryptedVolume.pathExists(fileName))
-        return PathUtils.pathJoin(outputDirectory, fileName)
+            val fileName = baseName+(random.nextInt(fileNameRandomMax-fileNameRandomMin)+fileNameRandomMin)+'.'+ if (isVideo) {"mp4"} else {"jpg"}
+            outputPath = PathUtils.pathJoin(outputDirectory, fileName)
+        } while (encryptedVolume.pathExists(outputPath))
+        return outputPath
     }
 
     private fun startTimerThen(action: () -> Unit) {
@@ -447,18 +448,18 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             isRecording = false
         } else if (!isWaitingForTimer) {
             val path = getOutputPath(true)
-            /*startTimerThen {
-                val handleId = encryptedVolume.openWriteMode(path)
+            startTimerThen {
+                val fileHandle = encryptedVolume.openFile(path)
                 videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
                     var offset = 0L
                     override fun write(byteArray: ByteArray) {
-                        offset += encryptedVolume.writeFile(handleId, offset, byteArray, byteArray.size)
+                        offset += encryptedVolume.write(fileHandle, offset, byteArray, byteArray.size)
                     }
                     override fun seek(offset: Long) {
                         this.offset = offset
                     }
                     override fun close() {
-                        encryptedVolume.closeFile(handleId)
+                        encryptedVolume.closeFile(fileHandle)
                     }
                 }), executor, object : VideoCapture.OnVideoSavedCallback {
                     override fun onVideoSaved() {
@@ -473,7 +474,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 })
                 binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
                 isRecording = true
-            }*/
+            }
         }
     }
 

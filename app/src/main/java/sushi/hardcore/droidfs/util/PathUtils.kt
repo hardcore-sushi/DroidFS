@@ -14,19 +14,20 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.text.DecimalFormat
 import kotlin.math.log10
+import kotlin.math.max
 import kotlin.math.pow
 
 object PathUtils {
     fun getParentPath(path: String): String {
         return if (path.endsWith("/")) {
-            val a = path.substring(0, path.length - 2)
+            val a = path.substring(0, max(1, path.length - 1))
             if (a.count { it == '/' } == 1) {
                 "/"
             } else {
                 a.substring(0, a.lastIndexOf("/"))
             }
         } else {
-            if (path.count { it == '/' } == 1) {
+            if (path.count { it == '/' } <= 1) {
                 "/"
             } else {
                 path.substring(0, path.lastIndexOf("/"))
@@ -48,17 +49,11 @@ object PathUtils {
     }
 
     fun getRelativePath(parentPath: String, childPath: String): String {
-        return when {
-            parentPath.isEmpty() -> {
-                childPath
-            }
-            parentPath.length == childPath.length -> {
-                ""
-            }
-            else -> {
-                childPath.substring(parentPath.length + 1)
-            }
-        }
+        return childPath.substring(parentPath.length + if (parentPath.endsWith("/")) {
+            0
+        } else {
+            1
+        })
     }
 
     fun isChildOf(childPath: String, parentPath: String): Boolean {
