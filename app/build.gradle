@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 android {
     compileSdkVersion 31
     buildToolsVersion "31"
-    ndkVersion "24.0.8215888"
+    ndkVersion "23.1.7779620"
 
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8

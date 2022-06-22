@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
+project(DroidFS)
+
 add_subdirectory(${PROJECT_SOURCE_DIR}/libcryfs/)
 
 add_library(
@@ -26,8 +28,7 @@ target_link_libraries(
 )
 
 add_library(cryfs_jni SHARED src/main/native/libcryfs.c)
-#file(GLOB CRYFS_STATIC_LIBRARIES ${PROJECT_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/lib*.a)
-target_link_libraries(cryfs_jni fspp-fuse)#${CRYFS_STATIC_LIBRARIES})
+target_link_libraries(cryfs_jni fspp-fuse)
 
 add_library(
         avformat
