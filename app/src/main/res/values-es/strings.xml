@@ -110,7 +110,7 @@
     <string name="github_summary">El repositorio de DroidFS en GitHub. Código fuente, documentación, seguimiento de errores…</string>
     <string name="gitea">Gitea</string>
     <string name="gitea_summary">El repositorio DroidFS en la instancia Gitea de Chapril. A diferencia de GitHub, Gitea es un software totalmente libre y auto-alojado. Código fuente, documentación, seguimiento de errores…</string>
-    <string name="share">Comaprtir</string>
+    <string name="share">Compartir</string>
     <string name="decrypt_files">Exportar/Desencriptar</string>
     <string name="copy_failed">Copia de %s ha fallado.</string>
     <string name="copy_success">¡Copiado satisfactoriamente!</string>
