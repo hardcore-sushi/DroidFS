@@ -32,7 +32,6 @@ import sushi.hardcore.droidfs.ConstValues.isImage
 import sushi.hardcore.droidfs.ConstValues.isPDF
 import sushi.hardcore.droidfs.ConstValues.isText
 import sushi.hardcore.droidfs.ConstValues.isVideo
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter

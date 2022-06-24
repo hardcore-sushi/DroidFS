@@ -9,6 +9,7 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
+import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 

@@ -11,6 +11,7 @@ object ConstValues {
     val FAKE_URI: Uri = Uri.parse("fakeuri://droidfs")
     const val MAX_KERNEL_WRITE = 128*1024
     const val WIPE_PASSES = 2
+    const val IO_BUFF_SIZE = 16384
     const val SLIDESHOW_DELAY: Long = 4000
     const val DEFAULT_THEME_VALUE = "dark_green"
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"

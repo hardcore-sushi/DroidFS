@@ -1,9 +1,4 @@
 <resources>
-    <string-array name="volume_types">
-        <item>Gocryptfs</item>
-        <item>CryFS</item>
-    </string-array>
-
     <string-array name="gocryptfs_encryption_ciphers">
         <item>AES-GCM</item>
         <item>XChaCha20-Poly1305</item>

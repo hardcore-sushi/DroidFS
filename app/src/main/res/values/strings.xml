@@ -242,4 +242,8 @@
     <string name="pin_passwords_title">Numeric keypad layout</string>
     <string name="pin_passwords_summary">Use a numeric keypad layout when entering volume passwords</string>
     <string name="volume_type_label">Volume type:</string>
+    <string name="gocryptfs">Gocryptfs</string>
+    <string name="cryfs">CryFS</string>
+    <string name="gocryptfs_disabled">Gocryptfs support has been disabled</string>
+    <string name="cryfs_disabled">CryFS support has been disabled</string>
 </resources>

@@ -17,10 +17,12 @@ import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
+import kotlin.collections.ArrayList
 
 class CreateVolumeFragment: Fragment() {
     companion object {
@@ -51,6 +53,7 @@ class CreateVolumeFragment: Fragment() {
 
     private lateinit var binding: FragmentCreateVolumeBinding
     private var themeValue = ConstValues.DEFAULT_THEME_VALUE
+    private val volumeTypes = ArrayList<String>(2)
     private lateinit var volumePath: String
     private var isHiddenVolume: Boolean = false
     private var usfFingerprint: Boolean = false
@@ -82,10 +85,16 @@ class CreateVolumeFragment: Fragment() {
         if (!usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
         }
+        if (BuildConfig.GOCRYPTFS_ENABLED) {
+            volumeTypes.add(resources.getString(R.string.gocryptfs))
+        }
+        if (BuildConfig.CRYFS_ENABLED) {
+            volumeTypes.add(resources.getString(R.string.cryfs))
+        }
         binding.spinnerVolumeType.adapter = ArrayAdapter(
             requireContext(),
             android.R.layout.simple_spinner_item,
-            resources.getStringArray(R.array.volume_types)
+            volumeTypes
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
@@ -98,8 +107,10 @@ class CreateVolumeFragment: Fragment() {
         }
         binding.spinnerVolumeType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val ciphersArray = if (position == 0) { // Gocryptfs
-                    binding.checkboxSavePassword.visibility = View.VISIBLE
+                val ciphersArray = if (volumeTypes[position] == resources.getString(R.string.gocryptfs)) {
+                    if (usfFingerprint && fingerprintProtector != null) {
+                        binding.checkboxSavePassword.visibility = View.VISIBLE
+                    }
                     R.array.gocryptfs_encryption_ciphers
                 } else {
                     binding.checkboxSavePassword.visibility = View.GONE
@@ -164,7 +175,7 @@ class CreateVolumeFragment: Fragment() {
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    val volume = if (binding.spinnerVolumeType.selectedItem == 0) { // Gocryptfs
+                    val volume = if (volumeTypes[binding.spinnerVolumeType.selectedItemPosition] == resources.getString(R.string.gocryptfs)) {
                         val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
                             0 -> 0
                             1 -> 1

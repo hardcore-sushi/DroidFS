@@ -3,12 +3,11 @@ package sushi.hardcore.droidfs.file_viewers
 import android.annotation.SuppressLint
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
-import sushi.hardcore.droidfs.GocryptfsVolume
+import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.ByteArrayInputStream
@@ -73,7 +72,7 @@ class TextEditor: FileViewerActivity() {
         if (fileHandle != -1L) {
             val buff = ByteArrayInputStream(content)
             var offset: Long = 0
-            val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
             var length: Int
             while (buff.read(ioBuffer).also { length = it } > 0) {
                 val written = encryptedVolume.write(fileHandle, offset, ioBuffer, length).toLong()

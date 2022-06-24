@@ -1,6 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
+ext {
+    enableCryFS = true
+    enableGocryptfs = true
+}
+
 android {
     compileSdkVersion 31
     buildToolsVersion "31"
@@ -21,6 +26,16 @@ android {
         ndk {
             abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
         }
+
+        externalNativeBuild.cmake {
+            targets "mux"
+            if (project.ext.enableGocryptfs) {
+                targets += "gocryptfs_jni"
+            }
+            if (project.ext.enableCryFS) {
+                targets += "cryfs_jni"
+            }
+        }
     }
 
     if (!file("fdroid").exists()) {
@@ -34,6 +49,8 @@ android {
 
     applicationVariants.all { variant ->
         variant.resValue "string", "versionName", variant.versionName
+        buildConfigField "boolean", "CRYFS_ENABLED", "${project.ext.enableCryFS}"
+        buildConfigField "boolean", "GOCRYPTFS_ENABLED", "${project.ext.enableGocryptfs}"
     }
 
     buildFeatures {

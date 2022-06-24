@@ -3,7 +3,6 @@ package sushi.hardcore.droidfs.explorers
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
@@ -12,7 +11,6 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
@@ -24,7 +22,6 @@ import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
-import java.io.File
 
 class ExplorerActivity : BaseExplorerActivity() {
     companion object {

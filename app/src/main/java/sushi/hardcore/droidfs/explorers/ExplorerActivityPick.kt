@@ -2,14 +2,11 @@ package sushi.hardcore.droidfs.explorers
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
-import java.util.*
 
 class ExplorerActivityPick : BaseExplorerActivity() {
     private var resultIntent = Intent()

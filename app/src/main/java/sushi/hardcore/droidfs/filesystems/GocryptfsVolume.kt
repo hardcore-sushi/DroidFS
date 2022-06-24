@@ -1,14 +1,12 @@
-package sushi.hardcore.droidfs
+package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.filesystems.Stat
 
 class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     private external fun native_close(sessionID: Int)
     private external fun native_is_closed(sessionID: Int): Boolean
-    private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>
+    private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>?
     private external fun native_open_read_mode(sessionID: Int, file_path: String): Int
     private external fun native_open_write_mode(sessionID: Int, file_path: String, mode: Int): Int
     private external fun native_read_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray): Int
@@ -24,7 +22,6 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     companion object {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
-        const val DefaultBS = 4096
         const val CONFIG_FILE_NAME = "gocryptfs.conf"
         external fun createVolume(root_cipher_dir: String, password: ByteArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
         private external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int

@@ -5,7 +5,6 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.GocryptfsVolume
 import sushi.hardcore.droidfs.SavedVolume
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.PathUtils
@@ -80,7 +79,7 @@ abstract class EncryptedVolume: Parcelable {
 
     fun exportFile(fileHandle: Long, os: OutputStream): Boolean {
         var offset: Long = 0
-        val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+        val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
         var length: Int
         while (read(fileHandle, ioBuffer, offset).also { length = it } > 0){
             os.write(ioBuffer, 0, length)
@@ -117,7 +116,7 @@ abstract class EncryptedVolume: Parcelable {
         if (dstfileHandle != -1L) {
             var success = true
             var offset: Long = 0
-            val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
             var length: Int
             while (inputStream.read(ioBuffer).also { length = it } > 0) {
                 val written = write(dstfileHandle, offset, ioBuffer, length).toLong()
@@ -159,7 +158,7 @@ abstract class EncryptedVolume: Parcelable {
                     Pair(null, 3)
                 } else {
                     var offset: Long = 0
-                    val ioBuffer = ByteArray(GocryptfsVolume.DefaultBS)
+                    val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
                     var length: Int
                     while (read(fileHandle, ioBuffer, offset).also { length = it } > 0) {
                         System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)

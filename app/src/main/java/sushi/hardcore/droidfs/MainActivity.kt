@@ -31,13 +31,12 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
-import java.nio.CharBuffer
-import java.nio.charset.StandardCharsets
 import java.util.*
 
 class MainActivity : BaseActivity(), VolumeAdapter.Listener {
@@ -346,6 +345,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         menu.findItem(R.id.change_password).isVisible =
             onlyOneAndWriteable &&
             // Only gocryptfs volumes support password change
+            BuildConfig.GOCRYPTFS_ENABLED &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
         menu.findItem(R.id.remove_default_open).isVisible =
             onlyOneSelected &&
@@ -461,6 +461,13 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
     private fun openVolume(volume: SavedVolume, position: Int) {
+        if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE && !BuildConfig.GOCRYPTFS_ENABLED) {
+            Toast.makeText(this, R.string.gocryptfs_disabled, Toast.LENGTH_SHORT).show()
+            return
+        } else if (volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE && !BuildConfig.CRYFS_ENABLED) {
+            Toast.makeText(this, R.string.cryfs_disabled, Toast.LENGTH_SHORT).show()
+            return
+        }
         var askForPassword = true
         fingerprintProtector?.let { fingerprintProtector ->
             volume.encryptedHash?.let { encryptedHash ->
@@ -646,11 +653,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         if (pickMode && !usfKeepOpen) {
             finish()
             if (shouldCloseVolume) {
-                val sessionID = intent.getIntExtra("sessionID", -1)
-                if (sessionID != -1) {
-                    GocryptfsVolume(sessionID).close()
-                    RestrictedFileProvider.wipeAll(this)
-                }
+                intent.getParcelableExtra<EncryptedVolume>("volume")?.close()
+                RestrictedFileProvider.wipeAll(this)
             }
         }
     }
