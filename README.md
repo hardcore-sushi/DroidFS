@@ -1,6 +1,6 @@
 # DroidFS
 DroidFS is an alternative way to use encrypted overlay filesystems on Android that uses its own internal file explorer instead of mounting virtual volumes.
-It currently only works with [gocryptfs](https://github.com/rfjakob/gocryptfs) but support for [CryFS](https://github.com/cryfs/cryfs) could be added in the future.
+It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [CryFS](https://github.com/cryfs/cryfs) (alpha).
 
 <p align="center">
 <img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" height="500">
@@ -83,79 +83,20 @@ DroidFS need some permissions to work properly. Here is why:
 </ul>
 
 # Limitations
-DroidFS use some parts of the original gocryptfs code, which is designed to run on Linux x86 systems: it accesses the underlying file system with file paths and syscalls. However in Android, you can't access other apps files with file paths. Instead, you must use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. And obviously, the original gocryptfs code doesn't work with this API. This is why DroidFS can't open volumes provided by other applications, such as cloud storage clients. You can only use DroidFS with volumes located on shared storage or in the app's internal storage (hidden volumes). External storage such as SD cards are only supported in read-only access for now.
+DroidFS works as a wrapper around modified versions of the original encrypted container implementations ([libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) and [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs)). These programs were designed to run on standard x86 Linux systems: they access the underlying file system with file paths and syscalls. However, on Android, you can't access files from other applications using file paths. Instead, one has to use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. Obviously, neither Gocryptfs nor CryFS support this API. As a result, DroidFS cannot open volumes provided by other applications (such as cloud storage clients), nor can it allow other applications to access encrypted volumes once opened.
 
-# Build
-Most of the original gocryptfs code was used as is (written in Go) and compiled to native code. That's why you need [Go](https://golang.org) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/) to build DroidFS from source.
+Due to Android's storage restrictions, encrypted volumes located on SD cards must be placed under `/Android/data/sushi.hardcore.droidfs/` if you want DroidFS to be able to modify them.
 
-#### Install dependencies
-On debian:
-```
-$ sudo apt-get install build-essential pkg-config libssl-dev
-```
-Install [Go](https://golang.org/doc/install):
-```
-$ sudo apt-get install golang-go
-```
-You also need to install the Android SDK build tools and the [Android NDK](https://developer.android.com/studio/projects/install-ndk).
-
-#### Download Sources
-```
-$ git clone --recurse-submodules https://github.com/hardcore-sushi/DroidFS.git
-$ cd DroidFS
-```
-[libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) needs OpenSSL:
-```
-$ cd app/libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1n.tar.gz
-```
-Verify OpenSSL signature:
-```
-$ wget https://www.openssl.org/source/openssl-1.1.1n.tar.gz.asc
-$ gpg --verify openssl-1.1.1n.tar.gz.asc openssl-1.1.1n.tar.gz
-```
-Continue **ONLY** if the signature is **VALID**.
-```
-$ tar -xvzf openssl-1.1.1n.tar.gz
-```
-DroidFS also need [FFmpeg](https://ffmpeg.org) to record encrypted video:
-```
-$ cd app/ffmpeg
-$ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
-```
-
-#### Generate a keystore
-APKs must be signed to be installed on an Android device. If you don't already have a keystore, you can generate one by running:
-```
-$ keytool -genkey -keystore <output file> -alias <key alias> -keyalg EC -validity 10000
-```
-
-#### Build
-Retrieve your Android NDK installation path, usually something like "/home/\<user\>/Android/SDK/ndk/\<NDK version\>". Now you can build libgocryptfs:
-```
-$ cd DroidFS/app/libgocryptfs
-$ env ANDROID_NDK_HOME="<your ndk path>" OPENSSL_PATH="./openssl-1.1.1n" ./build.sh
- ```
-Then FFmpeg:
-```
-$ cd app/ffmpeg
-$ env ANDROID_NDK_HOME="<your ndk path>" ./build.sh ffmpeg
-```
-Finally, compile the app:
-```
-$ ./gradlew assembleRelease
-```
-If the build succeeds, you will find the unsigned APKs in `app/build/outputs/apk/release/`. You need to sign them in order to install the app:
-```
-$ apksigner sign --out droidfs.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
-```
-Now you can install `droidfs.apk` on your device.
+# Building from source
+You can follow the instructions in [BUILD.md](BUILD.md) to build DroidFS from source.
 
 # Third party code
 Thanks to these open source projects that DroidFS uses:
 
 ### Modified code:
-- [libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) (forked from [gocryptfs](https://github.com/rfjakob/gocryptfs)) to encrypt your data
+- Encrypted filesystems (to protect your data):
+    - [libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) (forked from [gocryptfs](https://github.com/rfjakob/gocryptfs))
+    - [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs) (forked from [cryfs](https://github.com/cryfs/cryfs))
 - [libpdfviewer](https://forge.chapril.org/hardcoresushi/libpdfviewer) (forked from [PdfViewer](https://github.com/GrapheneOS/PdfViewer)) to open PDF files
 - [DoubleTapPlayerView](https://github.com/vkay94/DoubleTapPlayerView) to add double-click controls to the video player
 ### Borrowed code:
