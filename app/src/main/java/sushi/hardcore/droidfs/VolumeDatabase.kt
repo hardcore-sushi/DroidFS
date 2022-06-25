@@ -104,17 +104,11 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
         val list: MutableList<SavedVolume> = ArrayList()
         val cursor = readableDatabase.rawQuery("SELECT * FROM $TABLE_NAME", null)
         while (cursor.moveToNext()){
-            val typeColumnIndex = cursor.getColumnIndex(COLUMN_TYPE)
-            val volumeType = if (typeColumnIndex == -1) {
-                EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
-            } else {
-                cursor.getBlob(typeColumnIndex)[0]
-            }
             list.add(
                 SavedVolume(
                     cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)),
                     cursor.getShort(cursor.getColumnIndexOrThrow(COLUMN_HIDDEN)) == 1.toShort(),
-                    volumeType,
+                    cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_TYPE))[0],
                     cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_HASH)),
                     cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_IV))
                 )

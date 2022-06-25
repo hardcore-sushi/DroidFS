@@ -81,7 +81,7 @@ abstract class EncryptedVolume: Parcelable {
         var offset: Long = 0
         val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
         var length: Int
-        while (read(fileHandle, ioBuffer, offset).also { length = it } > 0){
+        while (read(fileHandle, ioBuffer, offset).also { length = it } > 0) {
             os.write(ioBuffer, 0, length)
             offset += length.toLong()
         }
@@ -105,7 +105,7 @@ abstract class EncryptedVolume: Parcelable {
 
     fun exportFile(context: Context, src_path: String, output_path: Uri): Boolean {
         val os = context.contentResolver.openOutputStream(output_path)
-        if (os != null){
+        if (os != null) {
             return exportFile(src_path, os)
         }
         return false
@@ -137,7 +137,7 @@ abstract class EncryptedVolume: Parcelable {
 
     fun importFile(context: Context, src_uri: Uri, dst_path: String): Boolean {
         val inputStream = context.contentResolver.openInputStream(src_uri)
-        if (inputStream != null){
+        if (inputStream != null) {
             return importFile(inputStream, dst_path)
         }
         return false

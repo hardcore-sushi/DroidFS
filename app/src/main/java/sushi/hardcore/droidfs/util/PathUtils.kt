@@ -6,7 +6,6 @@ import android.net.Uri
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
@@ -18,20 +17,18 @@ import kotlin.math.max
 import kotlin.math.pow
 
 object PathUtils {
+    const val SEPARATOR = '/'
+
     fun getParentPath(path: String): String {
-        return if (path.endsWith("/")) {
-            val a = path.substring(0, max(1, path.length - 1))
-            if (a.count { it == '/' } == 1) {
-                "/"
-            } else {
-                a.substring(0, a.lastIndexOf("/"))
-            }
+        val strippedPath = if (path.endsWith(SEPARATOR)) {
+            path.substring(0, max(1, path.length - 1))
         } else {
-            if (path.count { it == '/' } <= 1) {
-                "/"
-            } else {
-                path.substring(0, path.lastIndexOf("/"))
-            }
+            path
+        }
+        return if (strippedPath.count { it == SEPARATOR } <= 1) {
+            SEPARATOR.toString()
+        } else {
+            strippedPath.substring(0, strippedPath.lastIndexOf(SEPARATOR))
         }
     }
 
@@ -39,17 +36,17 @@ object PathUtils {
         val result = StringBuilder()
         for (element in strings) {
             if (element.isNotEmpty()) {
-                result.append(element)
-                if (!element.endsWith("/")) {
-                    result.append("/")
+                if (!element.startsWith(SEPARATOR) && result.last() != SEPARATOR) {
+                    result.append(SEPARATOR)
                 }
+                result.append(element)
             }
         }
-        return result.substring(0, result.length - 1)
+        return result.toString()
     }
 
     fun getRelativePath(parentPath: String, childPath: String): String {
-        return childPath.substring(parentPath.length + if (parentPath.endsWith("/")) {
+        return childPath.substring(parentPath.length + if (parentPath.endsWith(SEPARATOR)) {
             0
         } else {
             1
@@ -75,7 +72,7 @@ object PathUtils {
         if (result == null) {
             result = uri.path
             result?.let {
-                val cut = it.lastIndexOf('/')
+                val cut = it.lastIndexOf(SEPARATOR)
                 if (cut != -1) {
                     result = it.substring(cut + 1)
                 }

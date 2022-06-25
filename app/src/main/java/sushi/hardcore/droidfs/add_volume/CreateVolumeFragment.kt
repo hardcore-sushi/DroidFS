@@ -159,8 +159,8 @@ class CreateVolumeFragment: Fragment() {
     }
 
     private fun createVolume() {
-        val password = WidgetUtil.editTextContentEncode(binding.editPassword)
-        val passwordConfirm = WidgetUtil.editTextContentEncode(binding.editPasswordConfirm)
+        val password = WidgetUtil.encodeEditTextContent(binding.editPassword)
+        val passwordConfirm = WidgetUtil.encodeEditTextContent(binding.editPasswordConfirm)
         if (!password.contentEquals(passwordConfirm)) {
             Toast.makeText(requireContext(), R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
             Arrays.fill(password, 0)

@@ -6,7 +6,7 @@ import java.nio.charset.StandardCharsets
 import java.util.*
 
 object WidgetUtil {
-    fun editTextContentEncode(editText: EditText): ByteArray {
+    fun encodeEditTextContent(editText: EditText): ByteArray {
         val charArray = CharArray(editText.text.length)
         editText.text.getChars(0, editText.text.length, charArray, 0)
         val byteArray = StandardCharsets.UTF_8.encode(

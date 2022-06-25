@@ -275,7 +275,7 @@ class ImageViewer: FileViewerActivity() {
                                     Bitmap.CompressFormat.JPEG
                                 }, 100, outputStream) == true
                         ){
-                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)){
+                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)) {
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
                                 callback()
                             } else {

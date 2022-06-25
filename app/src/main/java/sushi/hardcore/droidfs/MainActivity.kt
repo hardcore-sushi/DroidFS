@@ -429,7 +429,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             val dstPath = File(srcPath.parent, newName).canonicalFile
             val newDBName: String
             val success = if (volume.isHidden) {
-                if (newName.contains("/")) {
+                if (newName.contains(PathUtils.SEPARATOR)) {
                     Toast.makeText(this, R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
                     renameVolume(volume, position)
                     return@EditTextDialog
@@ -528,7 +528,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         openVolumeWithPassword(
             volume,
             position,
-            WidgetUtil.editTextContentEncode(dialogBinding.editPassword),
+            WidgetUtil.encodeEditTextContent(dialogBinding.editPassword),
             dialogBinding.checkboxSavePassword.isChecked,
         )
     }

@@ -7,7 +7,6 @@ import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -403,7 +402,13 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             if (!ready){
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.warning)
-                    .setMessage(getString(if (items[i].isDirectory){R.string.dir_overwrite_question} else {R.string.file_overwrite_question}, testDstPath))
+                    .setMessage(getString(
+                        if (items[i].isDirectory) {
+                            R.string.dir_overwrite_question
+                        } else {
+                            R.string.file_overwrite_question
+                        }, testDstPath
+                    ))
                     .setPositiveButton(R.string.yes) {_, _ ->
                         items[i].dstPath = testDstPath
                         items[i].overwriteConfirmed = true
@@ -588,7 +593,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     protected open fun closeVolumeOnDestroy() {
-        if (!encryptedVolume.isClosed()){
+        if (!encryptedVolume.isClosed()) {
             encryptedVolume.close()
         }
         RestrictedFileProvider.wipeAll(this) //additional security
@@ -617,7 +622,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (isCreating){
             isCreating = false
         } else {
-            if (encryptedVolume.isClosed()){
+            if (encryptedVolume.isClosed()) {
                 finish()
             } else {
                 isStartingActivity = false

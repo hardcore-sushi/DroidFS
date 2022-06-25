@@ -257,7 +257,7 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1list_1dir(JNIEnv
         elementList = (*env)->NewObject(env, arrayList, arrayListInit, elements.r2);
 
         unsigned int c = 0;
-        for (unsigned int i=0; i<elements.r2; ++i){
+        for (unsigned int i=0; i<elements.r2; ++i) {
             const char* name = &(elements.r0[c]);
             size_t nameLen = strlen(name);
 

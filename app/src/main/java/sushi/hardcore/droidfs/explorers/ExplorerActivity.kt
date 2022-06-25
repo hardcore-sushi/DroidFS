@@ -115,7 +115,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickImportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { rootUri ->
         rootUri?.let {
             val tree = DocumentFile.fromTreeUri(this, it)!! //non-null after Lollipop
-            val operation = OperationFile(PathUtils.pathJoin(tree.name!!, currentDirectoryPath), Stat.S_IFDIR)
+            val operation = OperationFile(PathUtils.pathJoin(currentDirectoryPath, tree.name!!), Stat.S_IFDIR)
             checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
                 checkedOperation?.let {
                     lifecycleScope.launch {
@@ -170,7 +170,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         setContentView(binding.root)
         binding.fab.setOnClickListener {
             if (currentItemAction != ItemsActions.NONE){
-                //openDialogCreateFolder()
+                openDialogCreateFolder()
             } else {
                 val adapter = IconTextDialogAdapter(this)
                 adapter.items = listOf(

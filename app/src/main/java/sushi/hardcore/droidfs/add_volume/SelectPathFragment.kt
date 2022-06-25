@@ -190,7 +190,7 @@ class SelectPathFragment: Fragment() {
                 if (isHidden) R.string.enter_volume_name else R.string.enter_volume_path,
                 Toast.LENGTH_SHORT
             ).show()
-        } else if (isHidden && currentVolumeValue.contains("/")) {
+        } else if (isHidden && currentVolumeValue.contains(PathUtils.SEPARATOR)) {
             Toast.makeText(requireContext(), R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
         } else {
             val volumePath = getCurrentVolumePath()
