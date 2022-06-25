@@ -1,9 +1,16 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
-ext {
-    enableCryFS = true
-    enableGocryptfs = true
+if (hasProperty("disableCryFS")) {
+    ext.disableCryFS = getProperty("disableCryFS")
+} else {
+    ext.disableCryFS = false
+}
+
+if (hasProperty("disableGocryptfs")) {
+    ext.disableGocryptfs = getProperty("disableGocryptfs")
+} else {
+    ext.disableGocryptfs = false
 }
 
 android {
@@ -28,12 +35,11 @@ android {
         }
 
         externalNativeBuild.cmake {
-            targets "mux"
-            if (project.ext.enableGocryptfs) {
-                targets += "gocryptfs_jni"
+            if (project.ext.disableGocryptfs) {
+                arguments "-DGOCRYPTFS=OFF"
             }
-            if (project.ext.enableCryFS) {
-                targets += "cryfs_jni"
+            if (project.ext.disableCryFS) {
+		arguments "-DCRYFS=OFF"
             }
         }
     }
@@ -49,8 +55,8 @@ android {
 
     applicationVariants.all { variant ->
         variant.resValue "string", "versionName", variant.versionName
-        buildConfigField "boolean", "CRYFS_ENABLED", "${project.ext.enableCryFS}"
-        buildConfigField "boolean", "GOCRYPTFS_ENABLED", "${project.ext.enableGocryptfs}"
+        buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
+        buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"
     }
 
     buildFeatures {

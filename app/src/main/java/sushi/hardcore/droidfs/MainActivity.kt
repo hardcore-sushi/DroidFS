@@ -345,7 +345,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         menu.findItem(R.id.change_password).isVisible =
             onlyOneAndWriteable &&
             // Only gocryptfs volumes support password change
-            BuildConfig.GOCRYPTFS_ENABLED &&
+            !BuildConfig.GOCRYPTFS_DISABLED &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
         menu.findItem(R.id.remove_default_open).isVisible =
             onlyOneSelected &&
@@ -461,10 +461,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
     private fun openVolume(volume: SavedVolume, position: Int) {
-        if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE && !BuildConfig.GOCRYPTFS_ENABLED) {
+        if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE && BuildConfig.GOCRYPTFS_DISABLED) {
             Toast.makeText(this, R.string.gocryptfs_disabled, Toast.LENGTH_SHORT).show()
             return
-        } else if (volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE && !BuildConfig.CRYFS_ENABLED) {
+        } else if (volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE && BuildConfig.CRYFS_DISABLED) {
             Toast.makeText(this, R.string.cryfs_disabled, Toast.LENGTH_SHORT).show()
             return
         }

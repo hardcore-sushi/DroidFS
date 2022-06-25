@@ -85,10 +85,10 @@ class CreateVolumeFragment: Fragment() {
         if (!usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
         }
-        if (BuildConfig.GOCRYPTFS_ENABLED) {
+        if (!BuildConfig.GOCRYPTFS_DISABLED) {
             volumeTypes.add(resources.getString(R.string.gocryptfs))
         }
-        if (BuildConfig.CRYFS_ENABLED) {
+        if (!BuildConfig.CRYFS_DISABLED) {
             volumeTypes.add(resources.getString(R.string.cryfs))
         }
         binding.spinnerVolumeType.adapter = ArrayAdapter(
