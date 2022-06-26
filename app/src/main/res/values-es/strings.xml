@@ -240,4 +240,9 @@
     <string name="elements_selected">%d/%d Seleccionados</string>
     <string name="pin_passwords_title">Diseño de teclado numérico</string>
     <string name="pin_passwords_summary">Usar el diseño de teclado numérico para ingresar las contraseñas de los volumenes</string>
+    <string name="volume_type_label">Tipo de volumen:</string>
+    <string name="gocryptfs">Gocryptfs</string>
+    <string name="cryfs">CryFS</string>
+    <string name="gocryptfs_disabled">Se ha desactivado la compatibilidad con Gocryptfs</string>
+    <string name="cryfs_disabled">Se ha desactivado la compatibilidad con CryFS</string>
 </resources>
