@@ -110,7 +110,7 @@ class FileOperationService : Service() {
         tasks[notificationId]?.cancel()
     }
 
-    open class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
+    class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
 
     private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<T> {
         tasks[notification.notificationId] = task
