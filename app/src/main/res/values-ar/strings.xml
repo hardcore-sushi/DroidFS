@@ -138,6 +138,7 @@
     <string name="image_saved_successfully">تم حفظ تغييرات الصورة بنجاح.</string>
     <string name="bitmap_compress_failed">فشل ضغط الصورة النقطية.</string>
     <string name="file_write_failed">فشل كتابة الملف.</string>
+    <string name="error_not_a_volume">لم يتم التعرف على المجلد المشفر. رجاءاً تحقق من المسار المحدد.</string>
     <string name="version">إصدار</string>
     <string name="error_cipher_null">تشفير الخطأ فارغ</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -240,4 +241,10 @@
     <string name="elements_selected">%d/%d محدد</string>
     <string name="pin_passwords_title">نظام مفاتيح لوحة أرقام</string>
     <string name="pin_passwords_summary">استخدام عرض لوحة أرقام عند القيام بادخال كلمات مرور المجلدات المشفرة</string>
+    <string name="volume_type_label">نوع المجلد المشفر:</string>
+    <string name="gocryptfs">Gocryptfs</string>
+    <string name="cryfs">CryFS</string>
+    <string name="gocryptfs_disabled">Gocryptfs لقد تم تعطيل دعم</string>
+    <string name="cryfs_disabled">CryFS لقد تم تعطيل دعم</string>
+    <string name="file_op_delete_msg">جاري حذف الملفات…</string>
 </resources>
