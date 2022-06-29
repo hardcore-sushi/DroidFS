@@ -373,7 +373,19 @@ class ExplorerActivity : BaseExplorerActivity() {
                 val size = explorerAdapter.selectedItems.size
                 val dialog = CustomAlertDialogBuilder(this, themeValue)
                 dialog.setTitle(R.string.warning)
-                dialog.setPositiveButton(R.string.ok) { _, _ -> removeSelectedItems() }
+                dialog.setPositiveButton(R.string.ok) { _, _ ->
+                    taskScope.launch {
+                        fileOperationService.removeElements(explorerAdapter.selectedItems.map { i -> explorerElements[i] })?.let { failedItem ->
+                            CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                .setTitle(R.string.error)
+                                .setMessage(getString(R.string.remove_failed, failedItem))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                        setCurrentPath(currentDirectoryPath) //refresh
+                    }
+                    unselectAll()
+                }
                 dialog.setNegativeButton(R.string.cancel, null)
                 if (size > 1) {
                     dialog.setMessage(getString(R.string.multiple_delete_confirm, explorerAdapter.selectedItems.size.toString()))
@@ -500,30 +512,5 @@ class ExplorerActivity : BaseExplorerActivity() {
         } else {
             super.onBackPressed()
         }
-    }
-
-    private fun removeSelectedItems() {
-        var failedItem: String? = null
-        for (i in explorerAdapter.selectedItems) {
-            val element = explorerAdapter.explorerElements[i]
-            val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
-            if (element.isDirectory) {
-                val result = encryptedVolume.recursiveRemoveDirectory(fullPath)
-                result?.let{ failedItem = it }
-            } else {
-                if (!encryptedVolume.deleteFile(fullPath)) {
-                    failedItem = fullPath
-                }
-            }
-            if (failedItem != null) {
-                CustomAlertDialogBuilder(this, themeValue)
-                        .setTitle(R.string.error)
-                        .setMessage(getString(R.string.remove_failed, failedItem))
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                break
-            }
-        }
-        setCurrentPath(currentDirectoryPath) //refresh
     }
 }

@@ -246,4 +246,5 @@
     <string name="cryfs">CryFS</string>
     <string name="gocryptfs_disabled">Gocryptfs support has been disabled</string>
     <string name="cryfs_disabled">CryFS support has been disabled</string>
+    <string name="file_op_delete_msg">Deleting files…</string>
 </resources>

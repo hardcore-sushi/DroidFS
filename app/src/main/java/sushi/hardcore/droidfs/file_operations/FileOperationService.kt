@@ -402,6 +402,30 @@ class FileOperationService : Service() {
         waitForTask(notification, task)
     }
 
+    suspend fun removeElements(items: List<ExplorerElement>): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_delete_msg, items.size)
+        val task = async(Dispatchers.IO) {
+            var failedItem: String? = null
+            for ((i, element) in items.withIndex()) {
+                if (element.isDirectory) {
+                    val result = encryptedVolume.recursiveRemoveDirectory(element.fullPath)
+                    result?.let { failedItem = it }
+                } else {
+                    if (!encryptedVolume.deleteFile(element.fullPath)) {
+                        failedItem = element.fullPath
+                    }
+                }
+                if (failedItem == null) {
+                    updateNotificationProgress(notification, i + 1, items.size)
+                } else {
+                    break
+                }
+            }
+            failedItem
+        }
+        waitForTask(notification, task).failedItem
+    }
+
     private fun recursiveCountChildElements(rootDirectory: DocumentFile, scope: CoroutineScope): Int {
         if (!scope.isActive) {
             return 0
