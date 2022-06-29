@@ -5,9 +5,11 @@
 JNIEXPORT jlong JNICALL
 Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeInit(JNIEnv *env, jobject thiz,
                                                                jstring base_dir, jstring jlocalStateDir,
-                                                               jbyteArray password, jboolean createBaseDir,
+                                                               jbyteArray password, jbyteArray givenHash,
+                                                               jobject returnedHash,
+                                                               jboolean createBaseDir,
                                                                jstring cipher) {
-    return cryfs_init(env, base_dir, jlocalStateDir, password, createBaseDir, cipher);
+    return cryfs_init(env, base_dir, jlocalStateDir, password, givenHash, returnedHash, createBaseDir, cipher);
 }
 
 JNIEXPORT jlong JNICALL

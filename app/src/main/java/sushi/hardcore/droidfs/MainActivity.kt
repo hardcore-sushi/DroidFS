@@ -31,7 +31,7 @@ import sushi.hardcore.droidfs.explorers.ExplorerActivityDrop
 import sushi.hardcore.droidfs.explorers.ExplorerActivityPick
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -535,7 +535,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     private fun askForPassword(volume: SavedVolume, position: Int, savePasswordHash: Boolean = false) {
         val dialogBinding = DialogOpenVolumeBinding.inflate(layoutInflater)
-        if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null || volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE) {
+        if (!usfFingerprint || fingerprintProtector == null || volume.encryptedHash != null) {
             dialogBinding.checkboxSavePassword.visibility = View.GONE
         } else {
             dialogBinding.checkboxSavePassword.isChecked = savePasswordHash
@@ -564,10 +564,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     private fun openVolumeWithPassword(volume: SavedVolume, position: Int, password: ByteArray, savePasswordHash: Boolean) {
-        val usfFingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
-        var returnedHash: ByteArray? = null
-        if (savePasswordHash && usfFingerprint) {
-            returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+        val returnedHash: ObjRef<ByteArray?>? = if (savePasswordHash) {
+            ObjRef(null)
+        } else {
+            null
         }
         object : LoadingTask<EncryptedVolume?>(this, themeValue, R.string.loading_msg_open) {
             override suspend fun doTask(): EncryptedVolume? {
@@ -594,7 +594,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         }
                         override fun onPasswordHashDecrypted(hash: ByteArray) {}
                         override fun onPasswordHashSaved() {
-                            Arrays.fill(returnedHash, 0)
+                            Arrays.fill(returnedHash.value!!, 0)
                             volumeAdapter.onVolumeChanged(position)
                             startExplorer(encryptedVolume, volume.shortName)
                         }
@@ -604,10 +604,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                                 encryptedVolume.close()
                                 isClosed = true
                             }
-                            Arrays.fill(returnedHash, 0)
+                            Arrays.fill(returnedHash.value!!, 0)
                         }
                     }
-                    fingerprintProtector.savePasswordHash(volume, returnedHash)
+                    fingerprintProtector.savePasswordHash(volume, returnedHash.value!!)
                 } else {
                     startExplorer(encryptedVolume, volume.shortName)
                 }

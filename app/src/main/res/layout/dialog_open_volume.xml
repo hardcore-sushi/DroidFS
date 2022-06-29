@@ -18,15 +18,15 @@
     </EditText>
 
     <CheckBox
-        android:id="@+id/checkbox_save_password"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/fingerprint_save_checkbox_text"/>
-
-    <CheckBox
         android:id="@+id/checkbox_default_open"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/default_open"/>
+
+    <CheckBox
+        android:id="@+id/checkbox_save_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/fingerprint_save_checkbox_text"/>
 
 </LinearLayout>

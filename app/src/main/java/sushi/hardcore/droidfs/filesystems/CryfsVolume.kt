@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.filesystems
 import android.os.Parcel
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 
 class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
@@ -16,7 +17,9 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         private external fun nativeInit(
             baseDir: String,
             localStateDir: String,
-            password: ByteArray,
+            password: ByteArray?,
+            givenHash: ByteArray?,
+            returnedHash: ObjRef<ByteArray?>?,
             createBaseDir: Boolean,
             cipher: String?
         ): Long
@@ -39,8 +42,16 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             return PathUtils.pathJoin(filesDir, ConstValues.CRYFS_LOCAL_STATE_DIR)
         }
 
-        private fun init(baseDir: String, localStateDir: String, password: ByteArray, createBaseDir: Boolean, cipher: String?): CryfsVolume? {
-            val fusePtr = nativeInit(baseDir, localStateDir, password, createBaseDir, cipher)
+        private fun init(
+            baseDir: String,
+            localStateDir: String,
+            password: ByteArray?,
+            givenHash: ByteArray?,
+            returnedHash: ObjRef<ByteArray?>?,
+            createBaseDir: Boolean,
+            cipher: String?
+        ): CryfsVolume? {
+            val fusePtr = nativeInit(baseDir, localStateDir, password, givenHash, returnedHash, createBaseDir, cipher)
             return if (fusePtr == 0L) {
                 null
             } else {
@@ -48,12 +59,12 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             }
         }
 
-        fun create(baseDir: String, localStateDir: String, password: ByteArray, cipher: String?): Boolean {
-            return init(baseDir, localStateDir, password, true, cipher)?.also { it.close() } != null
+        fun create(baseDir: String, localStateDir: String, password: ByteArray, returnedHash: ObjRef<ByteArray?>?, cipher: String?): Boolean {
+            return init(baseDir, localStateDir, password, null, returnedHash, true, cipher)?.also { it.close() } != null
         }
 
-        fun init(baseDir: String, localStateDir: String, password: ByteArray): CryfsVolume? {
-            return init(baseDir, localStateDir, password, false, null)
+        fun init(baseDir: String, localStateDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ObjRef<ByteArray?>?): CryfsVolume? {
+            return init(baseDir, localStateDir, password, givenHash, returnedHash, false, null)
         }
     }
 

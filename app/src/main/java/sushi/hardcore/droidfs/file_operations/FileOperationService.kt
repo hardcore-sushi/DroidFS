@@ -18,6 +18,7 @@ import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
@@ -109,7 +110,7 @@ class FileOperationService : Service() {
         tasks[notificationId]?.cancel()
     }
 
-    open class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
+    class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
 
     private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<T> {
         tasks[notification.notificationId] = task
@@ -401,6 +402,30 @@ class FileOperationService : Service() {
         waitForTask(notification, task)
     }
 
+    suspend fun removeElements(items: List<ExplorerElement>): String? = coroutineScope {
+        val notification = showNotification(R.string.file_op_delete_msg, items.size)
+        val task = async(Dispatchers.IO) {
+            var failedItem: String? = null
+            for ((i, element) in items.withIndex()) {
+                if (element.isDirectory) {
+                    val result = encryptedVolume.recursiveRemoveDirectory(element.fullPath)
+                    result?.let { failedItem = it }
+                } else {
+                    if (!encryptedVolume.deleteFile(element.fullPath)) {
+                        failedItem = element.fullPath
+                    }
+                }
+                if (failedItem == null) {
+                    updateNotificationProgress(notification, i + 1, items.size)
+                } else {
+                    break
+                }
+            }
+            failedItem
+        }
+        waitForTask(notification, task).failedItem
+    }
+
     private fun recursiveCountChildElements(rootDirectory: DocumentFile, scope: CoroutineScope): Int {
         if (!scope.isActive) {
             return 0
@@ -414,8 +439,6 @@ class FileOperationService : Service() {
         }
         return count
     }
-
-    internal class ObjRef<T>(var value: T)
 
     private fun recursiveCopyVolume(
         src: DocumentFile,

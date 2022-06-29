@@ -18,6 +18,7 @@ import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -108,12 +109,8 @@ class CreateVolumeFragment: Fragment() {
         binding.spinnerVolumeType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val ciphersArray = if (volumeTypes[position] == resources.getString(R.string.gocryptfs)) {
-                    if (usfFingerprint && fingerprintProtector != null) {
-                        binding.checkboxSavePassword.visibility = View.VISIBLE
-                    }
                     R.array.gocryptfs_encryption_ciphers
                 } else {
-                    binding.checkboxSavePassword.visibility = View.GONE
                     R.array.cryfs_encryption_ciphers
                 }
                 with(encryptionCipherAdapter) {
@@ -167,9 +164,11 @@ class CreateVolumeFragment: Fragment() {
             Arrays.fill(passwordConfirm, 0)
         } else {
             Arrays.fill(passwordConfirm, 0)
-            var returnedHash: ByteArray? = null
-            if (binding.checkboxSavePassword.isChecked)
-                returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+            val returnedHash: ObjRef<ByteArray?>? = if (binding.checkboxSavePassword.isChecked) {
+                ObjRef(null)
+            } else {
+                null
+            }
             object: LoadingTask<SavedVolume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
                 override suspend fun doTask(): SavedVolume? {
                     val volumeFile = File(volumePath)
@@ -188,13 +187,16 @@ class CreateVolumeFragment: Fragment() {
                             xchacha,
                             GocryptfsVolume.ScryptDefaultLogN,
                             ConstValues.CREATOR,
-                            returnedHash
+                            returnedHash?.apply {
+                                value = ByteArray(GocryptfsVolume.KeyLen)
+                            }?.value,
                         ), EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                     } else {
                         saveVolume(CryfsVolume.create(
                             volumePath,
                             CryfsVolume.getLocalStateDir(activity.filesDir.path),
                             password,
+                            returnedHash,
                             resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition]
                         ), EncryptedVolume.CRYFS_VOLUME_TYPE)
                     }
@@ -216,21 +218,21 @@ class CreateVolumeFragment: Fragment() {
                                 override fun onHashStorageReset() {
                                     hashStorageReset = true
                                     // retry
-                                    it.savePasswordHash(volume, returnedHash)
+                                    it.savePasswordHash(volume, returnedHash.value!!)
                                 }
                                 override fun onPasswordHashDecrypted(hash: ByteArray) {} // shouldn't happen here
                                 override fun onPasswordHashSaved() {
-                                    Arrays.fill(returnedHash, 0)
+                                    Arrays.fill(returnedHash.value!!, 0)
                                     onVolumeCreated()
                                 }
                                 override fun onFailed(pending: Boolean) {
                                     if (!pending) {
-                                        Arrays.fill(returnedHash, 0)
+                                        Arrays.fill(returnedHash.value!!, 0)
                                         onVolumeCreated()
                                     }
                                 }
                             }
-                            it.savePasswordHash(volume, returnedHash)
+                            it.savePasswordHash(volume, returnedHash.value!!)
                         }
                     } else onVolumeCreated()
                 }
