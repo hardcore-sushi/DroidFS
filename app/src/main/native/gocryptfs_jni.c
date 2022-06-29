@@ -5,30 +5,6 @@
 #include <sys/stat.h>
 #include "libgocryptfs.h"
 
-void wipe(char* data, const unsigned int len){
-    for (unsigned int i=0; i<len;++i){
-        data[i] = '\0';
-    }
-}
-
-void jcharArray_to_charArray(const jchar* src, char* dst, const unsigned int len){
-    for (unsigned int i=0; i<len; ++i){
-        dst[i] = src[i];
-    }
-}
-
-void unsignedCharArray_to_jbyteArray(const unsigned char* src, jbyte* dst, const unsigned int len){
-    for (unsigned int i=0; i<len; ++i){
-        dst[i] = src[i];
-    }
-}
-
-void jbyteArray_to_unsignedCharArray(const jbyte* src, unsigned char* dst, const unsigned int len){
-    for (unsigned int i=0; i<len; ++i){
-        dst[i] = src[i];
-    }
-}
-
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
                                                                              jstring jroot_cipher_dir,
@@ -43,17 +19,15 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_createVol
     GoString gofilename = {root_cipher_dir, strlen(root_cipher_dir)}, gocreator = {creator, strlen(creator)};
 
     const size_t password_len = (*env)->GetArrayLength(env, jpassword);
-    char* password = (char*)(*env)->GetByteArrayElements(env, jpassword, NULL);
+    jbyte* password = (*env)->GetByteArrayElements(env, jpassword, NULL);
     GoSlice go_password = {password, password_len, password_len};
 
     size_t returned_hash_len;
-    jbyte* jbyte_returned_hash;
-    unsigned char* returned_hash;
+    jbyte* returned_hash;
     GoSlice go_returned_hash = {NULL, 0, 0};
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
         returned_hash_len = (*env)->GetArrayLength(env, jreturned_hash);
-        jbyte_returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
-        returned_hash = malloc(returned_hash_len);
+        returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
         go_returned_hash.data = returned_hash;
         go_returned_hash.len = returned_hash_len;
         go_returned_hash.cap = returned_hash_len;
@@ -63,14 +37,10 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_createVol
 
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
     (*env)->ReleaseStringUTFChars(env, jcreator, creator);
-    wipe(password, password_len);
-    (*env)->ReleaseByteArrayElements(env, jpassword, (jbyte*)password, 0);
+    (*env)->ReleaseByteArrayElements(env, jpassword, password, 0);
 
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
-        unsignedCharArray_to_jbyteArray(returned_hash, jbyte_returned_hash, returned_hash_len);
-        wipe(returned_hash, returned_hash_len);
-        free(returned_hash);
-        (*env)->ReleaseByteArrayElements(env, jreturned_hash, jbyte_returned_hash, 0);
+        (*env)->ReleaseByteArrayElements(env, jreturned_hash, returned_hash, 0);
     }
 
     return result;
@@ -86,36 +56,31 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_nativeIni
     GoString go_root_cipher_dir = {root_cipher_dir, strlen(root_cipher_dir)};
 
     size_t password_len;
-    char* password;
+    jbyte* password;
     GoSlice go_password = {NULL, 0, 0};
     size_t given_hash_len;
-    jbyte* jbyte_given_hash;
-    unsigned char* given_hash;
+    jbyte* given_hash;
     GoSlice go_given_hash = {NULL, 0, 0};
     if ((*env)->IsSameObject(env, jgiven_hash, NULL)){
         password_len = (*env)->GetArrayLength(env, jpassword);
-        password = (char*)(*env)->GetByteArrayElements(env, jpassword, NULL);
+        password = (*env)->GetByteArrayElements(env, jpassword, NULL);
         go_password.data = password;
         go_password.len = password_len;
         go_password.cap = password_len;
     } else {
         given_hash_len = (*env)->GetArrayLength(env, jgiven_hash);
-        jbyte_given_hash = (*env)->GetByteArrayElements(env, jgiven_hash, NULL);
-        given_hash = malloc(given_hash_len);
-        jbyteArray_to_unsignedCharArray(jbyte_given_hash, given_hash, given_hash_len);
+        given_hash = (*env)->GetByteArrayElements(env, jgiven_hash, NULL);
         go_given_hash.data = given_hash;
         go_given_hash.len = given_hash_len;
         go_given_hash.cap = given_hash_len;
     }
 
     size_t returned_hash_len;
-    jbyte* jbyte_returned_hash;
-    unsigned char* returned_hash;
+    jbyte* returned_hash;
     GoSlice go_returned_hash = {NULL, 0, 0};
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)){
         returned_hash_len = (*env)->GetArrayLength(env, jreturned_hash);
-        jbyte_returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
-        returned_hash = malloc(returned_hash_len);
+        returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
         go_returned_hash.data = returned_hash;
         go_returned_hash.len = returned_hash_len;
         go_returned_hash.cap = returned_hash_len;
@@ -126,19 +91,13 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_nativeIni
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
 
     if ((*env)->IsSameObject(env, jgiven_hash, NULL)){
-        wipe(password, password_len);
-        (*env)->ReleaseByteArrayElements(env, jpassword, (jbyte*)password, 0);
+        (*env)->ReleaseByteArrayElements(env, jpassword, password, 0);
     } else {
-        wipe(given_hash, given_hash_len);
-        free(given_hash);
-        (*env)->ReleaseByteArrayElements(env, jgiven_hash, jbyte_given_hash, 0);
+        (*env)->ReleaseByteArrayElements(env, jgiven_hash, given_hash, 0);
     }
 
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)){
-        unsignedCharArray_to_jbyteArray(returned_hash, jbyte_returned_hash, returned_hash_len);
-        wipe(returned_hash, returned_hash_len);
-        free(returned_hash);
-        (*env)->ReleaseByteArrayElements(env, jreturned_hash, jbyte_returned_hash, 0);
+        (*env)->ReleaseByteArrayElements(env, jreturned_hash, returned_hash, 0);
     }
 
     return sessionID;
@@ -153,53 +112,43 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1is_1closed(JNIEn
 JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_changePassword(JNIEnv *env, jclass clazz,
                                                                                jstring jroot_cipher_dir,
-                                                                               jcharArray jold_password,
+                                                                               jbyteArray jold_password,
                                                                                jbyteArray jgiven_hash,
-                                                                               jcharArray jnew_password,
+                                                                               jbyteArray jnew_password,
                                                                                jbyteArray jreturned_hash) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
     GoString go_root_cipher_dir = {root_cipher_dir, strlen(root_cipher_dir)};
 
     size_t old_password_len;
-    jchar* jchar_old_password;
-    char* old_password;
+    jbyte* old_password;
     GoSlice go_old_password = {NULL, 0, 0};
     size_t given_hash_len;
-    jbyte* jbyte_given_hash;
-    unsigned char* given_hash;
+    jbyte* given_hash;
     GoSlice go_given_hash = {NULL, 0, 0};
     if ((*env)->IsSameObject(env, jgiven_hash, NULL)){
         old_password_len = (*env)->GetArrayLength(env, jold_password);
-        jchar_old_password = (*env)->GetCharArrayElements(env, jold_password, NULL);
-        old_password = malloc(old_password_len);
-        jcharArray_to_charArray(jchar_old_password, old_password, old_password_len);
+        old_password = (*env)->GetByteArrayElements(env, jold_password, NULL);
         go_old_password.data = old_password;
         go_old_password.len = old_password_len;
         go_old_password.cap = old_password_len;
     } else {
         given_hash_len = (*env)->GetArrayLength(env, jgiven_hash);
-        jbyte_given_hash = (*env)->GetByteArrayElements(env, jgiven_hash, NULL);
-        given_hash = malloc(given_hash_len);
-        jbyteArray_to_unsignedCharArray(jbyte_given_hash, given_hash, given_hash_len);
+        given_hash = (*env)->GetByteArrayElements(env, jgiven_hash, NULL);
         go_given_hash.data = given_hash;
         go_given_hash.len = given_hash_len;
         go_given_hash.cap = given_hash_len;
     }
 
     size_t new_password_len = (*env)->GetArrayLength(env, jnew_password);
-    jchar* jchar_new_password = (*env)->GetCharArrayElements(env, jnew_password, NULL);
-    char* new_password = malloc(new_password_len);
-    jcharArray_to_charArray(jchar_new_password, new_password, new_password_len);
+    jbyte* new_password = (*env)->GetByteArrayElements(env, jnew_password, NULL);
     GoSlice go_new_password = {new_password, new_password_len, new_password_len};
 
     size_t returned_hash_len;
-    jbyte* jbyte_returned_hash;
-    unsigned char* returned_hash;
+    jbyte* returned_hash;
     GoSlice go_returned_hash = {NULL, 0, 0};
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
         returned_hash_len = (*env)->GetArrayLength(env, jreturned_hash);
-        jbyte_returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
-        returned_hash = malloc(returned_hash_len);
+        returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
         go_returned_hash.data = returned_hash;
         go_returned_hash.len = returned_hash_len;
         go_returned_hash.cap = returned_hash_len;
@@ -210,24 +159,15 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_changePas
     (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
 
     if ((*env)->IsSameObject(env, jgiven_hash, NULL)){
-        wipe(old_password, old_password_len);
-        free(old_password);
-        (*env)->ReleaseCharArrayElements(env, jold_password, jchar_old_password, 0);
+        (*env)->ReleaseByteArrayElements(env, jold_password, old_password, 0);
     } else {
-        wipe(given_hash, given_hash_len);
-        free(given_hash);
-        (*env)->ReleaseByteArrayElements(env, jgiven_hash, jbyte_given_hash, 0);
+        (*env)->ReleaseByteArrayElements(env, jgiven_hash, given_hash, 0);
     }
 
-    wipe(new_password, new_password_len);
-    free(new_password);
-    (*env)->ReleaseCharArrayElements(env, jnew_password, jchar_new_password, 0);
+    (*env)->ReleaseByteArrayElements(env, jnew_password, new_password, 0);
 
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
-        unsignedCharArray_to_jbyteArray(returned_hash, jbyte_returned_hash, returned_hash_len);
-        wipe(returned_hash, returned_hash_len);
-        free(returned_hash);
-        (*env)->ReleaseByteArrayElements(env, jreturned_hash, jbyte_returned_hash, 0);
+        (*env)->ReleaseByteArrayElements(env, jreturned_hash, returned_hash, 0);
     }
 
     return result;
@@ -370,15 +310,12 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1read_1file(JNIEn
                                                            jint sessionID, jint handleID, jlong offset,
                                                             jbyteArray jbuff) {
     const size_t buff_size = (*env)->GetArrayLength(env, jbuff);
-    unsigned char* buff = malloc(sizeof(char)*buff_size);
+    jbyte* buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
     GoSlice go_buff = {buff, buff_size, buff_size};
 
     int read = gcf_read_file(sessionID, handleID, offset, go_buff);
 
-    if (read > 0){
-        (*env)->SetByteArrayRegion(env, jbuff, 0, read, (const jbyte*)buff);
-    }
-    free(buff);
+    (*env)->ReleaseByteArrayElements(env, jbuff, buff, 0);
     return read;
 }
 
