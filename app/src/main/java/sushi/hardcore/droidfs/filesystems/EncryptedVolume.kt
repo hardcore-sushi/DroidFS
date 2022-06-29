@@ -7,6 +7,7 @@ import android.os.Parcelable
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.SavedVolume
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 import java.io.FileOutputStream
@@ -40,13 +41,26 @@ abstract class EncryptedVolume: Parcelable {
             }
         }
 
-        fun init(volume: SavedVolume, filesDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): EncryptedVolume? {
+        fun init(
+            volume: SavedVolume,
+            filesDir: String,
+            password: ByteArray?,
+            givenHash: ByteArray?,
+            returnedHash: ObjRef<ByteArray?>?
+        ): EncryptedVolume? {
             return when (volume.type) {
                 GOCRYPTFS_VOLUME_TYPE -> {
-                    GocryptfsVolume.init(volume.getFullPath(filesDir), password, givenHash, returnedHash)
+                    GocryptfsVolume.init(
+                        volume.getFullPath(filesDir),
+                        password,
+                        givenHash,
+                        returnedHash?.apply {
+                            value = ByteArray(GocryptfsVolume.KeyLen)
+                        }?.value
+                    )
                 }
                 CRYFS_VOLUME_TYPE -> {
-                    CryfsVolume.init(volume.getFullPath(filesDir), CryfsVolume.getLocalStateDir(filesDir), password!!)
+                    CryfsVolume.init(volume.getFullPath(filesDir), CryfsVolume.getLocalStateDir(filesDir), password, givenHash, returnedHash)
                 }
                 else -> throw invalidVolumeType()
             }

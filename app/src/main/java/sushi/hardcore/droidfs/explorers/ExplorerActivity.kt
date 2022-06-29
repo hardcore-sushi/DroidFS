@@ -8,7 +8,6 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.MainActivity
@@ -64,7 +63,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         if (items == null) {
                             remoteEncryptedVolume.close()
                         } else {
-                            lifecycleScope.launch {
+                            taskScope.launch {
                                 val failedItem = fileOperationService.copyElements(items, remoteEncryptedVolume)
                                 if (failedItem == null) {
                                     Toast.makeText(this@ExplorerActivity, R.string.success_import, Toast.LENGTH_SHORT).show()
@@ -95,7 +94,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
     private val pickExportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
-            lifecycleScope.launch {
+            taskScope.launch {
                 val result = fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] })
                 if (!result.cancelled) {
                     if (result.failedItem == null) {
@@ -118,7 +117,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             val operation = OperationFile(PathUtils.pathJoin(currentDirectoryPath, tree.name!!), Stat.S_IFDIR)
             checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
                 checkedOperation?.let {
-                    lifecycleScope.launch {
+                    taskScope.launch {
                         val result = fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree)
                         if (result.taskResult.cancelled) {
                             setCurrentPath(currentDirectoryPath)
@@ -140,7 +139,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 ${getString(R.string.ask_for_wipe)}
                                 """.trimIndent())
                 .setPositiveButton(R.string.yes) { _, _ ->
-                    lifecycleScope.launch {
+                    taskScope.launch {
                         val errorMsg = fileOperationService.wipeUris(urisToWipe, rootFile)
                         if (errorMsg == null) {
                             Toast.makeText(this@ExplorerActivity, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
@@ -320,7 +319,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 if (currentItemAction == ItemsActions.COPY){
                     checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
                         items?.let {
-                            lifecycleScope.launch {
+                            taskScope.launch {
                                 val failedItem = fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>)
                                 if (!isFinishing) {
                                     if (failedItem == null) {
@@ -351,7 +350,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         toMove,
                         toClean,
                     ) {
-                        lifecycleScope.launch {
+                        taskScope.launch {
                             val failedItem = fileOperationService.moveElements(toMove, toClean)
                             if (failedItem == null) {
                                 Toast.makeText(this@ExplorerActivity, R.string.move_success, Toast.LENGTH_SHORT).show()
@@ -374,7 +373,19 @@ class ExplorerActivity : BaseExplorerActivity() {
                 val size = explorerAdapter.selectedItems.size
                 val dialog = CustomAlertDialogBuilder(this, themeValue)
                 dialog.setTitle(R.string.warning)
-                dialog.setPositiveButton(R.string.ok) { _, _ -> removeSelectedItems() }
+                dialog.setPositiveButton(R.string.ok) { _, _ ->
+                    taskScope.launch {
+                        fileOperationService.removeElements(explorerAdapter.selectedItems.map { i -> explorerElements[i] })?.let { failedItem ->
+                            CustomAlertDialogBuilder(this@ExplorerActivity, themeValue)
+                                .setTitle(R.string.error)
+                                .setMessage(getString(R.string.remove_failed, failedItem))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
+                        }
+                        setCurrentPath(currentDirectoryPath) //refresh
+                    }
+                    unselectAll()
+                }
                 dialog.setNegativeButton(R.string.cancel, null)
                 if (size > 1) {
                     dialog.setMessage(getString(R.string.multiple_delete_confirm, explorerAdapter.selectedItems.size.toString()))
@@ -501,30 +512,5 @@ class ExplorerActivity : BaseExplorerActivity() {
         } else {
             super.onBackPressed()
         }
-    }
-
-    private fun removeSelectedItems() {
-        var failedItem: String? = null
-        for (i in explorerAdapter.selectedItems) {
-            val element = explorerAdapter.explorerElements[i]
-            val fullPath = PathUtils.pathJoin(currentDirectoryPath, element.name)
-            if (element.isDirectory) {
-                val result = encryptedVolume.recursiveRemoveDirectory(fullPath)
-                result?.let{ failedItem = it }
-            } else {
-                if (!encryptedVolume.deleteFile(fullPath)) {
-                    failedItem = fullPath
-                }
-            }
-            if (failedItem != null) {
-                CustomAlertDialogBuilder(this, themeValue)
-                        .setTitle(R.string.error)
-                        .setMessage(getString(R.string.remove_failed, failedItem))
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                break
-            }
-        }
-        setCurrentPath(currentDirectoryPath) //refresh
     }
 }

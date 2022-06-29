@@ -21,9 +21,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.ConstValues.isAudio
@@ -60,6 +58,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             explorerViewModel.currentDirectoryPath = value
         }
     protected lateinit var fileOperationService: FileOperationService
+    protected val taskScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     private var isCreating = true
@@ -464,7 +463,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (items.size > 0) {
             checkPathOverwrite(items, currentDirectoryPath) { checkedItems ->
                 checkedItems?.let {
-                    lifecycleScope.launch {
+                    taskScope.launch {
                         val taskResult = fileOperationService.importFilesFromUris(checkedItems.map { it.dstPath!! }, uris)
                         if (taskResult.cancelled) {
                             setCurrentPath(currentDirectoryPath)
@@ -593,6 +592,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     protected open fun closeVolumeOnDestroy() {
+        taskScope.cancel()
         if (!encryptedVolume.isClosed()) {
             encryptedVolume.close()
         }
