@@ -1,4 +1,24 @@
-﻿<resources>
+<resources>
+    <string-array name="gocryptfs_encryption_ciphers">
+        <item>AES-GCM</item>
+        <item>XChaCha20-Poly1305</item>
+        <item>@string/auto</item>
+    </string-array>
+
+    <string-array name="cryfs_encryption_ciphers">
+        <item>xchacha20-poly1305</item>
+        <item>aes-256-gcm</item>
+        <item>aes-128-gcm</item>
+        <item>twofish-256-gcm</item>
+        <item>twofish-128-gcm</item>
+        <item>serpent-256-gcm</item>
+        <item>serpent-128-gcm</item>
+        <item>cast-256-gcm</item>
+        <item>mars-448-gcm</item>
+        <item>mars-256-gcm</item>
+        <item>mars-128-gcm</item>
+    </string-array>
+
     <string-array name="sort_orders_entries">
         <item>اسم</item>
         <item>حجم</item>
@@ -21,7 +41,7 @@
         <item>أسود برتقالي</item>
         <item>داكن بنفسجي</item>
         <item>أسود بنفسجي</item>
-        <item>Dark Pink</item>
-        <item>Black Pink</item>
+        <item>داكن زهري</item>
+        <item>أسود زهري</item>
     </string-array>
 </resources>
