@@ -18,6 +18,7 @@ import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
@@ -414,8 +415,6 @@ class FileOperationService : Service() {
         }
         return count
     }
-
-    internal class ObjRef<T>(var value: T)
 
     private fun recursiveCopyVolume(
         src: DocumentFile,
