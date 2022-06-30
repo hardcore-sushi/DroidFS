@@ -23,6 +23,14 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             createBaseDir: Boolean,
             cipher: String?
         ): Long
+        private external fun nativeChangeEncryptionKey(
+            baseDir: String,
+            localStateDir: String,
+            currentPassword: ByteArray?,
+            givenHash: ByteArray?,
+            newPassword: ByteArray,
+            returnedHash: ObjRef<ByteArray?>?
+        ): Boolean
         private external fun nativeCreate(fusePtr: Long, path: String, mode: Int): Long
         private external fun nativeOpen(fusePtr: Long, path: String, flags: Int): Long
         private external fun nativeRead(fusePtr: Long, fileHandle: Long, buffer: ByteArray, offset: Long): Int
@@ -65,6 +73,15 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
 
         fun init(baseDir: String, localStateDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ObjRef<ByteArray?>?): CryfsVolume? {
             return init(baseDir, localStateDir, password, givenHash, returnedHash, false, null)
+        }
+
+        fun changePassword(
+            baseDir: String, filesDir: String, currentPassword: ByteArray?,
+            givenHash: ByteArray?,
+            newPassword: ByteArray,
+            returnedHash: ObjRef<ByteArray?>?
+        ): Boolean {
+            return nativeChangeEncryptionKey(baseDir, getLocalStateDir(filesDir), currentPassword, givenHash, newPassword, returnedHash)
         }
     }
 

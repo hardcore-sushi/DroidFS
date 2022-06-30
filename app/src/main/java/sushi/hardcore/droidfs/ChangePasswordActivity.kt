@@ -9,7 +9,11 @@ import android.view.View
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
+import sushi.hardcore.droidfs.filesystems.CryfsVolume
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.ObjRef
+import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 
@@ -66,14 +70,12 @@ class ChangePasswordActivity: BaseActivity() {
     }
 
     private fun changeVolumePassword() {
-        val newPassword = CharArray(binding.editNewPassword.text.length)
-        binding.editNewPassword.text.getChars(0, newPassword.size, newPassword, 0)
-        val newPasswordConfirm = CharArray(binding.editPasswordConfirm.text.length)
-        binding.editPasswordConfirm.text.getChars(0, newPasswordConfirm.size, newPasswordConfirm, 0)
+        val newPassword = WidgetUtil.encodeEditTextContent(binding.editNewPassword)
+        val newPasswordConfirm = WidgetUtil.encodeEditTextContent(binding.editPasswordConfirm)
         @SuppressLint("NewApi")
         if (!newPassword.contentEquals(newPasswordConfirm)) {
             Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
-            Arrays.fill(newPassword, 0.toChar())
+            Arrays.fill(newPassword, 0)
         } else {
             var changeWithCurrentPassword = true
             volume.encryptedHash?.let { encryptedHash ->
@@ -91,7 +93,7 @@ class ChangePasswordActivity: BaseActivity() {
                             }
                             override fun onPasswordHashSaved() {}
                             override fun onFailed(pending: Boolean) {
-                                Arrays.fill(newPassword, 0.toChar())
+                                Arrays.fill(newPassword, 0)
                             }
                         }
                         it.loadPasswordHash(volume.name, encryptedHash, iv)
@@ -102,30 +104,48 @@ class ChangePasswordActivity: BaseActivity() {
                 changeVolumePassword(newPassword)
             }
         }
-        Arrays.fill(newPasswordConfirm, 0.toChar())
+        Arrays.fill(newPasswordConfirm, 0)
     }
 
-    private fun changeVolumePassword(newPassword: CharArray, givenHash: ByteArray? = null) {
-        var returnedHash: ByteArray? = null
-        if (binding.checkboxSavePassword.isChecked) {
-            returnedHash = ByteArray(GocryptfsVolume.KeyLen)
+    private fun changeVolumePassword(newPassword: ByteArray, givenHash: ByteArray? = null) {
+        val returnedHash: ObjRef<ByteArray?>? = if (binding.checkboxSavePassword.isChecked) {
+            ObjRef(null)
+        } else {
+            null
         }
-        var currentPassword: CharArray? = null
-        if (givenHash == null) {
-            currentPassword = CharArray(binding.editCurrentPassword.text.length)
-            binding.editCurrentPassword.text.getChars(0, currentPassword.size, currentPassword, 0)
+        val currentPassword = if (givenHash == null) {
+            WidgetUtil.encodeEditTextContent(binding.editCurrentPassword)
+        } else {
+            null
         }
         object : LoadingTask<Boolean>(this, themeValue, R.string.loading_msg_change_password) {
             override suspend fun doTask(): Boolean {
-                val success = GocryptfsVolume.changePassword(volume.getFullPath(filesDir.path), currentPassword, givenHash, newPassword, returnedHash)
+                val success = if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE) {
+                    GocryptfsVolume.changePassword(
+                        volume.getFullPath(filesDir.path),
+                        currentPassword,
+                        givenHash,
+                        newPassword,
+                        returnedHash?.apply { value = ByteArray(GocryptfsVolume.KeyLen) }?.value
+                    )
+                } else {
+                    CryfsVolume.changePassword(
+                        volume.getFullPath(filesDir.path),
+                        filesDir.path,
+                        currentPassword,
+                        givenHash,
+                        newPassword,
+                        returnedHash
+                    )
+                }
                 if (success) {
                     if (volumeDatabase.isHashSaved(volume.name)) {
                         volumeDatabase.removeHash(volume)
                     }
                 }
                 if (currentPassword != null)
-                    Arrays.fill(currentPassword, 0.toChar())
-                Arrays.fill(newPassword, 0.toChar())
+                    Arrays.fill(currentPassword, 0)
+                Arrays.fill(newPassword, 0)
                 if (givenHash != null)
                     Arrays.fill(givenHash, 0)
                 return success
@@ -138,21 +158,21 @@ class ChangePasswordActivity: BaseActivity() {
                         it.listener = object : FingerprintProtector.Listener {
                             override fun onHashStorageReset() {
                                 // retry
-                                it.savePasswordHash(volume, returnedHash)
+                                it.savePasswordHash(volume, returnedHash.value!!)
                             }
                             override fun onPasswordHashDecrypted(hash: ByteArray) {}
                             override fun onPasswordHashSaved() {
-                                Arrays.fill(returnedHash, 0)
+                                Arrays.fill(returnedHash.value!!, 0)
                                 finish()
                             }
                             override fun onFailed(pending: Boolean) {
                                 if (!pending) {
-                                    Arrays.fill(returnedHash, 0)
+                                    Arrays.fill(returnedHash.value!!, 0)
                                     finish()
                                 }
                             }
                         }
-                        it.savePasswordHash(volume, returnedHash)
+                        it.savePasswordHash(volume, returnedHash.value!!)
                     }
                 } else {
                     finish()

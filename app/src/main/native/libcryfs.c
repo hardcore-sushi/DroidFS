@@ -12,6 +12,14 @@ Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeInit(JN
     return cryfs_init(env, base_dir, jlocalStateDir, password, givenHash, returnedHash, createBaseDir, cipher);
 }
 
+JNIEXPORT jboolean JNICALL
+Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeChangeEncryptionKey(
+        JNIEnv *env, jobject thiz, jstring base_dir, jstring local_state_dir,
+        jbyteArray current_password, jbyteArray given_hash, jbyteArray new_password,
+        jobject returned_hash) {
+    return cryfs_change_encryption_key(env, base_dir, local_state_dir, current_password, given_hash, new_password, returned_hash);
+}
+
 JNIEXPORT jlong JNICALL
 Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeCreate(JNIEnv *env, jobject thiz,
                                                                               jlong fuse_ptr, jstring path,

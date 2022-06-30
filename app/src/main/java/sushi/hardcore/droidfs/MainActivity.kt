@@ -342,11 +342,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         val onlyOneAndWriteable =
             onlyOneSelected &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].canWrite(filesDir.path)
-        menu.findItem(R.id.change_password).isVisible =
-            onlyOneAndWriteable &&
-            // Only gocryptfs volumes support password change
-            !BuildConfig.GOCRYPTFS_DISABLED &&
-            volumeAdapter.volumes[volumeAdapter.selectedItems.first()].type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
+        menu.findItem(R.id.change_password).isVisible = onlyOneAndWriteable
         menu.findItem(R.id.remove_default_open).isVisible =
             onlyOneSelected &&
             volumeAdapter.volumes[volumeAdapter.selectedItems.first()].name == defaultVolumeName
