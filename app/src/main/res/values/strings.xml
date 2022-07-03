@@ -203,7 +203,6 @@
     <string name="password_confirmation_label">Repeat the password:</string>
     <string name="password_confirmation_hint">Password (confirmation)</string>
     <string name="password_hash_saved">password hash saved</string>
-    <string name="read_only">(read-only)</string>
     <string name="no_volumes_text">No volume saved, add some by clicking on the + button</string>
     <string name="fingerprint_error_msg">Fingerprint authentication can\'t be used: %s.</string>
     <string name="keyguard_not_secure">keyguard not secure</string>
@@ -247,4 +246,6 @@
     <string name="gocryptfs_disabled">Gocryptfs support has been disabled</string>
     <string name="cryfs_disabled">CryFS support has been disabled</string>
     <string name="file_op_delete_msg">Deleting files…</string>
+    <string name="volume_type">(%s)</string>
+    <string name="volume_type_read_only">(%s, read-only)</string>
 </resources>

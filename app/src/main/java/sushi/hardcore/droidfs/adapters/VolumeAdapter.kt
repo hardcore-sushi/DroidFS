@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.SavedVolume
 import sushi.hardcore.droidfs.VolumeDatabase
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 
 class VolumeAdapter(
     private val context: Context,
@@ -89,13 +90,18 @@ class VolumeAdapter(
             } else {
                 View.VISIBLE
             }
-            itemView.findViewById<TextView>(R.id.text_read_only).apply {
-                visibility = if (volume.canWrite(context.filesDir.path))
-                    View.GONE
-                else {
-                    View.VISIBLE
-                }
-            }
+            itemView.findViewById<TextView>(R.id.text_info).text = context.getString(
+                if (volume.canWrite(context.filesDir.path)) {
+                    R.string.volume_type
+                } else {
+                    R.string.volume_type_read_only
+                },
+                context.getString(if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE) {
+                    R.string.gocryptfs
+                } else {
+                    R.string.cryfs
+                })
+            )
             setSelectable(itemView.findViewById<LinearLayout>(R.id.selectable_container), itemView, layoutPosition)
         }
     }

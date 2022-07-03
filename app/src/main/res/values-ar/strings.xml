@@ -202,7 +202,6 @@
     <string name="password_confirmation_label">أعد كتابة كلمة المرور:</string>
     <string name="password_confirmation_hint">كلمة المرور (تأكيد)</string>
     <string name="password_hash_saved">تم حفظ تجزئة كلمة المرور</string>
-    <string name="read_only">(قراءة فقط)</string>
     <string name="no_volumes_text">ليس هنالك مجلد مشفر ، أضف واحد بالضغط على زر +</string>
     <string name="fingerprint_error_msg">لم يتم التعرف على بصمة الأصبع: %s.</string>
     <string name="keyguard_not_secure">حارس المفاتيح ليس آمنا</string>
