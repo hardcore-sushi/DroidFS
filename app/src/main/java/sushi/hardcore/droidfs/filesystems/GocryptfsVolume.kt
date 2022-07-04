@@ -25,7 +25,13 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         const val CONFIG_FILE_NAME = "gocryptfs.conf"
         external fun createVolume(root_cipher_dir: String, password: ByteArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
         private external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
-        external fun changePassword(root_cipher_dir: String, old_password: CharArray?, givenHash: ByteArray?, new_password: CharArray, returnedHash: ByteArray?): Boolean
+        external fun changePassword(
+            root_cipher_dir: String,
+            currentPassword: ByteArray?,
+            givenHash: ByteArray?,
+            newPassword: ByteArray,
+            returnedHash: ByteArray?
+        ): Boolean
 
         fun init(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): GocryptfsVolume? {
             val sessionId = nativeInit(root_cipher_dir, password, givenHash, returnedHash)

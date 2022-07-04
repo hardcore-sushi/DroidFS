@@ -4,6 +4,7 @@
         <item name="colorAccent">@color/secondary</item>
         <item name="colorPrimary">@color/primary</item>
         <item name="colorSurface">@color/dialogDarkBackground</item>
+        <item name="android:navigationBarColor">?android:attr/colorBackground</item>
         <item name="android:statusBarColor">@color/primary</item>
         <item name="infoBarBackgroundColor">#181818</item>
         <item name="buttonBackgroundColor">#5B5A5C</item>
@@ -28,6 +29,7 @@
 
     <style name="BlackGreen" parent="BaseTheme">
         <item name="android:windowBackground">@color/black</item>
+        <item name="android:navigationBarColor">@color/black</item>
         <item name="infoBarBackgroundColor">@color/black</item>
         <item name="buttonBackgroundColor">#3B3A3C</item>
         <item name="buttonStyle">@style/BlackButton</item>
