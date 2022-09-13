@@ -77,6 +77,7 @@ abstract class EncryptedVolume: Parcelable {
     abstract fun read(fileHandle: Long, buffer: ByteArray, offset: Long): Int
     abstract fun write(fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int
     abstract fun closeFile(fileHandle: Long): Boolean
+    // Due to gocryptfs internals, truncate requires the file to be open before it is called
     abstract fun truncate(path: String, size: Long): Boolean
     abstract fun deleteFile(path: String): Boolean
     abstract fun readDir(path: String): MutableList<ExplorerElement>?
@@ -142,6 +143,7 @@ abstract class EncryptedVolume: Parcelable {
                     break
                 }
             }
+            truncate(dst_path, offset)
             closeFile(dstfileHandle)
             inputStream.close()
             return success

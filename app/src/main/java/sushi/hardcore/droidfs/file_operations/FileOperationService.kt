@@ -141,6 +141,7 @@ class FileOperationService : Service() {
                         break
                     }
                 }
+                encryptedVolume.truncate(dstPath, offset)
                 encryptedVolume.closeFile(dstFileHandle)
             } else {
                 success = false
