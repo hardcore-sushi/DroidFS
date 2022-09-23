@@ -185,7 +185,7 @@ object PathUtils {
         return rootDirectory.delete()
     }
 
-     fun safePickDirectory(directoryPicker: ActivityResultLauncher<Uri>, context: Context, themeValue: String) {
+     fun safePickDirectory(directoryPicker: ActivityResultLauncher<Uri?>, context: Context, themeValue: String) {
         try {
             directoryPicker.launch(null)
         } catch (e: ActivityNotFoundException) {

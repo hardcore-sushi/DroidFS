@@ -1,9 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.content.res.Configuration
-import android.content.res.Resources
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.graphics.drawable.Drawable
 import android.os.Handler
@@ -11,7 +9,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
-import androidx.exifinterface.media.ExifInterface
+import androidx.activity.addCallback
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
@@ -35,7 +33,6 @@ class ImageViewer: FileViewerActivity() {
 
     private lateinit var fileName: String
     private lateinit var handler: Handler
-    private var bitmap: Bitmap? = null
     private var requestBuilder: RequestBuilder<Drawable>? = null
     private var x1 = 0F
     private var x2 = 0F
@@ -151,53 +148,26 @@ class ImageViewer: FileViewerActivity() {
             rotationAngle -= 90
             rotateImage()
         }
+        onBackPressedDispatcher.addCallback(this) {
+            if (slideshowActive) {
+                stopSlideshow()
+            } else {
+                askSaveRotation {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        }
         loadImage()
         handler.postDelayed(hideUI, hideDelay)
     }
 
     private fun loadImage(){
-        bitmap = null
         requestBuilder = null
         loadWholeFile(filePath)?.let {
-            val displayWithGlide = if (it.size < 5_000_000) {
-                true
-            } else {
-                bitmap = BitmapFactory.decodeByteArray(it, 0, it.size)
-                if (bitmap == null) {
-                    true
-                } else {
-                    val orientation = ExifInterface(ByteArrayInputStream(it)).getAttributeInt(
-                        ExifInterface.TAG_ORIENTATION,
-                        ExifInterface.ORIENTATION_NORMAL
-                    )
-                    originalOrientation = when (orientation) {
-                        ExifInterface.ORIENTATION_ROTATE_90 -> 90f
-                        ExifInterface.ORIENTATION_ROTATE_180 -> 180f
-                        ExifInterface.ORIENTATION_ROTATE_270 -> 270f
-                        else -> 0f
-                    }
-                    val displayMetrics = Resources.getSystem().displayMetrics
-                    if (displayMetrics.widthPixels < bitmap!!.width || displayMetrics.heightPixels < bitmap!!.height) {
-                        val newWidth: Int
-                        val newHeight: Int
-                        if (displayMetrics.widthPixels > displayMetrics.heightPixels) {
-                            newWidth = displayMetrics.widthPixels
-                            newHeight = bitmap!!.height*displayMetrics.widthPixels/bitmap!!.width
-                        } else {
-                            newHeight = displayMetrics.heightPixels
-                            newWidth = bitmap!!.width*displayMetrics.heightPixels/bitmap!!.height
-                        }
-                        bitmap = Bitmap.createScaledBitmap(bitmap!!, newWidth, newHeight, false)
-                    }
-                    Glide.with(this).load(bitmap).transform(OrientationTransformation(originalOrientation)).into(binding.imageViewer)
-                    false
-                }
-            }
-            if (displayWithGlide) {
-                originalOrientation = 0f
-                requestBuilder = Glide.with(this).load(it)
-                requestBuilder?.into(binding.imageViewer)
-            }
+            originalOrientation = 0f
+            requestBuilder = Glide.with(this).load(it)
+            requestBuilder?.into(binding.imageViewer)
             fileName = File(filePath).name
             binding.textFilename.text = fileName
             rotationAngle = originalOrientation
@@ -227,14 +197,6 @@ class ImageViewer: FileViewerActivity() {
         Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
     }
 
-    override fun onBackPressed() {
-        if (slideshowActive){
-            stopSlideshow()
-        } else {
-            askSaveRotation { super.onBackPressed() }
-        }
-    }
-
     class OrientationTransformation(private val orientation: Float): BitmapTransformation() {
 
         lateinit var bitmap: Bitmap
@@ -255,7 +217,7 @@ class ImageViewer: FileViewerActivity() {
     private fun rotateImage(){
         binding.imageViewer.restoreZoomNormal()
         orientationTransformation = OrientationTransformation(rotationAngle)
-        (requestBuilder ?: Glide.with(this).load(bitmap)).transform(orientationTransformation).into(binding.imageViewer)
+        requestBuilder?.transform(orientationTransformation)?.into(binding.imageViewer)
     }
 
     private fun askSaveRotation(callback: () -> Unit){

@@ -59,11 +59,10 @@ abstract class MediaPlayer: FileViewerActivity() {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
-            override fun onPositionDiscontinuity(reason: Int) {
-                if (player.currentMediaItemIndex != currentPlaylistIndex) {
-                    playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex+1) % mappedPlaylist.size)
-                    refreshFileName()
-                }
+
+            override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+                playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex+1) % mappedPlaylist.size)
+                refreshFileName()
             }
         })
         player.prepare()

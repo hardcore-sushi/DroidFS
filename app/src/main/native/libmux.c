@@ -18,7 +18,7 @@ int write_packet(void* opaque, uint8_t* buff, int buff_size) {
     JNIEnv *env;
     (*muxer->jvm)->GetEnv(muxer->jvm, (void **) &env, JNI_VERSION_1_6);
     jbyteArray jarray = (*env)->NewByteArray(env, buff_size);
-    (*env)->SetByteArrayRegion(env, jarray, 0, buff_size, buff);
+    (*env)->SetByteArrayRegion(env, jarray, 0, buff_size, (const signed char*)buff);
     (*env)->CallVoidMethod(env, muxer->thiz, muxer->write_packet_method_id, jarray, buff_size);
     return buff_size;
 }
@@ -52,8 +52,7 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addAudioTrack(JNIEnv *en
     const AVCodec* encoder = avcodec_find_encoder(AV_CODEC_ID_AAC);
     AVStream* stream = avformat_new_stream((AVFormatContext *) format_context, NULL);
     AVCodecContext* codec_context = avcodec_alloc_context3(encoder);
-    codec_context->channels = channel_count;
-    codec_context->channel_layout = av_get_default_channel_layout(channel_count);
+    av_channel_layout_default(&codec_context->ch_layout, channel_count);
     codec_context->sample_rate = sample_rate;
     codec_context->sample_fmt = encoder->sample_fmts[0];
     codec_context->bit_rate = bitrate;
@@ -105,8 +104,8 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_writePacket(JNIEnv *env,
         r.den = 1000000;
         av_packet_rescale_ts(packet, r, ((AVFormatContext *)format_context)->streams[stream_index]->time_base);
     }
-    unsigned char* buff = malloc(size);
-    (*env)->GetByteArrayRegion(env, buffer, 0, size, buff);
+    uint8_t* buff = malloc(size);
+    (*env)->GetByteArrayRegion(env, buffer, 0, size, (signed char*)buff);
     packet->data = buff;
     if (is_key_frame) {
         packet->flags = AV_PKT_FLAG_KEY;

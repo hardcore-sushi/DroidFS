@@ -35,7 +35,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
-                val remoteEncryptedVolume = resultIntent.getParcelableExtra<EncryptedVolume>("volume")!!
+                val remoteEncryptedVolume = getParcelableExtra<EncryptedVolume>(resultIntent, "volume")!!
                 val path = resultIntent.getStringExtra("path")
                 val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements
@@ -63,6 +63,8 @@ class ExplorerActivity : BaseExplorerActivity() {
                         if (items == null) {
                             remoteEncryptedVolume.close()
                         } else {
+                            // stop loading thumbnails while writing files
+                            explorerAdapter.loadThumbnails = false
                             taskScope.launch {
                                 val failedItem = fileOperationService.copyElements(items, remoteEncryptedVolume)
                                 if (failedItem == null) {
@@ -74,6 +76,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                         .setPositiveButton(R.string.ok, null)
                                         .show()
                                 }
+                                explorerAdapter.loadThumbnails = true
                                 setCurrentPath(currentDirectoryPath)
                                 remoteEncryptedVolume.close()
                             }

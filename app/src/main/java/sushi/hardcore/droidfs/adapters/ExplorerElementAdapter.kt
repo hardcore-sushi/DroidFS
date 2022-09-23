@@ -41,6 +41,7 @@ class ExplorerElementAdapter(
     }
     var isUsingListLayout = true
     private var thumbnailsCache: LruCache<String, Bitmap>? = null
+    var loadThumbnails = true
 
     init {
         if (encryptedVolume != null) {
@@ -159,7 +160,7 @@ class ExplorerElementAdapter(
                     if (thumbnail != null) {
                         icon.setImageBitmap(thumbnail)
                         setDefaultIcon = false
-                    } else {
+                    } else if (adapter.loadThumbnails) {
                         loadThumbnail(fullPath, adapter)
                     }
                 }

@@ -82,7 +82,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         volumeName = intent.getStringExtra("volume_name") ?: ""
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = getParcelableExtra(intent, "volume")!!
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)

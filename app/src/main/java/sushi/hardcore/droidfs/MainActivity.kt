@@ -15,6 +15,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
@@ -134,6 +135,16 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 unsetDefaultVolume()
             }
         }
+        onBackPressedDispatcher.addCallback(this) {
+            if (volumeAdapter.selectedItems.isNotEmpty()) {
+                unselectAll()
+            } else {
+                if (pickMode)
+                    shouldCloseVolume = false
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+            }
+        }
         Intent(this, FileOperationService::class.java).also {
             bindService(it, object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -146,6 +157,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     override fun onStart() {
         super.onStart()
+        // refresh theme if changed in SettingsActivity
+        val newThemeValue = sharedPrefs.getString("theme", ConstValues.DEFAULT_THEME_VALUE)!!
+        onThemeChanged(newThemeValue)
         // refresh this in case another instance of MainActivity changes its value
         defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     }
@@ -619,7 +633,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             explorerIntent.putExtras(intent.extras!!) //forward extras
         } else if (pickMode) {
             explorerIntent = Intent(this, ExplorerActivityPick::class.java)
-            explorerIntent.putExtra("destinationVolume", intent.getParcelableExtra<EncryptedVolume>("volume")!!)
+            explorerIntent.putExtra("destinationVolume", getParcelableExtra<EncryptedVolume>(intent, "volume")!!)
             explorerIntent.flags = Intent.FLAG_ACTIVITY_FORWARD_RESULT
         }
         if (explorerIntent == null) {
@@ -634,22 +648,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             finish()
     }
 
-    override fun onBackPressed() {
-        if (volumeAdapter.selectedItems.isNotEmpty()) {
-            unselectAll()
-        } else {
-            if (pickMode)
-                shouldCloseVolume = false
-            super.onBackPressed()
-        }
-    }
-
     override fun onStop() {
         super.onStop()
         if (pickMode && !usfKeepOpen) {
             finish()
             if (shouldCloseVolume) {
-                intent.getParcelableExtra<EncryptedVolume>("volume")?.close()
+                getParcelableExtra<EncryptedVolume>(intent, "volume")?.close()
                 RestrictedFileProvider.wipeAll(this)
             }
         }

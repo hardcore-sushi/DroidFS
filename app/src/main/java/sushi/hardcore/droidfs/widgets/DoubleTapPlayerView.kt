@@ -46,7 +46,7 @@ class DoubleTapPlayerView @JvmOverloads constructor(
             return true
         }
 
-        override fun onSingleTapConfirmed(e: MotionEvent?): Boolean {
+        override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
             if (!isDoubleTapping)
                 performClick()
             return true

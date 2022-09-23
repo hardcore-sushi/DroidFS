@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.addCallback
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.BaseActivity
@@ -33,12 +34,17 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = getParcelableExtra(intent, "volume")!!
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
+        }
+        onBackPressedDispatcher.addCallback(this) {
+            isFinishingIntentionally = true
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
         }
         hideSystemUi()
         viewFile()
@@ -75,7 +81,8 @@ abstract class FileViewerActivity: BaseActivity() {
             when (result.second) {
                 1 -> dialog.setMessage(R.string.get_size_failed)
                 2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
-                else -> dialog.setMessage(R.string.read_file_failed)
+                3 -> dialog.setMessage(R.string.read_file_failed)
+                4 -> dialog.setMessage(R.string.io_error)
             }
             dialog.show()
         }
@@ -144,10 +151,5 @@ abstract class FileViewerActivity: BaseActivity() {
         if (!usf_keep_open) {
             finish()
         }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        isFinishingIntentionally = true
     }
 }

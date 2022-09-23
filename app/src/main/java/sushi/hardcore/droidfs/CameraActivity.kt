@@ -17,6 +17,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
@@ -94,7 +95,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = getParcelableExtra(intent, "volume")!!
         outputDirectory = intent.getStringExtra("path")!!
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -277,6 +278,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 MotionEvent.ACTION_MOVE -> scaleGestureDetector.onTouchEvent(event)
                 else -> false
             }
+        }
+        onBackPressedDispatcher.addCallback(this) {
+            isFinishingIntentionally = true
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
         }
     }
 
@@ -504,11 +510,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     override fun onResume() {
         super.onResume()
         sensorOrientationListener.addListener(this)
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        isFinishingIntentionally = true
     }
 
     override fun onOrientationChange(newOrientation: Int) {

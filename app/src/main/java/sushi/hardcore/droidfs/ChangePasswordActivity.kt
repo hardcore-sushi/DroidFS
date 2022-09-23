@@ -27,7 +27,7 @@ class ChangePasswordActivity: BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        volume = intent.getParcelableExtra("volume")!!
+        volume = getParcelableExtra(intent, "volume")!!
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
         title = getString(R.string.change_password)

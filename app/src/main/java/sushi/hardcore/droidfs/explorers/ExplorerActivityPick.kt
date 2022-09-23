@@ -83,7 +83,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     override fun closeVolumeOnDestroy() {
         if (!isFinishingIntentionally && !usf_keep_open){
-            intent.getParcelableExtra<EncryptedVolume>("destinationVolume")?.close()
+            getParcelableExtra<EncryptedVolume>(intent, "destinationVolume")?.close()
             super.closeVolumeOnDestroy()
         }
     }

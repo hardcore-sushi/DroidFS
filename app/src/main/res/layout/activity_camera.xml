@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".CameraActivity"
-    android:background="#000000">
+    android:background="@color/fullScreenBackgroundColor">
 
     <androidx.camera.view.PreviewView
         android:id="@+id/camera_preview"

@@ -7,6 +7,9 @@ import java.io.ByteArrayInputStream
 import java.io.File
 
 class PdfViewer: FileViewerActivity() {
+    init {
+        applyCustomTheme = false
+    }
     private lateinit var pdfViewer: PdfViewer
 
     override fun hideSystemUi() {
@@ -35,6 +38,11 @@ class PdfViewer: FileViewerActivity() {
     override fun onResume() {
         super.onResume()
         pdfViewer.onResume()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pdfViewer.onDestroy()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {

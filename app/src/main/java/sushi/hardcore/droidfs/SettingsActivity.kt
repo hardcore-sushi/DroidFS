@@ -34,7 +34,7 @@ class SettingsActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId){
             android.R.id.home -> {
-                onBackPressed() //return to the previous fragment rather than the activity
+                onBackPressedDispatcher.onBackPressed() //return to the previous fragment rather than the activity
                 true
             }
             else -> super.onOptionsItemSelected(item)

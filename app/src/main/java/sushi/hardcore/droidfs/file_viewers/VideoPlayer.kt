@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.file_viewers
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import com.google.android.exoplayer2.ExoPlayer
+import com.google.android.exoplayer2.ui.StyledPlayerView
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
@@ -16,9 +17,9 @@ class VideoPlayer: MediaPlayer() {
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
-        binding.videoPlayer.setControllerVisibilityListener { visibility ->
+        binding.videoPlayer.setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener { visibility ->
             binding.topBar.visibility = visibility
-        }
+        })
         binding.rotateButton.setOnClickListener {
             requestedOrientation =
                 if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {

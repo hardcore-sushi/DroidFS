@@ -1,19 +1,23 @@
 package sushi.hardcore.droidfs
 
+import android.content.Intent
 import android.content.SharedPreferences
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
 
 open class BaseActivity: AppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
+    protected var applyCustomTheme: Boolean = true
     lateinit var themeValue: String
     private var shouldCheckTheme = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (shouldCheckTheme) {
+        if (shouldCheckTheme && applyCustomTheme) {
             themeValue = sharedPrefs.getString("theme", ConstValues.DEFAULT_THEME_VALUE)!!
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)
@@ -28,8 +32,6 @@ open class BaseActivity: AppCompatActivity() {
                 "dark_purple" -> setTheme(R.style.DarkPurple)
                 "black_purple" -> setTheme(R.style.BlackPurple)
             }
-        } else {
-            shouldCheckTheme = true
         }
         super.onCreate(savedInstanceState)
         if (!sharedPrefs.getBoolean("usf_screenshot", false)){
@@ -37,17 +39,21 @@ open class BaseActivity: AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        val newThemeValue = sharedPrefs.getString("theme", "dark_green")!!
-        onThemeChanged(newThemeValue)
-    }
-
+    // must not be called if applyCustomTheme is false
     fun onThemeChanged(newThemeValue: String) {
         if (newThemeValue != themeValue) {
             themeValue = newThemeValue
             shouldCheckTheme = false
             recreate()
+        }
+    }
+
+    inline fun <reified T: Parcelable> getParcelableExtra(intent: Intent, name: String): T? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            intent.getParcelableExtra(name, T::class.java)
+        } else {
+            @Suppress("Deprecation")
+            intent.getParcelableExtra(name)
         }
     }
 }
