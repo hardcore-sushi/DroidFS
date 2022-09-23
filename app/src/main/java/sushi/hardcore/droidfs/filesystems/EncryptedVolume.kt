@@ -74,8 +74,8 @@ abstract class EncryptedVolume: Parcelable {
     override fun describeContents() = 0
 
     abstract fun openFile(path: String): Long
-    abstract fun read(fileHandle: Long, buffer: ByteArray, offset: Long): Int
-    abstract fun write(fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int
+    abstract fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
+    abstract fun write(fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int
     abstract fun closeFile(fileHandle: Long): Boolean
     // Due to gocryptfs internals, truncate requires the file to be open before it is called
     abstract fun truncate(path: String, size: Long): Boolean
@@ -96,7 +96,7 @@ abstract class EncryptedVolume: Parcelable {
         var offset: Long = 0
         val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
         var length: Int
-        while (read(fileHandle, ioBuffer, offset).also { length = it } > 0) {
+        while (read(fileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it } > 0) {
             os.write(ioBuffer, 0, length)
             offset += length.toLong()
         }
@@ -132,10 +132,10 @@ abstract class EncryptedVolume: Parcelable {
             var success = true
             var offset: Long = 0
             val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
-            var length: Int
-            while (inputStream.read(ioBuffer).also { length = it } > 0) {
-                val written = write(dstfileHandle, offset, ioBuffer, length).toLong()
-                if (written == length.toLong()) {
+            var length: Long
+            while (inputStream.read(ioBuffer).also { length = it.toLong() } > 0) {
+                val written = write(dstfileHandle, offset, ioBuffer, 0, length).toLong()
+                if (written == length) {
                     offset += written
                 } else {
                     inputStream.close()
@@ -174,12 +174,7 @@ abstract class EncryptedVolume: Parcelable {
                     Pair(null, 3)
                 } else {
                     var offset: Long = 0
-                    val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
-                    var length: Int
-                    while (read(fileHandle, ioBuffer, offset).also { length = it } > 0) {
-                        System.arraycopy(ioBuffer, 0, fileBuff, offset.toInt(), length)
-                        offset += length.toLong()
-                    }
+                    while (offset < fileSize && read(fileHandle, offset, fileBuff, offset, fileSize-offset).also { offset += it } > 0) {}
                     closeFile(fileHandle)
                     if (offset == fileBuff.size.toLong()) {
                         Pair(fileBuff, 0)

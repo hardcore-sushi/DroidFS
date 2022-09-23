@@ -33,8 +33,8 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         ): Boolean
         private external fun nativeCreate(fusePtr: Long, path: String, mode: Int): Long
         private external fun nativeOpen(fusePtr: Long, path: String, flags: Int): Long
-        private external fun nativeRead(fusePtr: Long, fileHandle: Long, buffer: ByteArray, offset: Long): Int
-        private external fun nativeWrite(fusePtr: Long, fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int
+        private external fun nativeRead(fusePtr: Long, fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
+        private external fun nativeWrite(fusePtr: Long, fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int
         private external fun nativeTruncate(fusePtr: Long, path: String, size: Long): Boolean
         private external fun nativeDeleteFile(fusePtr: Long, path: String): Boolean
         private external fun nativeCloseFile(fusePtr: Long, fileHandle: Long): Boolean
@@ -101,12 +101,12 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         }
     }
 
-    override fun read(fileHandle: Long, buffer: ByteArray, offset: Long): Int {
-        return nativeRead(fusePtr, fileHandle, buffer, offset)
+    override fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int {
+        return nativeRead(fusePtr, fileHandle, fileOffset, buffer, dstOffset, length)
     }
 
-    override fun write(fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int {
-        return nativeWrite(fusePtr, fileHandle, offset, buffer, size)
+    override fun write(fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int {
+        return nativeWrite(fusePtr, fileHandle, fileOffset, buffer, srcOffset, length)
     }
 
     override fun truncate(path: String, size: Long): Boolean {

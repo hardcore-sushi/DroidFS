@@ -459,7 +459,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
                     var offset = 0L
                     override fun write(byteArray: ByteArray) {
-                        offset += encryptedVolume.write(fileHandle, offset, byteArray, byteArray.size)
+                        offset += encryptedVolume.write(fileHandle, offset, byteArray, 0, byteArray.size.toLong())
                     }
                     override fun seek(offset: Long) {
                         this.offset = offset

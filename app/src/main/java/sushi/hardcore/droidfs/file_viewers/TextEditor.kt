@@ -70,23 +70,12 @@ class TextEditor: FileViewerActivity() {
         val content = editor.text.toString().toByteArray()
         val fileHandle = encryptedVolume.openFile(filePath)
         if (fileHandle != -1L) {
-            val buff = ByteArrayInputStream(content)
             var offset: Long = 0
-            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
-            var length: Int
-            while (buff.read(ioBuffer).also { length = it } > 0) {
-                val written = encryptedVolume.write(fileHandle, offset, ioBuffer, length).toLong()
-                if (written == length.toLong()) {
-                    offset += written
-                } else {
-                    break
-                }
-            }
+            while (offset < content.size && encryptedVolume.write(fileHandle, offset, content, offset, content.size.toLong()).also { offset += it } > 0) {}
             if (offset == content.size.toLong()){
                 success = encryptedVolume.truncate(filePath, offset)
             }
             encryptedVolume.closeFile(fileHandle)
-            buff.close()
         }
         if (success){
             Toast.makeText(this, getString(R.string.file_saved), Toast.LENGTH_SHORT).show()

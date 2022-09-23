@@ -293,12 +293,12 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1open_1write_1mod
 
 JNIEXPORT jint JNICALL
 Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1write_1file(JNIEnv *env, jobject thiz,
-                                                            jint sessionID, jint handleID, jlong offset,
-                                                            jbyteArray jbuff, jint buff_size) {
+                                                            jint sessionID, jint handleID, jlong file_offset,
+                                                            jbyteArray jbuff, jlong src_offset, jint length) {
     jbyte* buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
-    GoSlice go_buff = {buff, buff_size, buff_size};
+    GoSlice go_buff = {buff+src_offset, length, length};
 
-    int written = gcf_write_file(sessionID, handleID, offset, go_buff);
+    int written = gcf_write_file(sessionID, handleID, file_offset, go_buff);
 
     (*env)->ReleaseByteArrayElements(env, jbuff, buff, 0);
 
@@ -307,13 +307,12 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1write_1file(JNIE
 
 JNIEXPORT jint JNICALL
 Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1read_1file(JNIEnv *env, jobject thiz,
-                                                           jint sessionID, jint handleID, jlong offset,
-                                                            jbyteArray jbuff) {
-    const size_t buff_size = (*env)->GetArrayLength(env, jbuff);
+                                                           jint sessionID, jint handleID, jlong file_offset,
+                                                            jbyteArray jbuff, jlong dst_offset, jint length) {
     jbyte* buff = (*env)->GetByteArrayElements(env, jbuff, NULL);
-    GoSlice go_buff = {buff, buff_size, buff_size};
+    GoSlice go_buff = {buff+dst_offset, length, length};
 
-    int read = gcf_read_file(sessionID, handleID, offset, go_buff);
+    int read = gcf_read_file(sessionID, handleID, file_offset, go_buff);
 
     (*env)->ReleaseByteArrayElements(env, jbuff, buff, 0);
     return read;

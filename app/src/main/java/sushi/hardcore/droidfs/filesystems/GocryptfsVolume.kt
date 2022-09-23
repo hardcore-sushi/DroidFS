@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import kotlin.math.min
 
 class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     private external fun native_close(sessionID: Int)
@@ -9,8 +10,8 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>?
     private external fun native_open_read_mode(sessionID: Int, file_path: String): Int
     private external fun native_open_write_mode(sessionID: Int, file_path: String, mode: Int): Int
-    private external fun native_read_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray): Int
-    private external fun native_write_file(sessionID: Int, handleID: Int, offset: Long, buff: ByteArray, buff_size: Int): Int
+    private external fun native_read_file(sessionID: Int, handleID: Int, fileOffset: Long, buff: ByteArray, dstOffset: Long, length: Int): Int
+    private external fun native_write_file(sessionID: Int, handleID: Int, fileOffset: Long, buff: ByteArray, srcOffset: Long, length: Int): Int
     private external fun native_truncate(sessionID: Int, path: String, offset: Long): Boolean
     private external fun native_close_file(sessionID: Int, handleID: Int)
     private external fun native_remove_file(sessionID: Int, file_path: String): Boolean
@@ -22,6 +23,7 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     companion object {
         const val KeyLen = 32
         const val ScryptDefaultLogN = 16
+        const val MAX_KERNEL_WRITE = 128*1024
         const val CONFIG_FILE_NAME = "gocryptfs.conf"
         external fun createVolume(root_cipher_dir: String, password: ByteArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
         private external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
@@ -53,8 +55,8 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         return native_open_write_mode(sessionID, path, 0).toLong()
     }
 
-    override fun read(fileHandle: Long, buffer: ByteArray, offset: Long): Int {
-        return native_read_file(sessionID, fileHandle.toInt(), offset, buffer)
+    override fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int {
+        return native_read_file(sessionID, fileHandle.toInt(), fileOffset, buffer, dstOffset, min(length.toInt(), MAX_KERNEL_WRITE))
     }
 
     override fun readDir(path: String): MutableList<ExplorerElement>? {
@@ -91,8 +93,8 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         return true
     }
 
-    override fun write(fileHandle: Long, offset: Long, buffer: ByteArray, size: Int): Int {
-        return native_write_file(sessionID, fileHandle.toInt(), offset, buffer, size)
+    override fun write(fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int {
+        return native_write_file(sessionID, fileHandle.toInt(), fileOffset, buffer, srcOffset, min(length.toInt(), MAX_KERNEL_WRITE))
     }
 
     override fun truncate(path: String, size: Long): Boolean {

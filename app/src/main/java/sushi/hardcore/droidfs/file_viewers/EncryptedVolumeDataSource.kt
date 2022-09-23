@@ -1,23 +1,29 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.net.Uri
+import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.TransferListener
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import kotlin.math.ceil
 import kotlin.math.min
 
 class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, private val filePath: String): DataSource {
     private var fileHandle = -1L
-    private var fileSize: Long = -1
     private var fileOffset: Long = 0
+    private var bytesRemaining: Long = -1
+
     override fun open(dataSpec: DataSpec): Long {
-        fileOffset = dataSpec.position
         fileHandle = encryptedVolume.openFile(filePath)
-        fileSize = encryptedVolume.getAttr(filePath)!!.size
-        return fileSize
+        fileOffset = dataSpec.position
+        val fileSize = encryptedVolume.getAttr(filePath)!!.size
+        bytesRemaining = if (dataSpec.length == C.LENGTH_UNSET.toLong()) {
+            fileSize - fileOffset
+        } else {
+            min(fileSize, dataSpec.length)
+        }
+        return bytesRemaining
     }
 
     override fun getUri(): Uri {
@@ -33,23 +39,18 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     }
 
     override fun read(buffer: ByteArray, offset: Int, readLength: Int): Int {
-        if (fileOffset >= fileSize){
-            return -1
-        }
-        var totalRead = 0
-        for (i in 0 until ceil(readLength.toDouble()/ConstValues.MAX_KERNEL_WRITE).toInt()){
-            val tmpReadLength = min(readLength-totalRead, ConstValues.MAX_KERNEL_WRITE)
-            val tmpBuff = if (fileOffset+tmpReadLength > fileSize){
-                ByteArray((fileSize-fileOffset).toInt())
-            } else {
-                ByteArray(tmpReadLength)
-            }
-            val read = encryptedVolume.read(fileHandle, tmpBuff, fileOffset)
-            System.arraycopy(tmpBuff, 0, buffer, offset+totalRead, read)
-            fileOffset += read
-            totalRead += read
-        }
-        return totalRead
+        val originalOffset = fileOffset
+        while (fileOffset < originalOffset+readLength && encryptedVolume.read(
+                fileHandle,
+                fileOffset,
+                buffer,
+                offset+(fileOffset-originalOffset),
+                (originalOffset+readLength)-fileOffset
+            ).also { fileOffset += it } > 0
+        ) {}
+        val totalRead = fileOffset-originalOffset
+        bytesRemaining -= totalRead
+        return totalRead.toInt()
     }
 
     class Factory(private val encryptedVolume: EncryptedVolume, private val filePath: String): DataSource.Factory {
