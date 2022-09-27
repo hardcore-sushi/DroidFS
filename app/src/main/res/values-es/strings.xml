@@ -186,7 +186,6 @@
     <string name="remove">Eliminar</string>
     <string name="settings">Ajustes</string>
     <string name="select_all">Seleccionar todo</string>
-    <string name="forget_password">Olvidar la contraseña</string>
     <string name="unrecoverable_key_exception_msg">%s. No se puede cargar la clave de encriptación.</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
     <string name="delete_hidden_volume_question">%s está oculto, ¿sólo quieres olvidar la ruta del volumen o también BORRAR todo su CONTENIDO?</string>

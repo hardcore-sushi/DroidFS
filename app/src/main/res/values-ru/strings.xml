@@ -180,7 +180,6 @@
     <string name="remove">Удалить</string>
     <string name="settings">Настройки</string>
     <string name="select_all">Выбрать все</string>
-    <string name="forget_password">Забыть пароль</string>
     <string name="unrecoverable_key_exception_msg">%s. Невозможно загрузить ключ шифрования.</string>
     <string name="delete_hidden_volume_question">Том \"%s\" скрытый, вы хотите только забыть путь к нему или УДАЛИТЬ том со всем его СОДЕРЖИМЫМ?</string>
     <string name="forget_only">Только забыть</string>

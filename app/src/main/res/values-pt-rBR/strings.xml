@@ -180,7 +180,6 @@
     <string name="remove">Remover</string>
     <string name="settings">Configurações</string>
     <string name="select_all">Selecionar tudo</string>
-    <string name="forget_password">Abandonar a senha</string>
     <string name="unrecoverable_key_exception_msg">%s. Não foi possível carregar a chave de criptografia.</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
     <string name="delete_hidden_volume_question">%s está oculto, você só quer abandonar o caminho do volume ou também REMOVER todo o seu CONTEÚDO?</string>

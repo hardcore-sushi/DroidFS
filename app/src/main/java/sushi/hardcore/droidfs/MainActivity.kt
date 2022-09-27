@@ -283,7 +283,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 removeVolumes(selectedVolumes)
                 true
             }
-            R.id.forget_password -> {
+            R.id.delete_password_hash -> {
                 for (i in volumeAdapter.selectedItems) {
                     if (volumeDatabase.removeHash(volumeAdapter.volumes[i]))
                         volumeAdapter.onVolumeChanged(i)
@@ -349,7 +349,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         val isSelecting = volumeAdapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.select_all).isVisible = isSelecting
         menu.findItem(R.id.remove).isVisible = isSelecting
-        menu.findItem(R.id.forget_password).isVisible =
+        menu.findItem(R.id.delete_password_hash).isVisible =
             isSelecting &&
             !volumeAdapter.selectedItems.any { i -> volumeAdapter.volumes[i].encryptedHash == null }
         val onlyOneSelected = volumeAdapter.selectedItems.size == 1
