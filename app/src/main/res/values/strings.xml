@@ -250,4 +250,7 @@
     <string name="volume_type_read_only">(%s, read-only)</string>
     <string name="io_error">I/O Error.</string>
     <string name="use_fingerprint">Use fingerprint instead of current password</string>
+    <string name="remember_volume">Remember volume</string>
+    <string name="open_volume">Open volume</string>
+    <string name="choose_existing_volume">Please choose an existing volume</string>
 </resources>

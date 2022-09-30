@@ -6,13 +6,14 @@ import android.view.Menu
 import android.view.MenuItem
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 
 class ExplorerActivityPick : BaseExplorerActivity() {
     private var resultIntent = Intent()
     private var isFinishingIntentionally = false
     override fun init() {
-        super.init()
+        setContentView(R.layout.activity_explorer_pick)
         resultIntent.putExtra("volume", encryptedVolume)
     }
 
@@ -83,7 +84,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
 
     override fun closeVolumeOnDestroy() {
         if (!isFinishingIntentionally && !usf_keep_open){
-            getParcelableExtra<EncryptedVolume>(intent, "destinationVolume")?.close()
+            IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "destinationVolume")?.close()
             super.closeVolumeOnDestroy()
         }
     }

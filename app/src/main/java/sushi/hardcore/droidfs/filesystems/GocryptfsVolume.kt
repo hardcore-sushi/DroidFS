@@ -1,7 +1,9 @@
 package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
+import android.util.Log
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.util.ObjRef
 import kotlin.math.min
 
 class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
@@ -22,10 +24,20 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
 
     companion object {
         const val KeyLen = 32
-        const val ScryptDefaultLogN = 16
-        const val MAX_KERNEL_WRITE = 128*1024
+        private const val ScryptDefaultLogN = 16
+        private const val VOLUME_CREATOR = "DroidFS"
+        private const val MAX_KERNEL_WRITE = 128*1024
         const val CONFIG_FILE_NAME = "gocryptfs.conf"
-        external fun createVolume(root_cipher_dir: String, password: ByteArray, plainTextNames: Boolean, xchacha: Int, logN: Int, creator: String, returnedHash: ByteArray?): Boolean
+        private external fun nativeCreateVolume(
+            root_cipher_dir: String,
+            password: ByteArray,
+            plainTextNames: Boolean,
+            xchacha: Int,
+            logN: Int,
+            creator: String,
+            returnedHash: ByteArray?,
+            openAfterCreation: Boolean,
+        ): Int
         private external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(
             root_cipher_dir: String,
@@ -34,6 +46,29 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
             newPassword: ByteArray,
             returnedHash: ByteArray?
         ): Boolean
+
+        fun createAndOpenVolume(
+            root_cipher_dir: String,
+            password: ByteArray,
+            plainTextNames: Boolean,
+            xchacha: Int,
+            returnedHash: ByteArray?,
+            volume: ObjRef<EncryptedVolume?>?
+        ): Boolean {
+            val openAfterCreation = volume != null
+            val result = nativeCreateVolume(root_cipher_dir, password, plainTextNames, xchacha, ScryptDefaultLogN, VOLUME_CREATOR, returnedHash, openAfterCreation)
+            return if (!openAfterCreation) {
+                result == 1
+            } else if (result == -1) {
+                Log.e("gocryptfs", "Failed to open volume after creation")
+                true
+            } else if (result == -2) {
+                false
+            } else {
+                volume!!.value = GocryptfsVolume(result)
+                true
+            }
+        }
 
         fun init(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): GocryptfsVolume? {
             val sessionId = nativeInit(root_cipher_dir, password, givenHash, returnedHash)
@@ -52,7 +87,7 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     constructor(parcel: Parcel) : this(parcel.readInt())
 
     override fun openFile(path: String): Long {
-        return native_open_write_mode(sessionID, path, 0).toLong()
+        return native_open_write_mode(sessionID, path, 384).toLong() // 0600
     }
 
     override fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int {
@@ -81,7 +116,7 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     }
 
     override fun mkdir(path: String): Boolean {
-        return native_mkdir(sessionID, path, 0)
+        return native_mkdir(sessionID, path, 448) // 0700
     }
 
     override fun rmdir(path: String): Boolean {

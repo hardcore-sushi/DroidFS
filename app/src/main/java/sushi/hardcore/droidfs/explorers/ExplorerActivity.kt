@@ -8,16 +8,17 @@ import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
-import sushi.hardcore.droidfs.databinding.ActivityExplorerBinding
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -31,11 +32,10 @@ class ExplorerActivity : BaseExplorerActivity() {
     private var usf_share = false
     private var currentItemAction = ItemsActions.NONE
     private val itemsToProcess = ArrayList<OperationFile>()
-    private lateinit var binding: ActivityExplorerBinding
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
-                val remoteEncryptedVolume = getParcelableExtra<EncryptedVolume>(resultIntent, "volume")!!
+                val remoteEncryptedVolume = IntentUtils.getParcelableExtra<EncryptedVolume>(resultIntent, "volume")!!
                 val path = resultIntent.getStringExtra("path")
                 val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements
@@ -168,9 +168,8 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     override fun init() {
-        binding = ActivityExplorerBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.fab.setOnClickListener {
+        super.init()
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             if (currentItemAction != ItemsActions.NONE){
                 openDialogCreateFolder()
             } else {

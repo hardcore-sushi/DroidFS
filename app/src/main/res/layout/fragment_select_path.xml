@@ -101,6 +101,14 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
         android:visibility="gone"/>
 
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_remember"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/remember_volume"
+        android:checked="true"
+        android:layout_gravity="center"/>
+
     <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/button_action"
         android:layout_width="match_parent"
@@ -108,6 +116,6 @@
         android:layout_gravity="center"
         android:layout_marginHorizontal="@dimen/volume_operation_button_horizontal_margin"
         android:layout_marginTop="@dimen/volume_operation_vertical_gap"
-        android:text="@string/add_volume" />
+        android:text="@string/create_volume" />
 
 </LinearLayout>

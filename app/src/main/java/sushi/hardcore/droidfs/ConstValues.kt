@@ -4,7 +4,6 @@ import android.net.Uri
 import java.io.File
 
 object ConstValues {
-    const val CREATOR = "DroidFS"
     const val VOLUME_DATABASE_NAME = "SavedVolumes"
     const val CRYFS_LOCAL_STATE_DIR = "cryfsLocalState"
     const val SORT_ORDER_KEY = "sort_order"
@@ -13,6 +12,9 @@ object ConstValues {
     const val IO_BUFF_SIZE = 16384
     const val SLIDESHOW_DELAY: Long = 4000
     const val DEFAULT_THEME_VALUE = "dark_green"
+    const val THEME_VALUE_KEY = "theme"
+    const val DEFAULT_VOLUME_KEY = "default_volume"
+    const val REMEMBER_VOLUME_KEY = "remember_volume"
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"
     const val DEFAULT_THUMBNAIL_MAX_SIZE = 10_000L
     const val PIN_PASSWORDS_KEY = "pin_passwords"

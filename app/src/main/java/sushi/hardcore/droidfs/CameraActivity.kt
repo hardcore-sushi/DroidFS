@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
@@ -95,7 +96,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-        encryptedVolume = getParcelableExtra(intent, "volume")!!
+        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
         outputDirectory = intent.getStringExtra("path")!!
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

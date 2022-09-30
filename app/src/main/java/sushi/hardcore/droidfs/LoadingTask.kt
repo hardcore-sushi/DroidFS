@@ -1,6 +1,6 @@
 package sushi.hardcore.droidfs
 
-import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.FragmentActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -8,7 +8,7 @@ import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.databinding.DialogLoadingBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
-abstract class LoadingTask<T>(val activity: AppCompatActivity, themeValue: String, loadingMessageResId: Int) {
+abstract class LoadingTask<T>(val activity: FragmentActivity, themeValue: String, loadingMessageResId: Int) {
     private val dialogLoading = CustomAlertDialogBuilder(activity, themeValue)
         .setView(
             DialogLoadingBinding.inflate(activity.layoutInflater).apply {

@@ -67,8 +67,14 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             }
         }
 
-        fun create(baseDir: String, localStateDir: String, password: ByteArray, returnedHash: ObjRef<ByteArray?>?, cipher: String?): Boolean {
-            return init(baseDir, localStateDir, password, null, returnedHash, true, cipher)?.also { it.close() } != null
+        fun create(baseDir: String, localStateDir: String, password: ByteArray, returnedHash: ObjRef<ByteArray?>?, cipher: String?, volume: ObjRef<EncryptedVolume?>?): Boolean {
+            return init(baseDir, localStateDir, password, null, returnedHash, true, cipher)?.also {
+                if (volume == null) {
+                    it.close()
+                } else {
+                    volume.value = it
+                }
+            } != null
         }
 
         fun init(baseDir: String, localStateDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ObjRef<ByteArray?>?): CryfsVolume? {

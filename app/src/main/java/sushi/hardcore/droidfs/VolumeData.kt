@@ -5,7 +5,7 @@ import android.os.Parcelable
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 
-class SavedVolume(val name: String, val isHidden: Boolean = false, val type: Byte, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
+class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
 
     constructor(parcel: Parcel) : this(
         parcel.readString()!!,
@@ -48,9 +48,9 @@ class SavedVolume(val name: String, val isHidden: Boolean = false, val type: Byt
         const val VOLUMES_DIRECTORY = "volumes"
 
         @JvmField
-        val CREATOR = object : Parcelable.Creator<SavedVolume> {
-            override fun createFromParcel(parcel: Parcel) = SavedVolume(parcel)
-            override fun newArray(size: Int) = arrayOfNulls<SavedVolume>(size)
+        val CREATOR = object : Parcelable.Creator<VolumeData> {
+            override fun createFromParcel(parcel: Parcel) = VolumeData(parcel)
+            override fun newArray(size: Int) = arrayOfNulls<VolumeData>(size)
         }
 
         fun getHiddenVolumeFullPath(filesDir: String, name: String): String {

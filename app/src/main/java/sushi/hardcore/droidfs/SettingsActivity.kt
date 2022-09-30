@@ -82,7 +82,7 @@ class SettingsActivity : BaseActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
+            findPreference<ListPreference>(ConstValues.THEME_VALUE_KEY)?.setOnPreferenceChangeListener { _, newValue ->
                 (activity as BaseActivity).onThemeChanged(newValue as String)
                 true
             }

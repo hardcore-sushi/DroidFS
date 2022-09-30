@@ -5,17 +5,16 @@ import android.net.Uri
 import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
+import com.google.android.material.floatingactionbutton.FloatingActionButton
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.databinding.ActivityExplorerDropBinding
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
-    private lateinit var binding: ActivityExplorerDropBinding
 
     override fun init() {
-        binding = ActivityExplorerDropBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        binding.fab.setOnClickListener {
+        super.init()
+        findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             openDialogCreateFolder()
         }
     }
@@ -34,7 +33,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                 val errorMsg: String? = if (extras != null && extras.containsKey(Intent.EXTRA_STREAM)) {
                     when (intent.action) {
                         Intent.ACTION_SEND -> {
-                            val uri = getParcelableExtra<Uri>(intent, Intent.EXTRA_STREAM)
+                            val uri = IntentUtils.getParcelableExtra<Uri>(intent, Intent.EXTRA_STREAM)
                             if (uri == null) {
                                 getString(R.string.share_intent_parsing_failed)
                             } else {

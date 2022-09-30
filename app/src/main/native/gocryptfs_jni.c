@@ -5,15 +5,18 @@
 #include <sys/stat.h>
 #include "libgocryptfs.h"
 
-JNIEXPORT jboolean JNICALL
-Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_createVolume(JNIEnv *env, jclass clazz,
+const int KeyLen = 32;
+
+JNIEXPORT jint JNICALL
+Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_nativeCreateVolume(JNIEnv *env, jclass clazz,
                                                                              jstring jroot_cipher_dir,
                                                                              jbyteArray jpassword,
                                                                              jboolean plainTextNames,
                                                                              jint xchacha,
                                                                              jint logN,
                                                                              jstring jcreator,
-                                                                             jbyteArray jreturned_hash) {
+                                                                             jbyteArray jreturned_hash,
+                                                                             jboolean open_after_creation) {
     const char* root_cipher_dir = (*env)->GetStringUTFChars(env, jroot_cipher_dir, NULL);
     const char* creator = (*env)->GetStringUTFChars(env, jcreator, NULL);
     GoString gofilename = {root_cipher_dir, strlen(root_cipher_dir)}, gocreator = {creator, strlen(creator)};
@@ -23,27 +26,43 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_00024Companion_createVol
     GoSlice go_password = {password, password_len, password_len};
 
     size_t returned_hash_len;
-    jbyte* returned_hash;
-    GoSlice go_returned_hash = {NULL, 0, 0};
+    GoSlice go_returned_hash;
     if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
         returned_hash_len = (*env)->GetArrayLength(env, jreturned_hash);
-        returned_hash = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
-        go_returned_hash.data = returned_hash;
-        go_returned_hash.len = returned_hash_len;
-        go_returned_hash.cap = returned_hash_len;
+        go_returned_hash.data = (*env)->GetByteArrayElements(env, jreturned_hash, NULL);
+    } else if (open_after_creation) {
+        returned_hash_len = KeyLen;
+        go_returned_hash.data = malloc(KeyLen);
+    } else {
+        returned_hash_len = 0;
+        go_returned_hash.data = NULL;
     }
+    go_returned_hash.len = returned_hash_len;
+    go_returned_hash.cap = returned_hash_len;
 
     GoUint8 result = gcf_create_volume(gofilename, go_password, plainTextNames, xchacha, logN, gocreator, go_returned_hash);
 
-    (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
-    (*env)->ReleaseStringUTFChars(env, jcreator, creator);
     (*env)->ReleaseByteArrayElements(env, jpassword, password, 0);
+    (*env)->ReleaseStringUTFChars(env, jcreator, creator);
 
-    if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
-        (*env)->ReleaseByteArrayElements(env, jreturned_hash, returned_hash, 0);
+    GoInt sessionID = -2;
+    if (result && open_after_creation) {
+        GoSlice null_slice = {NULL, 0, 0};
+        sessionID = gcf_init(gofilename, null_slice, go_returned_hash, null_slice);
     }
 
-    return result;
+    (*env)->ReleaseStringUTFChars(env, jroot_cipher_dir, root_cipher_dir);
+
+    if (!(*env)->IsSameObject(env, jreturned_hash, NULL)) {
+        (*env)->ReleaseByteArrayElements(env, jreturned_hash, go_returned_hash.data, 0);
+    } else if (open_after_creation) {
+        for (unsigned int i=0; i<returned_hash_len; ++i) {
+            ((unsigned char*) go_returned_hash.data)[i] = 0;
+        }
+        free(go_returned_hash.data);
+    }
+
+    return sessionID*open_after_creation+result*!open_after_creation;
 }
 
 JNIEXPORT jint JNICALL

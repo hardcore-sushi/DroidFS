@@ -11,6 +11,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
@@ -34,7 +35,7 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
-        encryptedVolume = getParcelableExtra(intent, "volume")!!
+        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)

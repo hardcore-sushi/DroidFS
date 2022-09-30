@@ -14,6 +14,7 @@ import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -22,7 +23,7 @@ import java.util.*
 class ChangePasswordActivity: BaseActivity() {
 
     private lateinit var binding: ActivityChangePasswordBinding
-    private lateinit var volume: SavedVolume
+    private lateinit var volume: VolumeData
     private lateinit var volumeDatabase: VolumeDatabase
     private var fingerprintProtector: FingerprintProtector? = null
     private var usfFingerprint: Boolean = false
@@ -32,7 +33,7 @@ class ChangePasswordActivity: BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        volume = getParcelableExtra(intent, "volume")!!
+        volume = IntentUtils.getParcelableExtra(intent, "volume")!!
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
         title = getString(R.string.change_password)

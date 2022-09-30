@@ -5,7 +5,7 @@ import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.SavedVolume
+import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
@@ -42,7 +42,7 @@ abstract class EncryptedVolume: Parcelable {
         }
 
         fun init(
-            volume: SavedVolume,
+            volume: VolumeData,
             filesDir: String,
             password: ByteArray?,
             givenHash: ByteArray?,

@@ -18,7 +18,7 @@ open class BaseActivity: AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         if (shouldCheckTheme && applyCustomTheme) {
-            themeValue = sharedPrefs.getString("theme", ConstValues.DEFAULT_THEME_VALUE)!!
+            themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)
                 "dark_red" -> setTheme(R.style.DarkRed)
@@ -45,15 +45,6 @@ open class BaseActivity: AppCompatActivity() {
             themeValue = newThemeValue
             shouldCheckTheme = false
             recreate()
-        }
-    }
-
-    inline fun <reified T: Parcelable> getParcelableExtra(intent: Intent, name: String): T? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            intent.getParcelableExtra(name, T::class.java)
-        } else {
-            @Suppress("Deprecation")
-            intent.getParcelableExtra(name)
         }
     }
 }
