@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.file_viewers
 import android.os.Bundle
 import android.view.View
 import androidx.activity.addCallback
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.BaseActivity
@@ -27,6 +28,7 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
+    protected open var fullscreenMode = true
     private val legacyMod by lazy {
         sharedPrefs.getBoolean("legacyMod", false)
     }
@@ -47,11 +49,18 @@ abstract class FileViewerActivity: BaseActivity() {
             isEnabled = false
             onBackPressedDispatcher.onBackPressed()
         }
-        hideSystemUi()
+        if (fullscreenMode) {
+            fixNavBarColor()
+            hideSystemUi()
+        }
         viewFile()
     }
 
-    open fun hideSystemUi() {
+    private fun fixNavBarColor() {
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.fullScreenBackgroundColor)
+    }
+
+    private fun hideSystemUi() {
         if (legacyMod) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
@@ -67,7 +76,7 @@ abstract class FileViewerActivity: BaseActivity() {
 
     override fun onUserInteraction() {
         super.onUserInteraction()
-        if (windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
+        if (fullscreenMode && windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
             hideSystemUi()
         }
     }

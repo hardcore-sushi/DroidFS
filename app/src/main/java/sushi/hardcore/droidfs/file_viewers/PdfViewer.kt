@@ -10,11 +10,8 @@ class PdfViewer: FileViewerActivity() {
     init {
         applyCustomTheme = false
     }
+    override var fullscreenMode = false
     private lateinit var pdfViewer: PdfViewer
-
-    override fun hideSystemUi() {
-        //don't hide system ui
-    }
 
     override fun getFileType(): String {
         return "pdf"

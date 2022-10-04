@@ -7,20 +7,16 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
-import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import java.io.ByteArrayInputStream
 import java.io.File
 
 class TextEditor: FileViewerActivity() {
+    override var fullscreenMode = false
     private lateinit var fileName: String
     private lateinit var editor: EditText
     private var changedSinceLastSave = false
     private var wordWrap = true
-    override fun hideSystemUi() {
-        //don't hide system ui
-    }
 
     override fun getFileType(): String {
         return "text"
