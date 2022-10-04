@@ -1,10 +1,7 @@
 package sushi.hardcore.droidfs
 
-import android.content.Intent
 import android.content.SharedPreferences
-import android.os.Build
 import android.os.Bundle
-import android.os.Parcelable
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.PreferenceManager
@@ -17,8 +14,8 @@ open class BaseActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
+        themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
         if (shouldCheckTheme && applyCustomTheme) {
-            themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)
                 "dark_red" -> setTheme(R.style.DarkRed)

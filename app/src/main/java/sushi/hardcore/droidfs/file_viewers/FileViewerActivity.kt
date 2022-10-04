@@ -6,6 +6,11 @@ import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
@@ -81,22 +86,29 @@ abstract class FileViewerActivity: BaseActivity() {
         }
     }
 
-    protected fun loadWholeFile(path: String, fileSize: Long? = null): ByteArray? {
-        val result = encryptedVolume.loadWholeFile(path, size = fileSize)
-        if (result.second != 0) {
-            val dialog = CustomAlertDialogBuilder(this, themeValue)
-                .setTitle(R.string.error)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-            when (result.second) {
-                1 -> dialog.setMessage(R.string.get_size_failed)
-                2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
-                3 -> dialog.setMessage(R.string.read_file_failed)
-                4 -> dialog.setMessage(R.string.io_error)
+    protected fun loadWholeFile(path: String, fileSize: Long? = null, callback: (ByteArray) -> Unit) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = encryptedVolume.loadWholeFile(path, size = fileSize)
+            if (isActive) {
+                withContext(Dispatchers.Main) {
+                    if (result.second == 0) {
+                        callback(result.first!!)
+                    } else {
+                        val dialog = CustomAlertDialogBuilder(this@FileViewerActivity, themeValue)
+                            .setTitle(R.string.error)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
+                        when (result.second) {
+                            1 -> dialog.setMessage(R.string.get_size_failed)
+                            2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
+                            3 -> dialog.setMessage(R.string.read_file_failed)
+                            4 -> dialog.setMessage(R.string.io_error)
+                        }
+                        dialog.show()
+                    }
+                }
             }
-            dialog.show()
         }
-        return result.first
     }
 
     protected fun createPlaylist() {

@@ -163,13 +163,13 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun loadImage(){
+        fileName = File(filePath).name
+        binding.textFilename.text = fileName
         requestBuilder = null
-        loadWholeFile(filePath)?.let {
+        loadWholeFile(filePath) {
             originalOrientation = 0f
             requestBuilder = Glide.with(this).load(it)
             requestBuilder?.into(binding.imageViewer)
-            fileName = File(filePath).name
-            binding.textFilename.text = fileName
             rotationAngle = originalOrientation
         }
     }

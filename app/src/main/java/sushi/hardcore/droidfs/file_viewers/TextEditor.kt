@@ -23,8 +23,10 @@ class TextEditor: FileViewerActivity() {
     }
 
     override fun viewFile() {
-        loadWholeFile(filePath)?.let {
-            fileName = File(filePath).name
+        fileName = File(filePath).name
+        title = fileName
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        loadWholeFile(filePath) {
             try {
                 loadLayout(String(it))
             } catch (e: OutOfMemoryError){
@@ -43,8 +45,6 @@ class TextEditor: FileViewerActivity() {
         } else {
             setContentView(R.layout.activity_text_editor)
         }
-        title = fileName
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         editor = findViewById(R.id.text_editor)
         editor.setText(fileContent)
         editor.addTextChangedListener(object: TextWatcher {
