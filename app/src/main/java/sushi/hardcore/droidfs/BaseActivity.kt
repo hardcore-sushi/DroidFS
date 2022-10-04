@@ -31,6 +31,8 @@ open class BaseActivity: AppCompatActivity() {
                 "black_orange" -> setTheme(R.style.BlackOrange)
                 "dark_purple" -> setTheme(R.style.DarkPurple)
                 "black_purple" -> setTheme(R.style.BlackPurple)
+                "dark_pink" -> setTheme(R.style.DarkPink)
+                "black_pink" -> setTheme(R.style.BlackPink)
             }
         }
         super.onCreate(savedInstanceState)

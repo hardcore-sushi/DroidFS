@@ -21,6 +21,8 @@ open class CustomAlertDialogBuilder(context: Context, theme: String) : AlertDial
         "black_orange" -> R.style.BlackOrangeDialog
         "dark_purple" -> R.style.DarkPurpleDialog
         "black_purple" -> R.style.BlackPurpleDialog
+        "dark_pink" -> R.style.DarkPinkDialog
+        "black_pink" -> R.style.BlackPinkDialog
         else -> R.style.DarkGreenDialog
     }
 ) {

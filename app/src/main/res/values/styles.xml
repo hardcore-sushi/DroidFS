@@ -26,6 +26,9 @@
     <style name="DarkPurple" parent="BaseTheme">
         <item name="colorAccent">@color/purple</item>
     </style>
+    <style name="DarkPink" parent="BaseTheme">
+        <item name="colorAccent">@color/pink</item>
+    </style>
 
     <style name="BlackGreen" parent="BaseTheme">
         <item name="android:windowBackground">@color/black</item>
@@ -48,6 +51,9 @@
     </style>
     <style name="BlackPurple" parent="BlackGreen">
         <item name="colorAccent">@color/purple</item>
+    </style>
+    <style name="BlackPink" parent="BlackGreen">
+        <item name="colorAccent">@color/pink</item>
     </style>
 
     <style name="DarkButton" parent="Widget.AppCompat.Button">

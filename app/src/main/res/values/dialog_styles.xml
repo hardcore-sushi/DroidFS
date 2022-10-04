@@ -20,6 +20,9 @@
     <style name="DarkPurpleDialog" parent="DarkGreenDialog">
         <item name="colorAccent">@color/purple</item>
     </style>
+    <style name="DarkPinkDialog" parent="DarkGreenDialog">
+        <item name="colorAccent">@color/pink</item>
+    </style>
 
     <style name="BlackGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
         <item name="colorAccent">@color/secondary</item>
@@ -39,6 +42,9 @@
     </style>
     <style name="BlackPurpleDialog" parent="BlackGreenDialog">
         <item name="colorAccent">@color/purple</item>
+    </style>
+    <style name="BlackPinkDialog" parent="BlackGreenDialog">
+        <item name="colorAccent">@color/pink</item>
     </style>
 
 </resources>

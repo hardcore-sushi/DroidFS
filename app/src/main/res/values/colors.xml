@@ -9,6 +9,7 @@
     <color name="yellow">#FFD600</color>
     <color name="orange">#FF6D00</color>
     <color name="purple">#AA00FF</color>
+    <color name="pink">#FF76D8</color>
     <color name="neutralIconTint">@color/white</color>
     <color name="fullScreenBackgroundColor">@color/black</color>
     <color name="textColor">@color/white</color>
