@@ -138,6 +138,7 @@
     <string name="image_saved_successfully">Cambios de la imagen guardados con éxito.</string>
     <string name="bitmap_compress_failed">Fallo al comprimir el mapa de bits.</string>
     <string name="file_write_failed">No se ha podido escribir el archivo.</string>
+    <string name="error_not_a_volume">Volumen encriptado no reconocido. Por favor, comprueba la ruta seleccionada.</string>
     <string name="version">Versión</string>
     <string name="error_cipher_null">Error de cifrado núlo</string>
     <string name="key_permanently_invalidated_exception">KeyPermanentlyInvalidatedException</string>
@@ -238,6 +239,12 @@
     <string name="elements_selected">%d/%d Seleccionados</string>
     <string name="pin_passwords_title">Diseño de teclado numérico</string>
     <string name="pin_passwords_summary">Usar el diseño de teclado numérico para ingresar las contraseñas de los volumenes</string>
+    <string name="volume_type_label">Tipo de volumen:</string>
+    <string name="gocryptfs">Gocryptfs</string>
+    <string name="cryfs">CryFS</string>
+    <string name="gocryptfs_disabled">Se ha desactivado la compatibilidad con Gocryptfs</string>
+    <string name="cryfs_disabled">Se ha desactivado la compatibilidad con CryFS</string>
+    <string name="file_op_delete_msg">Eliminando archivos…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, Sólo lectura)</string>
 </resources>
