@@ -245,4 +245,9 @@
     <string name="gocryptfs_disabled">Gocryptfs لقد تم تعطيل دعم</string>
     <string name="cryfs_disabled">CryFS لقد تم تعطيل دعم</string>
     <string name="file_op_delete_msg">جاري حذف الملفات…</string>
+    <string name="io_error">خطأ في الإدخال والإخراج.</string>
+    <string name="use_fingerprint">استخدم بصمة الأصبع بدلا من كلمة المرور الحالية</string>
+    <string name="remember_volume">تذكر المجلد المشفر</string>
+    <string name="open_volume">فتح المجلد المشفر</string>
+    <string name="choose_existing_volume">برجاء اختيار مجلد مشفر مسبق تم إنشاءه مسبقاً</string>
 </resources>
