@@ -17,6 +17,7 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
@@ -31,6 +32,7 @@ import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.video_recording.VideoCapture
@@ -94,7 +96,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
         outputDirectory = intent.getStringExtra("path")!!
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -278,6 +280,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 else -> false
             }
         }
+        onBackPressedDispatcher.addCallback(this) {
+            isFinishingIntentionally = true
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
@@ -453,7 +460,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
                     var offset = 0L
                     override fun write(byteArray: ByteArray) {
-                        offset += encryptedVolume.write(fileHandle, offset, byteArray, byteArray.size)
+                        offset += encryptedVolume.write(fileHandle, offset, byteArray, 0, byteArray.size.toLong())
                     }
                     override fun seek(offset: Long) {
                         this.offset = offset
@@ -504,11 +511,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     override fun onResume() {
         super.onResume()
         sensorOrientationListener.addListener(this)
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        isFinishingIntentionally = true
     }
 
     override fun onOrientationChange(newOrientation: Int) {

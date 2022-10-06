@@ -28,6 +28,7 @@ import static androidx.camera.core.impl.UseCaseConfig.OPTION_DEFAULT_CAPTURE_CON
 import static androidx.camera.core.impl.UseCaseConfig.OPTION_DEFAULT_SESSION_CONFIG;
 import static androidx.camera.core.impl.UseCaseConfig.OPTION_SESSION_CONFIG_UNPACKER;
 import static androidx.camera.core.impl.UseCaseConfig.OPTION_SURFACE_OCCUPANCY_PRIORITY;
+import static androidx.camera.core.impl.UseCaseConfig.OPTION_ZSL_DISABLED;
 import static androidx.camera.core.impl.VideoCaptureConfig.OPTION_AUDIO_BIT_RATE;
 import static androidx.camera.core.impl.VideoCaptureConfig.OPTION_AUDIO_CHANNEL_COUNT;
 import static androidx.camera.core.impl.VideoCaptureConfig.OPTION_AUDIO_MIN_BUFFER_SIZE;
@@ -121,6 +122,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * @hide
  */
 @RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
+@RestrictTo(Scope.LIBRARY_GROUP)
 public final class VideoCapture extends UseCase {
 
     ////////////////////////////////////////////////////////////////////////////////////////////
@@ -1123,6 +1125,7 @@ public final class VideoCapture extends UseCase {
     }
 
     /** Set audio record parameters by CamcorderProfile */
+    @SuppressWarnings("deprecation")
     private void setAudioParametersByCamcorderProfile(Size currentResolution, String cameraId) {
         CamcorderProfile profile;
         boolean isCamcorderProfileFound = false;
@@ -1732,6 +1735,14 @@ public final class VideoCapture extends UseCase {
             return this;
         }
 
+        /** @hide */
+        @RestrictTo(Scope.LIBRARY_GROUP)
+        @NonNull
+        @Override
+        public Builder setZslDisabled(boolean disabled) {
+            getMutableConfig().insertOption(OPTION_ZSL_DISABLED, disabled);
+            return this;
+        }
     }
 
     /**

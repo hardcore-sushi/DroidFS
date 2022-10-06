@@ -10,7 +10,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.SavedVolume
+import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeDatabase
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 
@@ -20,9 +20,9 @@ class VolumeAdapter(
     private val allowSelection: Boolean,
     private val showReadOnly: Boolean,
     private val listener: Listener,
-) : SelectableAdapter<SavedVolume>(listener::onSelectionChanged) {
+) : SelectableAdapter<VolumeData>(listener::onSelectionChanged) {
     private val inflater: LayoutInflater = LayoutInflater.from(context)
-    lateinit var volumes: List<SavedVolume>
+    lateinit var volumes: List<VolumeData>
 
     init {
         reloadVolumes()
@@ -30,11 +30,11 @@ class VolumeAdapter(
 
     interface Listener {
         fun onSelectionChanged(size: Int)
-        fun onVolumeItemClick(volume: SavedVolume, position: Int)
+        fun onVolumeItemClick(volume: VolumeData, position: Int)
         fun onVolumeItemLongClick()
     }
 
-    override fun getItems(): List<SavedVolume> {
+    override fun getItems(): List<VolumeData> {
         return volumes
     }
 

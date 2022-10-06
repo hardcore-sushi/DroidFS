@@ -89,6 +89,7 @@ object ExternalProvider {
                 val result = exportFile(activity, encryptedVolume, file_path, null)
                 return if (result.first != null) {
                     Intent(Intent.ACTION_VIEW).apply {
+                        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                         setDataAndType(result.first, result.second)
                     }
                 } else {

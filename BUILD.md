@@ -45,16 +45,16 @@ $ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
 If you want Gocryptfs support, you need to download OpenSSL:
 ```
 $ cd ../libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1p.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1q.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ wget https://www.openssl.org/source/openssl-1.1.1p.tar.gz.asc
-$ gpg --verify openssl-1.1.1p.tar.gz.asc openssl-1.1.1p.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1q.tar.gz.asc
+$ gpg --verify openssl-1.1.1q.tar.gz.asc openssl-1.1.1q.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.
 ```
-$ tar -xzf openssl-1.1.1p.tar.gz
+$ tar -xzf openssl-1.1.1q.tar.gz
 ```
 If you want CryFS support, initialize libcryfs:
 ```
@@ -76,7 +76,7 @@ $ ./build.sh ffmpeg
 This step is only required if you want Gocryptfs support.
 ```
 $ cd app/libgocryptfs
-$ OPENSSL_PATH="./openssl-1.1.1p" ./build.sh
+$ OPENSSL_PATH="./openssl-1.1.1q" ./build.sh
  ```
 ## Compile APKs
 Gradle build libgocryptfs and libcryfs by default.

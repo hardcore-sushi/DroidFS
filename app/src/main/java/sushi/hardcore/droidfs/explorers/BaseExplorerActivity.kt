@@ -39,6 +39,7 @@ import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_viewers.*
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -82,7 +83,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         volumeName = intent.getStringExtra("volume_name") ?: ""
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
@@ -156,7 +157,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     protected open fun init() {
-        setContentView(R.layout.activity_explorer_base)
+        setContentView(R.layout.activity_explorer)
     }
 
     protected open fun bindFileOperationService(){

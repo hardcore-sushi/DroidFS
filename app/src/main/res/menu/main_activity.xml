@@ -23,10 +23,10 @@
         android:icon="@drawable/icon_settings"/>
 
     <item
-        android:id="@+id/forget_password"
+        android:id="@+id/delete_password_hash"
         app:showAsAction="never"
         android:visible="false"
-        android:title="@string/forget_password"/>
+        android:title="@string/remove_fingerprint"/>
 
     <item
         android:id="@+id/change_password"

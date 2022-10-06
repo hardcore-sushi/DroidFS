@@ -187,7 +187,6 @@
     <string name="remove">إزالة</string>
     <string name="settings">إعدادات</string>
     <string name="select_all">تحديد الكل</string>
-    <string name="forget_password">نسيان كلمة المرور</string>
     <string name="unrecoverable_key_exception_msg">%s. فشل تحميل مفتاح التشفير.</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
     <string name="delete_hidden_volume_question">%s مخفي ، هل تريد فقط نسيان مسار المجلد أو حذف كل محتوياته أيضًا?</string>

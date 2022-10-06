@@ -8,13 +8,14 @@ import androidx.preference.PreferenceManager
 
 open class BaseActivity: AppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
+    protected var applyCustomTheme: Boolean = true
     lateinit var themeValue: String
     private var shouldCheckTheme = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        if (shouldCheckTheme) {
-            themeValue = sharedPrefs.getString("theme", ConstValues.DEFAULT_THEME_VALUE)!!
+        themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
+        if (shouldCheckTheme && applyCustomTheme) {
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)
                 "dark_red" -> setTheme(R.style.DarkRed)
@@ -27,9 +28,9 @@ open class BaseActivity: AppCompatActivity() {
                 "black_orange" -> setTheme(R.style.BlackOrange)
                 "dark_purple" -> setTheme(R.style.DarkPurple)
                 "black_purple" -> setTheme(R.style.BlackPurple)
+                "dark_pink" -> setTheme(R.style.DarkPink)
+                "black_pink" -> setTheme(R.style.BlackPink)
             }
-        } else {
-            shouldCheckTheme = true
         }
         super.onCreate(savedInstanceState)
         if (!sharedPrefs.getBoolean("usf_screenshot", false)){
@@ -37,12 +38,7 @@ open class BaseActivity: AppCompatActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-        val newThemeValue = sharedPrefs.getString("theme", "dark_green")!!
-        onThemeChanged(newThemeValue)
-    }
-
+    // must not be called if applyCustomTheme is false
     fun onThemeChanged(newThemeValue: String) {
         if (newThemeValue != themeValue) {
             themeValue = newThemeValue

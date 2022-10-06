@@ -7,28 +7,26 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
-import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import java.io.ByteArrayInputStream
 import java.io.File
 
 class TextEditor: FileViewerActivity() {
+    override var fullscreenMode = false
     private lateinit var fileName: String
     private lateinit var editor: EditText
     private var changedSinceLastSave = false
     private var wordWrap = true
-    override fun hideSystemUi() {
-        //don't hide system ui
-    }
 
     override fun getFileType(): String {
         return "text"
     }
 
     override fun viewFile() {
-        loadWholeFile(filePath)?.let {
-            fileName = File(filePath).name
+        fileName = File(filePath).name
+        title = fileName
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        loadWholeFile(filePath) {
             try {
                 loadLayout(String(it))
             } catch (e: OutOfMemoryError){
@@ -47,8 +45,6 @@ class TextEditor: FileViewerActivity() {
         } else {
             setContentView(R.layout.activity_text_editor)
         }
-        title = fileName
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         editor = findViewById(R.id.text_editor)
         editor.setText(fileContent)
         editor.addTextChangedListener(object: TextWatcher {
@@ -70,23 +66,12 @@ class TextEditor: FileViewerActivity() {
         val content = editor.text.toString().toByteArray()
         val fileHandle = encryptedVolume.openFile(filePath)
         if (fileHandle != -1L) {
-            val buff = ByteArrayInputStream(content)
             var offset: Long = 0
-            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
-            var length: Int
-            while (buff.read(ioBuffer).also { length = it } > 0) {
-                val written = encryptedVolume.write(fileHandle, offset, ioBuffer, length).toLong()
-                if (written == length.toLong()) {
-                    offset += written
-                } else {
-                    break
-                }
-            }
+            while (offset < content.size && encryptedVolume.write(fileHandle, offset, content, offset, content.size.toLong()).also { offset += it } > 0) {}
             if (offset == content.size.toLong()){
                 success = encryptedVolume.truncate(filePath, offset)
             }
             encryptedVolume.closeFile(fileHandle)
-            buff.close()
         }
         if (success){
             Toast.makeText(this, getString(R.string.file_saved), Toast.LENGTH_SHORT).show()

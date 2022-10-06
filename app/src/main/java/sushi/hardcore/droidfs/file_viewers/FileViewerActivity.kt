@@ -2,14 +2,22 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.addCallback
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.ConstValues
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
@@ -25,6 +33,7 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
+    protected open var fullscreenMode = true
     private val legacyMod by lazy {
         sharedPrefs.getBoolean("legacyMod", false)
     }
@@ -33,18 +42,30 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
-        encryptedVolume = intent.getParcelableExtra("volume")!!
+        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
         usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
         }
-        hideSystemUi()
+        onBackPressedDispatcher.addCallback(this) {
+            isFinishingIntentionally = true
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
+        if (fullscreenMode) {
+            fixNavBarColor()
+            hideSystemUi()
+        }
         viewFile()
     }
 
-    open fun hideSystemUi() {
+    private fun fixNavBarColor() {
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.fullScreenBackgroundColor)
+    }
+
+    private fun hideSystemUi() {
         if (legacyMod) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
@@ -60,26 +81,34 @@ abstract class FileViewerActivity: BaseActivity() {
 
     override fun onUserInteraction() {
         super.onUserInteraction()
-        if (windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
+        if (fullscreenMode && windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
             hideSystemUi()
         }
     }
 
-    protected fun loadWholeFile(path: String, fileSize: Long? = null): ByteArray? {
-        val result = encryptedVolume.loadWholeFile(path, size = fileSize)
-        if (result.second != 0) {
-            val dialog = CustomAlertDialogBuilder(this, themeValue)
-                .setTitle(R.string.error)
-                .setCancelable(false)
-                .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-            when (result.second) {
-                1 -> dialog.setMessage(R.string.get_size_failed)
-                2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
-                else -> dialog.setMessage(R.string.read_file_failed)
+    protected fun loadWholeFile(path: String, fileSize: Long? = null, callback: (ByteArray) -> Unit) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            val result = encryptedVolume.loadWholeFile(path, size = fileSize)
+            if (isActive) {
+                withContext(Dispatchers.Main) {
+                    if (result.second == 0) {
+                        callback(result.first!!)
+                    } else {
+                        val dialog = CustomAlertDialogBuilder(this@FileViewerActivity, themeValue)
+                            .setTitle(R.string.error)
+                            .setCancelable(false)
+                            .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
+                        when (result.second) {
+                            1 -> dialog.setMessage(R.string.get_size_failed)
+                            2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
+                            3 -> dialog.setMessage(R.string.read_file_failed)
+                            4 -> dialog.setMessage(R.string.io_error)
+                        }
+                        dialog.show()
+                    }
+                }
             }
-            dialog.show()
         }
-        return result.first
     }
 
     protected fun createPlaylist() {
@@ -144,10 +173,5 @@ abstract class FileViewerActivity: BaseActivity() {
         if (!usf_keep_open) {
             finish()
         }
-    }
-
-    override fun onBackPressed() {
-        super.onBackPressed()
-        isFinishingIntentionally = true
     }
 }

@@ -41,6 +41,8 @@
         <item>Black Orange</item>
         <item>Dark Purple</item>
         <item>Black Purple</item>
+        <item>Dark Pink</item>
+        <item>Black Pink</item>
     </string-array>
 
     <!-- don't translate the following otherwise the app will crash -->
@@ -66,5 +68,7 @@
         <item>black_orange</item>
         <item>dark_purple</item>
         <item>black_purple</item>
+        <item>dark_pink</item>
+        <item>black_pink</item>
     </string-array>
 </resources>

@@ -131,16 +131,17 @@ class FileOperationService : Service() {
             if (dstFileHandle != -1L) {
                 var offset: Long = 0
                 val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
-                var length: Int
-                while (remoteEncryptedVolume.read(srcFileHandle, ioBuffer, offset).also { length = it } > 0) {
-                    val written = encryptedVolume.write(dstFileHandle, offset, ioBuffer, length).toLong()
-                    if (written == length.toLong()) {
+                var length: Long
+                while (remoteEncryptedVolume.read(srcFileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it.toLong() } > 0) {
+                    val written = encryptedVolume.write(dstFileHandle, offset, ioBuffer, 0, length).toLong()
+                    if (written == length) {
                         offset += written
                     } else {
                         success = false
                         break
                     }
                 }
+                encryptedVolume.truncate(dstPath, offset)
                 encryptedVolume.closeFile(dstFileHandle)
             } else {
                 success = false

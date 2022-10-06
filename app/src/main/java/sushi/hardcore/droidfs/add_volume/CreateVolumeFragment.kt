@@ -23,13 +23,13 @@ import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
-import kotlin.collections.ArrayList
 
 class CreateVolumeFragment: Fragment() {
     companion object {
         private const val KEY_THEME_VALUE = "theme"
         private const val KEY_VOLUME_PATH = "path"
         private const val KEY_IS_HIDDEN = "hidden"
+        private const val KEY_REMEMBER_VOLUME = "remember"
         private const val KEY_PIN_PASSWORDS = ConstValues.PIN_PASSWORDS_KEY
         private const val KEY_USF_FINGERPRINT = "fingerprint"
 
@@ -37,6 +37,7 @@ class CreateVolumeFragment: Fragment() {
             themeValue: String,
             volumePath: String,
             isHidden: Boolean,
+            rememberVolume: Boolean,
             pinPasswords: Boolean,
             usfFingerprint: Boolean,
         ): CreateVolumeFragment {
@@ -45,6 +46,7 @@ class CreateVolumeFragment: Fragment() {
                     putString(KEY_THEME_VALUE, themeValue)
                     putString(KEY_VOLUME_PATH, volumePath)
                     putBoolean(KEY_IS_HIDDEN, isHidden)
+                    putBoolean(KEY_REMEMBER_VOLUME, rememberVolume)
                     putBoolean(KEY_PIN_PASSWORDS, pinPasswords)
                     putBoolean(KEY_USF_FINGERPRINT, usfFingerprint)
                 }
@@ -57,6 +59,7 @@ class CreateVolumeFragment: Fragment() {
     private val volumeTypes = ArrayList<String>(2)
     private lateinit var volumePath: String
     private var isHiddenVolume: Boolean = false
+    private var rememberVolume: Boolean = false
     private var usfFingerprint: Boolean = false
     private lateinit var volumeDatabase: VolumeDatabase
     private var fingerprintProtector: FingerprintProtector? = null
@@ -76,6 +79,7 @@ class CreateVolumeFragment: Fragment() {
             arguments.getString(KEY_THEME_VALUE)?.let { themeValue = it }
             volumePath = arguments.getString(KEY_VOLUME_PATH)!!
             isHiddenVolume = arguments.getBoolean(KEY_IS_HIDDEN)
+            rememberVolume = arguments.getBoolean(KEY_REMEMBER_VOLUME)
             usfFingerprint = arguments.getBoolean(KEY_USF_FINGERPRINT)
             arguments.getBoolean(KEY_PIN_PASSWORDS)
         }
@@ -83,7 +87,7 @@ class CreateVolumeFragment: Fragment() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             fingerprintProtector = FingerprintProtector.new(requireActivity(), themeValue, volumeDatabase)
         }
-        if (!usfFingerprint || fingerprintProtector == null) {
+        if (!rememberVolume || !usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
         }
         if (!BuildConfig.GOCRYPTFS_DISABLED) {
@@ -140,21 +144,6 @@ class CreateVolumeFragment: Fragment() {
         (activity as AddVolumeActivity).onFragmentLoaded(false)
     }
 
-    private fun saveVolume(success: Boolean, volumeType: Byte): SavedVolume? {
-        return if (success) {
-            val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
-            val volume = SavedVolume(volumeName, isHiddenVolume, volumeType)
-            volumeDatabase.apply {
-                if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
-                    removeVolume(volumeName)
-                saveVolume(volume)
-            }
-            volume
-        } else {
-            null
-        }
-    }
-
     private fun createVolume() {
         val password = WidgetUtil.encodeEditTextContent(binding.editPassword)
         val passwordConfirm = WidgetUtil.encodeEditTextContent(binding.editPasswordConfirm)
@@ -169,50 +158,73 @@ class CreateVolumeFragment: Fragment() {
             } else {
                 null
             }
-            object: LoadingTask<SavedVolume?>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
-                override suspend fun doTask(): SavedVolume? {
+            val encryptedVolume = if (rememberVolume) {
+                null
+            } else {
+                ObjRef<EncryptedVolume?>(null)
+            }
+            object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
+                private fun generateResult(success: Boolean, volumeType: Byte): Byte {
+                    return if (success) {
+                        volumeType
+                    } else {
+                        -1
+                    }
+                }
+
+                override suspend fun doTask(): Byte {
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    val volume = if (volumeTypes[binding.spinnerVolumeType.selectedItemPosition] == resources.getString(R.string.gocryptfs)) {
+                    val result = if (volumeTypes[binding.spinnerVolumeType.selectedItemPosition] == resources.getString(R.string.gocryptfs)) {
                         val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
                             0 -> 0
                             1 -> 1
                             else -> -1
                         }
-                        saveVolume(GocryptfsVolume.createVolume(
+                        generateResult(GocryptfsVolume.createAndOpenVolume(
                             volumePath,
                             password,
                             false,
                             xchacha,
-                            GocryptfsVolume.ScryptDefaultLogN,
-                            ConstValues.CREATOR,
                             returnedHash?.apply {
                                 value = ByteArray(GocryptfsVolume.KeyLen)
                             }?.value,
+                            encryptedVolume,
                         ), EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                     } else {
-                        saveVolume(CryfsVolume.create(
+                        generateResult(CryfsVolume.create(
                             volumePath,
                             CryfsVolume.getLocalStateDir(activity.filesDir.path),
                             password,
                             returnedHash,
-                            resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition]
+                            resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition],
+                            encryptedVolume,
                         ), EncryptedVolume.CRYFS_VOLUME_TYPE)
                     }
                     Arrays.fill(password, 0)
-                    return volume
+                    return result
                 }
-            }.startTask(lifecycleScope) { volume ->
-                if (volume == null) {
+            }.startTask(lifecycleScope) { result ->
+                if (result.compareTo(-1) == 0) {
                     CustomAlertDialogBuilder(requireContext(), themeValue)
                         .setTitle(R.string.error)
                         .setMessage(R.string.create_volume_failed)
                         .setPositiveButton(R.string.ok, null)
                         .show()
                 } else {
+                    val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
+                    val volume = VolumeData(volumeName, isHiddenVolume, result)
+                    var isVolumeSaved = false
+                    volumeDatabase.apply {
+                        if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
+                            removeVolume(volumeName)
+                        if (rememberVolume) {
+                            isVolumeSaved = saveVolume(volume)
+                        }
+                    }
                     @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
-                    if (binding.checkboxSavePassword.isChecked && returnedHash != null) {
+                    if (isVolumeSaved && binding.checkboxSavePassword.isChecked && returnedHash != null) {
                         fingerprintProtector!!.let {
                             it.listener = object : FingerprintProtector.Listener {
                                 override fun onHashStorageReset() {
@@ -223,24 +235,32 @@ class CreateVolumeFragment: Fragment() {
                                 override fun onPasswordHashDecrypted(hash: ByteArray) {} // shouldn't happen here
                                 override fun onPasswordHashSaved() {
                                     Arrays.fill(returnedHash.value!!, 0)
-                                    onVolumeCreated()
+                                    onVolumeCreated(encryptedVolume?.value, volume.shortName)
                                 }
                                 override fun onFailed(pending: Boolean) {
                                     if (!pending) {
                                         Arrays.fill(returnedHash.value!!, 0)
-                                        onVolumeCreated()
+                                        onVolumeCreated(encryptedVolume?.value, volume.shortName)
                                     }
                                 }
                             }
                             it.savePasswordHash(volume, returnedHash.value!!)
                         }
-                    } else onVolumeCreated()
+                    } else {
+                        onVolumeCreated(encryptedVolume?.value, volume.shortName)
+                    }
                 }
             }
         }
     }
 
-    private fun onVolumeCreated() {
-        (activity as AddVolumeActivity).onVolumeAdded(hashStorageReset)
+    private fun onVolumeCreated(encryptedVolume: EncryptedVolume?, volumeShortName: String) {
+        (activity as AddVolumeActivity).apply {
+            if (rememberVolume || encryptedVolume == null) {
+                finish()
+            } else {
+                startExplorer(encryptedVolume, volumeShortName)
+            }
+        }
     }
 }

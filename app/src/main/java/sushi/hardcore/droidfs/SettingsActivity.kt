@@ -34,7 +34,7 @@ class SettingsActivity : BaseActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId){
             android.R.id.home -> {
-                onBackPressed() //return to the previous fragment rather than the activity
+                onBackPressedDispatcher.onBackPressed() //return to the previous fragment rather than the activity
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -82,7 +82,7 @@ class SettingsActivity : BaseActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            findPreference<ListPreference>("theme")?.setOnPreferenceChangeListener { _, newValue ->
+            findPreference<ListPreference>(ConstValues.THEME_VALUE_KEY)?.setOnPreferenceChangeListener { _, newValue ->
                 (activity as BaseActivity).onThemeChanged(newValue as String)
                 true
             }

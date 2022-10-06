@@ -35,10 +35,15 @@ Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeOpen(JN
 }
 
 JNIEXPORT jint JNICALL
-Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeRead(JNIEnv *env, jobject thiz,
-                                                               jlong fuse_ptr, jlong file_handle,
-                                                               jbyteArray buffer, jlong offset) {
-    return cryfs_read(env, fuse_ptr, file_handle, buffer, offset);
+Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeRead(JNIEnv *env,
+                                                                              jobject thiz,
+                                                                              jlong fuse_ptr,
+                                                                              jlong file_handle,
+                                                                              jlong file_offset,
+                                                                              jbyteArray buffer,
+                                                                              jlong dst_offset,
+                                                                              jlong length) {
+    return cryfs_read(env, fuse_ptr, file_handle, file_offset, buffer, dst_offset, length);
 }
 
 JNIEXPORT jint JNICALL
@@ -46,10 +51,11 @@ Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeWrite(J
                                                                                jobject thiz,
                                                                                jlong fuse_ptr,
                                                                                jlong file_handle,
-                                                                               jlong offset,
+                                                                               jlong file_offset,
                                                                                jbyteArray buffer,
-                                                                               jint size) {
-    return cryfs_write(env, fuse_ptr, file_handle, offset, buffer, size);
+                                                                               jlong src_offset,
+                                                                               jlong length) {
+    return cryfs_write(env, fuse_ptr, file_handle, file_offset, buffer, src_offset, length);
 }
 
 JNIEXPORT jboolean JNICALL

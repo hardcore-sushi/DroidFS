@@ -187,7 +187,7 @@
     <string name="remove">Remove</string>
     <string name="settings">Settings</string>
     <string name="select_all">Select All</string>
-    <string name="forget_password">Forget password</string>
+    <string name="remove_fingerprint">Remove fingerprint</string>
     <string name="unrecoverable_key_exception_msg">%s. Can\'t load encryption key.</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
     <string name="delete_hidden_volume_question">%s is hidden, do you just want to forget the path of the volume or also DELETE all its CONTENT?</string>
@@ -248,4 +248,9 @@
     <string name="file_op_delete_msg">Deleting files…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, read-only)</string>
+    <string name="io_error">I/O Error.</string>
+    <string name="use_fingerprint">Use fingerprint instead of current password</string>
+    <string name="remember_volume">Remember volume</string>
+    <string name="open_volume">Open volume</string>
+    <string name="choose_existing_volume">Please choose an existing volume</string>
 </resources>

@@ -1,17 +1,20 @@
 package sushi.hardcore.droidfs
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -20,14 +23,17 @@ import java.util.*
 class ChangePasswordActivity: BaseActivity() {
 
     private lateinit var binding: ActivityChangePasswordBinding
-    private lateinit var volume: SavedVolume
+    private lateinit var volume: VolumeData
     private lateinit var volumeDatabase: VolumeDatabase
     private var fingerprintProtector: FingerprintProtector? = null
     private var usfFingerprint: Boolean = false
+    private val inputMethodManager by lazy {
+        getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        volume = intent.getParcelableExtra("volume")!!
+        volume = IntentUtils.getParcelableExtra(intent, "volume")!!
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
         title = getString(R.string.change_password)
@@ -38,8 +44,7 @@ class ChangePasswordActivity: BaseActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             fingerprintProtector = FingerprintProtector.new(this, themeValue, volumeDatabase)
             if (fingerprintProtector != null && volume.encryptedHash != null) {
-                binding.textCurrentPasswordLabel.visibility = View.GONE
-                binding.editCurrentPassword.visibility = View.GONE
+                binding.fingerprintSwitchContainer.visibility = View.VISIBLE
             }
         }
         if (!usfFingerprint || fingerprintProtector == null) {
@@ -48,6 +53,20 @@ class ChangePasswordActivity: BaseActivity() {
         if (sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false)) {
             arrayOf(binding.editCurrentPassword, binding.editNewPassword, binding.editPasswordConfirm).forEach {
                 it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            }
+        }
+        binding.fingerprintSwitchContainer.setOnClickListener {
+            binding.switchUseFingerprint.toggle()
+        }
+        binding.switchUseFingerprint.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked && binding.editCurrentPassword.hasFocus()) {
+                binding.editCurrentPassword.clearFocus()
+                inputMethodManager.hideSoftInputFromWindow(binding.editCurrentPassword.windowToken, 0)
+            }
+        }
+        binding.editCurrentPassword.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus) {
+                binding.switchUseFingerprint.isChecked = false
             }
         }
         binding.editPasswordConfirm.setOnEditorActionListener { _, _, _ ->
@@ -81,22 +100,24 @@ class ChangePasswordActivity: BaseActivity() {
             volume.encryptedHash?.let { encryptedHash ->
                 volume.iv?.let { iv ->
                     fingerprintProtector?.let {
-                        changeWithCurrentPassword = false
-                        it.listener = object : FingerprintProtector.Listener {
-                            override fun onHashStorageReset() {
-                                showCurrentPasswordInput()
-                                volume.encryptedHash = null
-                                volume.iv = null
+                        if (binding.switchUseFingerprint.isChecked) {
+                            changeWithCurrentPassword = false
+                            it.listener = object : FingerprintProtector.Listener {
+                                override fun onHashStorageReset() {
+                                    showCurrentPasswordInput()
+                                    volume.encryptedHash = null
+                                    volume.iv = null
+                                }
+                                override fun onPasswordHashDecrypted(hash: ByteArray) {
+                                    changeVolumePassword(newPassword, hash)
+                                }
+                                override fun onPasswordHashSaved() {}
+                                override fun onFailed(pending: Boolean) {
+                                    Arrays.fill(newPassword, 0)
+                                }
                             }
-                            override fun onPasswordHashDecrypted(hash: ByteArray) {
-                                changeVolumePassword(newPassword, hash)
-                            }
-                            override fun onPasswordHashSaved() {}
-                            override fun onFailed(pending: Boolean) {
-                                Arrays.fill(newPassword, 0)
-                            }
+                            it.loadPasswordHash(volume.name, encryptedHash, iv)
                         }
-                        it.loadPasswordHash(volume.name, encryptedHash, iv)
                     }
                 }
             }

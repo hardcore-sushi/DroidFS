@@ -7,11 +7,11 @@ import java.io.ByteArrayInputStream
 import java.io.File
 
 class PdfViewer: FileViewerActivity() {
-    private lateinit var pdfViewer: PdfViewer
-
-    override fun hideSystemUi() {
-        //don't hide system ui
+    init {
+        applyCustomTheme = false
     }
+    override var fullscreenMode = false
+    private lateinit var pdfViewer: PdfViewer
 
     override fun getFileType(): String {
         return "pdf"
@@ -22,7 +22,7 @@ class PdfViewer: FileViewerActivity() {
         val fileName = File(filePath).name
         title = fileName
         val fileSize = encryptedVolume.getAttr(filePath)?.size
-        loadWholeFile(filePath, fileSize)?.let {
+        loadWholeFile(filePath, fileSize) {
             pdfViewer.loadPdf(ByteArrayInputStream(it), fileName, fileSize)
         }
     }
@@ -35,6 +35,11 @@ class PdfViewer: FileViewerActivity() {
     override fun onResume() {
         super.onResume()
         pdfViewer.onResume()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        pdfViewer.onDestroy()
     }
 
     override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
