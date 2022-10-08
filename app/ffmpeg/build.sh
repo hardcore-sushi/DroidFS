@@ -63,6 +63,7 @@ else
 			--disable-sndio \
 			--disable-schannel \
 			--disable-securetransport \
+			--disable-vulkan \
 			--disable-xlib \
 			--disable-zlib \
 			--disable-cuvid \

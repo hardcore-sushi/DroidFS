@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.add_volume
 
 import android.os.Bundle
 import android.view.MenuItem
+import androidx.activity.addCallback
 import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityAddVolumeBinding
@@ -38,6 +39,12 @@ class AddVolumeActivity: BaseActivity() {
                 )
                 .commit()
         }
+        onBackPressedDispatcher.addCallback(this) {
+            setResult(RESULT_USER_BACK)
+            shouldCloseVolume = false
+            isEnabled = false
+            onBackPressedDispatcher.onBackPressed()
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -51,12 +58,6 @@ class AddVolumeActivity: BaseActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
-    }
-
-    override fun onBackPressed() {
-        setResult(RESULT_USER_BACK)
-        shouldCloseVolume = false
-        super.onBackPressed()
     }
 
     fun onFragmentLoaded(selectPathFragment: Boolean) {

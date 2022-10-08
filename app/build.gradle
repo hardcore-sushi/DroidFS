@@ -28,8 +28,8 @@ android {
         minSdkVersion 21
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 29
-        versionCode 28
-        versionName "2.0.0-alpha1"
+        versionCode 29
+        versionName "2.0.0-alpha2"
 
         ndk {
             abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
