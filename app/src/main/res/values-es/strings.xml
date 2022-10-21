@@ -247,4 +247,9 @@
     <string name="file_op_delete_msg">Eliminando archivos…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, Sólo lectura)</string>
+    <string name="io_error">I/O Error.</string>
+    <string name="use_fingerprint">Utilizar huella dactilar en lugar de la contraseña actual</string>
+    <string name="remember_volume">Recordar volumen</string>
+    <string name="open_volume">Abrir volumen</string>
+    <string name="choose_existing_volume">Por favor seleccione un volumen existente</string>
 </resources>
