@@ -2,11 +2,14 @@ package sushi.hardcore.droidfs.add_volume
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
+import android.provider.Settings
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -77,6 +80,16 @@ class SelectPathFragment: Fragment() {
         return binding.root
     }
 
+    private fun requestManageAllFiles(): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:"+requireContext().packageName)))
+                return true
+            }
+        }
+        return false
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         originalRememberVolume = sharedPrefs.getBoolean(ConstValues.REMEMBER_VOLUME_KEY, true)
@@ -98,26 +111,30 @@ class SelectPathFragment: Fragment() {
             refreshStatus(binding.editVolumeName.text)
         }
         binding.buttonPickDirectory.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (ContextCompat.checkSelfPermission(
-                        requireContext(),
-                        Manifest.permission.READ_EXTERNAL_STORAGE
-                    ) +
-                    ContextCompat.checkSelfPermission(
-                        requireContext(),
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) == PackageManager.PERMISSION_GRANTED
-                )
-                    launchPickDirectory()
-                else
-                    askStoragePermissions.launch(
-                        arrayOf(
-                            Manifest.permission.READ_EXTERNAL_STORAGE,
+            if (!requestManageAllFiles()) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (
+                        ContextCompat.checkSelfPermission(
+                            requireContext(),
+                            Manifest.permission.READ_EXTERNAL_STORAGE
+                        ) + ContextCompat.checkSelfPermission(
+                            requireContext(),
                             Manifest.permission.WRITE_EXTERNAL_STORAGE
+                        ) == PackageManager.PERMISSION_GRANTED
+                    ) {
+                        launchPickDirectory()
+                    } else {
+                        askStoragePermissions.launch(
+                            arrayOf(
+                                Manifest.permission.READ_EXTERNAL_STORAGE,
+                                Manifest.permission.WRITE_EXTERNAL_STORAGE
+                            )
                         )
-                    )
-            } else
-                launchPickDirectory()
+                    }
+                } else {
+                    launchPickDirectory()
+                }
+            }
         }
         binding.editVolumeName.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {}

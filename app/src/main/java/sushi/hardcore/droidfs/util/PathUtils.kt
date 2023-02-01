@@ -3,9 +3,11 @@ package sushi.hardcore.droidfs.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
 import android.provider.OpenableColumns
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
 import sushi.hardcore.droidfs.R
@@ -18,6 +20,7 @@ import kotlin.math.pow
 
 object PathUtils {
     const val SEPARATOR = '/'
+    const val PATH_RESOLVER_TAG = "PATH RESOLVER"
 
     fun getParentPath(path: String): String {
         val strippedPath = if (path.endsWith(SEPARATOR)) {
@@ -95,11 +98,44 @@ object PathUtils {
         return "Android/data/${context.packageName}/"
     }
 
-    private fun getExternalStoragePath(context: Context): List<String> {
+    private fun getExternalStoragePath(context: Context, name: String): String? {
+        for (dir in ContextCompat.getExternalFilesDirs(context, null)) {
+            Log.d(PATH_RESOLVER_TAG, "External dir: $dir")
+            if (Environment.isExternalStorageRemovable(dir)) {
+                Log.d(PATH_RESOLVER_TAG, "isExternalStorageRemovable")
+                val path = dir.path.split("/Android")[0]
+                if (File(path).name == name) {
+                    return path
+                }
+            }
+        }
+        Log.d(PATH_RESOLVER_TAG, "getExternalFilesDirs failed")
+        try {
+            val process = ProcessBuilder("mount").redirectErrorStream(true).start().apply { waitFor() }
+            process.inputStream.readBytes().decodeToString().split("\n").forEach { line ->
+                if (line.startsWith("/dev/block/vold")) {
+                    Log.d(PATH_RESOLVER_TAG, "mount: $line")
+                    val fields = line.split(" ")
+                    if (fields.size >= 3) {
+                        val path = fields[2]
+                        if (File(path).name == name) {
+                            return path
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        Log.d(PATH_RESOLVER_TAG, "mount processing failed")
+        return null
+    }
+
+    private fun getExternalStoragesPaths(context: Context): List<String> {
         val externalPaths: MutableList<String> = ArrayList()
         ContextCompat.getExternalFilesDirs(context, null).forEach {
-            val rootPath = it.path.substring(0, it.path.indexOf(getPackageDataFolder(context)+"files"))
-            if (!rootPath.endsWith("/0/")){ //not primary storage
+            if (Environment.isExternalStorageRemovable(it)) {
+                val rootPath = it.path.substring(0, it.path.indexOf(getPackageDataFolder(context)+"files"))
                 externalPaths.add(rootPath)
             }
         }
@@ -107,7 +143,7 @@ object PathUtils {
     }
 
     fun isPathOnExternalStorage(path: String, context: Context): Boolean {
-        getExternalStoragePath(context).forEach {
+        getExternalStoragesPaths(context).forEach {
             if (path.startsWith(it)){
                 return true
             }
@@ -116,18 +152,23 @@ object PathUtils {
     }
 
     private const val PRIMARY_VOLUME_NAME = "primary"
-    fun getFullPathFromTreeUri(treeUri: Uri?, context: Context): String? {
-        if (treeUri == null) return null
+    fun getFullPathFromTreeUri(treeUri: Uri, context: Context): String? {
         if ("content".equals(treeUri.scheme, ignoreCase = true)) {
             val vId = getVolumeIdFromTreeUri(treeUri)
-            var volumePath = getVolumePath(vId, context) ?: return null
-            if (volumePath.endsWith(File.separator))
-                volumePath = volumePath.substring(0, volumePath.length - 1)
-            var documentPath = getDocumentPathFromTreeUri(treeUri)
-            if (documentPath!!.endsWith(File.separator))
-                documentPath = documentPath.substring(0, documentPath.length - 1)
+            Log.d(PATH_RESOLVER_TAG, "Volume Id: $vId")
+            var volumePath = getVolumePath(vId ?: return null, context)
+            Log.d(PATH_RESOLVER_TAG, "Volume Path: $volumePath")
+            if (volumePath == null) {
+                volumePath = if (vId == "primary") {
+                    Environment.getExternalStorageDirectory().path
+                } else {
+                    getExternalStoragePath(context, vId) ?: "/storage/$vId"
+                }
+            }
+            val documentPath = getDocumentPathFromTreeUri(treeUri)!!
+            Log.d(PATH_RESOLVER_TAG, "Document Path: $documentPath")
             return if (documentPath.isNotEmpty()) {
-                pathJoin(volumePath, documentPath)
+                pathJoin(volumePath!!, documentPath)
             } else volumePath
         } else if ("file".equals(treeUri.scheme, ignoreCase = true)) {
             return treeUri.path
@@ -135,7 +176,7 @@ object PathUtils {
         return null
     }
 
-    private fun getVolumePath(volumeId: String?, context: Context): String? {
+    private fun getVolumePath(volumeId: String, context: Context): String? {
         return try {
             val mStorageManager = context.getSystemService(Context.STORAGE_SERVICE) as StorageManager
             val storageVolumeClazz = Class.forName("android.os.storage.StorageVolume")
