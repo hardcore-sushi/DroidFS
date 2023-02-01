@@ -50,7 +50,11 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
         ) {}
         val totalRead = fileOffset-originalOffset
         bytesRemaining -= totalRead
-        return totalRead.toInt()
+        return if (totalRead == 0L) {
+            C.RESULT_END_OF_INPUT
+        } else {
+            totalRead.toInt()
+        }
     }
 
     class Factory(private val encryptedVolume: EncryptedVolume, private val filePath: String): DataSource.Factory {
