@@ -27,7 +27,7 @@ class PdfViewer: FileViewerActivity() {
         }
     }
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
         pdfViewer.onCreateOptionMenu(menu)
         return super.onCreateOptionsMenu(menu)
     }
@@ -42,7 +42,7 @@ class PdfViewer: FileViewerActivity() {
         pdfViewer.onDestroy()
     }
 
-    override fun onPrepareOptionsMenu(menu: Menu?): Boolean {
+    override fun onPrepareOptionsMenu(menu: Menu): Boolean {
         return pdfViewer.onPrepareOptionsMenu(menu)
     }
 
