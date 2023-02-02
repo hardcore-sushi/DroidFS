@@ -30,6 +30,7 @@ class VolumeOpener(
     private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity)
     var themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
     var defaultVolumeName: String? = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
+    private var dialogBinding: DialogOpenVolumeBinding? = null
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -90,10 +91,14 @@ class VolumeOpener(
         }
     }
 
-    private fun onPasswordSubmitted(volume: VolumeData, isVolumeSaved: Boolean, dialogBinding: DialogOpenVolumeBinding, callbacks: VolumeOpenerCallbacks) {
-        if (dialogBinding.checkboxDefaultOpen.isChecked xor (defaultVolumeName == volume.name)) {
+    fun wipeSensitive() {
+        dialogBinding?.editPassword?.text?.clear()
+    }
+
+    private fun onPasswordSubmitted(volume: VolumeData, isVolumeSaved: Boolean, callbacks: VolumeOpenerCallbacks) {
+        if (dialogBinding!!.checkboxDefaultOpen.isChecked xor (defaultVolumeName == volume.name)) {
             with (sharedPrefs.edit()) {
-                defaultVolumeName = if (dialogBinding.checkboxDefaultOpen.isChecked) {
+                defaultVolumeName = if (dialogBinding!!.checkboxDefaultOpen.isChecked) {
                     putString(DEFAULT_VOLUME_KEY, volume.name)
                     volume.name
                 } else {
@@ -103,41 +108,44 @@ class VolumeOpener(
                 apply()
             }
         }
+        val password = WidgetUtil.encodeEditTextContent(dialogBinding!!.editPassword)
+        val savePasswordHash = dialogBinding!!.checkboxSavePassword.isChecked
+        dialogBinding = null
         // openVolumeWithPassword is responsible for wiping the password
         openVolumeWithPassword(
             volume,
-            WidgetUtil.encodeEditTextContent(dialogBinding.editPassword),
+            password,
             isVolumeSaved,
-            dialogBinding.checkboxSavePassword.isChecked,
+            savePasswordHash,
             callbacks,
         )
     }
 
     private fun askForPassword(volume: VolumeData, isVolumeSaved: Boolean, callbacks: VolumeOpenerCallbacks, savePasswordHash: Boolean = false) {
-        val dialogBinding = DialogOpenVolumeBinding.inflate(activity.layoutInflater)
+        dialogBinding = DialogOpenVolumeBinding.inflate(activity.layoutInflater)
         if (isVolumeSaved) {
             if (!sharedPrefs.getBoolean("usf_fingerprint", false) || fingerprintProtector == null || volume.encryptedHash != null) {
-                dialogBinding.checkboxSavePassword.visibility = View.GONE
+                dialogBinding!!.checkboxSavePassword.visibility = View.GONE
             } else {
-                dialogBinding.checkboxSavePassword.isChecked = savePasswordHash
+                dialogBinding!!.checkboxSavePassword.isChecked = savePasswordHash
             }
-            dialogBinding.checkboxDefaultOpen.isChecked = defaultVolumeName == volume.name
+            dialogBinding!!.checkboxDefaultOpen.isChecked = defaultVolumeName == volume.name
         } else {
-            dialogBinding.checkboxSavePassword.visibility = View.GONE
-            dialogBinding.checkboxDefaultOpen.visibility = View.GONE
+            dialogBinding!!.checkboxSavePassword.visibility = View.GONE
+            dialogBinding!!.checkboxDefaultOpen.visibility = View.GONE
         }
         val dialog = CustomAlertDialogBuilder(activity, themeValue)
             .setTitle(activity.getString(R.string.open_dialog_title, volume.shortName))
-            .setView(dialogBinding.root)
+            .setView(dialogBinding!!.root)
             .setNegativeButton(R.string.cancel, null)
             .setPositiveButton(R.string.open) { _, _ ->
-                onPasswordSubmitted(volume, isVolumeSaved, dialogBinding, callbacks)
+                onPasswordSubmitted(volume, isVolumeSaved, callbacks)
             }
             .create()
-        dialogBinding.editPassword.apply {
+        dialogBinding!!.editPassword.apply {
             setOnEditorActionListener { _, _, _ ->
                 dialog.dismiss()
-                onPasswordSubmitted(volume, isVolumeSaved, dialogBinding, callbacks)
+                onPasswordSubmitted(volume, isVolumeSaved, callbacks)
                 true
             }
             if (sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false)) {

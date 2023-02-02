@@ -263,4 +263,10 @@ class CreateVolumeFragment: Fragment() {
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        binding.editPassword.text.clear()
+        binding.editPasswordConfirm.text.clear()
+    }
 }

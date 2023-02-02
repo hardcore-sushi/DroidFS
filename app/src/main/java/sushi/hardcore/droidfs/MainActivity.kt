@@ -475,6 +475,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     override fun onStop() {
         super.onStop()
+        volumeOpener.wipeSensitive()
         if (explorerRouter.pickMode && !usfKeepOpen && shouldCloseVolume) {
             IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "volume")?.close()
             RestrictedFileProvider.wipeAll(this)

@@ -207,4 +207,11 @@ class ChangePasswordActivity: BaseActivity() {
             }
         }
     }
+
+    override fun onStop() {
+        super.onStop()
+        binding.editCurrentPassword.text.clear()
+        binding.editNewPassword.text.clear()
+        binding.editPasswordConfirm.text.clear()
+    }
 }
