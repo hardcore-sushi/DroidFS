@@ -64,7 +64,7 @@ class FileOperationService : Service() {
         val notificationBuilder = NotificationCompat.Builder(this, NOTIFICATION_CHANNEL_ID)
         notificationBuilder
                 .setContentTitle(getString(message))
-                .setSmallIcon(R.mipmap.icon_launcher)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setOngoing(true)
                 .addAction(NotificationCompat.Action(
                     R.drawable.icon_close,
