@@ -23,12 +23,8 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.BaseActivity
-import sushi.hardcore.droidfs.ConstValues
-import sushi.hardcore.droidfs.ConstValues.isAudio
-import sushi.hardcore.droidfs.ConstValues.isImage
-import sushi.hardcore.droidfs.ConstValues.isPDF
-import sushi.hardcore.droidfs.ConstValues.isText
-import sushi.hardcore.droidfs.ConstValues.isVideo
+import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
@@ -88,7 +84,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         mapFolders = sharedPrefs.getBoolean("map_folders", true)
-        currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(ConstValues.SORT_ORDER_KEY, "name"))
+        currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(Constants.SORT_ORDER_KEY, "name"))
         init()
         recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
         refresher = findViewById(R.id.refresher)
@@ -112,7 +108,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 null
             },
             this,
-            sharedPrefs.getLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
+            sharedPrefs.getLong(Constants.THUMBNAIL_MAX_SIZE_KEY, Constants.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
@@ -233,19 +229,19 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 explorerElements[position].isParentFolder -> {
                     setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
                 }
-                isImage(fullPath) -> {
+                FileTypes.isImage(fullPath) -> {
                     startFileViewer(ImageViewer::class.java, fullPath)
                 }
-                isVideo(fullPath) -> {
+                FileTypes.isVideo(fullPath) -> {
                     startFileViewer(VideoPlayer::class.java, fullPath)
                 }
-                isText(fullPath) -> {
+                FileTypes.isText(fullPath) -> {
                     startFileViewer(TextEditor::class.java, fullPath)
                 }
-                isPDF(fullPath) -> {
+                FileTypes.isPDF(fullPath) -> {
                     startFileViewer(PdfViewer::class.java, fullPath)
                 }
-                isAudio(fullPath) -> {
+                FileTypes.isAudio(fullPath) -> {
                     startFileViewer(AudioPlayer::class.java, fullPath)
                 }
                 else -> showOpenAsDialog(fullPath)
@@ -271,7 +267,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         unselectAll(false)
         explorerAdapter.explorerElements = explorerElements
         val sharedPrefsEditor = sharedPrefs.edit()
-        sharedPrefsEditor.putString(ConstValues.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
+        sharedPrefsEditor.putString(Constants.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
         sharedPrefsEditor.apply()
     }
 

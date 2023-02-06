@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.preference.PreferenceManager
-import sushi.hardcore.droidfs.ConstValues.DEFAULT_VOLUME_KEY
+import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.databinding.DialogOpenVolumeBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.ObjRef
@@ -28,7 +28,7 @@ class VolumeOpener(
     private val volumeDatabase = VolumeDatabase(activity)
     private var fingerprintProtector: FingerprintProtector? = null
     private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity)
-    var themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
+    var themeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
     var defaultVolumeName: String? = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     private var dialogBinding: DialogOpenVolumeBinding? = null
 
@@ -148,7 +148,7 @@ class VolumeOpener(
                 onPasswordSubmitted(volume, isVolumeSaved, callbacks)
                 true
             }
-            if (sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false)) {
+            if (sharedPrefs.getBoolean(Constants.PIN_PASSWORDS_KEY, false)) {
                 inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
             }
         }

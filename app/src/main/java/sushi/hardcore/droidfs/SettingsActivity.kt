@@ -60,7 +60,7 @@ class SettingsActivity : BaseActivity() {
                 showMaxSizeDialog()
             } else {
                 with(sharedPrefs.edit()) {
-                    putLong(ConstValues.THUMBNAIL_MAX_SIZE_KEY, value)
+                    putLong(Constants.THUMBNAIL_MAX_SIZE_KEY, value)
                     apply()
                 }
                 maxSizePreference.summary = PathUtils.formatSize(size)
@@ -82,16 +82,16 @@ class SettingsActivity : BaseActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            findPreference<ListPreference>(ConstValues.THEME_VALUE_KEY)?.setOnPreferenceChangeListener { _, newValue ->
+            findPreference<ListPreference>(Constants.THEME_VALUE_KEY)?.setOnPreferenceChangeListener { _, newValue ->
                 (activity as BaseActivity).onThemeChanged(newValue as String)
                 true
             }
-            findPreference<Preference>(ConstValues.THUMBNAIL_MAX_SIZE_KEY)?.let {
+            findPreference<Preference>(Constants.THUMBNAIL_MAX_SIZE_KEY)?.let {
                 maxSizePreference = it
                 maxSizePreference.summary = getString(
                     R.string.thumbnail_max_size_summary,
                     PathUtils.formatSize(sharedPrefs.getLong(
-                        ConstValues.THUMBNAIL_MAX_SIZE_KEY, ConstValues.DEFAULT_THUMBNAIL_MAX_SIZE
+                        Constants.THUMBNAIL_MAX_SIZE_KEY, Constants.DEFAULT_THUMBNAIL_MAX_SIZE
                     )*1000)
                 )
                 maxSizePreference.setOnPreferenceClickListener {

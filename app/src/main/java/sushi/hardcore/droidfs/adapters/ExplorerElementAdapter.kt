@@ -16,7 +16,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.DrawableImageViewTarget
 import com.bumptech.glide.request.transition.Transition
 import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -173,17 +173,17 @@ class ExplorerElementAdapter(
         override fun bind(explorerElement: ExplorerElement, position: Int, isSelected: Boolean) {
             super.bind(explorerElement, position, isSelected)
             when {
-                ConstValues.isImage(explorerElement.name) -> {
+                FileTypes.isImage(explorerElement.name) -> {
                     setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_image)
                 }
-                ConstValues.isVideo(explorerElement.name) -> {
+                FileTypes.isVideo(explorerElement.name) -> {
                     setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video)
                 }
                 else -> icon.setImageResource(
                     when {
-                        ConstValues.isText(explorerElement.name) -> R.drawable.icon_file_text
-                        ConstValues.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
-                        ConstValues.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
+                        FileTypes.isText(explorerElement.name) -> R.drawable.icon_file_text
+                        FileTypes.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
+                        FileTypes.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
                         else -> R.drawable.icon_file_unknown
                     }
                 )

@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
@@ -94,7 +94,7 @@ abstract class EncryptedVolume: Parcelable {
 
     fun exportFile(fileHandle: Long, os: OutputStream): Boolean {
         var offset: Long = 0
-        val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
+        val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
         var length: Int
         while (read(fileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it } > 0) {
             os.write(ioBuffer, 0, length)
@@ -131,7 +131,7 @@ abstract class EncryptedVolume: Parcelable {
         if (dstfileHandle != -1L) {
             var success = true
             var offset: Long = 0
-            val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
+            val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
             var length: Long
             while (inputStream.read(ioBuffer).also { length = it.toLong() } > 0) {
                 val written = write(dstfileHandle, offset, ioBuffer, 0, length).toLong()

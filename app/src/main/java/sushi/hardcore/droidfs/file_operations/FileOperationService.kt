@@ -14,7 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -130,7 +130,7 @@ class FileOperationService : Service() {
             val dstFileHandle = encryptedVolume.openFile(dstPath)
             if (dstFileHandle != -1L) {
                 var offset: Long = 0
-                val ioBuffer = ByteArray(ConstValues.IO_BUFF_SIZE)
+                val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
                 var length: Long
                 while (remoteEncryptedVolume.read(srcFileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it.toLong() } > 0) {
                     val written = encryptedVolume.write(dstFileHandle, offset, ioBuffer, 0, length).toLong()

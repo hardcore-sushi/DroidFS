@@ -14,7 +14,7 @@ open class BaseActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
-        themeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
+        themeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
         if (shouldCheckTheme && applyCustomTheme) {
             when (themeValue) {
                 "black_green" -> setTheme(R.style.BlackGreen)

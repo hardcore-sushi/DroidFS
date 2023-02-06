@@ -12,7 +12,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -116,7 +116,7 @@ abstract class FileViewerActivity: BaseActivity() {
             encryptedVolume.recursiveMapFiles(originalParentPath)?.let { elements ->
                 for (e in elements) {
                     if (e.isRegularFile) {
-                        if (ConstValues.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
+                        if (FileTypes.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
                             mappedPlaylist.add(e)
                         }
                     }

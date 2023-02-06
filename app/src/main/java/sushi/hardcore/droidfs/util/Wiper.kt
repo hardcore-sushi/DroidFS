@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import androidx.documentfile.provider.DocumentFile
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import java.io.File
 import java.io.FileOutputStream
@@ -25,11 +25,11 @@ object Wiper {
                 val buff = ByteArray(buff_size)
                 Arrays.fill(buff, 0.toByte())
                 val writes = ceil(size.toDouble() / buff_size).toInt()
-                for (i in 0 until ConstValues.WIPE_PASSES) {
+                for (i in 0 until Constants.WIPE_PASSES) {
                     for (j in 0 until writes) {
                         os.write(buff)
                     }
-                    if (i < ConstValues.WIPE_PASSES - 1) {
+                    if (i < Constants.WIPE_PASSES - 1) {
                         //reopening to flush and seek
                         os.close()
                         os = context.contentResolver.openOutputStream(uri)!!
@@ -57,11 +57,11 @@ object Wiper {
             val buff = ByteArray(buff_size)
             Arrays.fill(buff, 0.toByte())
             val writes = ceil(size.toDouble() / buff_size).toInt()
-            for (i in 0 until ConstValues.WIPE_PASSES) {
+            for (i in 0 until Constants.WIPE_PASSES) {
                 for (j in 0 until writes) {
                     os.write(buff)
                 }
-                if (i < ConstValues.WIPE_PASSES - 1) {
+                if (i < Constants.WIPE_PASSES - 1) {
                     //reopening to flush and seek
                     os.close()
                     os = FileOutputStream(file)

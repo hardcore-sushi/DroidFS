@@ -50,7 +50,7 @@ class ChangePasswordActivity: BaseActivity() {
         if (!usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
         }
-        if (sharedPrefs.getBoolean(ConstValues.PIN_PASSWORDS_KEY, false)) {
+        if (sharedPrefs.getBoolean(Constants.PIN_PASSWORDS_KEY, false)) {
             arrayOf(binding.editCurrentPassword, binding.editNewPassword, binding.editPasswordConfirm).forEach {
                 it.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_VARIATION_PASSWORD
             }

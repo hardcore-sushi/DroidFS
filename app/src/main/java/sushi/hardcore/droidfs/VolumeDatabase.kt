@@ -10,7 +10,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 
-class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, ConstValues.VOLUME_DATABASE_NAME, null, 4) {
+class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 4) {
     companion object {
         const val TABLE_NAME = "Volumes"
         const val COLUMN_NAME = "name"

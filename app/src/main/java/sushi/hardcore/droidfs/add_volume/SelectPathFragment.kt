@@ -20,7 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeDatabase
@@ -62,7 +62,7 @@ class SelectPathFragment: Fragment() {
         if (uri != null)
             onDirectoryPicked(uri)
     }
-    private var themeValue = ConstValues.DEFAULT_THEME_VALUE
+    private var themeValue = Constants.DEFAULT_THEME_VALUE
     private lateinit var volumeDatabase: VolumeDatabase
     private lateinit var filesDir: String
     private lateinit var sharedPrefs: SharedPreferences
@@ -82,7 +82,7 @@ class SelectPathFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-        originalRememberVolume = sharedPrefs.getBoolean(ConstValues.REMEMBER_VOLUME_KEY, true)
+        originalRememberVolume = sharedPrefs.getBoolean(Constants.REMEMBER_VOLUME_KEY, true)
         binding.switchRemember.isChecked = originalRememberVolume
         arguments?.let { arguments ->
             arguments.getString(KEY_THEME_VALUE)?.let { themeValue = it }
@@ -229,7 +229,7 @@ class SelectPathFragment: Fragment() {
     private fun onPathSelected() {
         if (binding.switchRemember.isChecked != originalRememberVolume) {
             with(sharedPrefs.edit()) {
-                putBoolean(ConstValues.REMEMBER_VOLUME_KEY, binding.switchRemember.isChecked)
+                putBoolean(Constants.REMEMBER_VOLUME_KEY, binding.switchRemember.isChecked)
                 apply()
             }
         }

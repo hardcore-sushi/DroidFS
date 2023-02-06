@@ -1,7 +1,7 @@
 package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
@@ -47,7 +47,7 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         private external fun nativeIsClosed(fusePtr: Long): Boolean
 
         fun getLocalStateDir(filesDir: String): String {
-            return PathUtils.pathJoin(filesDir, ConstValues.CRYFS_LOCAL_STATE_DIR)
+            return PathUtils.pathJoin(filesDir, Constants.CRYFS_LOCAL_STATE_DIR)
         }
 
         private fun init(

@@ -30,7 +30,7 @@ class CreateVolumeFragment: Fragment() {
         private const val KEY_VOLUME_PATH = "path"
         private const val KEY_IS_HIDDEN = "hidden"
         private const val KEY_REMEMBER_VOLUME = "remember"
-        private const val KEY_PIN_PASSWORDS = ConstValues.PIN_PASSWORDS_KEY
+        private const val KEY_PIN_PASSWORDS = Constants.PIN_PASSWORDS_KEY
         private const val KEY_USF_FINGERPRINT = "fingerprint"
 
         fun newInstance(
@@ -55,7 +55,7 @@ class CreateVolumeFragment: Fragment() {
     }
 
     private lateinit var binding: FragmentCreateVolumeBinding
-    private var themeValue = ConstValues.DEFAULT_THEME_VALUE
+    private var themeValue = Constants.DEFAULT_THEME_VALUE
     private val volumeTypes = ArrayList<String>(2)
     private lateinit var volumePath: String
     private var isHiddenVolume: Boolean = false

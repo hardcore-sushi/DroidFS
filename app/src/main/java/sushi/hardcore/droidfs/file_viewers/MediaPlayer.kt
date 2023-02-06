@@ -6,7 +6,7 @@ import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.video.VideoSize
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -27,7 +27,7 @@ abstract class MediaPlayer: FileViewerActivity() {
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = EncryptedVolumeDataSource.Factory(encryptedVolume, filePath)
         return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
-            .createMediaSource(MediaItem.fromUri(ConstValues.FAKE_URI))
+            .createMediaSource(MediaItem.fromUri(Constants.FAKE_URI))
     }
 
     private fun initializePlayer(){

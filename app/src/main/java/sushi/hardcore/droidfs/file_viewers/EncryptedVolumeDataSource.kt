@@ -5,7 +5,7 @@ import com.google.android.exoplayer2.C
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DataSpec
 import com.google.android.exoplayer2.upstream.TransferListener
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import kotlin.math.min
 
@@ -27,7 +27,7 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     }
 
     override fun getUri(): Uri {
-        return ConstValues.FAKE_URI
+        return Constants.FAKE_URI
     }
 
     override fun close() {

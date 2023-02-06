@@ -17,7 +17,7 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.launch
-import sushi.hardcore.droidfs.ConstValues.DEFAULT_VOLUME_KEY
+import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.adapters.VolumeAdapter
 import sushi.hardcore.droidfs.add_volume.AddVolumeActivity
 import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
@@ -137,7 +137,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     override fun onStart() {
         super.onStart()
         // refresh theme if changed in SettingsActivity
-        val newThemeValue = sharedPrefs.getString(ConstValues.THEME_VALUE_KEY, ConstValues.DEFAULT_THEME_VALUE)!!
+        val newThemeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
         onThemeChanged(newThemeValue)
         volumeOpener.themeValue = newThemeValue
         volumeAdapter.refresh()

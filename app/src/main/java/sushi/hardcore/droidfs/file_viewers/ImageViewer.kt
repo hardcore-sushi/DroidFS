@@ -14,7 +14,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
-import sushi.hardcore.droidfs.ConstValues
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -120,7 +120,7 @@ class ImageViewer: FileViewerActivity() {
         binding.imageButtonSlideshow.setOnClickListener {
             if (!slideshowActive){
                 slideshowActive = true
-                handler.postDelayed(slideshowNext, ConstValues.SLIDESHOW_DELAY)
+                handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
                 window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 hideUI.run()
                 Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
@@ -187,7 +187,7 @@ class ImageViewer: FileViewerActivity() {
             if (!slideshowSwipe) { //reset slideshow delay if user swipes
                 handler.removeCallbacks(slideshowNext)
             }
-            handler.postDelayed(slideshowNext, ConstValues.SLIDESHOW_DELAY)
+            handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
         }
     }
 
