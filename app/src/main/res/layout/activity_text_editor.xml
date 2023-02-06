@@ -15,6 +15,7 @@
             android:layout_height="wrap_content"
             android:gravity="top"
             android:textSize="15sp"
+            android:typeface="monospace"
             android:background="@null"
             android:padding="5dp"
             android:importantForAutofill="no"/>
