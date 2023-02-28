@@ -11,6 +11,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.Theme
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -45,10 +46,10 @@ object ExternalProvider {
         return Pair(null, null)
     }
 
-    fun share(activity: AppCompatActivity, themeValue: String, encryptedVolume: EncryptedVolume, file_paths: List<String>) {
+    fun share(activity: AppCompatActivity, theme: Theme, encryptedVolume: EncryptedVolume, file_paths: List<String>) {
         var contentType: String? = null
         val uris = ArrayList<Uri>(file_paths.size)
-        object : LoadingTask<String?>(activity, themeValue, R.string.loading_msg_export) {
+        object : LoadingTask<String?>(activity, theme, R.string.loading_msg_export) {
             override suspend fun doTask(): String? {
                 for (path in file_paths) {
                     val result = exportFile(activity, encryptedVolume, path, contentType)
@@ -74,7 +75,7 @@ object ExternalProvider {
                 }
                 activity.startActivity(Intent.createChooser(shareIntent, activity.getString(R.string.share_chooser)))
             } else {
-                CustomAlertDialogBuilder(activity, themeValue)
+                CustomAlertDialogBuilder(activity, theme)
                     .setTitle(R.string.error)
                     .setMessage(activity.getString(R.string.export_failed, failedItem))
                     .setPositiveButton(R.string.ok, null)
@@ -83,8 +84,8 @@ object ExternalProvider {
         }
     }
 
-    fun open(activity: AppCompatActivity, themeValue: String, encryptedVolume: EncryptedVolume, file_path: String) {
-        object : LoadingTask<Intent?>(activity, themeValue, R.string.loading_msg_export) {
+    fun open(activity: AppCompatActivity, theme: Theme, encryptedVolume: EncryptedVolume, file_path: String) {
+        object : LoadingTask<Intent?>(activity, theme, R.string.loading_msg_export) {
             override suspend fun doTask(): Intent? {
                 val result = exportFile(activity, encryptedVolume, file_path, null)
                 return if (result.first != null) {
@@ -98,7 +99,7 @@ object ExternalProvider {
             }
         }.startTask(activity.lifecycleScope) { openIntent ->
             if (openIntent == null) {
-                CustomAlertDialogBuilder(activity, themeValue)
+                CustomAlertDialogBuilder(activity, theme)
                     .setTitle(R.string.error)
                     .setMessage(activity.getString(R.string.export_failed, file_path))
                     .setPositiveButton(R.string.ok, null)

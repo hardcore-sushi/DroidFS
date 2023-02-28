@@ -27,21 +27,4 @@
         <item>حجم (وصف)</item>
         <item>تاريخ (وصف)</item>
     </string-array>
-
-    <string-array name="themes_entries">
-        <item>داكن أخضر</item>
-        <item>أسود أخضر</item>
-        <item>داكن أحمر</item>
-        <item>أسود أحمر</item>
-        <item>داكن أزرق</item>
-        <item>أسود أزرق</item>
-        <item>داكن أصفر</item>
-        <item>أسود أصفر</item>
-        <item>داكن برتقالي</item>
-        <item>أسود برتقالي</item>
-        <item>داكن بنفسجي</item>
-        <item>أسود بنفسجي</item>
-        <item>داكن زهري</item>
-        <item>أسود زهري</item>
-    </string-array>
 </resources>

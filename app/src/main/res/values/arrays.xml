@@ -28,21 +28,14 @@
         <item>Date (desc)</item>
     </string-array>
 
-    <string-array name="themes_entries">
-        <item>Dark Green</item>
-        <item>Black Green</item>
-        <item>Dark Red</item>
-        <item>Black Red</item>
-        <item>Dark Blue</item>
-        <item>Black Blue</item>
-        <item>Dark Yellow</item>
-        <item>Black Yellow</item>
-        <item>Dark Orange</item>
-        <item>Black Orange</item>
-        <item>Dark Purple</item>
-        <item>Black Purple</item>
-        <item>Dark Pink</item>
-        <item>Black Pink</item>
+    <string-array name="color_names">
+        <item>Green</item>
+        <item>Red</item>
+        <item>Blue</item>
+        <item>Yellow</item>
+        <item>Orange</item>
+        <item>Purple</item>
+        <item>Pink</item>
     </string-array>
 
     <!-- don't translate the following otherwise the app will crash -->
@@ -55,20 +48,13 @@
         <item>date_desc</item>
     </string-array>
 
-    <string-array name="themes_values">
-        <item>dark_green</item>
-        <item>black_green</item>
-        <item>dark_red</item>
-        <item>black_red</item>
-        <item>dark_blue</item>
-        <item>black_blue</item>
-        <item>dark_yellow</item>
-        <item>black_yellow</item>
-        <item>dark_orange</item>
-        <item>black_orange</item>
-        <item>dark_purple</item>
-        <item>black_purple</item>
-        <item>dark_pink</item>
-        <item>black_pink</item>
+    <string-array name="color_values">
+        <item>green</item>
+        <item>red</item>
+        <item>blue</item>
+        <item>yellow</item>
+        <item>orange</item>
+        <item>purple</item>
+        <item>pink</item>
     </string-array>
 </resources>

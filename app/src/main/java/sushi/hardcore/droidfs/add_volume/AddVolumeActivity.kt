@@ -29,7 +29,7 @@ class AddVolumeActivity: BaseActivity() {
                 .beginTransaction()
                 .add(
                     R.id.fragment_container,
-                    SelectPathFragment.newInstance(themeValue, explorerRouter.pickMode),
+                    SelectPathFragment.newInstance(theme, explorerRouter.pickMode),
                 )
                 .commit()
         }
@@ -85,7 +85,7 @@ class AddVolumeActivity: BaseActivity() {
             .beginTransaction()
             .replace(
                 R.id.fragment_container, CreateVolumeFragment.newInstance(
-                    themeValue,
+                    theme,
                     volumePath,
                     isHidden,
                     rememberVolume,

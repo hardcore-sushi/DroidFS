@@ -11,7 +11,6 @@ object Constants {
     const val IO_BUFF_SIZE = 16384
     const val SLIDESHOW_DELAY: Long = 4000
     const val DEFAULT_THEME_VALUE = "dark_green"
-    const val THEME_VALUE_KEY = "theme"
     const val DEFAULT_VOLUME_KEY = "default_volume"
     const val REMEMBER_VOLUME_KEY = "remember_volume"
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"

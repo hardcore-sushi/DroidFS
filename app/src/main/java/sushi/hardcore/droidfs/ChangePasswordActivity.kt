@@ -42,7 +42,7 @@ class ChangePasswordActivity: BaseActivity() {
         volumeDatabase = VolumeDatabase(this)
         usfFingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fingerprintProtector = FingerprintProtector.new(this, themeValue, volumeDatabase)
+            fingerprintProtector = FingerprintProtector.new(this, theme, volumeDatabase)
             if (fingerprintProtector != null && volume.encryptedHash != null) {
                 binding.fingerprintSwitchContainer.visibility = View.VISIBLE
             }
@@ -139,7 +139,7 @@ class ChangePasswordActivity: BaseActivity() {
         } else {
             null
         }
-        object : LoadingTask<Boolean>(this, themeValue, R.string.loading_msg_change_password) {
+        object : LoadingTask<Boolean>(this, theme, R.string.loading_msg_change_password) {
             override suspend fun doTask(): Boolean {
                 val success = if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE) {
                     GocryptfsVolume.changePassword(
@@ -199,7 +199,7 @@ class ChangePasswordActivity: BaseActivity() {
                     finish()
                 }
             } else {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.error)
                     .setMessage(R.string.change_password_failed)
                     .setPositiveButton(R.string.ok, null)

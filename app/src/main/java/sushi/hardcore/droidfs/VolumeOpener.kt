@@ -28,14 +28,14 @@ class VolumeOpener(
     private val volumeDatabase = VolumeDatabase(activity)
     private var fingerprintProtector: FingerprintProtector? = null
     private val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(activity)
-    var themeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
+    private val theme = (activity as BaseActivity).theme
     var defaultVolumeName: String? = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     private var dialogBinding: DialogOpenVolumeBinding? = null
     private val volumeManager = (activity.application as VolumeManagerApp).volumeManager
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fingerprintProtector = FingerprintProtector.new(activity, themeValue, volumeDatabase)
+            fingerprintProtector = FingerprintProtector.new(activity, theme, volumeDatabase)
         }
     }
 
@@ -60,7 +60,7 @@ class VolumeOpener(
                                 callbacks.onHashStorageReset()
                             }
                             override fun onPasswordHashDecrypted(hash: ByteArray) {
-                                object : LoadingTask<EncryptedVolume?>(activity, themeValue, R.string.loading_msg_open) {
+                                object : LoadingTask<EncryptedVolume?>(activity, theme, R.string.loading_msg_open) {
                                     override suspend fun doTask(): EncryptedVolume? {
                                         val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, null, hash, null)
                                         Arrays.fill(hash, 0)
@@ -68,7 +68,7 @@ class VolumeOpener(
                                     }
                                 }.startTask(activity.lifecycleScope) { encryptedVolume ->
                                     if (encryptedVolume == null) {
-                                        CustomAlertDialogBuilder(activity, themeValue)
+                                        CustomAlertDialogBuilder(activity, theme)
                                             .setTitle(R.string.open_volume_failed)
                                             .setMessage(R.string.open_failed_hash_msg)
                                             .setPositiveButton(R.string.ok, null)
@@ -140,7 +140,7 @@ class VolumeOpener(
             dialogBinding!!.checkboxSavePassword.visibility = View.GONE
             dialogBinding!!.checkboxDefaultOpen.visibility = View.GONE
         }
-        val dialog = CustomAlertDialogBuilder(activity, themeValue)
+        val dialog = CustomAlertDialogBuilder(activity, theme)
             .setTitle(activity.getString(R.string.open_dialog_title, volume.shortName))
             .setView(dialogBinding!!.root)
             .setNegativeButton(R.string.cancel, null)
@@ -168,7 +168,7 @@ class VolumeOpener(
         } else {
             null
         }
-        object : LoadingTask<EncryptedVolume?>(activity, themeValue, R.string.loading_msg_open) {
+        object : LoadingTask<EncryptedVolume?>(activity, theme, R.string.loading_msg_open) {
             override suspend fun doTask(): EncryptedVolume? {
                 val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, password, null, returnedHash)
                 Arrays.fill(password, 0)
@@ -176,7 +176,7 @@ class VolumeOpener(
             }
         }.startTask(activity.lifecycleScope) { encryptedVolume ->
             if (encryptedVolume == null) {
-                CustomAlertDialogBuilder(activity, themeValue)
+                CustomAlertDialogBuilder(activity, theme)
                     .setTitle(R.string.open_volume_failed)
                     .setMessage(R.string.open_volume_failed_msg)
                     .setPositiveButton(R.string.ok) { _, _ ->

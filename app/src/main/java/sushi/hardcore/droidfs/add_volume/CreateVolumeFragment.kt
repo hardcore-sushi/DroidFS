@@ -18,6 +18,7 @@ import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
+import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.WidgetUtil
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -34,7 +35,7 @@ class CreateVolumeFragment: Fragment() {
         private const val KEY_USF_FINGERPRINT = "fingerprint"
 
         fun newInstance(
-            themeValue: String,
+            theme: Theme,
             volumePath: String,
             isHidden: Boolean,
             rememberVolume: Boolean,
@@ -43,7 +44,7 @@ class CreateVolumeFragment: Fragment() {
         ): CreateVolumeFragment {
             return CreateVolumeFragment().apply {
                 arguments = Bundle().apply {
-                    putString(KEY_THEME_VALUE, themeValue)
+                    putParcelable(KEY_THEME_VALUE, theme)
                     putString(KEY_VOLUME_PATH, volumePath)
                     putBoolean(KEY_IS_HIDDEN, isHidden)
                     putBoolean(KEY_REMEMBER_VOLUME, rememberVolume)
@@ -55,7 +56,7 @@ class CreateVolumeFragment: Fragment() {
     }
 
     private lateinit var binding: FragmentCreateVolumeBinding
-    private var themeValue = Constants.DEFAULT_THEME_VALUE
+    private lateinit var theme: Theme
     private val volumeTypes = ArrayList<String>(2)
     private lateinit var volumePath: String
     private var isHiddenVolume: Boolean = false
@@ -76,7 +77,7 @@ class CreateVolumeFragment: Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         val pinPasswords = requireArguments().let { arguments ->
-            arguments.getString(KEY_THEME_VALUE)?.let { themeValue = it }
+            theme = Compat.getParcelable(arguments, KEY_THEME_VALUE)!!
             volumePath = arguments.getString(KEY_VOLUME_PATH)!!
             isHiddenVolume = arguments.getBoolean(KEY_IS_HIDDEN)
             rememberVolume = arguments.getBoolean(KEY_REMEMBER_VOLUME)
@@ -85,7 +86,7 @@ class CreateVolumeFragment: Fragment() {
         }
         volumeDatabase = VolumeDatabase(requireContext())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fingerprintProtector = FingerprintProtector.new(requireActivity(), themeValue, volumeDatabase)
+            fingerprintProtector = FingerprintProtector.new(requireActivity(), theme, volumeDatabase)
         }
         if (!rememberVolume || !usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
@@ -159,7 +160,7 @@ class CreateVolumeFragment: Fragment() {
                 null
             }
             val encryptedVolume = ObjRef<EncryptedVolume?>(null)
-            object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
+            object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, theme, R.string.loading_msg_create) {
                 private fun generateResult(success: Boolean, volumeType: Byte): Byte {
                     return if (success) {
                         volumeType
@@ -203,7 +204,7 @@ class CreateVolumeFragment: Fragment() {
                 }
             }.startTask(lifecycleScope) { result ->
                 if (result.compareTo(-1) == 0) {
-                    CustomAlertDialogBuilder(requireContext(), themeValue)
+                    CustomAlertDialogBuilder(requireContext(), theme)
                         .setTitle(R.string.error)
                         .setMessage(R.string.create_volume_failed)
                         .setPositiveButton(R.string.ok, null)

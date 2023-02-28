@@ -79,7 +79,6 @@
     <string name="unsafe_features">الميزات غير الآمنة</string>
     <string name="manage_unsafe_features">إدارة الميزات غير الآمنة</string>
     <string name="manage_unsafe_features_summary">تمكين / تعطيل الميزات غير الآمنة</string>
-    <string name="ui">الواجهة الرسومية</string>
     <string name="usf_home_warning_msg">يحاول DroidFS أن يكون آمنًا قدر الإمكان. ولكن غالبًا ما ينطوي الأمان على عدم الراحة. ولهذا السبب فإن DroidFS يقدم لك ميزات إضافية غير آمنة يمكنك تمكينها وتعطيلها وفقًا لاحتياجاتك. تحذير: يمكن أن تكون هذه الميزات غير آمنة. لا تستخدمها إلا إذا كنت تعرف بالضبط ما تفعله. نوصي بشدة بقراءة الوثائق قبل تمكينها.</string>
     <string name="see_unsafe_features">انظر الميزات غير الآمنة</string>
     <string name="open_as">فتح ك</string>
@@ -174,7 +173,6 @@
     <string name="auto">تلقائي</string>
     <string name="encryption_cipher_label">خوارزمية التشفير:</string>
     <string name="theme">سمة</string>
-    <string name="theme_summary">تخصيص سمة التطبيق</string>
     <string name="thumbnails">صور مصغرة</string>
     <string name="thumbnails_summary">عرض صور مصغرة للصور ومقاطع الفيديو</string>
     <string name="seek_seconds_forward">+%d ثواني</string>

@@ -61,7 +61,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     getString(R.string.share_intent_parsing_failed)
                 }
                 errorMsg?.let {
-                    CustomAlertDialogBuilder(this, themeValue)
+                    CustomAlertDialogBuilder(this, theme)
                             .setTitle(R.string.error)
                             .setMessage(it)
                             .setPositiveButton(R.string.ok, null)
@@ -76,7 +76,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     private fun onImported(failedItem: String?){
         setCurrentPath(currentDirectoryPath)
         if (failedItem == null) {
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.success_import)
                     .setMessage(R.string.success_import_msg)
                     .setCancelable(false)
@@ -85,7 +85,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     }
                     .show()
         } else {
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.error)
                     .setMessage(getString(R.string.import_failed, failedItem))
                     .setPositiveButton(R.string.ok, null)

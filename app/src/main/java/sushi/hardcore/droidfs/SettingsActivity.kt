@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs
 
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
@@ -79,11 +80,23 @@ class SettingsActivity : BaseActivity() {
             }
         }
 
+        private fun refreshTheme() {
+            with(requireActivity()) {
+                startActivity(Intent(this, SettingsActivity::class.java))
+                finish()
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+            }
+        }
+
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            findPreference<ListPreference>(Constants.THEME_VALUE_KEY)?.setOnPreferenceChangeListener { _, newValue ->
-                (activity as BaseActivity).onThemeChanged(newValue as String)
+            findPreference<ListPreference>("color")?.setOnPreferenceChangeListener { _, _ ->
+                refreshTheme()
+                true
+            }
+            findPreference<SwitchPreferenceCompat>("black_theme")?.setOnPreferenceChangeListener { _, _ ->
+                refreshTheme()
                 true
             }
             findPreference<Preference>(Constants.THUMBNAIL_MAX_SIZE_KEY)?.let {
@@ -126,7 +139,7 @@ class SettingsActivity : BaseActivity() {
                     if (errorMsg == null) {
                         true
                     } else {
-                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).themeValue)
+                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
                             .setTitle(R.string.error)
                             .setMessage(errorMsg)
                             .setPositiveButton(R.string.ok, null)

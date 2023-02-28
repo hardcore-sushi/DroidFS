@@ -84,7 +84,7 @@ abstract class FileViewerActivity: BaseActivity() {
                     if (result.second == 0) {
                         callback(result.first!!)
                     } else {
-                        val dialog = CustomAlertDialogBuilder(this@FileViewerActivity, themeValue)
+                        val dialog = CustomAlertDialogBuilder(this@FileViewerActivity, theme)
                             .setTitle(R.string.error)
                             .setCancelable(false)
                             .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }

@@ -22,7 +22,7 @@ import javax.crypto.spec.GCMParameterSpec
 @RequiresApi(Build.VERSION_CODES.M)
 class FingerprintProtector private constructor(
     private val activity: FragmentActivity,
-    private val themeValue: String,
+    private val theme: Theme,
     private val volumeDatabase: VolumeDatabase,
 ) {
 
@@ -54,11 +54,11 @@ class FingerprintProtector private constructor(
 
         fun new(
             activity: FragmentActivity,
-            themeValue: String,
+            theme: Theme,
             volumeDatabase: VolumeDatabase,
         ): FingerprintProtector? {
             return if (canAuthenticate(activity) == 0)
-                FingerprintProtector(activity, themeValue, volumeDatabase)
+                FingerprintProtector(activity, theme, volumeDatabase)
             else
                 null
         }
@@ -98,7 +98,7 @@ class FingerprintProtector private constructor(
                                 listener.onPasswordHashDecrypted(plainText)
                             } catch (e: AEADBadTagException) {
                                 listener.onFailed(true)
-                                CustomAlertDialogBuilder(activity, themeValue)
+                                CustomAlertDialogBuilder(activity, theme)
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.MAC_verification_failed)
                                     .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -112,7 +112,7 @@ class FingerprintProtector private constructor(
                     }
                 } catch (e: IllegalBlockSizeException) {
                     listener.onFailed(true)
-                    CustomAlertDialogBuilder(activity, themeValue)
+                    CustomAlertDialogBuilder(activity, theme)
                         .setTitle(R.string.illegal_block_size_exception)
                         .setMessage(R.string.illegal_block_size_exception_msg)
                         .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -159,7 +159,7 @@ class FingerprintProtector private constructor(
                     keyStore.getKey(KEY_ALIAS, null) as SecretKey
                 } catch (e: UnrecoverableKeyException) {
                     listener.onFailed(true)
-                    CustomAlertDialogBuilder(activity, themeValue)
+                    CustomAlertDialogBuilder(activity, theme)
                         .setTitle(activity.getString(R.string.unrecoverable_key_exception))
                         .setMessage(activity.getString(R.string.unrecoverable_key_exception_msg, e.localizedMessage))
                         .setPositiveButton(R.string.reset_hash_storage) { _, _ ->
@@ -196,7 +196,7 @@ class FingerprintProtector private constructor(
 
     private fun alertKeyPermanentlyInvalidatedException() {
         listener.onFailed(true)
-        CustomAlertDialogBuilder(activity, themeValue)
+        CustomAlertDialogBuilder(activity, theme)
             .setTitle(R.string.key_permanently_invalidated_exception)
             .setMessage(R.string.key_permanently_invalidated_exception_msg)
             .setPositiveButton(R.string.reset_hash_storage) { _, _ ->

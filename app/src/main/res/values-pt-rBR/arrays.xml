@@ -7,21 +7,4 @@
         <item>Tamanho (decres.)</item>
         <item>Data (decres.)</item>
     </string-array>
-
-    <string-array name="themes_entries">
-        <item>Verde escuro</item>
-        <item>Verde preto</item>
-        <item>Vermelho escuro</item>
-        <item>Vermelho preto</item>
-        <item>Azul escuro</item>
-        <item>Azul preto</item>
-        <item>Amarelo escuro</item>
-        <item>Amarelo preto</item>
-        <item>Laranja escuro</item>
-        <item>Laranja preto</item>
-        <item>Roxo escuro</item>
-        <item>Roxo preto</item>
-        <item>Dark Pink</item>
-        <item>Black Pink</item>
-    </string-array>
 </resources>

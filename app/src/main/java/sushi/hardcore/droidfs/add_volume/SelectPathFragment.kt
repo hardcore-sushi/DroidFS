@@ -22,12 +22,14 @@ import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.Theme
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeDatabase
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.databinding.DialogSdcardErrorBinding
 import sushi.hardcore.droidfs.databinding.FragmentSelectPathBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -37,10 +39,10 @@ class SelectPathFragment: Fragment() {
         private const val KEY_THEME_VALUE = "theme"
         private const val KEY_PICK_MODE = "pick"
 
-        fun newInstance(themeValue: String, pickMode: Boolean): SelectPathFragment {
+        fun newInstance(theme: Theme, pickMode: Boolean): SelectPathFragment {
             return SelectPathFragment().apply {
                 arguments = Bundle().apply {
-                    putString(KEY_THEME_VALUE, themeValue)
+                    putParcelable(KEY_THEME_VALUE, theme)
                     putBoolean(KEY_PICK_MODE, pickMode)
                 }
             }
@@ -52,7 +54,7 @@ class SelectPathFragment: Fragment() {
         if (result[Manifest.permission.READ_EXTERNAL_STORAGE] == true && result[Manifest.permission.WRITE_EXTERNAL_STORAGE] == true)
             launchPickDirectory()
         else
-            CustomAlertDialogBuilder(requireContext(), themeValue)
+            CustomAlertDialogBuilder(requireContext(), theme)
                 .setTitle(R.string.storage_perm_denied)
                 .setMessage(R.string.storage_perm_denied_msg)
                 .setCancelable(false)
@@ -64,7 +66,7 @@ class SelectPathFragment: Fragment() {
             onDirectoryPicked(uri)
     }
     private lateinit var app: VolumeManagerApp
-    private var themeValue = Constants.DEFAULT_THEME_VALUE
+    private lateinit var theme: Theme
     private lateinit var volumeDatabase: VolumeDatabase
     private lateinit var filesDir: String
     private lateinit var sharedPrefs: SharedPreferences
@@ -88,7 +90,7 @@ class SelectPathFragment: Fragment() {
         originalRememberVolume = sharedPrefs.getBoolean(Constants.REMEMBER_VOLUME_KEY, true)
         binding.switchRemember.isChecked = originalRememberVolume
         arguments?.let { arguments ->
-            arguments.getString(KEY_THEME_VALUE)?.let { themeValue = it }
+            theme = Compat.getParcelable(arguments, KEY_THEME_VALUE)!!
             pickMode = arguments.getBoolean(KEY_PICK_MODE)
         }
         if (pickMode) {
@@ -155,7 +157,7 @@ class SelectPathFragment: Fragment() {
 
     private fun launchPickDirectory() {
         app.isStartingExternalApp = true
-        PathUtils.safePickDirectory(pickDirectory, requireContext(), themeValue)
+        PathUtils.safePickDirectory(pickDirectory, requireContext(), theme)
     }
 
     private fun showRightSection() {
@@ -217,7 +219,7 @@ class SelectPathFragment: Fragment() {
         if (path != null)
             binding.editVolumeName.setText(path)
         else
-            CustomAlertDialogBuilder(requireContext(), themeValue)
+            CustomAlertDialogBuilder(requireContext(), theme)
                 .setTitle(R.string.error)
                 .setMessage(R.string.path_error)
                 .setPositiveButton(R.string.ok, null)
@@ -250,7 +252,7 @@ class SelectPathFragment: Fragment() {
             } else if (isHidden && currentVolumeValue.contains(PathUtils.SEPARATOR)) {
                 Toast.makeText(requireContext(), R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
             } else if (isHidden && volumeAction == Action.CREATE) {
-                CustomAlertDialogBuilder(requireContext(), themeValue)
+                CustomAlertDialogBuilder(requireContext(), theme)
                     .setTitle(R.string.warning)
                     .setMessage(R.string.hidden_volume_warning)
                     .setPositiveButton(R.string.ok) { _, _ ->
@@ -302,13 +304,13 @@ class SelectPathFragment: Fragment() {
             Action.ADD -> {
                 val volumeType = EncryptedVolume.getVolumeType(volumePath)
                 if (volumeType < 0) {
-                    CustomAlertDialogBuilder(requireContext(), themeValue)
+                    CustomAlertDialogBuilder(requireContext(), theme)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_not_a_volume)
                         .setPositiveButton(R.string.ok, null)
                         .show()
                 } else if (!File(volumePath).canWrite()) {
-                    val dialog = CustomAlertDialogBuilder(requireContext(), themeValue)
+                    val dialog = CustomAlertDialogBuilder(requireContext(), theme)
                         .setTitle(R.string.warning)
                         .setCancelable(false)
                         .setPositiveButton(R.string.ok) { _, _ -> addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType) }
@@ -332,7 +334,7 @@ class SelectPathFragment: Fragment() {
 
     // called when the user tries to create a volume in a non-writable directory
     private fun errorDirectoryNotWritable(volumePath: String) {
-        val dialog = CustomAlertDialogBuilder(requireContext(), themeValue)
+        val dialog = CustomAlertDialogBuilder(requireContext(), theme)
             .setTitle(R.string.error)
             .setPositiveButton(R.string.ok, null)
         @SuppressLint("InflateParams")

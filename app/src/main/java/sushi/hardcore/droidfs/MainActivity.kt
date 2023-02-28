@@ -62,7 +62,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         if (sharedPrefs.getBoolean("applicationFirstOpening", true)) {
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.usf_home_warning_msg)
                 .setCancelable(false)
@@ -140,16 +140,18 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     override fun onStart() {
         super.onStart()
-        // refresh theme if changed in SettingsActivity
-        val newThemeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
-        onThemeChanged(newThemeValue)
-        volumeOpener.themeValue = newThemeValue
-        volumeAdapter.refresh()
-        if (volumeAdapter.volumes.isNotEmpty()) {
-            binding.textNoVolumes.visibility = View.GONE
+        // check if theme was changed (by SettingsActivity)
+        val newTheme = Theme.fromSharedPrefs(sharedPrefs)
+        if (newTheme != theme) {
+            recreate()
+        } else {
+            volumeAdapter.refresh()
+            if (volumeAdapter.volumes.isNotEmpty()) {
+                binding.textNoVolumes.visibility = View.GONE
+            }
+            // refresh this in case another instance of MainActivity changes its value
+            volumeOpener.defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
         }
-        // refresh this in case another instance of MainActivity changes its value
-        volumeOpener.defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -206,7 +208,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                             break
                         }
                     }
-                    CustomAlertDialogBuilder(this, themeValue)
+                    CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.warning)
                         .setView(dialogBinding.root)
                         .setPositiveButton(R.string.forget_only) { _, _ ->
@@ -305,10 +307,10 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 val volume = volumeAdapter.volumes[position]
                 when {
                     volume.isHidden -> {
-                        PathUtils.safePickDirectory(pickDirectory, this, themeValue)
+                        PathUtils.safePickDirectory(pickDirectory, this, theme)
                     }
                     File(filesDir, volume.shortName).exists() -> {
-                        CustomAlertDialogBuilder(this, themeValue)
+                        CustomAlertDialogBuilder(this, theme)
                             .setTitle(R.string.error)
                             .setMessage(R.string.hidden_volume_already_exists)
                             .setPositiveButton(R.string.ok, null)
@@ -381,7 +383,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         unselect(position)
         val dstDocumentFile = DocumentFile.fromTreeUri(this, uri)
         if (dstDocumentFile == null) {
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.error)
                 .setMessage(R.string.path_error)
                 .setPositiveButton(R.string.ok, null)
@@ -427,7 +429,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     }
                 }
                 else -> {
-                    CustomAlertDialogBuilder(this@MainActivity, themeValue)
+                    CustomAlertDialogBuilder(this@MainActivity, theme)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.copy_failed, result.taskResult.failedItem.name))
                         .setPositiveButton(R.string.ok, null)

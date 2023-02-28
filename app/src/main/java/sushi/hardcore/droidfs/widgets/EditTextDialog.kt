@@ -10,7 +10,7 @@ class EditTextDialog(
     activity: BaseActivity,
     private val titleId: Int,
     private val callback: (String) -> Unit,
-): CustomAlertDialogBuilder(activity, activity.themeValue) {
+): CustomAlertDialogBuilder(activity, activity.theme) {
     val binding = DialogEditTextBinding.inflate(activity.layoutInflater)
 
     fun setSelectedText(text: CharSequence) {

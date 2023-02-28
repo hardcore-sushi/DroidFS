@@ -79,7 +79,6 @@
     <string name="unsafe_features">Opções perigosas</string>
     <string name="manage_unsafe_features">Gerenciar opções perigosas</string>
     <string name="manage_unsafe_features_summary">Alternar opções perigosas</string>
-    <string name="ui">IU</string>
     <string name="usf_home_warning_msg">DroidFS tenta ser o mais seguro possível. No entanto, a segurança muitas vezes resulta em falta de conforto. Por isso o DroidFS oferece opções adicionais que você pode alternar de acordo com as suas necessidades.\n\nAviso: estas opções podem ser PERIGOSAS. Não as utilize a menos que você saiba o que está fazendo. É altamente recomendável ler a documentação antes de ativá-las.</string>
     <string name="see_unsafe_features">Ver opções perigosas</string>
     <string name="open_as">Abrir como</string>
@@ -170,7 +169,6 @@
     <string name="auto">Autom</string>
     <string name="encryption_cipher_label">Cipher de criptografia:</string>
     <string name="theme">Tema</string>
-    <string name="theme_summary">Personalizar o tema do app</string>
     <string name="thumbnails">Imagem em miniatura</string>
     <string name="thumbnails_summary">Mostrar imagens e vídeos em miniatura</string>
     <string name="seek_seconds_forward">+%d segundos</string>

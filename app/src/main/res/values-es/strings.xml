@@ -79,7 +79,6 @@
     <string name="unsafe_features">Características inseguras</string>
     <string name="manage_unsafe_features">Gestionar las características inseguras</string>
     <string name="manage_unsafe_features_summary">Activar/desactivar funciones inseguras</string>
-    <string name="ui">Interfaz</string>
     <string name="usf_home_warning_msg">DroidFS intenta ser lo más seguro posible. Sin embargo, la seguridad a menudo implica la falta de comodidad. Es por eso que DroidFS te ofrece características inseguras adicionales que puedes activar/desactivar de acuerdo a tus necesidades.\n\nAdvertencia: estas funciones pueden ser inseguras. No las utilices a menos que sepas exactamente lo que estás haciendo. Es muy recomendable leer la documentación antes de activarlas.</string>
     <string name="see_unsafe_features">Ver características inseguras</string>
     <string name="open_as">Abrir como</string>
@@ -174,7 +173,6 @@
     <string name="auto">Automático</string>
     <string name="encryption_cipher_label">Cifrado de encriptación:</string>
     <string name="theme">Tema</string>
-    <string name="theme_summary">Personalizar el tema de la aplicación</string>
     <string name="thumbnails">Miniaturas</string>
     <string name="thumbnails_summary">Mostrar miniaturas de imágenes y vídeos</string>
     <string name="seek_seconds_forward">+%d segundos</string>

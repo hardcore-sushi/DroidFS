@@ -8,8 +8,8 @@ import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.databinding.DialogLoadingBinding
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
-abstract class LoadingTask<T>(val activity: FragmentActivity, themeValue: String, loadingMessageResId: Int) {
-    private val dialogLoading = CustomAlertDialogBuilder(activity, themeValue)
+abstract class LoadingTask<T>(val activity: FragmentActivity, theme: Theme, loadingMessageResId: Int) {
+    private val dialogLoading = CustomAlertDialogBuilder(activity, theme)
         .setView(
             DialogLoadingBinding.inflate(activity.layoutInflater).apply {
                 textMessage.text = activity.getString(loadingMessageResId)

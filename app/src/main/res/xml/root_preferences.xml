@@ -1,37 +1,22 @@
 <PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <PreferenceCategory android:title="@string/ui">
+    <PreferenceCategory android:title="@string/theme">
 
         <ListPreference
-            android:defaultValue="dark_green"
-            android:entries="@array/themes_entries"
-            android:entryValues="@array/themes_values"
-            android:key="theme"
-            android:title="@string/theme"
-            android:summary="@string/theme_summary"
+            android:defaultValue="green"
+            android:entries="@array/color_names"
+            android:entryValues="@array/color_values"
+            android:key="color"
+            android:title="@string/theme_color"
+            android:summary="@string/theme_color_summary"
             android:icon="@drawable/icon_palette"/>
 
         <SwitchPreferenceCompat
-            android:title="@string/auto_fit_title"
-            android:summary="@string/auto_fit_summary"
-            android:key="autoFit"
             android:defaultValue="false"
-            android:icon="@drawable/icon_screen_rotation"/>
-
-        <SwitchPreferenceCompat
-            android:title="@string/legacy_mod_title"
-            android:summary="@string/legacy_mod_summary"
-            android:key="legacyMod"
-            android:defaultValue="false"
-            android:icon="@drawable/icon_mod"/>
-
-        <SwitchPreferenceCompat
-            android:title="@string/pin_passwords_title"
-            android:summary="@string/pin_passwords_summary"
-            android:key="pin_passwords"
-            android:defaultValue="false"
-            android:icon="@drawable/icon_num_pad"/>
+            android:icon="@drawable/icon_night"
+            android:key="black_theme"
+            android:title="@string/black_theme"/>
 
     </PreferenceCategory>
 
@@ -70,6 +55,31 @@
             android:key="map_folders"
             android:title="@string/map_folders"
             android:summary="@string/map_folders_summary"/>
+
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/ux">
+
+        <SwitchPreferenceCompat
+            android:title="@string/auto_fit_title"
+            android:summary="@string/auto_fit_summary"
+            android:key="autoFit"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_screen_rotation"/>
+
+        <SwitchPreferenceCompat
+            android:title="@string/legacy_mod_title"
+            android:summary="@string/legacy_mod_summary"
+            android:key="legacyMod"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_mod"/>
+
+        <SwitchPreferenceCompat
+            android:title="@string/pin_passwords_title"
+            android:summary="@string/pin_passwords_summary"
+            android:key="pin_passwords"
+            android:defaultValue="false"
+            android:icon="@drawable/icon_num_pad"/>
 
     </PreferenceCategory>
 

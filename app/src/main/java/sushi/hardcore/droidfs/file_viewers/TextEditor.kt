@@ -34,7 +34,7 @@ class TextEditor: FileViewerActivity() {
                     checkSaveAndExit()
                 }
             } catch (e: OutOfMemoryError){
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
@@ -87,7 +87,7 @@ class TextEditor: FileViewerActivity() {
 
     private fun checkSaveAndExit(){
         if (changedSinceLastSave){
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save)
                 .setPositiveButton(R.string.save) { _, _ ->

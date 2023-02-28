@@ -123,7 +123,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             } else {
                 1
             }
-            CustomAlertDialogBuilder(this, themeValue)
+            CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.camera_optimization)
                 .setSingleChoiceItems(arrayOf(getString(R.string.maximize_quality), getString(R.string.minimize_latency)), currentIndex) { dialog, which ->
                     val resId: Int
@@ -150,7 +150,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageRatio.setOnClickListener {
             resolutions?.let {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.choose_resolution)
                     .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
                         currentResolution = resolutions!![which]
@@ -283,7 +283,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     permissionsGranted = true
                     setupCamera()
                 } else {
-                    CustomAlertDialogBuilder(this, themeValue)
+                    CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.error)
                         .setMessage(R.string.camera_perm_needed)
                         .setCancelable(false)
@@ -410,7 +410,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             if (encryptedVolume.importFile(ByteArrayInputStream(outputBuff.toByteArray()), outputPath)) {
                                 Toast.makeText(applicationContext, getString(R.string.picture_save_success, outputPath), Toast.LENGTH_SHORT).show()
                             } else {
-                                CustomAlertDialogBuilder(this@CameraActivity, themeValue)
+                                CustomAlertDialogBuilder(this@CameraActivity, theme)
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.picture_save_failed)
                                     .setCancelable(false)

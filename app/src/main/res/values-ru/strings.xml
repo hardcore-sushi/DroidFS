@@ -76,7 +76,6 @@
     <string name="unsafe_features">Небезопасные функции</string>
     <string name="manage_unsafe_features">Управление небезопасными функциями</string>
     <string name="manage_unsafe_features_summary">Включить/отключить небезопасные функции</string>
-    <string name="ui">Интерфейс</string>
     <string name="usf_home_warning_msg">DroidFS старается быть максимально безопасным, однако безопасность часто связана с появлением неудобств. Поэтому DroidFS предлагает дополнительные небезопасные функции, которые вы можете включить/отключить в соответствии со своими потребностями.\n\nПредупреждение: эти функции могут быть НЕБЕЗОПАСНЫМИ. Не используйте их, если не уверены в своих действиях. Настоятельно рекомендуется прочитать документацию перед их включением.</string>
     <string name="see_unsafe_features">Посмотреть небезопасные функции</string>
     <string name="open_as">Открыть как</string>
@@ -168,7 +167,6 @@
     <string name="auto">Авто</string>
     <string name="encryption_cipher_label">Шифр:</string>
     <string name="theme">Тема</string>
-    <string name="theme_summary">Настройка темы приложения</string>
     <string name="thumbnails">Эскизы</string>
     <string name="thumbnails_summary">Показывать эскизы изображений и видео</string>
     <string name="seek_seconds_forward">+%d сек.</string>

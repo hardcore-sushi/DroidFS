@@ -7,24 +7,30 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.Theme
 
-open class CustomAlertDialogBuilder(context: Context, theme: String) : AlertDialog.Builder(
-    context, when (theme) {
-        "black_green" -> R.style.BlackGreenDialog
-        "dark_red" -> R.style.DarkRedDialog
-        "black_red" -> R.style.BlackRedDialog
-        "dark_blue" -> R.style.DarkBlueDialog
-        "black_blue" -> R.style.BlackBlueDialog
-        "dark_yellow" -> R.style.DarkYellowDialog
-        "black_yellow" -> R.style.BlackYellowDialog
-        "dark_orange" -> R.style.DarkOrangeDialog
-        "black_orange" -> R.style.BlackOrangeDialog
-        "dark_purple" -> R.style.DarkPurpleDialog
-        "black_purple" -> R.style.BlackPurpleDialog
-        "dark_pink" -> R.style.DarkPinkDialog
-        "black_pink" -> R.style.BlackPinkDialog
-        else -> R.style.DarkGreenDialog
-    }
+open class CustomAlertDialogBuilder(context: Context, theme: Theme) : AlertDialog.Builder(
+    context, if (theme.black) {
+            when (theme.color) {
+                "red" -> R.style.BlackRedDialog
+                "blue" -> R.style.BlackBlueDialog
+                "yellow" -> R.style.BlackYellowDialog
+                "orange" -> R.style.BlackOrangeDialog
+                "purple" -> R.style.BlackPurpleDialog
+                "pink" -> R.style.BlackPinkDialog
+                else -> R.style.BlackGreenDialog
+            }
+        } else {
+            when (theme.color) {
+                "red" -> R.style.DarkRedDialog
+                "blue" -> R.style.DarkBlueDialog
+                "yellow" -> R.style.DarkYellowDialog
+                "orange" -> R.style.DarkOrangeDialog
+                "purple" -> R.style.DarkPurpleDialog
+                "pink" -> R.style.DarkPinkDialog
+                else -> R.style.DarkGreenDialog
+            }
+        }
 ) {
     private var keepFullScreen = false
 

@@ -8,20 +8,4 @@
         <item>Размер (по убыванию)</item>
         <item>Дата (по убыванию)</item>
     </string-array>
-    <string-array name="themes_entries">
-        <item>Тёмно-зелёная</item>
-        <item>Чёрно-зелёная</item>
-        <item>Тёмно-красная</item>
-        <item>Чёрно-красная</item>
-        <item>Тёмно-синяя</item>
-        <item>Чёрно-синяя</item>
-        <item>Тёмно-жёлтая</item>
-        <item>Чёрно-жёлтая</item>
-        <item>Тёмно-оранжевая</item>
-        <item>Чёрно-оранжевая</item>
-        <item>Тёмно-фиолетовая</item>
-        <item>Чёрно-фиолетовая</item>
-        <item>Тёмно-розовая</item>
-        <item>Чёрно-розовая</item>
-    </string-array>
 </resources>

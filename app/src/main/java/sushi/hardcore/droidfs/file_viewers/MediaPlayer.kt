@@ -45,7 +45,7 @@ abstract class MediaPlayer: FileViewerActivity() {
                 onVideoSizeChanged(videoSize.width, videoSize.height)
             }
             override fun onPlayerError(error: PlaybackException) {
-                CustomAlertDialogBuilder(this@MediaPlayer, themeValue)
+                CustomAlertDialogBuilder(this@MediaPlayer, theme)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.playing_failed, error.errorCodeName))
                         .setCancelable(false)

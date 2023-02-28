@@ -191,12 +191,12 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     private fun openWithExternalApp(fullPath: String) {
         app.isStartingExternalApp = true
-        ExternalProvider.open(this, themeValue, encryptedVolume, fullPath)
+        ExternalProvider.open(this, theme, encryptedVolume, fullPath)
     }
 
     private fun showOpenAsDialog(path: String) {
         val adapter = OpenAsDialogAdapter(this, usf_open)
-        CustomAlertDialogBuilder(this, themeValue)
+        CustomAlertDialogBuilder(this, theme)
             .setSingleChoiceItems(adapter, -1) { dialog, which ->
                 when (adapter.getItem(which)) {
                     "image" -> startFileViewer(ImageViewer::class.java, path)
@@ -341,7 +341,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     private fun askLockVolume() {
-        CustomAlertDialogBuilder(this, themeValue)
+        CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_lock_volume)
                 .setPositiveButton(R.string.ok) { _, _ ->
@@ -357,7 +357,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!encryptedVolume.mkdir(PathUtils.pathJoin(currentDirectoryPath, folderName))) {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.error)
                         .setMessage(R.string.error_mkdir)
                         .setPositiveButton(R.string.ok, null)
@@ -394,7 +394,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 }
             }
             if (!ready){
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                     .setTitle(R.string.warning)
                     .setMessage(getString(
                         if (items[i].isDirectory) {
@@ -444,7 +444,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         for (uri in uris) {
             val fileName = PathUtils.getFilenameFromURI(this, uri)
             if (fileName == null) {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.error_retrieving_filename, uri))
                         .setPositiveButton(R.string.ok, null)
@@ -476,7 +476,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             if (!encryptedVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.rename_failed, old_name))
                         .setPositiveButton(R.string.ok, null)
@@ -532,7 +532,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 true
             }
             R.id.sort -> {
-                CustomAlertDialogBuilder(this, themeValue)
+                CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
