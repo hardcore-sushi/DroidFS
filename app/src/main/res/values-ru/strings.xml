@@ -10,7 +10,6 @@
     <string name="mkdir">Создать папку</string>
     <string name="dir_empty">Пусто</string>
     <string name="warning">Предупреждение!</string>
-    <string name="ask_close_volume">Закрыть том?</string>
     <string name="cancel">Отмена</string>
     <string name="enter_folder_name">Имя папки:</string>
     <string name="error">Ошибка</string>

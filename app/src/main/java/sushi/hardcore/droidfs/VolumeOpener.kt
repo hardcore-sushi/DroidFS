@@ -22,7 +22,7 @@ class VolumeOpener(
 ) {
     interface VolumeOpenerCallbacks {
         fun onHashStorageReset() {}
-        fun onVolumeOpened(encryptedVolume: EncryptedVolume, volumeShortName: String)
+        fun onVolumeOpened(id: Int)
     }
 
     private val volumeDatabase = VolumeDatabase(activity)
@@ -31,6 +31,7 @@ class VolumeOpener(
     var themeValue = sharedPrefs.getString(Constants.THEME_VALUE_KEY, Constants.DEFAULT_THEME_VALUE)!!
     var defaultVolumeName: String? = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
     private var dialogBinding: DialogOpenVolumeBinding? = null
+    private val volumeManager = (activity.application as VolumeManagerApp).volumeManager
 
     init {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -40,54 +41,59 @@ class VolumeOpener(
 
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
     fun openVolume(volume: VolumeData, isVolumeSaved: Boolean, callbacks: VolumeOpenerCallbacks) {
-        if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE && BuildConfig.GOCRYPTFS_DISABLED) {
-            Toast.makeText(activity, R.string.gocryptfs_disabled, Toast.LENGTH_SHORT).show()
-            return
-        } else if (volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE && BuildConfig.CRYFS_DISABLED) {
-            Toast.makeText(activity, R.string.cryfs_disabled, Toast.LENGTH_SHORT).show()
-            return
-        }
-        var askForPassword = true
-        fingerprintProtector?.let { fingerprintProtector ->
-            volume.encryptedHash?.let { encryptedHash ->
-                volume.iv?.let { iv ->
-                    askForPassword = false
-                    fingerprintProtector.listener = object : FingerprintProtector.Listener {
-                        override fun onHashStorageReset() {
-                            callbacks.onHashStorageReset()
-                        }
-                        override fun onPasswordHashDecrypted(hash: ByteArray) {
-                            object : LoadingTask<EncryptedVolume?>(activity, themeValue, R.string.loading_msg_open) {
-                                override suspend fun doTask(): EncryptedVolume? {
-                                    val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, null, hash, null)
-                                    Arrays.fill(hash, 0)
-                                    return encryptedVolume
+        val volumeId = volumeManager.getVolumeId(volume)
+        if (volumeId == null) {
+            if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE && BuildConfig.GOCRYPTFS_DISABLED) {
+                Toast.makeText(activity, R.string.gocryptfs_disabled, Toast.LENGTH_SHORT).show()
+                return
+            } else if (volume.type == EncryptedVolume.CRYFS_VOLUME_TYPE && BuildConfig.CRYFS_DISABLED) {
+                Toast.makeText(activity, R.string.cryfs_disabled, Toast.LENGTH_SHORT).show()
+                return
+            }
+            var askForPassword = true
+            fingerprintProtector?.let { fingerprintProtector ->
+                volume.encryptedHash?.let { encryptedHash ->
+                    volume.iv?.let { iv ->
+                        askForPassword = false
+                        fingerprintProtector.listener = object : FingerprintProtector.Listener {
+                            override fun onHashStorageReset() {
+                                callbacks.onHashStorageReset()
+                            }
+                            override fun onPasswordHashDecrypted(hash: ByteArray) {
+                                object : LoadingTask<EncryptedVolume?>(activity, themeValue, R.string.loading_msg_open) {
+                                    override suspend fun doTask(): EncryptedVolume? {
+                                        val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, null, hash, null)
+                                        Arrays.fill(hash, 0)
+                                        return encryptedVolume
+                                    }
+                                }.startTask(activity.lifecycleScope) { encryptedVolume ->
+                                    if (encryptedVolume == null) {
+                                        CustomAlertDialogBuilder(activity, themeValue)
+                                            .setTitle(R.string.open_volume_failed)
+                                            .setMessage(R.string.open_failed_hash_msg)
+                                            .setPositiveButton(R.string.ok, null)
+                                            .show()
+                                    } else {
+                                        callbacks.onVolumeOpened(volumeManager.insert(encryptedVolume, volume))
+                                    }
                                 }
-                            }.startTask(activity.lifecycleScope) { encryptedVolume ->
-                                if (encryptedVolume == null) {
-                                    CustomAlertDialogBuilder(activity, themeValue)
-                                        .setTitle(R.string.open_volume_failed)
-                                        .setMessage(R.string.open_failed_hash_msg)
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
-                                } else {
-                                    callbacks.onVolumeOpened(encryptedVolume, volume.shortName)
+                            }
+                            override fun onPasswordHashSaved() {}
+                            override fun onFailed(pending: Boolean) {
+                                if (!pending) {
+                                    askForPassword(volume, isVolumeSaved, callbacks)
                                 }
                             }
                         }
-                        override fun onPasswordHashSaved() {}
-                        override fun onFailed(pending: Boolean) {
-                            if (!pending) {
-                                askForPassword(volume, isVolumeSaved, callbacks)
-                            }
-                        }
+                        fingerprintProtector.loadPasswordHash(volume.shortName, encryptedHash, iv)
                     }
-                    fingerprintProtector.loadPasswordHash(volume.shortName, encryptedHash, iv)
                 }
             }
-        }
-        if (askForPassword) {
-            askForPassword(volume, isVolumeSaved, callbacks)
+            if (askForPassword) {
+                askForPassword(volume, isVolumeSaved, callbacks)
+            }
+        } else {
+            callbacks.onVolumeOpened(volumeId)
         }
     }
 
@@ -188,7 +194,7 @@ class VolumeOpener(
                         override fun onPasswordHashDecrypted(hash: ByteArray) {}
                         override fun onPasswordHashSaved() {
                             Arrays.fill(returnedHash.value!!, 0)
-                            callbacks.onVolumeOpened(encryptedVolume, volume.shortName)
+                            callbacks.onVolumeOpened(volumeManager.insert(encryptedVolume, volume))
                         }
                         private var isClosed = false
                         override fun onFailed(pending: Boolean) {
@@ -201,7 +207,7 @@ class VolumeOpener(
                     }
                     fingerprintProtector.savePasswordHash(volume, returnedHash.value!!)
                 } else {
-                    callbacks.onVolumeOpened(encryptedVolume, volume.shortName)
+                    callbacks.onVolumeOpened(volumeManager.insert(encryptedVolume, volume))
                 }
             }
         }

@@ -158,11 +158,7 @@ class CreateVolumeFragment: Fragment() {
             } else {
                 null
             }
-            val encryptedVolume = if (rememberVolume) {
-                null
-            } else {
-                ObjRef<EncryptedVolume?>(null)
-            }
+            val encryptedVolume = ObjRef<EncryptedVolume?>(null)
             object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, themeValue, R.string.loading_msg_create) {
                 private fun generateResult(success: Boolean, volumeType: Byte): Byte {
                     return if (success) {
@@ -223,6 +219,9 @@ class CreateVolumeFragment: Fragment() {
                             isVolumeSaved = saveVolume(volume)
                         }
                     }
+                    val volumeId = encryptedVolume.value?.let {
+                        (activity?.application as VolumeManagerApp).volumeManager.insert(it, volume)
+                    }
                     @SuppressLint("NewApi") // if fingerprintProtector is null checkboxSavePassword is hidden
                     if (isVolumeSaved && binding.checkboxSavePassword.isChecked && returnedHash != null) {
                         fingerprintProtector!!.let {
@@ -235,31 +234,31 @@ class CreateVolumeFragment: Fragment() {
                                 override fun onPasswordHashDecrypted(hash: ByteArray) {} // shouldn't happen here
                                 override fun onPasswordHashSaved() {
                                     Arrays.fill(returnedHash.value!!, 0)
-                                    onVolumeCreated(encryptedVolume?.value, volume.shortName)
+                                    onVolumeCreated(volumeId, volume.shortName)
                                 }
                                 override fun onFailed(pending: Boolean) {
                                     if (!pending) {
                                         Arrays.fill(returnedHash.value!!, 0)
-                                        onVolumeCreated(encryptedVolume?.value, volume.shortName)
+                                        onVolumeCreated(volumeId, volume.shortName)
                                     }
                                 }
                             }
                             it.savePasswordHash(volume, returnedHash.value!!)
                         }
                     } else {
-                        onVolumeCreated(encryptedVolume?.value, volume.shortName)
+                        onVolumeCreated(volumeId, volume.shortName)
                     }
                 }
             }
         }
     }
 
-    private fun onVolumeCreated(encryptedVolume: EncryptedVolume?, volumeShortName: String) {
+    private fun onVolumeCreated(id: Int?, volumeShortName: String) {
         (activity as AddVolumeActivity).apply {
-            if (rememberVolume || encryptedVolume == null) {
+            if (rememberVolume || id == null) {
                 finish()
             } else {
-                startExplorer(encryptedVolume, volumeShortName)
+                startExplorer(id, volumeShortName)
             }
         }
     }

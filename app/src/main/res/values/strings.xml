@@ -11,7 +11,7 @@
     <string name="mkdir">Create folder</string>
     <string name="dir_empty">Directory Empty</string>
     <string name="warning">Warning !</string>
-    <string name="ask_close_volume">Are you sure you want to close this volume ?</string>
+    <string name="ask_lock_volume">Are you sure you want to lock this volume ?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancel</string>
     <string name="enter_folder_name">Folder Name:</string>
@@ -253,4 +253,7 @@
     <string name="remember_volume">Remember volume</string>
     <string name="open_volume">Open volume</string>
     <string name="choose_existing_volume">Please choose an existing volume</string>
+    <string name="volume_unlocked">Volume unlocked</string>
+    <string name="lock_volume">Lock volume</string>
+    <string name="lock">Lock</string>
 </resources>

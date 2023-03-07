@@ -20,12 +20,10 @@ import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.adapters.VolumeAdapter
 import sushi.hardcore.droidfs.add_volume.AddVolumeActivity
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityMainBinding
 import sushi.hardcore.droidfs.databinding.DialogDeleteVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerRouter
 import sushi.hardcore.droidfs.file_operations.FileOperationService
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -33,11 +31,15 @@ import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
 
 class MainActivity : BaseActivity(), VolumeAdapter.Listener {
+    companion object {
+        private const val OPEN_DEFAULT_VOLUME = "openDefault"
+    }
+
     private lateinit var binding: ActivityMainBinding
     private lateinit var volumeDatabase: VolumeDatabase
+    private lateinit var volumeManager: VolumeManager
     private lateinit var volumeAdapter: VolumeAdapter
     private lateinit var volumeOpener: VolumeOpener
-    private var usfKeepOpen: Boolean = false
     private var addVolume = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if ((explorerRouter.pickMode || explorerRouter.dropMode) && result.resultCode != AddVolumeActivity.RESULT_USER_BACK) {
             setResult(result.resultCode, result.data) // forward result
@@ -54,7 +56,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
     private lateinit var fileOperationService: FileOperationService
     private lateinit var explorerRouter: ExplorerRouter
-    private var shouldCloseVolume = true // used when launched to pick file from another volume
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,10 +81,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 .show()
         }
         explorerRouter = ExplorerRouter(this, intent)
+        volumeManager = (application as VolumeManagerApp).volumeManager
         volumeDatabase = VolumeDatabase(this)
         volumeAdapter = VolumeAdapter(
             this,
             volumeDatabase,
+            (application as VolumeManagerApp).volumeManager,
             !explorerRouter.pickMode && !explorerRouter.dropMode,
             !explorerRouter.dropMode,
             this,
@@ -100,28 +103,29 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             addVolume.launch(Intent(this, AddVolumeActivity::class.java).also {
                 if (explorerRouter.dropMode || explorerRouter.pickMode) {
                     IntentUtils.forwardIntent(intent, it)
-                    shouldCloseVolume = false
                 }
             })
         }
-        usfKeepOpen = sharedPrefs.getBoolean("usf_keep_open", false)
         volumeOpener = VolumeOpener(this)
-        volumeOpener.defaultVolumeName?.let { name ->
-            try {
-                openVolume(volumeAdapter.volumes.first { it.name == name })
-            } catch (e: NoSuchElementException) {
-                unsetDefaultVolume()
-            }
-        }
         onBackPressedDispatcher.addCallback(this) {
             if (volumeAdapter.selectedItems.isNotEmpty()) {
                 unselectAll()
             } else {
-                if (explorerRouter.pickMode) {
-                    shouldCloseVolume = false
-                }
                 isEnabled = false
                 onBackPressedDispatcher.onBackPressed()
+            }
+        }
+        volumeOpener.defaultVolumeName?.let { name ->
+            val state = savedInstanceState?.getBoolean(OPEN_DEFAULT_VOLUME)
+            if (state == true || state == null) {
+                val volumeData = volumeAdapter.volumes.first { it.name == name }
+                if (!volumeManager.isOpen(volumeData)) {
+                    try {
+                        openVolume(volumeData)
+                    } catch (e: NoSuchElementException) {
+                        unsetDefaultVolume()
+                    }
+                }
             }
         }
         Intent(this, FileOperationService::class.java).also {
@@ -146,6 +150,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
         // refresh this in case another instance of MainActivity changes its value
         volumeOpener.defaultVolumeName = sharedPrefs.getString(DEFAULT_VOLUME_KEY, null)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(OPEN_DEFAULT_VOLUME, false)
     }
 
     override fun onSelectionChanged(size: Int) {
@@ -179,6 +188,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         invalidateOptionsMenu()
     }
 
+    private fun removeVolume(volume: VolumeData) {
+        volumeManager.getVolumeId(volume)?.let { volumeManager.closeVolume(it) }
+        volumeDatabase.removeVolume(volume.name)
+    }
+
     private fun removeVolumes(volumes: List<VolumeData>, i: Int = 0, doDeleteVolumeContent: Boolean? = null) {
         if (i < volumes.size) {
             if (volumes[i].isHidden) {
@@ -196,12 +210,12 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         .setTitle(R.string.warning)
                         .setView(dialogBinding.root)
                         .setPositiveButton(R.string.forget_only) { _, _ ->
-                            volumeDatabase.removeVolume(volumes[i].name)
+                            removeVolume(volumes[i])
                             removeVolumes(volumes, i + 1, if (dialogBinding.checkboxApplyToAll.isChecked) false else null)
                         }
                         .setNegativeButton(R.string.delete_volume) { _, _ ->
                             PathUtils.recursiveRemoveDirectory(File(volumes[i].getFullPath(filesDir.path)))
-                            volumeDatabase.removeVolume(volumes[i].name)
+                            removeVolume(volumes[i])
                             removeVolumes(volumes, i + 1, if (dialogBinding.checkboxApplyToAll.isChecked) true else null)
                         }
                         .setOnCancelListener {
@@ -213,11 +227,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     if (doDeleteVolumeContent) {
                         PathUtils.recursiveRemoveDirectory(File(volumes[i].getFullPath(filesDir.path)))
                     }
-                    volumeDatabase.removeVolume(volumes[i].name)
+                    removeVolume(volumes[i])
                     removeVolumes(volumes, i + 1, doDeleteVolumeContent)
                 }
             } else {
-                volumeDatabase.removeVolume(volumes[i].name)
+                removeVolume(volumes[i])
                 removeVolumes(volumes, i + 1, doDeleteVolumeContent)
             }
         } else {
@@ -241,9 +255,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         return when (item.itemId) {
             android.R.id.home -> {
                 if (explorerRouter.pickMode || explorerRouter.dropMode) {
-                    if (explorerRouter.pickMode) {
-                        shouldCloseVolume = false
-                    }
                     finish()
                 } else {
                     unselectAll()
@@ -253,6 +264,15 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             R.id.select_all -> {
                 volumeAdapter.selectAll()
                 invalidateOptionsMenu()
+                true
+            }
+            R.id.lock -> {
+                volumeAdapter.selectedItems.forEach {
+                    volumeManager.getVolumeId(volumeAdapter.volumes[it])?.let { id ->
+                        volumeManager.closeVolume(id)
+                    }
+                }
+                unselectAll()
                 true
             }
             R.id.remove -> {
@@ -325,6 +345,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         menu.findItem(R.id.settings).isVisible = !explorerRouter.pickMode && !explorerRouter.dropMode
         val isSelecting = volumeAdapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.select_all).isVisible = isSelecting
+        menu.findItem(R.id.lock).isVisible = isSelecting && volumeAdapter.selectedItems.any {
+            i -> volumeManager.isOpen(volumeAdapter.volumes[i])
+        }
         menu.findItem(R.id.remove).isVisible = isSelecting
         menu.findItem(R.id.delete_password_hash).isVisible =
             isSelecting &&
@@ -456,11 +479,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 volumeAdapter.refresh()
             }
 
-            override fun onVolumeOpened(encryptedVolume: EncryptedVolume, volumeShortName: String) {
-                startActivity(explorerRouter.getExplorerIntent(encryptedVolume, volumeShortName))
-                if (explorerRouter.pickMode) {
-                    shouldCloseVolume = false
-                }
+            override fun onVolumeOpened(id: Int) {
+                startActivity(explorerRouter.getExplorerIntent(id, volume.shortName))
                 if (explorerRouter.dropMode || explorerRouter.pickMode) {
                     finish()
                 }
@@ -468,18 +488,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         })
     }
 
-    override fun onResume() {
-        super.onResume()
-        shouldCloseVolume = true
-    }
-
     override fun onStop() {
         super.onStop()
         volumeOpener.wipeSensitive()
-        if (explorerRouter.pickMode && !usfKeepOpen && shouldCloseVolume) {
-            IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "volume")?.close()
-            RestrictedFileProvider.wipeAll(this)
-            finish()
-        }
     }
 }

@@ -11,7 +11,6 @@
     <string name="mkdir">Criar pasta</string>
     <string name="dir_empty">Pasta vazia</string>
     <string name="warning">Aviso!</string>
-    <string name="ask_close_volume">Tem certeza que quer fechar este volume?</string>
     <string name="ok">OK</string>
     <string name="cancel">Cancelar</string>
     <string name="enter_folder_name">Nome da pasta:</string>

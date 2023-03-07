@@ -44,6 +44,17 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
         }
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (other !is VolumeData) {
+            return false
+        }
+        return other.name == name && other.isHidden == isHidden
+    }
+
+    override fun hashCode(): Int {
+        return name.hashCode()+isHidden.hashCode()
+    }
+
     companion object {
         const val VOLUMES_DIRECTORY = "volumes"
 

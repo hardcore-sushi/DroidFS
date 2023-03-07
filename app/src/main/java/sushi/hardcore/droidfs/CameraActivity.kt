@@ -17,7 +17,6 @@ import android.view.animation.RotateAnimation
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
-import androidx.activity.addCallback
 import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
@@ -29,7 +28,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
@@ -63,14 +61,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 binding.imageTimer.setImageResource(R.drawable.icon_timer_off)
             }
         }
-    private var usf_keep_open = false
     private lateinit var sensorOrientationListener: SensorOrientationListener
     private var previousOrientation: Float = 0f
     private lateinit var orientedIcons: List<ImageView>
     private lateinit var encryptedVolume: EncryptedVolume
     private lateinit var outputDirectory: String
-    private var isFinishingIntentionally = false
-    private var isAskingPermissions = false
     private var permissionsGranted = false
     private lateinit var executor: Executor
     private lateinit var cameraProvider: ProcessCameraProvider
@@ -92,7 +87,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
@@ -103,7 +97,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
                 permissionsGranted = true
             } else {
-                isAskingPermissions = true
                 requestPermissions(arrayOf(Manifest.permission.CAMERA), CAMERA_PERMISSION_REQUEST_CODE)
             }
         } else {
@@ -220,7 +213,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 binding.takePhotoButton.visibility = View.GONE
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                        isAskingPermissions = true
                         requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST_CODE)
                     }
                 }
@@ -280,17 +272,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 else -> false
             }
         }
-        onBackPressedDispatcher.addCallback(this) {
-            isFinishingIntentionally = true
-            isEnabled = false
-            onBackPressedDispatcher.onBackPressed()
-        }
     }
 
     @RequiresApi(Build.VERSION_CODES.M)
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        isAskingPermissions = false
         if (grantResults.size == 1) {
             when (requestCode) {
                 CAMERA_PERMISSION_REQUEST_CODE -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -301,10 +287,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         .setTitle(R.string.error)
                         .setMessage(R.string.camera_perm_needed)
                         .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ ->
-                            isFinishingIntentionally = true
-                            finish()
-                        }.show()
+                        .setPositiveButton(R.string.ok) { _, _ -> finish() }.show()
                 }
                 AUDIO_PERMISSION_REQUEST_CODE -> if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (videoCapture != null) {
@@ -431,10 +414,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.picture_save_failed)
                                     .setCancelable(false)
-                                    .setPositiveButton(R.string.ok) { _, _ ->
-                                        isFinishingIntentionally = true
-                                        finish()
-                                    }
+                                    .setPositiveButton(R.string.ok) { _, _ -> finish() }
                                     .show()
                             }
                         }
@@ -485,32 +465,18 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (!isFinishingIntentionally) {
-            encryptedVolume.close()
-            RestrictedFileProvider.wipeAll(this)
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (!isFinishing && !usf_keep_open){
-            finish()
-        }
-    }
-
     override fun onPause() {
         super.onPause()
         sensorOrientationListener.remove(this)
-        if (!isAskingPermissions && !usf_keep_open) {
-            finish()
-        }
     }
 
     override fun onResume() {
         super.onResume()
-        sensorOrientationListener.addListener(this)
+        if (encryptedVolume.isClosed()) {
+            finish()
+        } else {
+            sensorOrientationListener.addListener(this)
+        }
     }
 
     override fun onOrientationChange(newOrientation: Int) {

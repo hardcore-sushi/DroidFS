@@ -39,6 +39,12 @@
         android:icon="@drawable/icon_sort"/>
 
     <item
+        android:id="@+id/lock"
+        app:showAsAction="ifRoom"
+        android:title="@string/lock_volume"
+        android:icon="@drawable/icon_lock"/>
+
+    <item
         android:id="@+id/close"
         app:showAsAction="ifRoom"
         android:title="@string/close_volume"

@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
+import androidx.activity.addCallback
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
@@ -29,6 +30,9 @@ class TextEditor: FileViewerActivity() {
         loadWholeFile(filePath) {
             try {
                 loadLayout(String(it))
+                onBackPressedDispatcher.addCallback(this) {
+                    checkSaveAndExit()
+                }
             } catch (e: OutOfMemoryError){
                 CustomAlertDialogBuilder(this, themeValue)
                     .setTitle(R.string.error)
@@ -123,9 +127,5 @@ class TextEditor: FileViewerActivity() {
             else -> super.onOptionsItemSelected(item)
         }
         return true
-    }
-
-    override fun onBackPressed() {
-        checkSaveAndExit()
     }
 }

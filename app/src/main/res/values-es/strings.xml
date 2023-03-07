@@ -11,7 +11,6 @@
     <string name="mkdir">Crear carpeta</string>
     <string name="dir_empty">Directorio vacío</string>
     <string name="warning">¡Advertencia!</string>
-    <string name="ask_close_volume">¿Estás seguro de que quieres cerrar este volumen?</string>
     <string name="ok">Aceptar</string>
     <string name="cancel">Cancelar</string>
     <string name="enter_folder_name">Nombre de la carpeta:</string>

@@ -15,7 +15,7 @@
 
         <SwitchPreference
             android:defaultValue="false"
-            android:icon="@drawable/icon_decrypt"
+            android:icon="@drawable/icon_lock_open"
             android:key="usf_decrypt"
             android:title="@string/usf_decrypt" />
         <SwitchPreference
@@ -31,7 +31,7 @@
 
         <SwitchPreference
             android:defaultValue="false"
-            android:icon="@drawable/icon_decrypt"
+            android:icon="@drawable/icon_lock_open"
             android:key="usf_keep_open"
             android:title="@string/usf_keep_open" />
 

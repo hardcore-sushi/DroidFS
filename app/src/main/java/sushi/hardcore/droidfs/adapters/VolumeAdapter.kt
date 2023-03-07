@@ -8,15 +8,18 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeDatabase
+import sushi.hardcore.droidfs.VolumeManager
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 
 class VolumeAdapter(
     private val context: Context,
     private val volumeDatabase: VolumeDatabase,
+    private val volumeManager: VolumeManager,
     private val allowSelection: Boolean,
     private val showReadOnly: Boolean,
     private val listener: Listener,
@@ -80,16 +83,12 @@ class VolumeAdapter(
         fun bind(position: Int) {
             val volume = volumes[position]
             itemView.findViewById<TextView>(R.id.text_volume_name).text = volume.shortName
-            itemView.findViewById<ImageView>(R.id.image_icon).setImageResource(R.drawable.icon_volume)
             itemView.findViewById<TextView>(R.id.text_path).text = if (volume.isHidden)
                 context.getString(R.string.hidden_volume)
             else
                 volume.name
-            itemView.findViewById<ImageView>(R.id.icon_fingerprint).visibility = if (volume.encryptedHash == null) {
-                View.GONE
-            } else {
-                View.VISIBLE
-            }
+            itemView.findViewById<ImageView>(R.id.icon_unlocked).isVisible = volumeManager.isOpen(volume)
+            itemView.findViewById<ImageView>(R.id.icon_fingerprint).isVisible = volume.encryptedHash != null
             itemView.findViewById<TextView>(R.id.text_info).text = context.getString(
                 if (volume.canWrite(context.filesDir.path)) {
                     R.string.volume_type

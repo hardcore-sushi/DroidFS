@@ -24,6 +24,7 @@ import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeDatabase
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.databinding.DialogSdcardErrorBinding
 import sushi.hardcore.droidfs.databinding.FragmentSelectPathBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -62,6 +63,7 @@ class SelectPathFragment: Fragment() {
         if (uri != null)
             onDirectoryPicked(uri)
     }
+    private lateinit var app: VolumeManagerApp
     private var themeValue = Constants.DEFAULT_THEME_VALUE
     private lateinit var volumeDatabase: VolumeDatabase
     private lateinit var filesDir: String
@@ -81,6 +83,7 @@ class SelectPathFragment: Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        app = requireActivity().application as VolumeManagerApp
         sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         originalRememberVolume = sharedPrefs.getBoolean(Constants.REMEMBER_VOLUME_KEY, true)
         binding.switchRemember.isChecked = originalRememberVolume
@@ -105,6 +108,7 @@ class SelectPathFragment: Fragment() {
                 if (Environment.isExternalStorageManager()) {
                     launchPickDirectory()
                 } else {
+                    app.isStartingExternalApp = true
                     startActivity(Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION, Uri.parse("package:"+requireContext().packageName)))
                 }
             } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -119,6 +123,7 @@ class SelectPathFragment: Fragment() {
                 ) {
                     launchPickDirectory()
                 } else {
+                    app.isStartingExternalApp = true
                     askStoragePermissions.launch(
                         arrayOf(
                             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -149,7 +154,7 @@ class SelectPathFragment: Fragment() {
     }
 
     private fun launchPickDirectory() {
-        (activity as AddVolumeActivity).shouldCloseVolume = false
+        app.isStartingExternalApp = true
         PathUtils.safePickDirectory(pickDirectory, requireContext(), themeValue)
     }
 

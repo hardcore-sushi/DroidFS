@@ -30,9 +30,8 @@
 
     <item
         android:id="@+id/decrypt"
-        app:showAsAction="ifRoom"
+        app:showAsAction="never"
         android:visible="false"
-        android:icon="@drawable/icon_decrypt"
         android:title="@string/decrypt_files"/>
 
     <item
@@ -71,6 +70,12 @@
         app:showAsAction="ifRoom"
         android:title="@string/sort_by"
         android:icon="@drawable/icon_sort"/>
+
+    <item
+        android:id="@+id/lock"
+        app:showAsAction="ifRoom"
+        android:title="@string/lock_volume"
+        android:icon="@drawable/icon_lock"/>
 
     <item
         android:id="@+id/close"

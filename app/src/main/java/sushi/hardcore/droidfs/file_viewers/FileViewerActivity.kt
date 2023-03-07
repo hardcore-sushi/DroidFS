@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -14,7 +13,6 @@ import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
@@ -27,8 +25,6 @@ abstract class FileViewerActivity: BaseActivity() {
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
     private var windowTypeMask = 0
-    private var isFinishingIntentionally = false
-    private var usf_keep_open = false
     private var foldersFirst = true
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
@@ -43,16 +39,10 @@ abstract class FileViewerActivity: BaseActivity() {
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
         encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
-        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
-        }
-        onBackPressedDispatcher.addCallback(this) {
-            isFinishingIntentionally = true
-            isEnabled = false
-            onBackPressedDispatcher.onBackPressed()
         }
         if (fullscreenMode) {
             fixNavBarColor()
@@ -156,21 +146,12 @@ abstract class FileViewerActivity: BaseActivity() {
     }
 
     protected fun goBackToExplorer() {
-        isFinishingIntentionally = true
         finish()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        if (!isFinishingIntentionally) {
-            encryptedVolume.close()
-            RestrictedFileProvider.wipeAll(this)
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (!usf_keep_open) {
+    override fun onResume() {
+        super.onResume()
+        if (encryptedVolume.isClosed()) {
             finish()
         }
     }

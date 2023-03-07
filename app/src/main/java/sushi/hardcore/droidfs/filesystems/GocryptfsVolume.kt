@@ -36,7 +36,6 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
             logN: Int,
             creator: String,
             returnedHash: ByteArray?,
-            openAfterCreation: Boolean,
         ): Int
         private external fun nativeInit(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): Int
         external fun changePassword(
@@ -53,20 +52,26 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
             plainTextNames: Boolean,
             xchacha: Int,
             returnedHash: ByteArray?,
-            volume: ObjRef<EncryptedVolume?>?
+            volume: ObjRef<EncryptedVolume?>
         ): Boolean {
-            val openAfterCreation = volume != null
-            val result = nativeCreateVolume(root_cipher_dir, password, plainTextNames, xchacha, ScryptDefaultLogN, VOLUME_CREATOR, returnedHash, openAfterCreation)
-            return if (!openAfterCreation) {
-                result == 1
-            } else if (result == -1) {
-                Log.e("gocryptfs", "Failed to open volume after creation")
-                true
-            } else if (result == -2) {
-                false
-            } else {
-                volume!!.value = GocryptfsVolume(result)
-                true
+            return when (val result = nativeCreateVolume(
+                root_cipher_dir,
+                password,
+                plainTextNames,
+                xchacha,
+                ScryptDefaultLogN,
+                VOLUME_CREATOR,
+                returnedHash,
+            )) {
+                -1 -> {
+                    Log.e("gocryptfs", "Failed to open volume after creation")
+                    true
+                }
+                -2 -> false
+                else -> {
+                    volume.value = GocryptfsVolume(result)
+                    true
+                }
             }
         }
 

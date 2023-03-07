@@ -15,7 +15,7 @@ import sushi.hardcore.droidfs.util.SQLUtil.appendSelectionArgs
 import sushi.hardcore.droidfs.util.SQLUtil.concatenateWhere
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
-import java.util.*
+import java.util.UUID
 import java.util.regex.Pattern
 
 class RestrictedFileProvider: ContentProvider() {

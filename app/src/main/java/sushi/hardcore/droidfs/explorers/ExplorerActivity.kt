@@ -6,6 +6,7 @@ import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import com.google.android.material.floatingactionbutton.FloatingActionButton
@@ -60,9 +61,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
                 if (operationFiles.size > 0){
                     checkPathOverwrite(operationFiles, currentDirectoryPath) { items ->
-                        if (items == null) {
-                            remoteEncryptedVolume.close()
-                        } else {
+                        if (items != null) {
                             // stop loading thumbnails while writing files
                             explorerAdapter.loadThumbnails = false
                             taskScope.launch {
@@ -78,12 +77,9 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 }
                                 explorerAdapter.loadThumbnails = true
                                 setCurrentPath(currentDirectoryPath)
-                                remoteEncryptedVolume.close()
                             }
                         }
                     }
-                } else {
-                    remoteEncryptedVolume.close()
                 }
             }
         }
@@ -169,6 +165,16 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     override fun init() {
         super.init()
+        onBackPressedDispatcher.addCallback(this) {
+            if (currentItemAction != ItemsActions.NONE) {
+                cancelItemAction()
+                invalidateOptionsMenu()
+            } else {
+                isEnabled = false
+                onBackPressedDispatcher.onBackPressed()
+                isEnabled = true
+            }
+        }
         findViewById<FloatingActionButton>(R.id.fab).setOnClickListener {
             if (currentItemAction != ItemsActions.NONE){
                 openDialogCreateFolder()
@@ -189,15 +195,14 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 val intent = Intent(this, MainActivity::class.java)
                                 intent.action = "pick"
                                 intent.putExtra("volume", encryptedVolume)
-                                isStartingActivity = true
                                 pickFromOtherVolumes.launch(intent)
                             }
                             "importFiles" -> {
-                                isStartingActivity = true
+                                app.isStartingExternalApp = true
                                 pickFiles.launch(arrayOf("*/*"))
                             }
                             "importFolder" -> {
-                                isStartingActivity = true
+                                app.isStartingExternalApp = true
                                 pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
@@ -212,7 +217,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 val intent = Intent(this, CameraActivity::class.java)
                                 intent.putExtra("path", currentDirectoryPath)
                                 intent.putExtra("volume", encryptedVolume)
-                                isStartingActivity = true
                                 startActivity(intent)
                             }
                         }
@@ -257,6 +261,7 @@ class ExplorerActivity : BaseExplorerActivity() {
         val result = super.onCreateOptionsMenu(menu)
         if (currentItemAction != ItemsActions.NONE) {
             menu.findItem(R.id.validate).isVisible = true
+            menu.findItem(R.id.lock).isVisible = false
             menu.findItem(R.id.close).isVisible = false
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
         } else {
@@ -405,13 +410,13 @@ class ExplorerActivity : BaseExplorerActivity() {
                 for (i in explorerAdapter.selectedItems) {
                     paths.add(explorerElements[i].fullPath)
                 }
-                isStartingActivity = true
+                app.isStartingExternalApp = true
                 ExternalProvider.share(this, themeValue, encryptedVolume, paths)
                 unselectAll()
                 true
             }
             R.id.decrypt -> {
-                isStartingActivity = true
+                app.isStartingExternalApp = true
                 pickExportDirectory.launch(null)
                 true
             }
@@ -504,15 +509,6 @@ class ExplorerActivity : BaseExplorerActivity() {
         if (currentItemAction != ItemsActions.NONE){
             currentItemAction = ItemsActions.NONE
             itemsToProcess.clear()
-        }
-    }
-
-    override fun onBackPressed() {
-        if (currentItemAction != ItemsActions.NONE) {
-            cancelItemAction()
-            invalidateOptionsMenu()
-        } else {
-            super.onBackPressed()
         }
     }
 }

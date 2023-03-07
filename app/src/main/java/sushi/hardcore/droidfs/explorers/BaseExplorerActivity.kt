@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -22,20 +23,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.BaseActivity
-import sushi.hardcore.droidfs.Constants
-import sushi.hardcore.droidfs.FileTypes
-import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.*
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_viewers.*
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
-import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -46,6 +42,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private var foldersFirst = true
     private var mapFolders = true
     private var currentSortOrderIndex = 0
+    private var volumeId = -1
     protected lateinit var encryptedVolume: EncryptedVolume
     private lateinit var volumeName: String
     private lateinit var explorerViewModel: ExplorerViewModel
@@ -58,10 +55,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     protected val taskScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
-    private var isCreating = true
-    protected var isStartingActivity = false
+    protected lateinit var app: VolumeManagerApp
     private var usf_open = false
-    protected var usf_keep_open = false
     private lateinit var linearLayoutManager: LinearLayoutManager
     private var isUsingListLayout = true
     private lateinit var layoutIcon: ImageButton
@@ -76,10 +71,11 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        app = application as VolumeManagerApp
         usf_open = sharedPrefs.getBoolean("usf_open", false)
-        usf_keep_open = sharedPrefs.getBoolean("usf_keep_open", false)
-        volumeName = intent.getStringExtra("volume_name") ?: ""
-        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
+        volumeName = intent.getStringExtra("volumeName") ?: ""
+        volumeId = intent.getIntExtra("volumeId", -1)
+        encryptedVolume = app.volumeManager.getVolume(volumeId)!!
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
@@ -118,6 +114,19 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         isUsingListLayout = sharedPrefs.getBoolean("useListLayout", true)
         layoutIcon = findViewById(R.id.layout_icon)
         setRecyclerViewLayout()
+        onBackPressedDispatcher.addCallback(this) {
+            if (explorerAdapter.selectedItems.isEmpty()) {
+                val parentPath = PathUtils.getParentPath(currentDirectoryPath)
+                if (parentPath == currentDirectoryPath) {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                } else {
+                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                }
+            } else {
+                unselectAll()
+            }
+        }
         layoutIcon.setOnClickListener {
             isUsingListLayout = !isUsingListLayout
             setRecyclerViewLayout()
@@ -171,18 +180,17 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    private fun startFileViewer(cls: Class<*>, filePath: String){
+    private fun startFileViewer(cls: Class<*>, filePath: String) {
         val intent = Intent(this, cls).apply {
             putExtra("path", filePath)
             putExtra("volume", encryptedVolume)
             putExtra("sortOrder", sortOrderValues[currentSortOrderIndex])
         }
-        isStartingActivity = true
         startActivity(intent)
     }
 
-    private fun openWithExternalApp(fullPath: String){
-        isStartingActivity = true
+    private fun openWithExternalApp(fullPath: String) {
+        app.isStartingExternalApp = true
         ExternalProvider.open(this, themeValue, encryptedVolume, fullPath)
     }
 
@@ -332,26 +340,16 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    private fun askCloseVolume() {
+    private fun askLockVolume() {
         CustomAlertDialogBuilder(this, themeValue)
                 .setTitle(R.string.warning)
-                .setMessage(R.string.ask_close_volume)
-                .setPositiveButton(R.string.ok) { _, _ -> closeVolumeOnUserExit() }
+                .setMessage(R.string.ask_lock_volume)
+                .setPositiveButton(R.string.ok) { _, _ ->
+                    app.volumeManager.closeVolume(volumeId)
+                    finish()
+                }
                 .setNegativeButton(R.string.cancel, null)
                 .show()
-    }
-
-    override fun onBackPressed() {
-        if (explorerAdapter.selectedItems.isEmpty()) {
-            val parentPath = PathUtils.getParentPath(currentDirectoryPath)
-            if (parentPath == currentDirectoryPath) {
-                askCloseVolume()
-            } else {
-                setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
-            }
-        } else {
-            unselectAll()
-        }
     }
 
     private fun createFolder(folderName: String){
@@ -508,9 +506,9 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         val noItemSelected = explorerAdapter.selectedItems.isEmpty()
         val iconColor = ContextCompat.getColor(this, R.color.neutralIconTint)
         setMenuIconTint(menu, iconColor, R.id.sort, R.drawable.icon_sort)
-        setMenuIconTint(menu, iconColor, R.id.decrypt, R.drawable.icon_decrypt)
         setMenuIconTint(menu, iconColor, R.id.share, R.drawable.icon_share)
         menu.findItem(R.id.sort).isVisible = noItemSelected
+        menu.findItem(R.id.lock).isVisible = noItemSelected
         menu.findItem(R.id.close).isVisible = noItemSelected
         supportActionBar?.setDisplayHomeAsUpEnabled(!noItemSelected)
         if (!noItemSelected) {
@@ -577,55 +575,33 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 true
             }
             R.id.close -> {
-                askCloseVolume()
+                finish()
+                true
+            }
+            R.id.lock -> {
+                askLockVolume()
                 true
             }
             else -> super.onOptionsItemSelected(item)
         }
     }
 
-    protected open fun closeVolumeOnUserExit() {
-        finish()
-    }
-
-    protected open fun closeVolumeOnDestroy() {
-        taskScope.cancel()
-        if (!encryptedVolume.isClosed()) {
-            encryptedVolume.close()
-        }
-        RestrictedFileProvider.wipeAll(this) //additional security
-    }
-
     override fun onDestroy() {
         super.onDestroy()
         if (!isChangingConfigurations) { //activity won't be recreated
-            closeVolumeOnDestroy()
-        }
-    }
-
-    override fun onPause() {
-        super.onPause()
-        if (!isChangingConfigurations){
-            if (isStartingActivity){
-                isStartingActivity = false
-            } else if (!usf_keep_open){
-                finish()
-            }
+            taskScope.cancel()
         }
     }
 
     override fun onResume() {
         super.onResume()
-        if (isCreating){
-            isCreating = false
+        if (app.isStartingExternalApp) {
+            ExternalProvider.removeFilesAsync(this)
+        }
+        if (encryptedVolume.isClosed()) {
+            finish()
         } else {
-            if (encryptedVolume.isClosed()) {
-                finish()
-            } else {
-                isStartingActivity = false
-                ExternalProvider.removeFilesAsync(this)
-                setCurrentPath(currentDirectoryPath)
-            }
+            setCurrentPath(currentDirectoryPath)
         }
     }
 }

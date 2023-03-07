@@ -9,7 +9,7 @@ class ExplorerRouter(private val context: Context, private val intent: Intent) {
     var pickMode = intent.action == "pick"
     var dropMode = (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) && intent.extras != null
 
-    fun getExplorerIntent(encryptedVolume: EncryptedVolume, volumeShortName: String): Intent {
+    fun getExplorerIntent(volumeId: Int, volumeShortName: String): Intent {
         var explorerIntent: Intent? = null
         if (dropMode) { //import via android share menu
             explorerIntent = Intent(context, ExplorerActivityDrop::class.java)
@@ -22,8 +22,8 @@ class ExplorerRouter(private val context: Context, private val intent: Intent) {
         if (explorerIntent == null) {
             explorerIntent = Intent(context, ExplorerActivity::class.java) //default opening
         }
-        explorerIntent.putExtra("volume", encryptedVolume)
-        explorerIntent.putExtra("volume_name", volumeShortName)
+        explorerIntent.putExtra("volumeId", volumeId)
+        explorerIntent.putExtra("volumeName", volumeShortName)
         return explorerIntent
     }
 }

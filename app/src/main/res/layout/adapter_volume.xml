@@ -8,21 +8,23 @@
     <RelativeLayout
         android:id="@+id/selectable_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="?attr/selectableItemBackground"
-        tools:ignore="UselessParent">
+        tools:ignore="UselessParent"
+        android:paddingEnd="4dp">
 
         <ImageView
             android:id="@+id/image_icon"
             android:layout_width="50dp"
-            android:layout_height="50dp"/>
+            android:layout_height="50dp"
+            android:src="@drawable/icon_volume"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_toEndOf="@id/image_icon"
-            android:layout_toStartOf="@id/icon_fingerprint">
+            android:layout_toStartOf="@id/layout_icons">
 
             <TextView
                 android:id="@+id/text_volume_name"
@@ -63,16 +65,31 @@
 
         </LinearLayout>
 
-        <ImageView
-            android:id="@+id/icon_fingerprint"
-            android:layout_width="26dp"
-            android:layout_height="26dp"
-            android:src="@drawable/icon_fingerprint"
-            android:contentDescription="@string/password_hash_saved"
-            android:visibility="gone"
-            android:layout_alignParentEnd="true"
-            android:layout_marginTop="11dp"
-            android:layout_marginEnd="5dp"/>
+        <LinearLayout
+            android:id="@+id/layout_icons"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:layout_alignParentEnd="true">
+
+            <ImageView
+                android:id="@+id/icon_unlocked"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:src="@drawable/icon_lock_open"
+                android:contentDescription="@string/volume_unlocked"
+                android:visibility="gone"/>
+
+            <ImageView
+                android:id="@+id/icon_fingerprint"
+                android:layout_width="26dp"
+                android:layout_height="26dp"
+                android:src="@drawable/icon_fingerprint"
+                android:contentDescription="@string/password_hash_saved"
+                android:visibility="gone"
+                android:layout_marginStart="5dp"/>
+
+        </LinearLayout>
 
     </RelativeLayout>
 

@@ -4,11 +4,8 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.activity.addCallback
 import sushi.hardcore.droidfs.*
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
 import sushi.hardcore.droidfs.databinding.ActivityAddVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerRouter
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.util.IntentUtils
 
 class AddVolumeActivity: BaseActivity() {
 
@@ -19,15 +16,12 @@ class AddVolumeActivity: BaseActivity() {
     private lateinit var binding: ActivityAddVolumeBinding
     private lateinit var explorerRouter: ExplorerRouter
     private lateinit var volumeOpener: VolumeOpener
-    private var usfKeepOpen = false
-    var shouldCloseVolume = true // used when launched to pick file from another volume
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityAddVolumeBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        usfKeepOpen = sharedPrefs.getBoolean("usf_keep_open", false)
         explorerRouter = ExplorerRouter(this, intent)
         volumeOpener = VolumeOpener(this)
         if (savedInstanceState == null) {
@@ -41,7 +35,6 @@ class AddVolumeActivity: BaseActivity() {
         }
         onBackPressedDispatcher.addCallback(this) {
             setResult(RESULT_USER_BACK)
-            shouldCloseVolume = false
             isEnabled = false
             onBackPressedDispatcher.onBackPressed()
         }
@@ -53,7 +46,6 @@ class AddVolumeActivity: BaseActivity() {
                 supportFragmentManager.popBackStack()
             else {
                 setResult(RESULT_USER_BACK)
-                shouldCloseVolume = false
                 finish()
             }
         }
@@ -70,21 +62,19 @@ class AddVolumeActivity: BaseActivity() {
         )
     }
 
-    fun startExplorer(encryptedVolume: EncryptedVolume, volumeShortName: String) {
-        startActivity(explorerRouter.getExplorerIntent(encryptedVolume, volumeShortName))
-        shouldCloseVolume = false
+    fun startExplorer(volumeId: Int, volumeShortName: String) {
+        startActivity(explorerRouter.getExplorerIntent(volumeId, volumeShortName))
         finish()
     }
 
     fun onVolumeSelected(volume: VolumeData, rememberVolume: Boolean) {
         if (rememberVolume) {
             setResult(RESULT_USER_BACK)
-            shouldCloseVolume = false
             finish()
         } else {
             volumeOpener.openVolume(volume, false, object : VolumeOpener.VolumeOpenerCallbacks {
-                override fun onVolumeOpened(encryptedVolume: EncryptedVolume, volumeShortName: String) {
-                    startExplorer(encryptedVolume, volumeShortName)
+                override fun onVolumeOpened(id: Int) {
+                    startExplorer(id, volume.shortName)
                 }
             })
         }
@@ -105,19 +95,5 @@ class AddVolumeActivity: BaseActivity() {
             )
             .addToBackStack(null)
             .commit()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        shouldCloseVolume = true
-    }
-
-    override fun onStop() {
-        super.onStop()
-        if (explorerRouter.pickMode && !usfKeepOpen && shouldCloseVolume) {
-            IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "volume")?.close()
-            RestrictedFileProvider.wipeAll(this)
-            finish()
-        }
     }
 }

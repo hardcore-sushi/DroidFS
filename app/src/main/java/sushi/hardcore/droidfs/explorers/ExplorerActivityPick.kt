@@ -22,21 +22,18 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     }
 
     override fun onExplorerElementClick(position: Int) {
-        val wasSelecting = explorerAdapter.selectedItems.isNotEmpty()
         if (explorerAdapter.selectedItems.isEmpty()) {
-            if (!wasSelecting) {
-                val fullPath = PathUtils.pathJoin(currentDirectoryPath, explorerElements[position].name)
-                when {
-                    explorerElements[position].isDirectory -> {
-                        setCurrentPath(fullPath)
-                    }
-                    explorerElements[position].isParentFolder -> {
-                        setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
-                    }
-                    else -> {
-                        resultIntent.putExtra("path", fullPath)
-                        returnActivityResult()
-                    }
+            val fullPath = PathUtils.pathJoin(currentDirectoryPath, explorerElements[position].name)
+            when {
+                explorerElements[position].isDirectory -> {
+                    setCurrentPath(fullPath)
+                }
+                explorerElements[position].isParentFolder -> {
+                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                }
+                else -> {
+                    resultIntent.putExtra("path", fullPath)
+                    returnActivityResult()
                 }
             }
         }
@@ -80,18 +77,5 @@ class ExplorerActivityPick : BaseExplorerActivity() {
         setResult(Activity.RESULT_OK, resultIntent)
         isFinishingIntentionally = true
         finish()
-    }
-
-    override fun closeVolumeOnDestroy() {
-        if (!isFinishingIntentionally && !usf_keep_open){
-            IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "destinationVolume")?.close()
-            super.closeVolumeOnDestroy()
-        }
-    }
-
-    override fun closeVolumeOnUserExit() {
-        isFinishingIntentionally = true
-        super.closeVolumeOnUserExit()
-        super.closeVolumeOnDestroy()
     }
 }
