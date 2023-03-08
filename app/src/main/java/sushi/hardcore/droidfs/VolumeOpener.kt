@@ -80,7 +80,7 @@ class VolumeOpener(
                             }
                             override fun onPasswordHashSaved() {}
                             override fun onFailed(pending: Boolean) {
-                                if (!pending) {
+                                if (!pending && sharedPrefs.getBoolean("passwordFallback", true)) {
                                     askForPassword(volume, isVolumeSaved, callbacks)
                                 }
                             }

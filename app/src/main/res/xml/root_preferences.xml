@@ -75,6 +75,13 @@
             android:icon="@drawable/icon_mod"/>
 
         <SwitchPreferenceCompat
+            android:title="@string/password_fallback"
+            android:summary="@string/password_fallback_summary"
+            android:key="passwordFallback"
+            android:defaultValue="true"
+            android:icon="@drawable/icon_password"/>
+
+        <SwitchPreferenceCompat
             android:title="@string/pin_passwords_title"
             android:summary="@string/pin_passwords_summary"
             android:key="pin_passwords"

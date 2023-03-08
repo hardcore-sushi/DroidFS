@@ -258,4 +258,6 @@
     <string name="theme_color">Theme color</string>
     <string name="theme_color_summary">Change app theme color</string>
     <string name="black_theme">Black theme</string>
+    <string name="password_fallback">Fallback to password</string>
+    <string name="password_fallback_summary">Prompt for password when fingerprint authentication is cancelled</string>
 </resources>
