@@ -61,8 +61,10 @@ abstract class MediaPlayer: FileViewerActivity() {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex+1) % mappedPlaylist.size)
-                refreshFileName()
+                if (player.repeatMode != Player.REPEAT_MODE_ONE) {
+                    playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex + 1) % mappedPlaylist.size)
+                    refreshFileName()
+                }
             }
         })
         player.prepare()
