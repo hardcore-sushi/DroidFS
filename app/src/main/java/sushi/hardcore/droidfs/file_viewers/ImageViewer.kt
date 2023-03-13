@@ -10,6 +10,8 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.activity.viewModels
+import androidx.lifecycle.ViewModel
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
@@ -31,18 +33,23 @@ class ImageViewer: FileViewerActivity() {
         private const val MIN_SWIPE_DISTANCE = 150
     }
 
+    class ImageViewModel : ViewModel() {
+        var imageBytes: ByteArray? = null
+        var rotationAngle: Float = 0f
+    }
+
     private lateinit var fileName: String
     private lateinit var handler: Handler
+    private val imageViewModel: ImageViewModel by viewModels()
     private var requestBuilder: RequestBuilder<Drawable>? = null
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
-    private var originalOrientation: Float = 0f
-    private var rotationAngle: Float = 0F
     private var orientationTransformation: OrientationTransformation? = null
     private val hideUI = Runnable {
         binding.actionButtons.visibility = View.GONE
         binding.topBar.visibility = View.GONE
+        hideSystemUi()
     }
     private val slideshowNext = Runnable {
         if (slideshowActive){
@@ -60,6 +67,8 @@ class ImageViewer: FileViewerActivity() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
+        showPartialSystemUi()
+        applyNavigationBarMargin(binding.root)
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
@@ -67,6 +76,7 @@ class ImageViewer: FileViewerActivity() {
                 if (binding.actionButtons.visibility == View.GONE) {
                     binding.actionButtons.visibility = View.VISIBLE
                     binding.topBar.visibility = View.VISIBLE
+                    showPartialSystemUi()
                     handler.postDelayed(hideUI, hideDelay)
                 } else {
                     hideUI.run()
@@ -102,7 +112,7 @@ class ImageViewer: FileViewerActivity() {
                         if (mappedPlaylist.size == 0) { //deleted all images of the playlist
                             goBackToExplorer()
                         } else {
-                            loadImage()
+                            loadImage(true)
                         }
                     } else {
                         CustomAlertDialogBuilder(this, theme)
@@ -140,14 +150,8 @@ class ImageViewer: FileViewerActivity() {
                 swipeImage(-1F)
             }
         }
-        binding.imageRotateRight.setOnClickListener {
-            rotationAngle += 90
-            rotateImage()
-        }
-        binding.imageRotateLeft.setOnClickListener {
-            rotationAngle -= 90
-            rotateImage()
-        }
+        binding.imageRotateRight.setOnClickListener { onClickRotate(90f) }
+        binding.imageRotateLeft.setOnClickListener { onClickRotate(-90f) }
         onBackPressedDispatcher.addCallback(this) {
             if (slideshowActive) {
                 stopSlideshow()
@@ -158,19 +162,27 @@ class ImageViewer: FileViewerActivity() {
                 }
             }
         }
-        loadImage()
+        loadImage(false)
         handler.postDelayed(hideUI, hideDelay)
     }
 
-    private fun loadImage(){
+    private fun loadImage(newImage: Boolean) {
         fileName = File(filePath).name
         binding.textFilename.text = fileName
-        requestBuilder = null
-        loadWholeFile(filePath) {
-            originalOrientation = 0f
-            requestBuilder = Glide.with(this).load(it)
-            requestBuilder?.into(binding.imageViewer)
-            rotationAngle = originalOrientation
+        if (newImage || imageViewModel.imageBytes == null) {
+            loadWholeFile(filePath) {
+                imageViewModel.imageBytes = it
+                requestBuilder = Glide.with(this).load(it)
+                requestBuilder?.into(binding.imageViewer)
+                imageViewModel.rotationAngle = 0f
+            }
+        } else {
+            requestBuilder = Glide.with(this).load(imageViewModel.imageBytes)
+            if (imageViewModel.rotationAngle.mod(360f) != 0f) {
+                rotateImage()
+            } else {
+                requestBuilder?.into(binding.imageViewer)
+            }
         }
     }
 
@@ -180,10 +192,16 @@ class ImageViewer: FileViewerActivity() {
         handler.postDelayed(hideUI, hideDelay)
     }
 
+    private fun onClickRotate(angle: Float) {
+        imageViewModel.rotationAngle += angle
+        binding.imageViewer.restoreZoomNormal()
+        rotateImage()
+    }
+
     private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false){
         playlistNext(deltaX < 0)
-        loadImage()
-        if (slideshowActive){
+        loadImage(true)
+        if (slideshowActive) {
             if (!slideshowSwipe) { //reset slideshow delay if user swipes
                 handler.removeCallbacks(slideshowNext)
             }
@@ -214,14 +232,13 @@ class ImageViewer: FileViewerActivity() {
         }
     }
 
-    private fun rotateImage(){
-        binding.imageViewer.restoreZoomNormal()
-        orientationTransformation = OrientationTransformation(rotationAngle)
+    private fun rotateImage() {
+        orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle)
         requestBuilder?.transform(orientationTransformation)?.into(binding.imageViewer)
     }
 
     private fun askSaveRotation(callback: () -> Unit){
-        if (rotationAngle.mod(360f) != originalOrientation && !slideshowActive) {
+        if (imageViewModel.rotationAngle.mod(360f) != 0f && !slideshowActive) {
             CustomAlertDialogBuilder(this, theme)
                 .keepFullScreen()
                 .setTitle(R.string.warning)
@@ -235,7 +252,7 @@ class ImageViewer: FileViewerActivity() {
                                     Bitmap.CompressFormat.PNG
                                 } else {
                                     Bitmap.CompressFormat.JPEG
-                                }, 100, outputStream) == true
+                                }, 90, outputStream) == true
                         ){
                             if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)) {
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()

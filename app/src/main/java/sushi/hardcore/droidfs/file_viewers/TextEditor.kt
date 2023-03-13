@@ -13,7 +13,6 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 class TextEditor: FileViewerActivity() {
-    override var fullscreenMode = false
     private lateinit var fileName: String
     private lateinit var editor: EditText
     private var changedSinceLastSave = false

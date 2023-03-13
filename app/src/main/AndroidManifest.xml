@@ -50,7 +50,7 @@
         <activity android:name=".explorers.ExplorerActivity"/>
         <activity android:name=".explorers.ExplorerActivityPick"/>
         <activity android:name=".explorers.ExplorerActivityDrop"/>
-        <activity android:name=".file_viewers.ImageViewer" android:configChanges="screenSize|orientation" /> <!-- don't reload content on configuration change -->
+        <activity android:name=".file_viewers.ImageViewer"/>
         <activity android:name=".file_viewers.VideoPlayer" android:configChanges="screenSize|orientation" />
         <activity android:name=".file_viewers.PdfViewer" android:configChanges="screenSize|orientation" android:theme="@style/AppTheme" />
         <activity android:name=".file_viewers.AudioPlayer" android:configChanges="screenSize|orientation" />

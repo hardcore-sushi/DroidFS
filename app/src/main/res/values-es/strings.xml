@@ -159,8 +159,6 @@
     <string name="folders_first_summary">Mostrar las carpetas al principio de la lista</string>
     <string name="auto_fit_title">Rotación automática de pantalla en el reproductor de vídeo</string>
     <string name="auto_fit_summary">Rotación automática de la pantalla para adaptarla a las dimensiones del vídeo</string>
-    <string name="legacy_mod_title">Modo de pantalla completa heredado</string>
-    <string name="legacy_mod_summary">Prueba esto si windowInsetsController no funciona correctamente en tu dispositivo (normalmente no es necesario)</string>
     <string name="open_tree_failed">No se ha encontrado ningún explorador de archivos. Por favor, instala uno y vuelve a intentarlo.</string>
     <string name="close_volume">Cerrar volumen</string>
     <string name="sort_by">Ordenar por</string>

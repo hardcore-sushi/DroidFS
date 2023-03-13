@@ -1,10 +1,15 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.os.Build
 import android.os.Bundle
 import android.view.View
-import androidx.core.content.ContextCompat
+import android.view.WindowInsets
+import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updateMargins
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -29,10 +34,7 @@ abstract class FileViewerActivity: BaseActivity() {
     private var wasMapped = false
     protected val mappedPlaylist = mutableListOf<ExplorerElement>()
     protected var currentPlaylistIndex = -1
-    protected open var fullscreenMode = true
-    private val legacyMod by lazy {
-        sharedPrefs.getBoolean("legacyMod", false)
-    }
+    private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.R
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,37 +46,60 @@ abstract class FileViewerActivity: BaseActivity() {
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
         }
-        if (fullscreenMode) {
-            fixNavBarColor()
-            hideSystemUi()
-        }
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_SWIPE
         viewFile()
     }
 
-    private fun fixNavBarColor() {
-        window.navigationBarColor = ContextCompat.getColor(this, R.color.fullScreenBackgroundColor)
+    open fun showPartialSystemUi() {
+        if (isLegacyFullscreen) {
+            @Suppress("Deprecation")
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        } else {
+            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            windowInsetsController.show(WindowInsetsCompat.Type.navigationBars())
+        }
     }
 
-    private fun hideSystemUi() {
-        if (legacyMod) {
+    open fun hideSystemUi() {
+        if (isLegacyFullscreen) {
             @Suppress("Deprecation")
             window.decorView.systemUiVisibility =
                 View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN
+                View.SYSTEM_UI_FLAG_FULLSCREEN or
+                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
+                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
         } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
+            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                window.setDecorFitsSystemWindows(false)
+            }
+        }
+    }
+
+    protected fun applyNavigationBarMargin(root: View) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
+                root.updateLayoutParams<FrameLayout.LayoutParams> {
+                    val newInsets = insets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars())
+                    this.updateMargins(
+                        left = newInsets.left,
+                        top = newInsets.top,
+                        right = newInsets.right,
+                        bottom = newInsets.bottom
+                    )
+                }
+                insets
+            }
+        } else {
+            root.fitsSystemWindows = true
         }
     }
 
     abstract fun getFileType(): String
     abstract fun viewFile()
-
-    override fun onUserInteraction() {
-        super.onUserInteraction()
-        if (fullscreenMode && windowTypeMask and WindowInsetsCompat.Type.statusBars() == 0) {
-            hideSystemUi()
-        }
-    }
 
     protected fun loadWholeFile(path: String, fileSize: Long? = null, callback: (ByteArray) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {

@@ -10,7 +10,6 @@ class PdfViewer: FileViewerActivity() {
     init {
         applyCustomTheme = false
     }
-    override var fullscreenMode = false
     private lateinit var pdfViewer: PdfViewer
 
     override fun getFileType(): String {

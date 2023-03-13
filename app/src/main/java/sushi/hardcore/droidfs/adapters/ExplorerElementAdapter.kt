@@ -125,7 +125,7 @@ class ExplorerElementAdapter(
                     volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
                         if (isActive) {
                             withContext(Dispatchers.Main) {
-                                if (isActive && !adapter.activity.isFinishing) {
+                                if (isActive && !adapter.activity.isFinishing && !adapter.activity.isDestroyed) {
                                     target = Glide.with(adapter.activity).load(it).skipMemoryCache(true).into(object : DrawableImageViewTarget(icon) {
                                         override fun onResourceReady(
                                             resource: Drawable,
