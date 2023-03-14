@@ -11,6 +11,7 @@
     <string name="mkdir">Crear carpeta</string>
     <string name="dir_empty">Directorio vacío</string>
     <string name="warning">¡Advertencia!</string>
+    <string name="ask_lock_volume">¿Seguro que quieres bloquear este volumen?</string>
     <string name="ok">Aceptar</string>
     <string name="cancel">Cancelar</string>
     <string name="enter_folder_name">Nombre de la carpeta:</string>
@@ -182,6 +183,7 @@
     <string name="remove">Eliminar</string>
     <string name="settings">Ajustes</string>
     <string name="select_all">Seleccionar todo</string>
+    <string name="remove_fingerprint">Eliminar huella dactilar</string>
     <string name="unrecoverable_key_exception_msg">%s. No se puede cargar la clave de encriptación.</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
     <string name="delete_hidden_volume_question">%s está oculto, ¿sólo quieres olvidar la ruta del volumen o también BORRAR todo su CONTENIDO?</string>
@@ -242,4 +244,18 @@
     <string name="file_op_delete_msg">Eliminando archivos…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, Sólo lectura)</string>
+    <string name="io_error">I/O Error.</string>
+    <string name="use_fingerprint">Utilizar huella dactilar en lugar de la contraseña actual</string>
+    <string name="remember_volume">Recordar volumen</string>
+    <string name="open_volume">Abrir volumen</string>
+    <string name="choose_existing_volume">Por favor seleccione un volumen existente</string>
+    <string name="volume_unlocked">Volumen desbloqueado</string>
+    <string name="lock_volume">Bloquear volumen</string>
+    <string name="lock">Bloquear</string>
+    <string name="ux">UX</string>
+    <string name="theme_color">Color del tema</string>
+    <string name="theme_color_summary">Cambiar el color del tema de la aplicación</string>
+    <string name="black_theme">Tema en negro</string>
+    <string name="password_fallback">Reintroducir contraseña</string>
+    <string name="password_fallback_summary">Solicitar la contraseña cuando se cancela la autenticación por huella dactilar</string>
 </resources>
