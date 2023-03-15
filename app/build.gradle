@@ -45,7 +45,7 @@ android {
         }
     }
 
-    if (!file("fdroid").exists()) {
+    if (!hasProperty("nosplits")) {
         splits {
             abi {
                 enable true

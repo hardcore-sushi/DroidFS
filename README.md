@@ -1,6 +1,8 @@
 # DroidFS
-DroidFS is an alternative way to use encrypted overlay filesystems on Android that uses its own internal file explorer instead of mounting virtual volumes.
-It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [CryFS](https://github.com/cryfs/cryfs) (alpha).
+An alternative way to use encrypted virtual filesystems on Android that uses its own internal file explorer instead of mounting volumes.
+It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [CryFS](https://github.com/cryfs/cryfs).
+
+For mortals: An encrypted file manager for Android.
 
 <p align="center">
 <img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" height="500">
@@ -14,22 +16,29 @@ It shouldn't be considered as an absolute safe way to store files.
 DroidFS cannot protect you from screen recording apps, keyloggers, apk backdooring, compromised root accesses, memory dumps etc.
 Do not use this app with volumes containing sensitive data unless you know exactly what you are doing.
 
+# Features
+- Compatible with original encrypted volume implementations
+- Internal support for video, audio, images, text and PDF files
+- Built-in camera to take on-the-fly encrypted photos and videos
+- Unlocking volumes using fingerprint authentication
+- Volume auto-locking when the app goes in background
+
 # Unsafe features
-DroidFS allows you to enable/disable unsafe features to fit your needs between security and comfort.
-It is strongly recommended to read the documentation of a feature before enabling it.
+Some available features are considered risky and are therefore disabled by default. It is strongly recommended that you read the following documentation if you wish to activate one of these options.
 
 <ul>
   <li><h4>Allow screenshots:</h4>
   Disable the secure flag of DroidFS activities. This will allow you to take screenshots from the app, but will also allow other apps to record the screen while using DroidFS.
+
   Note: apps with root access don't care about this flag: they can take screenshots or record the screen of any app without any permissions.
   </li>
-  <li><h4>Allow opening files with other applications *:</h4>
+  <li><h4>Allow opening files with other applications*:</h4>
   Decrypt and open file using external apps. These apps could save and send the files thus opened.
   </li>
   <li><h4>Allow exporting files:</h4>
   Decrypt and write file to disk (external storage). Any app with storage permissions could access exported files.
   </li>
-  <li><h4>Allow sharing files via the android share menu *:</h4>
+  <li><h4>Allow sharing files via the android share menu*:</h4>
   Decrypt and share file with other apps. These apps could save and send the files thus shared.
   </li>
   <li><h4>Keep volume open when the app goes in background:</h4>
@@ -65,17 +74,17 @@ __Don't install the APK if the checksums don't match!__
 F-Droid APKs should be signed with the F-Droid key. More details [here](https://f-droid.org/docs/Release_Channels_and_Signing_Keys).
 
 # Permissions
-DroidFS need some permissions to work properly. Here is why:
+DroidFS needs some permissions for certain features. However, you are free to deny them if you do not wish to use these features.
 
 <ul>
   <li><h4>Read & write access to shared storage:</h4>
-  Required for creating, opening and modifying volumes and for importing/exporting files to/from volumes.
+  Required to access volumes located on shared storage.
   </li>
   <li><h4>Biometric/Fingerprint hardware:</h4>
   Required to encrypt/decrypt password hashes using a fingerprint protected key.
   </li>
   <li><h4>Camera:</h4>
-  Needed to take photos & videos directly encrypted inside DroidFS. You can deny this permission if you don't want to use it.
+  Required to take encrypted photos or videos directly from the app.
   </li>
   <li><h4>Record audio:</h4>
   Required if you want sound on video recorded with DroidFS.
@@ -102,5 +111,5 @@ Thanks to these open source projects that DroidFS uses:
 ### Borrowed code:
 - [MaterialFiles](https://github.com/zhanghai/MaterialFiles) for Kotlin natural sorting implementation
 ### Libraries:
-- [Glide](https://github.com/bumptech/glide/) to display pictures
+- [Glide](https://github.com/bumptech/glide) to display pictures
 - [ExoPlayer](https://github.com/google/ExoPlayer) to play media files

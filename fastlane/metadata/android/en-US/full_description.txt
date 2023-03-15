@@ -1,25 +1,26 @@
-DroidFS is an alternative way to use encrypted overlay file-systems on Android that uses its own internal file explorer instead of mounting virtual volumes. This allows you to store files in encrypted virtual volumes that other apps can't decrypt.
+DroidFS is an alternative way to use encrypted overlay file-systems on Android that uses its own internal file explorer instead of mounting volumes. This allows you to store files in encrypted vaults that other apps can't decrypt.
 Currently, DroidFS supports the following encrypted containers:
 - gocryptfs (https://github.com/rfjakob/gocryptfs): encrypts file contents and file names but doesn't hide directory structure or file sizes.
 - CryFS (https://github.com/cryfs/cryfs): slower, but encrypts everything and obfuscates file sizes.
 
 <b>Features:</b>
-- Volumes fully compatibles with their original implementations
-- Internal opening of images, videos, audios, PDF and text files
-- Common file manager operations: copy, move, rename, create, delete
-- Internal and shared storage support
-- Cross-volume imports
-- Internal camera to take encrypted pictures and videos
+- Compatible with original encrypted volume implementations
+- Internal support for video, audio, images, text and PDF files
+- Built-in camera to take on-the-fly encrypted photos and videos
+- Unlocking volumes using fingerprint authentication
+- Volume auto-locking when the app goes in background
 
 <b>Permissions:</b>
-<b>Read & write access to shared storage:</b> required to create, open and modify volumes and import/export files to/from volumes.
+<b>Read & write access to shared storage:</b> required to access volumes located on shared storage.
 <b>Biometric/Fingerprint hardware:</b> needed to encrypt/decrypt password hashes using a fingerprint protected key.
-<b>Camera:</b> required to take encrypted photos or videos directly from DroidFS. You can deny this permission if you don't want to use this feature.
+<b>Camera:</b> required to take encrypted photos or videos directly from the app.
 <b>Record audio:</b> required if you want sound on videos recorded with DroidFS.
+
+All of these permissions can be denied if you don't want to use the corresponding feature.
 
 DroidFS is free, open-source, and you can find the project's repository:
 - on GitHub: https://github.com/hardcore-sushi/DroidFS
 - on the Gitea instance of the Chapril project: https://forge.chapril.org/hardcoresushi/DroidFS
 
 <b>Warning !</b>
-Security is relative. DroidFS does not come with any warranty and should not be considered as an absolute safe way to store files.
+Security is neither absolute nor definitive. DroidFS does not come with any warranty and should not be considered as an absolute safe way to store files.
