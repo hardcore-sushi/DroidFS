@@ -69,22 +69,22 @@ public final class Recording implements AutoCloseable {
     }
 
     /**
-     * Creates an {@link SucklessRecording} from a {@link PendingRecording} and recording ID.
+     * Creates an {@link Recording} from a {@link PendingRecording} and recording ID.
      *
      * <p>The recording ID is expected to be unique to the recorder that generated the pending
      * recording.
      */
     @NonNull
-    static SucklessRecording from(@NonNull SucklessPendingRecording pendingRecording, long recordingId) {
+    static Recording from(@NonNull PendingRecording pendingRecording, long recordingId) {
         Preconditions.checkNotNull(pendingRecording, "The given PendingRecording cannot be null.");
-        return new SucklessRecording(pendingRecording.getRecorder(),
+        return new Recording(pendingRecording.getRecorder(),
                 recordingId,
                 pendingRecording.getOutputOptions(),
                 /*finalizedOnCreation=*/false);
     }
 
     /**
-     * Creates an {@link SucklessRecording} from a {@link PendingRecording} and recording ID in a
+     * Creates an {@link Recording} from a {@link PendingRecording} and recording ID in a
      * finalized state.
      *
      * <p>This can be used if there was an error setting up the active recording and it would not
@@ -94,10 +94,10 @@ public final class Recording implements AutoCloseable {
      * recording.
      */
     @NonNull
-    static SucklessRecording createFinalizedFrom(@NonNull SucklessPendingRecording pendingRecording,
-                                                 long recordingId) {
+    static Recording createFinalizedFrom(@NonNull PendingRecording pendingRecording,
+            long recordingId) {
         Preconditions.checkNotNull(pendingRecording, "The given PendingRecording cannot be null.");
-        return new SucklessRecording(pendingRecording.getRecorder(),
+        return new Recording(pendingRecording.getRecorder(),
                 recordingId,
                 pendingRecording.getOutputOptions(),
                 /*finalizedOnCreation=*/true);
@@ -207,7 +207,6 @@ public final class Recording implements AutoCloseable {
      * {@link PendingRecording#start(Executor, Consumer)}. Once the active recording is
      * stopped, a {@link VideoRecordEvent.Finalize} event will be sent to the listener.
      *
-     * @hide
      */
     @RestrictTo(LIBRARY_GROUP)
     public boolean isClosed() {

@@ -210,7 +210,6 @@ public final class SucklessRecording implements AutoCloseable {
      * {@link PendingRecording#start(Executor, Consumer)}. Once the active recording is
      * stopped, a {@link VideoRecordEvent.Finalize} event will be sent to the listener.
      *
-     * @hide
      */
     @RestrictTo(LIBRARY_GROUP)
     public boolean isClosed() {
