@@ -2,9 +2,10 @@ package sushi.hardcore.droidfs.video_recording
 
 import android.media.MediaCodec
 import android.media.MediaFormat
+import androidx.camera.video.MediaMuxer
 import java.nio.ByteBuffer
 
-class MediaMuxer(val writer: SeekableWriter) {
+class FFmpegMuxer(val writer: SeekableWriter): MediaMuxer {
     external fun allocContext(): Long
     external fun addVideoTrack(formatContext: Long, bitrate: Int, width: Int, height: Int, orientationHint: Int): Int
     external fun addAudioTrack(formatContext: Long, bitrate: Int, sampleRate: Int, channelCount: Int): Int
@@ -13,75 +14,70 @@ class MediaMuxer(val writer: SeekableWriter) {
     external fun writeTrailer(formatContext: Long)
     external fun release(formatContext: Long)
 
-    companion object {
-        const val VIDEO_TRACK_INDEX = 0
-        const val AUDIO_TRACK_INDEX = 1
-    }
-
     var formatContext: Long?
 
-    var orientationHint = 0
-    var realVideoTrackIndex: Int? = null
-    var audioFrameSize: Int? = null
-    var firstPts: Long? = null
-    private var audioPts = 0L
+    var orientation = 0
+    private var videoTrackIndex: Int? = null
+    private var audioTrackIndex: Int? = null
+    private var firstPts: Long? = null
 
     init {
         System.loadLibrary("mux")
         formatContext = allocContext()
     }
 
-    fun writeSampleData(trackIndex: Int, buffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) {
+    override fun writeSampleData(trackIndex: Int, buffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) {
         val byteArray = ByteArray(bufferInfo.size)
         buffer.get(byteArray)
         if (firstPts == null) {
             firstPts = bufferInfo.presentationTimeUs
         }
-        if (trackIndex == AUDIO_TRACK_INDEX) {
-            writePacket(formatContext!!, byteArray, audioPts, -1, false)
-            audioPts += audioFrameSize!!
-        } else {
-            writePacket(
-                formatContext!!, byteArray, bufferInfo.presentationTimeUs - firstPts!!, realVideoTrackIndex!!,
-                bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
-            )
-        }
+        writePacket(
+            formatContext!!, byteArray, bufferInfo.presentationTimeUs - firstPts!!, trackIndex,
+            bufferInfo.flags and MediaCodec.BUFFER_FLAG_KEY_FRAME != 0
+        )
     }
 
-    fun addTrack(format: MediaFormat): Int {
-        val mime = format.getString("mime")!!.split('/')
-        val bitrate = format.getInteger("bitrate")
+    override fun addTrack(mediaFormat: MediaFormat): Int {
+        val mime = mediaFormat.getString("mime")!!.split('/')
+        val bitrate = mediaFormat.getInteger("bitrate")
         return if (mime[0] == "audio") {
-            audioFrameSize = addAudioTrack(
+            addAudioTrack(
                 formatContext!!,
                 bitrate,
-                format.getInteger("sample-rate"),
-                format.getInteger("channel-count")
-            )
-            AUDIO_TRACK_INDEX
+                mediaFormat.getInteger("sample-rate"),
+                mediaFormat.getInteger("channel-count")
+            ).also {
+                audioTrackIndex = it
+            }
         } else {
-            realVideoTrackIndex = addVideoTrack(
+            addVideoTrack(
                 formatContext!!,
                 bitrate,
-                format.getInteger("width"),
-                format.getInteger("height"),
-                orientationHint
-            )
-            VIDEO_TRACK_INDEX
+                mediaFormat.getInteger("width"),
+                mediaFormat.getInteger("height"),
+                orientation
+            ).also {
+               videoTrackIndex = it
+            }
         }
     }
 
-    fun start() {
+    override fun start() {
         writeHeaders(formatContext!!)
     }
-    fun stop() {
+    override fun stop() {
         writeTrailer(formatContext!!)
     }
-    fun release() {
+
+    override fun setOrientationHint(degree: Int) {
+        orientation = degree
+    }
+
+    override fun release() {
         writer.close()
         release(formatContext!!)
         firstPts = null
-        audioPts = 0
         formatContext = null
     }
 

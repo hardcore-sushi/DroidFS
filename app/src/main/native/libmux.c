@@ -31,7 +31,7 @@ int64_t seek(void* opaque, int64_t offset, int whence) {
     return offset;
 }
 
-jlong Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_allocContext(JNIEnv *env, jobject thiz) {
+jlong Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_allocContext(JNIEnv *env, jobject thiz) {
     const AVOutputFormat *format = av_guess_format("mp4", NULL, NULL);
     struct Muxer* muxer = malloc(sizeof(struct Muxer));
     (*env)->GetJavaVM(env, &muxer->jvm);
@@ -47,8 +47,8 @@ jlong Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_allocContext(JNIEn
 }
 
 JNIEXPORT jint JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addAudioTrack(JNIEnv *env, jobject thiz, jlong format_context, jint bitrate, jint sample_rate,
-                                                     jint channel_count) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_addAudioTrack(JNIEnv *env, jobject thiz, jlong format_context, jint bitrate, jint sample_rate,
+                                                                       jint channel_count) {
     const AVCodec* encoder = avcodec_find_encoder(AV_CODEC_ID_AAC);
     AVStream* stream = avformat_new_stream((AVFormatContext *) format_context, NULL);
     AVCodecContext* codec_context = avcodec_alloc_context3(encoder);
@@ -62,17 +62,16 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addAudioTrack(JNIEnv *en
     codec_context->flags = AV_CODEC_FLAG_GLOBAL_HEADER;
     avcodec_open2(codec_context, encoder, NULL);
     avcodec_parameters_from_context(stream->codecpar, codec_context);
-    int frame_size = codec_context->frame_size;
     avcodec_free_context(&codec_context);
-    return frame_size;
+    return stream->index;
 }
 
 JNIEXPORT jint JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addVideoTrack(JNIEnv *env, jobject thiz,
-                                                                      jlong format_context,
-                                                                      jint bitrate, jint width,
-                                                                      jint height,
-                                                                      jint orientation_hint) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_addVideoTrack(JNIEnv *env, jobject thiz,
+                                                                       jlong format_context,
+                                                                       jint bitrate, jint width,
+                                                                       jint height,
+                                                                       jint orientation_hint) {
     AVStream* stream = avformat_new_stream((AVFormatContext *) format_context, NULL);
     stream->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
     stream->codecpar->codec_id = AV_CODEC_ID_H264;
@@ -85,25 +84,22 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_addVideoTrack(JNIEnv *en
 }
 
 JNIEXPORT jint JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_writeHeaders(JNIEnv *env, jobject thiz, jlong format_context) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_writeHeaders(JNIEnv *env, jobject thiz, jlong format_context) {
     return avformat_write_header((AVFormatContext *) format_context, NULL);
 }
 
 JNIEXPORT void JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_writePacket(JNIEnv *env, jobject thiz, jlong format_context,
-                                                   jbyteArray buffer, jlong pts, jint stream_index,
-                                                   jboolean is_key_frame) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_writePacket(JNIEnv *env, jobject thiz, jlong format_context,
+                                                                     jbyteArray buffer, jlong pts, jint stream_index,
+                                                                     jboolean is_key_frame) {
     AVPacket* packet = av_packet_alloc();
     int size = (*env)->GetArrayLength(env, buffer);
     av_new_packet(packet, size);
-    packet->pts = pts;
-    if (stream_index >= 0) { //video
-        packet->stream_index = stream_index;
-        AVRational r;
-        r.num = 1;
-        r.den = 1000000;
-        av_packet_rescale_ts(packet, r, ((AVFormatContext *)format_context)->streams[stream_index]->time_base);
-    }
+    packet->stream_index = stream_index;
+    AVRational r;
+    r.num = 1;
+    r.den = 1000000;
+    packet->pts = av_rescale_q(pts, r, ((AVFormatContext*)format_context)->streams[stream_index]->time_base);
     uint8_t* buff = malloc(size);
     (*env)->GetByteArrayRegion(env, buffer, 0, size, (signed char*)buff);
     packet->data = buff;
@@ -116,12 +112,12 @@ Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_writePacket(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_writeTrailer(JNIEnv *env, jobject thiz, jlong format_context) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_writeTrailer(JNIEnv *env, jobject thiz, jlong format_context) {
     av_write_trailer((AVFormatContext *) format_context);
 }
 
 JNIEXPORT void JNICALL
-Java_sushi_hardcore_droidfs_video_1recording_MediaMuxer_release(JNIEnv *env, jobject thiz, jlong format_context) {
+Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_release(JNIEnv *env, jobject thiz, jlong format_context) {
     AVFormatContext* fc = (AVFormatContext *) format_context;
     av_free(fc->pb->buffer);
     free(fc->pb->opaque);

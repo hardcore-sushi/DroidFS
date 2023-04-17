@@ -19,10 +19,24 @@ import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.camera.camera2.interop.Camera2CameraInfo
-import androidx.camera.core.*
+import androidx.camera.core.AspectRatio
+import androidx.camera.core.Camera
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
+import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCaptureException
+import androidx.camera.core.Preview
+import androidx.camera.core.UseCase
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.video.MuxerOutputOptions
+import androidx.camera.video.Quality
+import androidx.camera.video.QualitySelector
+import androidx.camera.video.SucklessRecorder
+import androidx.camera.video.SucklessRecording
+import androidx.camera.video.VideoCapture
+import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
@@ -32,8 +46,8 @@ import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.video_recording.FFmpegMuxer
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
-import sushi.hardcore.droidfs.video_recording.VideoCapture
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.ByteArrayInputStream
@@ -42,6 +56,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
 
+@SuppressLint("RestrictedApi")
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     companion object {
         private const val CAMERA_PERMISSION_REQUEST_CODE = 0
@@ -73,11 +88,17 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private lateinit var cameraSelector: CameraSelector
     private val cameraPreview = Preview.Builder().build()
     private var imageCapture: ImageCapture? = null
-    private var videoCapture: VideoCapture? = null
+    private var videoCapture: VideoCapture<SucklessRecorder>? = null
+    private var videoRecorder: SucklessRecorder? = null
+    private var videoRecording: SucklessRecording? = null
     private var camera: Camera? = null
     private var resolutions: List<Size>? = null
     private var currentResolutionIndex: Int = 0
     private var currentResolution: Size? = null
+    private val aspectRatios = arrayOf(AspectRatio.RATIO_16_9, AspectRatio.RATIO_4_3)
+    private var currentAspectRatioIndex = 0
+    private var qualities: List<Quality>? = null
+    private var currentQualityIndex = -1
     private var captureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
     private var isBackCamera = true
     private var isInVideoMode = false
@@ -118,48 +139,74 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
 
         binding.imageCaptureMode.setOnClickListener {
-            val currentIndex = if (captureMode == ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY) {
-                0
-            } else {
-                1
-            }
-            CustomAlertDialogBuilder(this, theme)
-                .setTitle(R.string.camera_optimization)
-                .setSingleChoiceItems(arrayOf(getString(R.string.maximize_quality), getString(R.string.minimize_latency)), currentIndex) { dialog, which ->
-                    val resId: Int
-                    val newCaptureMode = if (which == 0) {
-                        resId = R.drawable.icon_high_quality
-                        ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
-                    } else {
-                        resId = R.drawable.icon_speed
-                        ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
-                    }
-                    if (newCaptureMode != captureMode) {
-                        captureMode = newCaptureMode
-                        binding.imageCaptureMode.setImageResource(resId)
-                        if (!isInVideoMode) {
-                            cameraProvider.unbind(imageCapture)
-                            refreshImageCapture()
-                            cameraProvider.bindToLifecycle(this, cameraSelector, imageCapture)
+            if (isInVideoMode) {
+                qualities?.let { qualities ->
+                    val qualityNames = qualities.map {
+                        when (it) {
+                            Quality.UHD -> "UHD"
+                            Quality.FHD -> "FHD"
+                            Quality.HD -> "HD"
+                            Quality.SD -> "SD"
+                            else -> throw IllegalArgumentException("Invalid quality: $it")
                         }
-                    }
-                    dialog.dismiss()
+                    }.toTypedArray()
+                    CustomAlertDialogBuilder(this, theme)
+                        .setTitle("Choose quality:")
+                        .setSingleChoiceItems(qualityNames, currentQualityIndex) { dialog, which ->
+                            currentQualityIndex = which
+                            rebindUseCases()
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(R.string.cancel, null)
+                        .show()
                 }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        }
-        binding.imageRatio.setOnClickListener {
-            resolutions?.let {
+            } else {
                 CustomAlertDialogBuilder(this, theme)
-                    .setTitle(R.string.choose_resolution)
-                    .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
-                        currentResolution = resolutions!![which]
-                        currentResolutionIndex = which
-                        setupCamera()
+                    .setTitle(R.string.camera_optimization)
+                    .setSingleChoiceItems(
+                        arrayOf(getString(R.string.maximize_quality), getString(R.string.minimize_latency)),
+                        if (captureMode == ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY) 0 else 1
+                    ) { dialog, which ->
+                        val newCaptureMode = if (which == 0) {
+                            ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
+                        } else {
+                            ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY
+                        }
+                        if (newCaptureMode != captureMode) {
+                            captureMode = newCaptureMode
+                            setCaptureModeIcon()
+                            rebindUseCases()
+                        }
                         dialog.dismiss()
                     }
                     .setNegativeButton(R.string.cancel, null)
                     .show()
+            }
+        }
+        binding.imageRatio.setOnClickListener {
+            if (isInVideoMode) {
+                CustomAlertDialogBuilder(this, theme)
+                    .setTitle("Aspect ratio:")
+                    .setSingleChoiceItems(arrayOf("16:9", "4:3"), currentAspectRatioIndex) { dialog, which ->
+                        currentAspectRatioIndex = which
+                        rebindUseCases()
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            } else {
+                resolutions?.let {
+                    CustomAlertDialogBuilder(this, theme)
+                        .setTitle(R.string.choose_resolution)
+                        .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
+                            currentResolution = resolutions!![which]
+                            currentResolutionIndex = which
+                            rebindUseCases()
+                            dialog.dismiss()
+                        }
+                        .setNegativeButton(R.string.cancel, null)
+                        .show()
+                }
             }
         }
         binding.imageTimer.setOnClickListener {
@@ -207,7 +254,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageModeSwitch.setOnClickListener {
             isInVideoMode = !isInVideoMode
-            setupCamera()
+            rebindUseCases()
             binding.imageFlash.setImageResource(if (isInVideoMode) {
                 binding.recordVideoButton.visibility = View.VISIBLE
                 binding.takePhotoButton.visibility = View.GONE
@@ -219,6 +266,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 binding.imageModeSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.icon_photo)?.mutate()?.also {
                     it.setTint(ContextCompat.getColor(this, R.color.neutralIconTint))
                 })
+                setCaptureModeIcon()
                 imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
                 R.drawable.icon_flash_off
             } else {
@@ -243,6 +291,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 true
             }
             resolutions = null
+            qualities = null
             setupCamera()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
@@ -299,6 +348,18 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
     }
 
+    private fun setCaptureModeIcon() {
+        binding.imageCaptureMode.setImageResource(if (isInVideoMode) {
+           R.drawable.icon_high_quality
+        } else {
+             if (captureMode == ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY) {
+                 R.drawable.icon_speed
+             } else {
+                 R.drawable.icon_high_quality
+             }
+        })
+    }
+
     private fun adaptPreviewSize(resolution: Size) {
         val screenWidth = resources.displayMetrics.widthPixels
         val screenHeight = resources.displayMetrics.heightPixels
@@ -327,43 +388,49 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     }
 
     private fun refreshVideoCapture() {
-        videoCapture = VideoCapture.Builder().apply {
-            currentResolution?.let {
-                setTargetResolution(it)
-            }
-        }.build()
+        val recorderBuilder = SucklessRecorder.Builder()
+            .setExecutor(executor)
+            .setAspectRatio(aspectRatios[currentAspectRatioIndex])
+        if (currentQualityIndex != -1) {
+            recorderBuilder.setQualitySelector(QualitySelector.from(qualities!![currentQualityIndex]))
+        }
+        videoRecorder = recorderBuilder.build()
+        videoCapture = VideoCapture.withOutput(videoRecorder!!)
     }
 
-    @SuppressLint("RestrictedApi")
+    private fun rebindUseCases(): UseCase {
+        cameraProvider.unbindAll()
+        val currentUseCase = (if (isInVideoMode) {
+            refreshVideoCapture()
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, videoCapture)
+            if (qualities == null) {
+                qualities = QualitySelector.getSupportedQualities(camera!!.cameraInfo)
+            }
+            videoCapture
+        } else {
+            refreshImageCapture()
+            camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
+            if (resolutions == null) {
+                val info = Camera2CameraInfo.from(camera!!.cameraInfo)
+                val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
+                val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
+                characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
+                    resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat).map { it.swap() }
+                }
+            }
+            imageCapture
+        })!!
+        adaptPreviewSize(currentUseCase.attachedSurfaceResolution!!.swap())
+        return currentUseCase
+    }
+
     private fun setupCamera() {
         if (permissionsGranted && ::extensionsManager.isInitialized && ::cameraProvider.isInitialized) {
             cameraSelector = if (isBackCamera){ CameraSelector.DEFAULT_BACK_CAMERA } else { CameraSelector.DEFAULT_FRONT_CAMERA }
             if (extensionsManager.isExtensionAvailable(cameraSelector, ExtensionMode.AUTO)) {
                 cameraSelector = extensionsManager.getExtensionEnabledCameraSelector(cameraSelector, ExtensionMode.AUTO)
             }
-
-            cameraProvider.unbindAll()
-
-            val currentUseCase = (if (isInVideoMode) {
-                refreshVideoCapture()
-                camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, videoCapture)
-                videoCapture
-            } else {
-                refreshImageCapture()
-                camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
-                imageCapture
-            })!!
-
-            adaptPreviewSize(currentResolution ?: currentUseCase.attachedSurfaceResolution!!.swap())
-
-            if (resolutions == null) {
-                val info = Camera2CameraInfo.from(camera!!.cameraInfo)
-                val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
-                characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
-                    resolutions = streamConfigurationMap.getOutputSizes(currentUseCase.imageFormat).map { it.swap() }
-                }
-            }
+            rebindUseCases()
         }
     }
 
@@ -431,36 +498,60 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     @SuppressLint("MissingPermission")
     private fun onClickRecordVideo() {
         if (isRecording) {
-            videoCapture?.stopRecording()
-            isRecording = false
+            videoRecording?.stop()
         } else if (!isWaitingForTimer) {
             val path = getOutputPath(true)
             startTimerThen {
-                val fileHandle = encryptedVolume.openFile(path)
-                videoCapture?.startRecording(VideoCapture.OutputFileOptions(object : SeekableWriter {
-                    var offset = 0L
-                    override fun write(byteArray: ByteArray) {
-                        offset += encryptedVolume.write(fileHandle, offset, byteArray, 0, byteArray.size.toLong())
+                var withAudio = true
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                        withAudio = false
                     }
-                    override fun seek(offset: Long) {
-                        this.offset = offset
+                }
+                videoRecording = videoRecorder?.prepareRecording(
+                    this,
+                    MuxerOutputOptions(
+                        FFmpegMuxer(object : SeekableWriter {
+                            private val fileHandle = encryptedVolume.openFile(path)
+                            private var offset = 0L
+
+                            override fun close() {
+                                encryptedVolume.closeFile(fileHandle)
+                            }
+
+                            override fun seek(offset: Long) {
+                                this.offset = offset
+                            }
+
+                            override fun write(buffer: ByteArray) {
+                                offset += encryptedVolume.write(fileHandle, offset, buffer, 0, buffer.size.toLong())
+                            }
+                        })
+                    )
+                )?.apply {
+                    if (withAudio) {
+                        withAudioEnabled()
                     }
-                    override fun close() {
-                        encryptedVolume.closeFile(fileHandle)
+                }?.start(executor) {
+                    when (it) {
+                        is VideoRecordEvent.Start -> {
+                            binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
+                            isRecording = true
+                        }
+                        is VideoRecordEvent.Finalize -> {
+                            if (it.hasError()) {
+                                it.cause?.printStackTrace()
+                                Toast.makeText(applicationContext, it.cause?.message, Toast.LENGTH_SHORT).show()
+                                videoRecording?.close()
+                                videoRecording = null
+                            } else {
+                                Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
+                            }
+                            binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                            isRecording = false
+                        }
                     }
-                }), executor, object : VideoCapture.OnVideoSavedCallback {
-                    override fun onVideoSaved() {
-                        Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
-                        binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
-                    }
-                    override fun onError(videoCaptureError: Int, message: String, cause: Throwable?) {
-                        Toast.makeText(applicationContext, message, Toast.LENGTH_SHORT).show()
-                        cause?.printStackTrace()
-                        binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
-                    }
-                })
-                binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
-                isRecording = true
+                }
             }
         }
     }
