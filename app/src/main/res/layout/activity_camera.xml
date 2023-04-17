@@ -18,41 +18,49 @@
         android:layout_height="40dp"
         android:layout_marginTop="20dp">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_capture_mode"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_high_quality"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_ratio"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"/>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_ratio"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_aspect_ratio"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_timer"
             app:layout_constraintStart_toEndOf="@id/image_capture_mode"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_timer"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_timer_off"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/image_flash"
             app:layout_constraintStart_toEndOf="@id/image_ratio"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_flash"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_flash_auto"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/image_timer"
@@ -74,11 +82,13 @@
         android:layout_alignParentBottom="true"
         android:layout_marginBottom="30dp">
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_mode_switch"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_video"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             android:layout_alignEnd="@id/layout_record_buttons"
             android:layout_marginEnd="120dp"
             android:layout_centerVertical="true"/>
@@ -104,11 +114,13 @@
 
         </RelativeLayout>
 
-        <ImageView
+        <ImageButton
             android:id="@+id/image_camera_switch"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:src="@drawable/icon_camera_front"
+            android:background="#00000000"
+            android:scaleType="fitCenter"
             android:layout_alignStart="@id/layout_record_buttons"
             android:layout_marginStart="120dp"
             android:layout_centerVertical="true"/>

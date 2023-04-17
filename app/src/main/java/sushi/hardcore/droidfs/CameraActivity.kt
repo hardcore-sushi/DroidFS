@@ -14,6 +14,7 @@ import android.view.*
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
@@ -533,21 +534,30 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         withAudioEnabled()
                     }
                 }?.start(executor) {
+                    val buttons = arrayOf(binding.imageCaptureMode, binding.imageRatio, binding.imageTimer, binding.imageModeSwitch, binding.imageCameraSwitch)
                     when (it) {
                         is VideoRecordEvent.Start -> {
                             binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
+                            for (i in buttons) {
+                                i.isEnabled = false
+                                i.alpha = 0.5F
+                            }
                             isRecording = true
                         }
                         is VideoRecordEvent.Finalize -> {
                             if (it.hasError()) {
                                 it.cause?.printStackTrace()
-                                Toast.makeText(applicationContext, it.cause?.message, Toast.LENGTH_SHORT).show()
+                                Toast.makeText(applicationContext, it.cause?.message ?: ("Error: " + it.error), Toast.LENGTH_SHORT).show()
                                 videoRecording?.close()
                                 videoRecording = null
                             } else {
                                 Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
                             }
                             binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
+                            for (i in buttons) {
+                                i.isEnabled = true
+                                i.alpha = 1F
+                            }
                             isRecording = false
                         }
                     }
@@ -588,7 +598,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         orientedIcons.map { it.startAnimation(rotateAnimation) }
         previousOrientation = realOrientation
         imageCapture?.targetRotation = newOrientation
-        videoCapture?.setTargetRotation(newOrientation)
+        videoCapture?.targetRotation = newOrientation
     }
 }
 
