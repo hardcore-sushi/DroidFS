@@ -118,13 +118,13 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         volumeOpener.defaultVolumeName?.let { name ->
             val state = savedInstanceState?.getBoolean(OPEN_DEFAULT_VOLUME)
             if (state == true || state == null) {
-                val volumeData = volumeAdapter.volumes.first { it.name == name }
-                if (!volumeManager.isOpen(volumeData)) {
-                    try {
+                try {
+                    val volumeData = volumeAdapter.volumes.first { it.name == name }
+                    if (!volumeManager.isOpen(volumeData)) {
                         openVolume(volumeData)
-                    } catch (e: NoSuchElementException) {
-                        unsetDefaultVolume()
                     }
+                } catch (e: NoSuchElementException) {
+                    unsetDefaultVolume()
                 }
             }
         }
