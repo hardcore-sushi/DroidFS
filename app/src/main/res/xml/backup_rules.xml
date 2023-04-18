@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<data-extraction-rules>
+<data-extraction-rules xmlns:tools="http://schemas.android.com/tools" tools:ignore="FullBackupContent">
     <cloud-backup>
         <exclude domain="file" path="."/>
         <exclude domain="database" path="."/>

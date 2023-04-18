@@ -1,0 +1,9 @@
+- Targeting Android 12L
+- Multi volume openings
+- Adaptive icon
+- Separate color selection & black mode theme
+- Optional password fallback
+- Hide navigation bar in full screen mode
+- Monospace font in text editor
+- Dependencies update
+- Bug fixes

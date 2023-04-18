@@ -46,7 +46,7 @@ abstract class FileViewerActivity: BaseActivity() {
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
         }
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_BARS_BY_SWIPE
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         viewFile()
     }
 
