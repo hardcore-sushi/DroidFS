@@ -25,13 +25,14 @@
         tools:node="remove" /> <!--removing this permission automatically added by exoplayer-->
 
     <application
-        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/BaseTheme"
-        android:name=".VolumeManagerApp">
+        android:name=".VolumeManagerApp"
+        android:fullBackupContent="false"
+        android:dataExtractionRules="@xml/backup_rules">
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
