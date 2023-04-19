@@ -10,6 +10,7 @@
     <string name="mkdir">Создать папку</string>
     <string name="dir_empty">Пусто</string>
     <string name="warning">Предупреждение!</string>
+    <string name="ask_lock_volume">Заблокировать том?</string>
     <string name="cancel">Отмена</string>
     <string name="enter_folder_name">Имя папки:</string>
     <string name="error">Ошибка</string>
@@ -238,4 +239,13 @@
     <string name="remember_volume">Запомнить том</string>
     <string name="open_volume">Открыть том</string>
     <string name="choose_existing_volume">Выберите существующий том</string>
+    <string name="volume_unlocked">Том разблокирован</string>
+    <string name="lock_volume">Заблокировать том</string>
+    <string name="lock">Заблокировать</string>
+    <string name="ux">Интерфейс</string>
+    <string name="theme_color">Цвет темы</string>
+    <string name="theme_color_summary">Изменить цвет темы приложения</string>
+    <string name="black_theme">Чёрная тема</string>
+    <string name="password_fallback">Возврат к паролю</string>
+    <string name="password_fallback_summary">Запрашивать пароль при отмене аутентификации по отпечатку пальца</string>
 </resources>
