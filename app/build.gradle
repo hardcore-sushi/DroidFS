@@ -13,6 +13,12 @@ if (hasProperty("disableGocryptfs")) {
     ext.disableGocryptfs = false
 }
 
+if (hasProperty("nosplits")) {
+	ext.splits = false
+} else {
+	ext.splits = true
+}
+
 android {
     compileSdkVersion 33
     buildToolsVersion "33.0.0"
@@ -44,7 +50,7 @@ android {
         }
     }
 
-    if (!hasProperty("nosplits")) {
+    if (project.ext.splits) {
         splits {
             abi {
                 enable true
