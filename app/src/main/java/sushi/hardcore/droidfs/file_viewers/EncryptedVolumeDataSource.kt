@@ -15,7 +15,7 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     private var bytesRemaining: Long = -1
 
     override fun open(dataSpec: DataSpec): Long {
-        fileHandle = encryptedVolume.openFile(filePath)
+        fileHandle = encryptedVolume.openFileReadMode(filePath)
         fileOffset = dataSpec.position
         val fileSize = encryptedVolume.getAttr(filePath)!!.size
         bytesRemaining = if (dataSpec.length == C.LENGTH_UNSET.toLong()) {

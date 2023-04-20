@@ -481,8 +481,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                                 CustomAlertDialogBuilder(this@CameraActivity, theme)
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.picture_save_failed)
-                                    .setCancelable(false)
-                                    .setPositiveButton(R.string.ok) { _, _ -> finish() }
+                                    .setPositiveButton(R.string.ok, null)
                                     .show()
                             }
                         }
@@ -502,6 +501,15 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             videoRecording?.stop()
         } else if (!isWaitingForTimer) {
             val path = getOutputPath(true)
+            val fileHandle = encryptedVolume.openFileWriteMode(path)
+            if (fileHandle == -1L) {
+                CustomAlertDialogBuilder(this, theme)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.file_creation_failed)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+                return
+            }
             startTimerThen {
                 var withAudio = true
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -513,7 +521,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     this,
                     MuxerOutputOptions(
                         FFmpegMuxer(object : SeekableWriter {
-                            private val fileHandle = encryptedVolume.openFile(path)
                             private var offset = 0L
 
                             override fun close() {

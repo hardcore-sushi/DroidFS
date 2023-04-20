@@ -125,9 +125,9 @@ class FileOperationService : Service() {
 
     private fun copyFile(srcPath: String, dstPath: String, remoteEncryptedVolume: EncryptedVolume = encryptedVolume): Boolean {
         var success = true
-        val srcFileHandle = remoteEncryptedVolume.openFile(srcPath)
+        val srcFileHandle = remoteEncryptedVolume.openFileReadMode(srcPath)
         if (srcFileHandle != -1L) {
-            val dstFileHandle = encryptedVolume.openFile(dstPath)
+            val dstFileHandle = encryptedVolume.openFileWriteMode(dstPath)
             if (dstFileHandle != -1L) {
                 var offset: Long = 0
                 val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)

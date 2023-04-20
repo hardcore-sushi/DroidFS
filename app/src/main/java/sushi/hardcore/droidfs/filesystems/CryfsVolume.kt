@@ -94,7 +94,11 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         writeLong(fusePtr)
     }
 
-    override fun openFile(path: String): Long {
+    override fun openFileReadMode(path: String): Long {
+        return nativeOpen(fusePtr, path, 0)
+    }
+
+    override fun openFileWriteMode(path: String): Long {
         val fileHandle = nativeOpen(fusePtr, path, 0)
         return if (fileHandle == -1L) {
             nativeCreate(fusePtr, path, 0)

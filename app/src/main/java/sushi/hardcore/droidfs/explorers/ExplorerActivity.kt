@@ -241,7 +241,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
         } else {
             val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
-            val handleID = encryptedVolume.openFile(filePath)
+            val handleID = encryptedVolume.openFileWriteMode(filePath)
             if (handleID == -1L) {
                 CustomAlertDialogBuilder(this, theme)
                         .setTitle(R.string.error)

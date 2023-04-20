@@ -73,7 +73,8 @@ abstract class EncryptedVolume: Parcelable {
 
     override fun describeContents() = 0
 
-    abstract fun openFile(path: String): Long
+    abstract fun openFileReadMode(path: String): Long
+    abstract fun openFileWriteMode(path: String): Long
     abstract fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
     abstract fun write(fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int
     abstract fun closeFile(fileHandle: Long): Boolean
@@ -106,7 +107,7 @@ abstract class EncryptedVolume: Parcelable {
 
     fun exportFile(src_path: String, os: OutputStream): Boolean {
         var success = false
-        val srcfileHandle = openFile(src_path)
+        val srcfileHandle = openFileReadMode(src_path)
         if (srcfileHandle != -1L) {
             success = exportFile(srcfileHandle, os)
             closeFile(srcfileHandle)
@@ -127,7 +128,7 @@ abstract class EncryptedVolume: Parcelable {
     }
 
     fun importFile(inputStream: InputStream, dst_path: String): Boolean {
-        val dstfileHandle = openFile(dst_path)
+        val dstfileHandle = openFileWriteMode(dst_path)
         if (dstfileHandle != -1L) {
             var success = true
             var offset: Long = 0
@@ -169,7 +170,7 @@ abstract class EncryptedVolume: Parcelable {
             }
             try {
                 val fileBuff = ByteArray(fileSize.toInt())
-                val fileHandle = openFile(fullPath)
+                val fileHandle = openFileReadMode(fullPath)
                 if (fileHandle == -1L) {
                     Pair(null, 3)
                 } else {

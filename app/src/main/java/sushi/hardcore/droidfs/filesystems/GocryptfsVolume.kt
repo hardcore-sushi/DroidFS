@@ -91,7 +91,11 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
 
     constructor(parcel: Parcel) : this(parcel.readInt())
 
-    override fun openFile(path: String): Long {
+    override fun openFileReadMode(path: String): Long {
+        return native_open_read_mode(sessionID, path).toLong()
+    }
+
+    override fun openFileWriteMode(path: String): Long {
         return native_open_write_mode(sessionID, path, 384).toLong() // 0600
     }
 
