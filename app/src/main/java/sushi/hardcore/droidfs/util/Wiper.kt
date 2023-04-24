@@ -8,10 +8,21 @@ import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import java.io.File
 import java.io.FileOutputStream
+import java.nio.ByteBuffer
 import java.util.*
 import kotlin.math.ceil
 
 object Wiper {
+    fun wipe(byteBuffer: ByteBuffer) {
+        if (byteBuffer.hasArray()) {
+            Arrays.fill(byteBuffer.array(), Byte.MIN_VALUE)
+        } else {
+            for (i in 0 until byteBuffer.limit()) {
+                byteBuffer.put(i, Byte.MIN_VALUE)
+            }
+        }
+    }
+
     private const val buff_size = 4096
     fun wipe(context: Context, uri: Uri): String? {
         val cursor = context.contentResolver.query(uri, null, null, null, null)
