@@ -10,8 +10,9 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 
-class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 4) {
+class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 5) {
     companion object {
+        const val TAG = "VolumeDatabase"
         const val TABLE_NAME = "Volumes"
         const val COLUMN_NAME = "name"
         const val COLUMN_HIDDEN = "hidden"
@@ -42,44 +43,63 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
         File(context.filesDir, VolumeData.VOLUMES_DIRECTORY).mkdir()
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // Adding type column and set it to GOCRYPTFS_VOLUME_TYPE for all existing volumes
-        db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_TYPE BLOB;")
-        db.update(TABLE_NAME, ContentValues().apply {
-            put(COLUMN_TYPE, byteArrayOf(EncryptedVolume.GOCRYPTFS_VOLUME_TYPE))
-        }, null, null)
+    private fun getNewVolumePath(volumeName: String): File {
+        return File(
+            VolumeData(
+                volumeName,
+                true,
+                EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
+            ).getFullPath(context.filesDir.path)
+        ).canonicalFile
+    }
 
-        // Moving hidden volumes to the "volumes" directory
-        if (File(context.filesDir, VolumeData.VOLUMES_DIRECTORY).mkdir()) {
-            val cursor = db.query(
-                TABLE_NAME,
-                arrayOf(COLUMN_NAME),
-                "$COLUMN_HIDDEN=?",
-                arrayOf("1"),
-                null,
-                null,
-                null
-            )
-            while (cursor.moveToNext()) {
-                val volumeName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME))
-                File(
-                    PathUtils.pathJoin(
-                        context.filesDir.path,
-                        volumeName
-                    )
-                ).renameTo(
-                    File(
-                        VolumeData(
-                            volumeName,
-                            true,
-                            EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
-                        ).getFullPath(context.filesDir.path)
-                    ).canonicalFile
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion == 3) {
+            // Adding type column and set it to GOCRYPTFS_VOLUME_TYPE for all existing volumes
+            db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_TYPE BLOB;")
+            db.update(TABLE_NAME, ContentValues().apply {
+                put(COLUMN_TYPE, byteArrayOf(EncryptedVolume.GOCRYPTFS_VOLUME_TYPE))
+            }, null, null)
+
+            // Moving registered hidden volumes to the "volumes" directory
+            if (File(context.filesDir, VolumeData.VOLUMES_DIRECTORY).mkdir()) {
+                val cursor = db.query(
+                    TABLE_NAME,
+                    arrayOf(COLUMN_NAME),
+                    "$COLUMN_HIDDEN=?",
+                    arrayOf("1"),
+                    null,
+                    null,
+                    null
                 )
+                while (cursor.moveToNext()) {
+                    val volumeName = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME))
+                    val success = File(
+                        PathUtils.pathJoin(
+                            context.filesDir.path,
+                            volumeName
+                        )
+                    ).renameTo(getNewVolumePath(volumeName))
+                    if (!success) {
+                        Log.e(TAG, "Failed to move $volumeName")
+                    }
+                }
+                cursor.close()
+            } else {
+                Log.e(TAG, "Volumes directory creation failed while upgrading")
             }
-            cursor.close()
-        } else {
-            Log.e("VolumeDatabase", "Volumes directory creation failed while upgrading")
+        }
+        // Moving unregistered hidden volumes to the "volumes" directory
+        File(context.filesDir.path).listFiles()?.let {
+            for (i in it) {
+                if (i.isDirectory && i.name != Constants.CRYFS_LOCAL_STATE_DIR && i.name != VolumeData.VOLUMES_DIRECTORY) {
+                    if (EncryptedVolume.getVolumeType(i.path) != (-1).toByte()) {
+                        if (!i.renameTo(getNewVolumePath(i.name))) {
+                            Log.e(TAG, "Failed to move "+i.name)
+                        }
+                    }
+                }
+            }
         }
     }
 
