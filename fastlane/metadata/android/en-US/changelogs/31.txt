@@ -1,0 +1,8 @@
+- Monochrome icon support
+- Closing volumes when app is removed from recent tasks
+- Dependencies update
+
+Bug fixes:
+- Opening read-only gocryptfs volumes
+- Right password encoding
+- Recovery of unregistered hidden volumes
