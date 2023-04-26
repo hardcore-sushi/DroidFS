@@ -1683,4 +1683,3 @@ public class EncoderImpl implements Encoder {
     }
 }
 
-

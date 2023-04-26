@@ -1675,4 +1675,3 @@ public class SucklessEncoderImpl implements Encoder {
     }
 }
 
-

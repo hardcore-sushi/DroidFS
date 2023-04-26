@@ -223,9 +223,9 @@ public final class SucklessRecorder implements VideoOutput {
          */
         DISABLED,
         /**
-         * The recording is being recorded with audio.
+         * Audio recording is enabled for the running recording.
          */
-        ACTIVE,
+        ENABLED,
         /**
          * The audio encoder encountered errors.
          */
@@ -817,6 +817,24 @@ public final class SucklessRecorder implements VideoOutput {
         }
     }
 
+    void mute(@NonNull SucklessRecording activeRecording, boolean muted) {
+        synchronized (mLock) {
+            if (!isSameRecording(activeRecording, mPendingRecordingRecord) && !isSameRecording(
+                    activeRecording, mActiveRecordingRecord)) {
+                // If this Recording is no longer active, log and treat as a no-op.
+                // This is not technically an error since the recording can be finalized
+                // asynchronously.
+                Logger.d(TAG,
+                        "mute() called on a recording that is no longer active: "
+                                + activeRecording.getOutputOptions());
+                return;
+            }
+            RecordingRecord finalRecordingRecord = isSameRecording(activeRecording,
+                    mPendingRecordingRecord) ? mPendingRecordingRecord : mActiveRecordingRecord;
+            mSequentialExecutor.execute(() -> muteInternal(finalRecordingRecord, muted));
+        }
+    }
+
     private void finalizePendingRecording(@NonNull RecordingRecord recordingToFinalize,
             @VideoRecordError int error, @Nullable Throwable cause) {
         recordingToFinalize.finalizeRecording(Uri.EMPTY);
@@ -949,8 +967,8 @@ public final class SucklessRecorder implements VideoOutput {
                 (transformationInfo) -> mSurfaceTransformationInfo = transformationInfo);
         Size surfaceSize = surfaceRequest.getResolution();
         // Fetch and cache nearest encoder profiles, if one exists.
-        VideoCapabilities capabilities =
-                VideoCapabilities.from(surfaceRequest.getCamera().getCameraInfo());
+        LegacyVideoCapabilities capabilities =
+                LegacyVideoCapabilities.from(surfaceRequest.getCamera().getCameraInfo());
         Quality highestSupportedQuality = capabilities.findHighestSupportedQualityFor(surfaceSize);
         Logger.d(TAG, "Using supported quality of " + highestSupportedQuality
                 + " for surface size " + surfaceSize);
@@ -1368,13 +1386,13 @@ public final class SucklessRecorder implements VideoOutput {
                 // Fall-through
             case ERROR_SOURCE:
                 // Fall-through
-            case ACTIVE:
+            case ENABLED:
                 // Fall-through
             case DISABLED:
                 throw new AssertionError(
                         "Incorrectly invoke startInternal in audio state " + mAudioState);
             case IDLING:
-                setAudioState(recordingToStart.hasAudioEnabled() ? AudioState.ACTIVE
+                setAudioState(recordingToStart.hasAudioEnabled() ? AudioState.ENABLED
                         : AudioState.DISABLED);
                 break;
             case INITIALIZING:
@@ -1385,7 +1403,7 @@ public final class SucklessRecorder implements VideoOutput {
                     }
                     try {
                         setupAudio(recordingToStart);
-                        setAudioState(AudioState.ACTIVE);
+                        setAudioState(AudioState.ENABLED);
                     } catch (AudioSourceAccessException | InvalidConfigException e) {
                         Logger.e(TAG, "Unable to create audio resource with error: ", e);
                         AudioState audioState;
@@ -1403,7 +1421,7 @@ public final class SucklessRecorder implements VideoOutput {
 
         initEncoderAndAudioSourceCallbacks(recordingToStart);
         if (isAudioEnabled()) {
-            mAudioSource.start();
+            mAudioSource.start(recordingToStart.isMuted());
             mAudioEncoder.start();
         }
         mVideoEncoder.start();
@@ -1535,8 +1553,6 @@ public final class SucklessRecorder implements VideoOutput {
                                     public void onSilenceStateChanged(boolean silenced) {
                                         if (mIsAudioSourceSilenced != silenced) {
                                             mIsAudioSourceSilenced = silenced;
-                                            mAudioErrorCause = silenced ? new IllegalStateException(
-                                                    "The audio source has been silenced.") : null;
                                             updateInProgressStatusEvent();
                                         } else {
                                             Logger.w(TAG, "Audio source silenced transitions"
@@ -1579,9 +1595,9 @@ public final class SucklessRecorder implements VideoOutput {
                             @Override
                             public void onEncodedData(@NonNull EncodedData encodedData) {
                                 if (mAudioState == AudioState.DISABLED) {
-                                    throw new AssertionError(
-                                            "Audio is not enabled but audio encoded data is "
-                                                    + "produced.");
+                                    encodedData.close();
+                                    throw new AssertionError("Audio is not enabled but audio "
+                                            + "encoded data is being produced.");
                                 }
 
                                 // If the media muxer doesn't yet exist, we may need to create and
@@ -1847,6 +1863,19 @@ public final class SucklessRecorder implements VideoOutput {
         }
     }
 
+    @ExecutedBy("mSequentialExecutor")
+    private void muteInternal(@NonNull RecordingRecord recordingToMute, boolean muted) {
+        if (recordingToMute.isMuted() == muted) {
+            return;
+        }
+        recordingToMute.mute(muted);
+        // Only mute/unmute audio source if recording is in-progress and it is not already stopping.
+        if (mInProgressRecording == recordingToMute && !mInProgressRecordingStopping
+                && mAudioSource != null) {
+            mAudioSource.mute(muted);
+        }
+    }
+
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     static void notifyEncoderSourceStopped(@NonNull Encoder encoder) {
         if (encoder instanceof SucklessEncoderImpl) {
@@ -1941,8 +1970,10 @@ public final class SucklessRecorder implements VideoOutput {
                 // Audio will not be initialized until the first recording with audio enabled is
                 // started. So if the audio state is INITIALIZING, consider the audio is disabled.
                 return AudioStats.AUDIO_STATE_DISABLED;
-            case ACTIVE:
-                if (mIsAudioSourceSilenced) {
+            case ENABLED:
+                if (mInProgressRecording != null && mInProgressRecording.isMuted()) {
+                    return AudioStats.AUDIO_STATE_MUTED;
+                } else if (mIsAudioSourceSilenced) {
                     return AudioStats.AUDIO_STATE_SOURCE_SILENCED;
                 } else {
                     return AudioStats.AUDIO_STATE_ACTIVE;
@@ -1971,7 +2002,7 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     @ExecutedBy("mSequentialExecutor")
     boolean isAudioEnabled() {
-        return mAudioState == AudioState.ACTIVE;
+        return mAudioState == AudioState.ENABLED;
     }
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
@@ -2043,7 +2074,7 @@ public final class SucklessRecorder implements VideoOutput {
                 break;
             case DISABLED:
                 // Fall-through
-            case ACTIVE:
+            case ENABLED:
                 setAudioState(AudioState.IDLING);
                 mAudioSource.stop();
                 break;
@@ -2497,6 +2528,8 @@ public final class SucklessRecorder implements VideoOutput {
                     /* no-op by default */
                 });
 
+        private final AtomicBoolean mMuted = new AtomicBoolean(false);
+
         @NonNull
         static RecordingRecord from(@NonNull SucklessPendingRecording pendingRecording, long recordingId) {
             return new AutoValue_SucklessRecorder_RecordingRecord(
@@ -2767,6 +2800,14 @@ public final class SucklessRecorder implements VideoOutput {
                 return;
             }
             finalizeRecordingInternal(mRecordingFinalizer.getAndSet(null), uri);
+        }
+
+        void mute(boolean muted) {
+            mMuted.set(muted);
+        }
+
+        boolean isMuted() {
+            return mMuted.get();
         }
 
         /**
