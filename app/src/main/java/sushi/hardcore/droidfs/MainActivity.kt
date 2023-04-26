@@ -128,6 +128,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 }
             }
         }
+        startService(Intent(this, WiperService::class.java))
         Intent(this, FileOperationService::class.java).also {
             bindService(it, object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {

@@ -41,8 +41,10 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        if (!isStartingExternalApp && !usfKeepOpen) {
-            volumeManager.closeAll()
+        if (!isStartingExternalApp) {
+            if (!usfKeepOpen) {
+                volumeManager.closeAll()
+            }
             RestrictedFileProvider.wipeAll(applicationContext)
         }
     }
