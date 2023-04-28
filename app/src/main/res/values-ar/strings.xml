@@ -245,7 +245,7 @@
     <string name="remember_volume">تذكر المجلد المشفر</string>
     <string name="open_volume">فتح المجلد المشفر</string>
     <string name="choose_existing_volume">برجاء اختيار مجلد مشفر مسبق تم إنشاءه مسبقاً</string>
-	<string name="volume_unlocked">المجلد مفتوح</string>
+    <string name="volume_unlocked">المجلد مفتوح</string>
     <string name="lock_volume">قفل المجلد</string>
     <string name="lock">قفل</string>
     <string name="ux">تجربة الإستخدام</string>
