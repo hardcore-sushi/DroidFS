@@ -245,4 +245,13 @@
     <string name="remember_volume">تذكر المجلد المشفر</string>
     <string name="open_volume">فتح المجلد المشفر</string>
     <string name="choose_existing_volume">برجاء اختيار مجلد مشفر مسبق تم إنشاءه مسبقاً</string>
+	<string name="volume_unlocked">المجلد مفتوح</string>
+    <string name="lock_volume">قفل المجلد</string>
+    <string name="lock">قفل</string>
+    <string name="ux">تجربة الإستخدام</string>
+    <string name="theme_color">لون التطبيق</string>
+    <string name="theme_color_summary">تغيير لون التطبيق</string>
+    <string name="black_theme">لون أسود داكن</string>
+    <string name="password_fallback">العودة إلى كلمة المرور</string>
+    <string name="password_fallback_summary">طلب كلمة المرور في حال فشل المصادقة ببصمة الأصبع</string>
 </resources>
