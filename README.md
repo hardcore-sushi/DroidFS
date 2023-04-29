@@ -2,7 +2,7 @@
 An alternative way to use encrypted virtual filesystems on Android that uses its own internal file explorer instead of mounting volumes.
 It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [CryFS](https://github.com/cryfs/cryfs).
 
-For mortals: An encrypted file manager for Android.
+For mortals: Encrypted storage compatible with already existing softwares.
 
 <p align="center">
 <img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" height="500">
@@ -22,6 +22,8 @@ Do not use this app with volumes containing sensitive data unless you know exact
 - Built-in camera to take on-the-fly encrypted photos and videos
 - Unlocking volumes using fingerprint authentication
 - Volume auto-locking when the app goes in background
+
+_For upcoming features, see [TODO.md](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/TODO.md)._
 
 # Unsafe features
 Some available features are considered risky and are therefore disabled by default. It is strongly recommended that you read the following documentation if you wish to activate one of these options.

@@ -1,6 +1,6 @@
 # TODO
 
-Here is a list of features that it would be nice to have in DroidFS.
+Here's a list of features that it would be nice to have in DroidFS. As this is a FLOSS project, there are no special requirements on *when* or even *if* these features will be implemented, but contributions are greatly appreciated.
 
 ## Security
 - [hardened_malloc](https://github.com/GrapheneOS/hardened_malloc) compatibility ([#181](https://github.com/hardcore-sushi/DroidFS/issues/181))
@@ -11,6 +11,10 @@ Here is a list of features that it would be nice to have in DroidFS.
 - Modifiable CryFS scrypt parameters
 - Alert dialog showing details of file operations
 - Internal file browser to select volumes
+
+## Encryption software support
+- [Shufflecake](https://shufflecake.net): plausible deniability for multiple hidden filesystems on Linux (would be absolutely awesome to have but quite difficult)
+- [eCryptfs](https://www.kernel.org/doc/html/latest/filesystems/ecryptfs.html): filesystem encryption at the kernel level
 
 ## Health
 - F-Droid ABI split
