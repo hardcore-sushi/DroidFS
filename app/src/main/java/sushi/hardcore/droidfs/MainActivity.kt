@@ -46,9 +46,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             finish()
         }
     }
-    private var changePasswordPosition: Int? = null
+    private var selectedVolumePosition: Int? = null
     private var changePassword = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        changePasswordPosition?.let { unselect(it) }
+        selectedVolumePosition?.let { unselect(it) }
     }
     private val pickDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null)
@@ -147,6 +147,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             recreate()
         } else {
             volumeAdapter.refresh()
+            invalidateOptionsMenu()
             if (volumeAdapter.volumes.isNotEmpty()) {
                 binding.textNoVolumes.visibility = View.GONE
             }
@@ -292,9 +293,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 true
             }
             R.id.change_password -> {
-                changePasswordPosition = volumeAdapter.selectedItems.elementAt(0)
+                selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
                 changePassword.launch(Intent(this, ChangePasswordActivity::class.java).apply {
-                    putExtra("volume", volumeAdapter.volumes[changePasswordPosition!!])
+                    putExtra("volume", volumeAdapter.volumes[selectedVolumePosition!!])
                 })
                 true
             }
@@ -304,24 +305,23 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 true
             }
             R.id.copy -> {
-                val position = volumeAdapter.selectedItems.elementAt(0)
-                val volume = volumeAdapter.volumes[position]
-                when {
-                    volume.isHidden -> {
-                        PathUtils.safePickDirectory(pickDirectory, this, theme)
-                    }
-                    File(filesDir, volume.shortName).exists() -> {
+                selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
+                val volume = volumeAdapter.volumes[selectedVolumePosition!!]
+                if (volume.isHidden) {
+                    PathUtils.safePickDirectory(pickDirectory, this, theme)
+                } else {
+                    val hiddenVolumeFile = File(VolumeData.getHiddenVolumeFullPath(filesDir.path, volume.shortName))
+                    if (hiddenVolumeFile.exists()) {
                         CustomAlertDialogBuilder(this, theme)
                             .setTitle(R.string.error)
                             .setMessage(R.string.hidden_volume_already_exists)
                             .setPositiveButton(R.string.ok, null)
                             .show()
-                    }
-                    else -> {
-                        unselect(position)
+                    } else {
+                        unselect(selectedVolumePosition!!)
                         copyVolume(
                             DocumentFile.fromFile(File(volume.name)),
-                            DocumentFile.fromFile(filesDir),
+                            DocumentFile.fromFile(hiddenVolumeFile.parentFile!!),
                         ) {
                             VolumeData(volume.shortName, true, volume.type, volume.encryptedHash, volume.iv)
                         }
@@ -379,9 +379,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     private fun onDirectoryPicked(uri: Uri) {
-        val position = volumeAdapter.selectedItems.elementAt(0)
-        val volume = volumeAdapter.volumes[position]
-        unselect(position)
+        val volume = volumeAdapter.volumes[selectedVolumePosition!!]
+        unselect(selectedVolumePosition!!)
         val dstDocumentFile = DocumentFile.fromTreeUri(this, uri)
         if (dstDocumentFile == null) {
             CustomAlertDialogBuilder(this, theme)
@@ -409,6 +408,13 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
     }
 
+    /**
+     * Copy a volume.
+     *
+     * @param srcDocumentFile [DocumentFile] of the volume to copy
+     * @param dstDocumentFile [DocumentFile] of the destination PARENT FOLDER
+     * @param getResultVolume A function that returns the [VolumeData] corresponding to the destination volume. Takes the [DocumentFile] of the newly created volume (not the parent folder).
+     */
     private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> VolumeData?) {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
