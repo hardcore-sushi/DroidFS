@@ -190,14 +190,14 @@ class CreateVolumeFragment: Fragment() {
                             encryptedVolume,
                         ), EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                     } else {
-                        generateResult(CryfsVolume.create(
+                        encryptedVolume.value = CryfsVolume.create(
                             volumePath,
                             CryfsVolume.getLocalStateDir(activity.filesDir.path),
                             password,
                             returnedHash,
                             resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition],
-                            encryptedVolume,
-                        ), EncryptedVolume.CRYFS_VOLUME_TYPE)
+                        )
+                        generateResult(encryptedVolume.value != null, EncryptedVolume.CRYFS_VOLUME_TYPE)
                     }
                     Arrays.fill(password, 0)
                     return result

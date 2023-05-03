@@ -27,7 +27,6 @@
     <string name="dir_not_empty">A pasta selecionada não está vazia</string>
     <string name="create_volume_failed">Falha ao criar o volume.</string>
     <string name="open_volume_failed">Não foi possível abrir</string>
-    <string name="open_volume_failed_msg">Falha ao abrir o volume. Por favor, verifique sua senha.</string>
     <string name="share_chooser">Compartilhar arquivo</string>
     <string name="storage_perm_denied">Permissão do armazenamento negada</string>
     <string name="storage_perm_denied_msg">DroidFS não pode funcionar sem permissão ao armazenamento.</string>
@@ -58,7 +57,6 @@
     <string name="listdir_null_error_msg">Não foi possível acessar a pasta</string>
     <string name="fingerprint_save_checkbox_text">Salvar o hash da senha usando impressão digital</string>
     <string name="fingerprint_instruction">Por favor, toque no sensor da impressão digital</string>
-    <string name="open_failed_hash_msg">Falha ao abrir o volume. A senha podia ter mudado.</string>
     <string name="illegal_block_size_exception">IllegalBlockSizeException</string>
     <string name="illegal_block_size_exception_msg">Isto poderia ter acontecido, se você tiver adicionado uma nova impressão digital. Tente resetar o hash do armazenamento para resolver este problema.</string>
     <string name="reset_hash_storage">Resetar o hash do armazenamento</string>

@@ -7,9 +7,9 @@ Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeInit(JN
                                                                jstring base_dir, jstring jlocalStateDir,
                                                                jbyteArray password, jbyteArray givenHash,
                                                                jobject returnedHash,
-                                                               jboolean createBaseDir,
-                                                               jstring cipher) {
-    return cryfs_init(env, base_dir, jlocalStateDir, password, givenHash, returnedHash, createBaseDir, cipher);
+                                                               jboolean createBaseDir, jstring cipher,
+                                                               jobject jerrorCode) {
+    return cryfs_init(env, base_dir, jlocalStateDir, password, givenHash, returnedHash, createBaseDir, cipher, jerrorCode);
 }
 
 JNIEXPORT jboolean JNICALL

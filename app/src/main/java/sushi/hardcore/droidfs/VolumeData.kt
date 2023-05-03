@@ -2,8 +2,12 @@ package sushi.hardcore.droidfs
 
 import android.os.Parcel
 import android.os.Parcelable
+import sushi.hardcore.droidfs.filesystems.CryfsVolume
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
+import java.io.FileInputStream
 
 class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
 
@@ -24,6 +28,28 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
             getHiddenVolumeFullPath(filesDir, name)
         else
             name
+    }
+
+    fun canRead(filesDir: String): Boolean {
+        val volumePath = getFullPath(filesDir)
+        if (!File(volumePath).canRead()) {
+            return false
+        }
+        val configFile = when (type) {
+            EncryptedVolume.GOCRYPTFS_VOLUME_TYPE -> PathUtils.pathJoin(volumePath, GocryptfsVolume.CONFIG_FILE_NAME)
+            EncryptedVolume.CRYFS_VOLUME_TYPE -> PathUtils.pathJoin(volumePath, CryfsVolume.CONFIG_FILE_NAME)
+            else -> return false
+        }
+        var success = true
+        try {
+            with (FileInputStream(configFile)) {
+                read()
+                close()
+            }
+        } catch (e: Exception) {
+            success = false
+        }
+        return success
     }
 
     fun canWrite(filesDir: String): Boolean {
