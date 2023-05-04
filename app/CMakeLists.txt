@@ -72,4 +72,5 @@ target_link_libraries(
         avformat
         avcodec
         avutil
+        log
 )

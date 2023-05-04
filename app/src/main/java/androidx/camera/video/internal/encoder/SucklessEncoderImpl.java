@@ -1254,45 +1254,45 @@ public class SucklessEncoderImpl implements Encoder {
                         mVideoTimestampConverter.convertToUptimeUs(bufferInfo.presentationTimeUs);
             }
 
-            // MediaCodec may send out of order buffer
-            if (bufferInfo.presentationTimeUs <= mLastPresentationTimeUs) {
-                Logger.d(mTag, "Drop buffer by out of order buffer from MediaCodec.");
-                return false;
-            }
+            // // MediaCodec may send out of order buffer
+            // if (bufferInfo.presentationTimeUs <= mLastPresentationTimeUs) {
+            //     Logger.d(mTag, "Drop buffer by out of order buffer from MediaCodec.");
+            //     return false;
+            // }
             mLastPresentationTimeUs = bufferInfo.presentationTimeUs;
 
-            // Ignore buffers are not in start/stop range. One situation is to ignore outdated
-            // frames when using the Surface of MediaCodec#createPersistentInputSurface. After
-            // the persistent Surface stops, it will keep a small number of old frames in its
-            // buffer, and send those old frames in the next startup.
-            if (!mStartStopTimeRangeUs.contains(bufferInfo.presentationTimeUs)) {
-                Logger.d(mTag, "Drop buffer by not in start-stop range.");
-                // If data hasn't reached the expected stop timestamp, set the stop timestamp.
-                if (mPendingCodecStop
-                        && bufferInfo.presentationTimeUs >= mStartStopTimeRangeUs.getUpper()) {
-                    if (mStopTimeoutFuture != null) {
-                        mStopTimeoutFuture.cancel(true);
-                    }
-                    mLastDataStopTimestamp = bufferInfo.presentationTimeUs;
-                    signalCodecStop();
-                    mPendingCodecStop = false;
-                }
-                return false;
-            }
+            // // Ignore buffers are not in start/stop range. One situation is to ignore outdated
+            // // frames when using the Surface of MediaCodec#createPersistentInputSurface. After
+            // // the persistent Surface stops, it will keep a small number of old frames in its
+            // // buffer, and send those old frames in the next startup.
+            // if (!mStartStopTimeRangeUs.contains(bufferInfo.presentationTimeUs)) {
+            //     Logger.d(mTag, "Drop buffer by not in start-stop range.");
+            //     // If data hasn't reached the expected stop timestamp, set the stop timestamp.
+            //     if (mPendingCodecStop
+            //             && bufferInfo.presentationTimeUs >= mStartStopTimeRangeUs.getUpper()) {
+            //         if (mStopTimeoutFuture != null) {
+            //             mStopTimeoutFuture.cancel(true);
+            //         }
+            //         mLastDataStopTimestamp = bufferInfo.presentationTimeUs;
+            //         signalCodecStop();
+            //         mPendingCodecStop = false;
+            //     }
+            //     return false;
+            // }
 
             if (updatePauseRangeStateAndCheckIfBufferPaused(bufferInfo)) {
                 Logger.d(mTag, "Drop buffer by pause.");
                 return false;
             }
 
-            // We should check if the adjusted time is valid. see b/189114207.
-            if (getAdjustedTimeUs(bufferInfo) <= mLastSentAdjustedTimeUs) {
-                Logger.d(mTag, "Drop buffer by adjusted time is less than the last sent time.");
-                if (mIsVideoEncoder && isKeyFrame(bufferInfo)) {
-                    mIsKeyFrameRequired = true;
-                }
-                return false;
-            }
+            // // We should check if the adjusted time is valid. see b/189114207.
+            // if (getAdjustedTimeUs(bufferInfo) <= mLastSentAdjustedTimeUs) {
+            //     Logger.d(mTag, "Drop buffer by adjusted time is less than the last sent time.");
+            //     if (mIsVideoEncoder && isKeyFrame(bufferInfo)) {
+            //         mIsKeyFrameRequired = true;
+            //     }
+            //     return false;
+            // }
 
             if (!mHasFirstData && !mIsKeyFrameRequired && mIsVideoEncoder) {
                 mIsKeyFrameRequired = true;
