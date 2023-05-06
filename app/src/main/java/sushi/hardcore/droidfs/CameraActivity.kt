@@ -47,6 +47,7 @@ import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.video_recording.AsynchronousSeekableWriter
 import sushi.hardcore.droidfs.video_recording.FFmpegMuxer
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -510,37 +511,32 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     .show()
                 return
             }
-            startTimerThen {
-                var withAudio = true
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                        withAudio = false
-                    }
+            val writer = AsynchronousSeekableWriter(object : SeekableWriter {
+                private var offset = 0L
+
+                override fun close() {
+                    encryptedVolume.closeFile(fileHandle)
                 }
-                videoRecording = videoRecorder?.prepareRecording(
-                    this,
-                    MuxerOutputOptions(
-                        FFmpegMuxer(object : SeekableWriter {
-                            private var offset = 0L
 
-                            override fun close() {
-                                encryptedVolume.closeFile(fileHandle)
-                            }
+                override fun seek(offset: Long) {
+                    this.offset = offset
+                }
 
-                            override fun seek(offset: Long) {
-                                this.offset = offset
-                            }
-
-                            override fun write(buffer: ByteArray) {
-                                offset += encryptedVolume.write(fileHandle, offset, buffer, 0, buffer.size.toLong())
-                            }
-                        })
-                    )
-                )?.apply {
-                    if (withAudio) {
-                        withAudioEnabled()
-                    }
-                }?.start(executor) {
+                override fun write(buffer: ByteArray, size: Int) {
+                    offset += encryptedVolume.write(fileHandle, offset, buffer, 0, size.toLong())
+                }
+            })
+            val pendingRecording = videoRecorder!!.prepareRecording(
+                this,
+                MuxerOutputOptions(FFmpegMuxer(writer))
+            ).also {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    it.withAudioEnabled()
+                }
+            }
+            startTimerThen {
+                writer.start()
+                videoRecording = pendingRecording.start(executor) {
                     val buttons = arrayOf(binding.imageCaptureMode, binding.imageRatio, binding.imageTimer, binding.imageModeSwitch, binding.imageCameraSwitch)
                     when (it) {
                         is VideoRecordEvent.Start -> {
