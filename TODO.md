@@ -14,7 +14,7 @@ Here's a list of features that it would be nice to have in DroidFS. As this is a
 
 ## Encryption software support
 - [Shufflecake](https://shufflecake.net): plausible deniability for multiple hidden filesystems on Linux (would be absolutely awesome to have but quite difficult)
-- [eCryptfs](https://www.kernel.org/doc/html/latest/filesystems/ecryptfs.html): filesystem encryption at the kernel level
+- [fscrypt](https://www.kernel.org/doc/html/latest/filesystems/fscrypt.html): filesystem encryption at the kernel level
 
 ## Health
 - F-Droid ABI split

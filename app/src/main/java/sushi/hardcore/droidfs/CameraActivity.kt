@@ -2,10 +2,7 @@ package sushi.hardcore.droidfs
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
@@ -14,12 +11,10 @@ import android.view.*
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -28,6 +23,7 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -57,6 +53,8 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @SuppressLint("RestrictedApi")
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
@@ -381,11 +379,17 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(captureMode)
             .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
-            .apply {
-                currentResolution?.let {
-                    setTargetResolution(it)
+            .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { supportedSizes, _ ->
+                resolutions = supportedSizes.sortedBy {
+                    -it.width*it.height
                 }
-            }
+                currentResolution?.let { targetResolution ->
+                    return@setResolutionFilter supportedSizes.sortedBy {
+                        sqrt((it.width - targetResolution.width).toDouble().pow(2) + (it.height - targetResolution.height).toDouble().pow(2))
+                    }
+                }
+                supportedSizes
+            }.build())
             .build()
     }
 
@@ -412,14 +416,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         } else {
             refreshImageCapture()
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
-            if (resolutions == null) {
-                val info = Camera2CameraInfo.from(camera!!.cameraInfo)
-                val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
-                characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
-                    resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat).map { it.swap() }
-                }
-            }
             imageCapture
         })!!
         adaptPreviewSize(currentUseCase.attachedSurfaceResolution!!.swap())
