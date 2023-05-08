@@ -154,6 +154,7 @@ JNIEXPORT void JNICALL
 Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_release(JNIEnv *env, jobject thiz, jlong format_context) {
     AVFormatContext* fc = (AVFormatContext *) format_context;
     av_free(fc->pb->buffer);
+    (*env)->DeleteGlobalRef(env, ((struct Muxer*)fc->pb->opaque)->thiz);
     free(fc->pb->opaque);
     avio_context_free(&fc->pb);
     avformat_free_context(fc);

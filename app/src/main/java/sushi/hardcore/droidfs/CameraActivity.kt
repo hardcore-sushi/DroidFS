@@ -77,6 +77,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
         }
     private lateinit var sensorOrientationListener: SensorOrientationListener
+    private var currentRotation = 0
     private var previousOrientation: Float = 0f
     private lateinit var orientedIcons: List<ImageView>
     private lateinit var encryptedVolume: EncryptedVolume
@@ -390,6 +391,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 }
                 supportedSizes
             }.build())
+            .setTargetRotation(currentRotation)
             .build()
     }
 
@@ -401,7 +403,9 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             recorderBuilder.setQualitySelector(QualitySelector.from(qualities!![currentQualityIndex]))
         }
         videoRecorder = recorderBuilder.build()
-        videoCapture = VideoCapture.withOutput(videoRecorder!!)
+        videoCapture = VideoCapture.withOutput(videoRecorder!!).apply {
+            targetRotation = currentRotation
+        }
     }
 
     private fun rebindUseCases(): UseCase {
@@ -598,6 +602,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         previousOrientation = realOrientation
         imageCapture?.targetRotation = newOrientation
         videoCapture?.targetRotation = newOrientation
+        currentRotation = newOrientation
     }
 }
 
