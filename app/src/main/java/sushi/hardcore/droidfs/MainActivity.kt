@@ -24,6 +24,7 @@ import sushi.hardcore.droidfs.databinding.ActivityMainBinding
 import sushi.hardcore.droidfs.databinding.DialogDeleteVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerRouter
 import sushi.hardcore.droidfs.file_operations.FileOperationService
+import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -418,11 +419,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> VolumeData?) {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
-            when {
-                result.taskResult.cancelled -> {
+            when (result.taskResult.state) {
+                TaskResult.State.CANCELLED -> {
                     result.dstRootDirectory?.delete()
                 }
-                result.taskResult.failedItem == null -> {
+                TaskResult.State.SUCCESS -> {
                     result.dstRootDirectory?.let {
                         getResultVolume(it)?.let { volume ->
                             volumeDatabase.saveVolume(volume)
@@ -435,13 +436,14 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         }
                     }
                 }
-                else -> {
+                TaskResult.State.FAILED -> {
                     CustomAlertDialogBuilder(this@MainActivity, theme)
                         .setTitle(R.string.error)
-                        .setMessage(getString(R.string.copy_failed, result.taskResult.failedItem.name))
+                        .setMessage(getString(R.string.copy_failed, result.taskResult.failedItem!!.name))
                         .setPositiveButton(R.string.ok, null)
                         .show()
                 }
+                TaskResult.State.ERROR -> result.taskResult.showErrorAlertDialog(this@MainActivity, theme)
             }
         }
     }

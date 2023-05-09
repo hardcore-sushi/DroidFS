@@ -17,9 +17,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
 import sushi.hardcore.droidfs.file_operations.OperationFile
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
-import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -36,7 +34,8 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
-                val remoteEncryptedVolume = IntentUtils.getParcelableExtra<EncryptedVolume>(resultIntent, "volume")!!
+                val srcVolumeId = resultIntent.getIntExtra("volumeId", -1)
+                val srcEncryptedVolume = app.volumeManager.getVolume(srcVolumeId)!!
                 val path = resultIntent.getStringExtra("path")
                 val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements
@@ -48,7 +47,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 OperationFile(paths[i], types[i])
                             )
                             if (types[i] == Stat.S_IFDIR) {
-                                remoteEncryptedVolume.recursiveMapFiles(paths[i])?.forEach {
+                                srcEncryptedVolume.recursiveMapFiles(paths[i])?.forEach {
                                     operationFiles.add(OperationFile.fromExplorerElement(it))
                                 }
                             }
@@ -64,17 +63,14 @@ class ExplorerActivity : BaseExplorerActivity() {
                         if (items != null) {
                             // stop loading thumbnails while writing files
                             explorerAdapter.loadThumbnails = false
-                            taskScope.launch {
-                                val failedItem = fileOperationService.copyElements(items, remoteEncryptedVolume)
-                                if (failedItem == null) {
-                                    Toast.makeText(this@ExplorerActivity, R.string.success_import, Toast.LENGTH_SHORT).show()
-                                } else {
-                                    CustomAlertDialogBuilder(this@ExplorerActivity, theme)
-                                        .setTitle(R.string.error)
-                                        .setMessage(getString(R.string.import_failed, failedItem))
-                                        .setPositiveButton(R.string.ok, null)
-                                        .show()
-                                }
+                            activityScope.launch {
+                                onTaskResult(
+                                    fileOperationService.copyElements(
+                                        volumeId,
+                                        items,
+                                        srcVolumeId
+                                    ), R.string.import_failed, R.string.success_import
+                                )
                                 explorerAdapter.loadThumbnails = true
                                 setCurrentPath(currentDirectoryPath)
                             }
@@ -86,81 +82,62 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
     private val pickFiles = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris != null) {
-            importFilesFromUris(uris){ failedItem ->
-                onImportComplete(failedItem, uris)
+            for (uri in uris) {
+                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
+            importFilesFromUris(uris) {
+                onImportComplete(uris)
             }
         }
     }
     private val pickExportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
-            taskScope.launch {
-                val result = fileOperationService.exportFiles(uri, explorerAdapter.selectedItems.map { i -> explorerElements[i] })
-                if (!result.cancelled) {
-                    if (result.failedItem == null) {
-                        Toast.makeText(this@ExplorerActivity, R.string.success_export, Toast.LENGTH_SHORT).show()
-                    } else {
-                        CustomAlertDialogBuilder(this@ExplorerActivity, theme)
-                            .setTitle(R.string.error)
-                            .setMessage(getString(R.string.export_failed, result.failedItem))
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                    }
-                }
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            val items = explorerAdapter.selectedItems.map { i -> explorerElements[i] }
+            activityScope.launch {
+                val result = fileOperationService.exportFiles(volumeId, items, uri)
+                onTaskResult(result, R.string.export_failed, R.string.success_export)
             }
         }
         unselectAll()
     }
     private val pickImportDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { rootUri ->
         rootUri?.let {
+            contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             val tree = DocumentFile.fromTreeUri(this, it)!! //non-null after Lollipop
             val operation = OperationFile(PathUtils.pathJoin(currentDirectoryPath, tree.name!!), Stat.S_IFDIR)
             checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
                 checkedOperation?.let {
-                    taskScope.launch {
-                        val result = fileOperationService.importDirectory(checkedOperation[0].dstPath!!, tree)
-                        if (result.taskResult.cancelled) {
-                            setCurrentPath(currentDirectoryPath)
-                        } else {
-                            onImportComplete(result.taskResult.failedItem, result.uris, tree)
+                    activityScope.launch {
+                        val result = fileOperationService.importDirectory(volumeId, checkedOperation[0].dstPath!!, tree)
+                        onTaskResult(result.taskResult, R.string.import_failed) {
+                            onImportComplete(result.uris, tree)
                         }
+                        setCurrentPath(currentDirectoryPath)
                     }
                 }
             }
         }
     }
 
-    private fun onImportComplete(failedItem: String?, urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
-        if (failedItem == null){
-            CustomAlertDialogBuilder(this, theme)
-                .setTitle(R.string.success_import)
-                .setMessage("""
-                                ${getString(R.string.success_import_msg)}
-                                ${getString(R.string.ask_for_wipe)}
-                                """.trimIndent())
-                .setPositiveButton(R.string.yes) { _, _ ->
-                    taskScope.launch {
-                        val errorMsg = fileOperationService.wipeUris(urisToWipe, rootFile)
-                        if (errorMsg == null) {
-                            Toast.makeText(this@ExplorerActivity, R.string.wipe_successful, Toast.LENGTH_SHORT).show()
-                        } else {
-                            CustomAlertDialogBuilder(this@ExplorerActivity, theme)
-                                .setTitle(R.string.error)
-                                .setMessage(getString(R.string.wipe_failed, errorMsg))
-                                .setPositiveButton(R.string.ok, null)
-                                .show()
-                        }
-                    }
+    private fun onImportComplete(urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
+        CustomAlertDialogBuilder(this, theme)
+            .setTitle(R.string.success_import)
+            .setMessage("""
+                            ${getString(R.string.success_import_msg)}
+                            ${getString(R.string.ask_for_wipe)}
+                            """.trimIndent())
+            .setPositiveButton(R.string.yes) { _, _ ->
+                activityScope.launch {
+                    onTaskResult(
+                        fileOperationService.wipeUris(urisToWipe, rootFile),
+                        R.string.wipe_failed,
+                        R.string.wipe_successful,
+                    )
                 }
-                .setNegativeButton(R.string.no, null)
-                .show()
-        } else {
-            CustomAlertDialogBuilder(this, theme)
-                .setTitle(R.string.error)
-                .setMessage(getString(R.string.import_failed, failedItem))
-                .setPositiveButton(R.string.ok, null)
-                .show()
-        }
-        setCurrentPath(currentDirectoryPath)
+            }
+            .setNegativeButton(R.string.no, null)
+            .show()
     }
 
     override fun init() {
@@ -324,22 +301,16 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.validate -> {
                 if (currentItemAction == ItemsActions.COPY){
-                    checkPathOverwrite(itemsToProcess, currentDirectoryPath){ items ->
-                        items?.let {
-                            taskScope.launch {
-                                val failedItem = fileOperationService.copyElements(it.toMutableList() as ArrayList<OperationFile>)
-                                if (!isFinishing) {
-                                    if (failedItem == null) {
-                                        Toast.makeText(this@ExplorerActivity, R.string.copy_success, Toast.LENGTH_SHORT).show()
-                                    } else {
-                                        CustomAlertDialogBuilder(this@ExplorerActivity, theme)
-                                            .setTitle(R.string.error)
-                                            .setMessage(getString(R.string.copy_failed, failedItem))
-                                            .setPositiveButton(R.string.ok, null)
-                                            .show()
-                                    }
-                                    setCurrentPath(currentDirectoryPath)
-                                }
+                    checkPathOverwrite(itemsToProcess, currentDirectoryPath) {
+                        // copying before being cleared
+                        it?.toMutableList()?.let { items ->
+                            activityScope.launch {
+                                onTaskResult(
+                                    fileOperationService.copyElements(volumeId, items),
+                                    R.string.copy_failed,
+                                    R.string.copy_success,
+                                )
+                                setCurrentPath(currentDirectoryPath)
                             }
                         }
                         cancelItemAction()
@@ -357,17 +328,12 @@ class ExplorerActivity : BaseExplorerActivity() {
                         toMove,
                         toClean,
                     ) {
-                        taskScope.launch {
-                            val failedItem = fileOperationService.moveElements(toMove, toClean)
-                            if (failedItem == null) {
-                                Toast.makeText(this@ExplorerActivity, R.string.move_success, Toast.LENGTH_SHORT).show()
-                            } else {
-                                CustomAlertDialogBuilder(this@ExplorerActivity, theme)
-                                    .setTitle(R.string.error)
-                                    .setMessage(getString(R.string.move_failed, failedItem))
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
+                        activityScope.launch {
+                            onTaskResult(
+                                fileOperationService.moveElements(volumeId, toMove, toClean),
+                                R.string.move_success,
+                                R.string.move_failed,
+                            )
                             setCurrentPath(currentDirectoryPath)
                         }
                         cancelItemAction()
@@ -381,8 +347,9 @@ class ExplorerActivity : BaseExplorerActivity() {
                 val dialog = CustomAlertDialogBuilder(this, theme)
                 dialog.setTitle(R.string.warning)
                 dialog.setPositiveButton(R.string.ok) { _, _ ->
-                    taskScope.launch {
-                        fileOperationService.removeElements(explorerAdapter.selectedItems.map { i -> explorerElements[i] })?.let { failedItem ->
+                    val items = explorerAdapter.selectedItems.map { i -> explorerElements[i] }
+                    activityScope.launch {
+                        fileOperationService.removeElements(volumeId, items)?.let { failedItem ->
                             CustomAlertDialogBuilder(this@ExplorerActivity, theme)
                                 .setTitle(R.string.error)
                                 .setMessage(getString(R.string.remove_failed, failedItem))

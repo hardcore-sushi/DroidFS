@@ -13,9 +13,18 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.VolumeManager
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.ObjRef
@@ -31,19 +40,18 @@ class FileOperationService : Service() {
     }
 
     private val binder = LocalBinder()
-    private lateinit var encryptedVolume: EncryptedVolume
+    private lateinit var volumeManger: VolumeManager
+    private var serviceScope = MainScope()
     private lateinit var notificationManager: NotificationManagerCompat
     private val tasks = HashMap<Int, Job>()
     private var lastNotificationId = 0
 
     inner class LocalBinder : Binder() {
         fun getService(): FileOperationService = this@FileOperationService
-        fun setEncryptedVolume(volume: EncryptedVolume) {
-            encryptedVolume = volume
-        }
     }
 
     override fun onBind(p0: Intent?): IBinder {
+        volumeManger = (application as VolumeManagerApp).volumeManager
         return binder
     }
 
@@ -110,29 +118,55 @@ class FileOperationService : Service() {
         tasks[notificationId]?.cancel()
     }
 
-    class TaskResult<T>(val cancelled: Boolean, val failedItem: T?)
-
-    private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<T> {
-        tasks[notification.notificationId] = task
-        return try {
-            TaskResult(false, task.await())
-        } catch (e: CancellationException) {
-            TaskResult(true, null)
-        } finally {
-            cancelNotification(notification)
-        }
+    private fun getEncryptedVolume(volumeId: Int): EncryptedVolume {
+        return volumeManger.getVolume(volumeId) ?: throw IllegalArgumentException("Invalid volumeId: $volumeId")
     }
 
-    private fun copyFile(srcPath: String, dstPath: String, remoteEncryptedVolume: EncryptedVolume = encryptedVolume): Boolean {
+    private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<out T> {
+        tasks[notification.notificationId] = task
+        return serviceScope.async {
+            try {
+                TaskResult.completed(task.await())
+            } catch (e: CancellationException) {
+                TaskResult.cancelled()
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                TaskResult.error(e.localizedMessage)
+            } finally {
+                cancelNotification(notification)
+            }
+        }.await()
+    }
+
+    private suspend fun <T> volumeTask(
+        volumeId: Int,
+        notification: FileOperationNotification,
+        task: suspend (encryptedVolume: EncryptedVolume) -> T
+    ): TaskResult<out T> {
+        return waitForTask(
+            notification,
+            volumeManger.getCoroutineScope(volumeId).async {
+                task(getEncryptedVolume(volumeId))
+            }
+        )
+    }
+
+    private suspend fun copyFile(
+        encryptedVolume: EncryptedVolume,
+        srcPath: String,
+        dstPath: String,
+        srcEncryptedVolume: EncryptedVolume = encryptedVolume,
+    ): Boolean {
         var success = true
-        val srcFileHandle = remoteEncryptedVolume.openFileReadMode(srcPath)
+        val srcFileHandle = srcEncryptedVolume.openFileReadMode(srcPath)
         if (srcFileHandle != -1L) {
             val dstFileHandle = encryptedVolume.openFileWriteMode(dstPath)
             if (dstFileHandle != -1L) {
                 var offset: Long = 0
                 val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
                 var length: Long
-                while (remoteEncryptedVolume.read(srcFileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it.toLong() } > 0) {
+                while (srcEncryptedVolume.read(srcFileHandle, offset, ioBuffer, 0, ioBuffer.size.toLong()).also { length = it.toLong() } > 0) {
+                    yield()
                     val written = encryptedVolume.write(dstFileHandle, offset, ioBuffer, 0, length).toLong()
                     if (written == length) {
                         offset += written
@@ -146,7 +180,7 @@ class FileOperationService : Service() {
             } else {
                 success = false
             }
-            remoteEncryptedVolume.closeFile(srcFileHandle)
+            srcEncryptedVolume.closeFile(srcFileHandle)
         } else {
             success = false
         }
@@ -154,25 +188,24 @@ class FileOperationService : Service() {
     }
 
     suspend fun copyElements(
-        items: ArrayList<OperationFile>,
-        remoteEncryptedVolume: EncryptedVolume = encryptedVolume
-    ): String? = coroutineScope {
+        volumeId: Int,
+        items: List<OperationFile>,
+        srcVolumeId: Int = volumeId,
+    ): TaskResult<out String?> {
         val notification = showNotification(R.string.file_op_copy_msg, items.size)
-        val task = async {
+        val srcEncryptedVolume = getEncryptedVolume(srcVolumeId)
+        return volumeTask(volumeId, notification) { encryptedVolume ->
             var failedItem: String? = null
-            for (i in 0 until items.size) {
-                withContext(Dispatchers.IO) {
-                    if (items[i].isDirectory) {
-                        if (!encryptedVolume.pathExists(items[i].dstPath!!)) {
-                            if (!encryptedVolume.mkdir(items[i].dstPath!!)) {
-                                failedItem = items[i].srcPath
-                            }
-                        }
-                    } else {
-                        if (!copyFile(items[i].srcPath, items[i].dstPath!!, remoteEncryptedVolume)) {
+            for (i in items.indices) {
+                yield()
+                if (items[i].isDirectory) {
+                    if (!encryptedVolume.pathExists(items[i].dstPath!!)) {
+                        if (!encryptedVolume.mkdir(items[i].dstPath!!)) {
                             failedItem = items[i].srcPath
                         }
                     }
+                } else if (!copyFile(encryptedVolume, items[i].srcPath, items[i].dstPath!!, srcEncryptedVolume)) {
+                    failedItem = items[i].srcPath
                 }
                 if (failedItem == null) {
                     updateNotificationProgress(notification, i+1, items.size)
@@ -182,13 +215,11 @@ class FileOperationService : Service() {
             }
             failedItem
         }
-        // treat cancellation as success
-        waitForTask(notification, task).failedItem
     }
 
-    suspend fun moveElements(toMove: List<OperationFile>, toClean: List<String>): String? = coroutineScope {
+    suspend fun moveElements(volumeId: Int, toMove: List<OperationFile>, toClean: List<String>): TaskResult<out String?> {
         val notification = showNotification(R.string.file_op_move_msg, toMove.size)
-        val task = async(Dispatchers.IO) {
+        return volumeTask(volumeId, notification) { encryptedVolume ->
             val total = toMove.size+toClean.size
             var failedItem: String? = null
             for ((i, item) in toMove.withIndex()) {
@@ -211,25 +242,23 @@ class FileOperationService : Service() {
             }
             failedItem
         }
-        // treat cancellation as success
-        waitForTask(notification, task).failedItem
     }
 
     private suspend fun importFilesFromUris(
+        encryptedVolume: EncryptedVolume,
         dstPaths: List<String>,
         uris: List<Uri>,
         notification: FileOperationNotification,
     ): String? {
         var failedIndex = -1
         for (i in dstPaths.indices) {
-            withContext(Dispatchers.IO) {
-                try {
-                    if (!encryptedVolume.importFile(this@FileOperationService, uris[i], dstPaths[i])) {
-                        failedIndex = i
-                    }
-                } catch (e: FileNotFoundException) {
+            yield()
+            try {
+                if (!encryptedVolume.importFile(this@FileOperationService, uris[i], dstPaths[i])) {
                     failedIndex = i
                 }
+            } catch (e: FileNotFoundException) {
+                failedIndex = i
             }
             if (failedIndex == -1) {
                 updateNotificationProgress(notification, i+1, dstPaths.size)
@@ -240,12 +269,11 @@ class FileOperationService : Service() {
         return null
     }
 
-    suspend fun importFilesFromUris(dstPaths: List<String>, uris: List<Uri>): TaskResult<String?> = coroutineScope {
+    suspend fun importFilesFromUris(volumeId: Int, dstPaths: List<String>, uris: List<Uri>): TaskResult<out String?> {
         val notification = showNotification(R.string.file_op_import_msg, dstPaths.size)
-        val task = async {
-            importFilesFromUris(dstPaths, uris, notification)
+        return volumeTask(volumeId, notification) { encryptedVolume ->
+            importFilesFromUris(encryptedVolume, dstPaths, uris, notification)
         }
-        waitForTask(notification, task)
     }
 
     /**
@@ -255,77 +283,63 @@ class FileOperationService : Service() {
      *
      * @return false if cancelled early, true otherwise.
      */
-    private fun recursiveMapDirectoryForImport(
+    private suspend fun recursiveMapDirectoryForImport(
         rootSrcDir: DocumentFile,
         rootDstPath: String,
         dstFiles: ArrayList<String>,
         srcUris: ArrayList<Uri>,
         dstDirs: ArrayList<String>,
-        scope: CoroutineScope,
-    ): Boolean {
+    ) {
         dstDirs.add(rootDstPath)
         for (child in rootSrcDir.listFiles()) {
-            if (!scope.isActive) {
-                return false
-            }
+            yield()
             child.name?.let { name ->
                 val subPath = PathUtils.pathJoin(rootDstPath, name)
                 if (child.isDirectory) {
-                    if (!recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs, scope)) {
-                        return false
-                    }
-                }
-                else if (child.isFile) {
+                    recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs)
+                } else if (child.isFile) {
                     srcUris.add(child.uri)
                     dstFiles.add(subPath)
                 }
             }
         }
-        return true
     }
 
-    class ImportDirectoryResult(val taskResult: TaskResult<String?>, val uris: List<Uri>)
+    class ImportDirectoryResult(val taskResult: TaskResult<out String?>, val uris: List<Uri>)
 
     suspend fun importDirectory(
+        volumeId: Int,
         rootDstPath: String,
         rootSrcDir: DocumentFile,
-    ): ImportDirectoryResult = coroutineScope {
+    ): ImportDirectoryResult {
         val notification = showNotification(R.string.file_op_import_msg, null)
         val srcUris = arrayListOf<Uri>()
-        val task = async {
+        return ImportDirectoryResult(volumeTask(volumeId, notification) { encryptedVolume ->
             var failedItem: String? = null
             val dstFiles = arrayListOf<String>()
             val dstDirs = arrayListOf<String>()
-
-            withContext(Dispatchers.IO) {
-                if (!recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs, this)) {
-                    return@withContext
-                }
-
-                // create destination folders so the new files can use them
-                for (dir in dstDirs) {
-                    if (!encryptedVolume.mkdir(dir)) {
-                        failedItem = dir
-                        break
-                    }
+            recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs)
+            // create destination folders so the new files can use them
+            for (dir in dstDirs) {
+                if (!encryptedVolume.mkdir(dir)) {
+                    failedItem = dir
+                    break
                 }
             }
             if (failedItem == null) {
-                failedItem = importFilesFromUris(dstFiles, srcUris, notification)
+                failedItem = importFilesFromUris(encryptedVolume, dstFiles, srcUris, notification)
             }
             failedItem
-        }
-        ImportDirectoryResult(waitForTask(notification, task), srcUris)
+        }, srcUris)
     }
 
-    suspend fun wipeUris(uris: List<Uri>, rootFile: DocumentFile? = null): String? = coroutineScope {
+    suspend fun wipeUris(uris: List<Uri>, rootFile: DocumentFile? = null): TaskResult<out String?> {
         val notification = showNotification(R.string.file_op_wiping_msg, uris.size)
-        val task = async {
+        val task = serviceScope.async(Dispatchers.IO) {
             var errorMsg: String? = null
             for (i in uris.indices) {
-                withContext(Dispatchers.IO) {
-                    errorMsg = Wiper.wipe(this@FileOperationService, uris[i])
-                }
+                yield()
+                errorMsg = Wiper.wipe(this@FileOperationService, uris[i])
                 if (errorMsg == null) {
                     updateNotificationProgress(notification, i+1, uris.size)
                 } else {
@@ -337,11 +351,10 @@ class FileOperationService : Service() {
             }
             errorMsg
         }
-        // treat cancellation as success
-        waitForTask(notification, task).failedItem
+        return waitForTask(notification, task)
     }
 
-    private fun exportFileInto(srcPath: String, treeDocumentFile: DocumentFile): Boolean {
+    private fun exportFileInto(encryptedVolume: EncryptedVolume, srcPath: String, treeDocumentFile: DocumentFile): Boolean {
         val outputStream = treeDocumentFile.createFile("*/*", File(srcPath).name)?.uri?.let {
             contentResolver.openOutputStream(it)
         }
@@ -352,25 +365,20 @@ class FileOperationService : Service() {
         }
     }
 
-    private fun recursiveExportDirectory(
+    private suspend fun recursiveExportDirectory(
+        encryptedVolume: EncryptedVolume,
         plain_directory_path: String,
         treeDocumentFile: DocumentFile,
-        scope: CoroutineScope
     ): String? {
         treeDocumentFile.createDirectory(File(plain_directory_path).name)?.let { childTree ->
             val explorerElements = encryptedVolume.readDir(plain_directory_path) ?: return null
             for (e in explorerElements) {
-                if (!scope.isActive) {
-                    return null
-                }
+                yield()
                 val fullPath = PathUtils.pathJoin(plain_directory_path, e.name)
                 if (e.isDirectory) {
-                    val failedItem = recursiveExportDirectory(fullPath, childTree, scope)
-                    failedItem?.let { return it }
-                } else {
-                    if (!exportFileInto(fullPath, childTree)){
-                        return fullPath
-                    }
+                    recursiveExportDirectory(encryptedVolume, fullPath, childTree)?.let { return it }
+                } else if (!exportFileInto(encryptedVolume, fullPath, childTree)) {
+                    return fullPath
                 }
             }
             return null
@@ -378,18 +386,20 @@ class FileOperationService : Service() {
         return treeDocumentFile.name
     }
 
-    suspend fun exportFiles(uri: Uri, items: List<ExplorerElement>): TaskResult<String?> = coroutineScope {
+    suspend fun exportFiles(volumeId: Int, items: List<ExplorerElement>, uri: Uri): TaskResult<out String?> {
         val notification = showNotification(R.string.file_op_export_msg, items.size)
-        val task = async {
-            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        return volumeTask(volumeId, notification) { encryptedVolume ->
             val treeDocumentFile = DocumentFile.fromTreeUri(this@FileOperationService, uri)!!
             var failedItem: String? = null
             for (i in items.indices) {
-                withContext(Dispatchers.IO) {
-                    failedItem = if (items[i].isDirectory) {
-                        recursiveExportDirectory(items[i].fullPath, treeDocumentFile, this)
+                yield()
+                failedItem = if (items[i].isDirectory) {
+                    recursiveExportDirectory(encryptedVolume, items[i].fullPath, treeDocumentFile)
+                } else {
+                    if (exportFileInto(encryptedVolume, items[i].fullPath, treeDocumentFile)) {
+                        null
                     } else {
-                        if (exportFileInto(items[i].fullPath, treeDocumentFile)) null else items[i].fullPath
+                        items[i].fullPath
                     }
                 }
                 if (failedItem == null) {
@@ -400,21 +410,37 @@ class FileOperationService : Service() {
             }
             failedItem
         }
-        waitForTask(notification, task)
     }
 
-    suspend fun removeElements(items: List<ExplorerElement>): String? = coroutineScope {
+    private suspend fun recursiveRemoveDirectory(encryptedVolume: EncryptedVolume, path: String): String? {
+        encryptedVolume.readDir(path)?.let { elements ->
+            for (e in elements) {
+                yield()
+                val fullPath = PathUtils.pathJoin(path, e.name)
+                if (e.isDirectory) {
+                    recursiveRemoveDirectory(encryptedVolume, fullPath)?.let { return it }
+                } else if (!encryptedVolume.deleteFile(fullPath)) {
+                    return fullPath
+                }
+            }
+        }
+        return if (!encryptedVolume.rmdir(path)) {
+            path
+        } else {
+            null
+        }
+    }
+
+    suspend fun removeElements(volumeId: Int, items: List<ExplorerElement>): String? {
         val notification = showNotification(R.string.file_op_delete_msg, items.size)
-        val task = async(Dispatchers.IO) {
+        return volumeTask(volumeId, notification) { encryptedVolume ->
             var failedItem: String? = null
             for ((i, element) in items.withIndex()) {
+                yield()
                 if (element.isDirectory) {
-                    val result = encryptedVolume.recursiveRemoveDirectory(element.fullPath)
-                    result?.let { failedItem = it }
-                } else {
-                    if (!encryptedVolume.deleteFile(element.fullPath)) {
-                        failedItem = element.fullPath
-                    }
+                    recursiveRemoveDirectory(encryptedVolume, element.fullPath)?.let { failedItem = it }
+                } else if (!encryptedVolume.deleteFile(element.fullPath)) {
+                    failedItem = element.fullPath
                 }
                 if (failedItem == null) {
                     updateNotificationProgress(notification, i + 1, items.size)
@@ -423,14 +449,11 @@ class FileOperationService : Service() {
                 }
             }
             failedItem
-        }
-        waitForTask(notification, task).failedItem
+        }.failedItem // treat cancellation as success
     }
 
-    private fun recursiveCountChildElements(rootDirectory: DocumentFile, scope: CoroutineScope): Int {
-        if (!scope.isActive) {
-            return 0
-        }
+    private suspend fun recursiveCountChildElements(rootDirectory: DocumentFile, scope: CoroutineScope): Int {
+        yield()
         val children = rootDirectory.listFiles()
         var count = children.size
         for (child in children) {
@@ -441,7 +464,7 @@ class FileOperationService : Service() {
         return count
     }
 
-    private fun recursiveCopyVolume(
+    private suspend fun recursiveCopyVolume(
         src: DocumentFile,
         dst: DocumentFile,
         dstRootDirectory: ObjRef<DocumentFile?>?,
@@ -453,9 +476,7 @@ class FileOperationService : Service() {
         val dstDir = dst.createDirectory(src.name ?: return src) ?: return src
         dstRootDirectory?.let { it.value = dstDir }
         for (child in src.listFiles()) {
-            if (!scope.isActive) {
-                return null
-            }
+            yield()
             if (child.isFile) {
                 val dstFile = dstDir.createFile("", child.name ?: return child) ?: return child
                 val outputStream = contentResolver.openOutputStream(dstFile.uri)
@@ -474,21 +495,16 @@ class FileOperationService : Service() {
         return null
     }
 
-    class CopyVolumeResult(val taskResult: TaskResult<DocumentFile?>, val dstRootDirectory: DocumentFile?)
+    class CopyVolumeResult(val taskResult: TaskResult<out DocumentFile?>, val dstRootDirectory: DocumentFile?)
 
-    suspend fun copyVolume(src: DocumentFile, dst: DocumentFile): CopyVolumeResult = coroutineScope {
+    suspend fun copyVolume(src: DocumentFile, dst: DocumentFile): CopyVolumeResult {
         val notification = showNotification(R.string.copy_volume_notification, null)
         val dstRootDirectory = ObjRef<DocumentFile?>(null)
-        val task = async(Dispatchers.IO) {
+        val task = serviceScope.async(Dispatchers.IO) {
             val total = recursiveCountChildElements(src, this)
-            if (isActive) {
-                updateNotificationProgress(notification, 0, total)
-                recursiveCopyVolume(src, dst, dstRootDirectory, notification, total, this)
-            } else {
-                null
-            }
+            updateNotificationProgress(notification, 0, total)
+            recursiveCopyVolume(src, dst, dstRootDirectory, notification, total, this)
         }
-        // treat cancellation as success
-        CopyVolumeResult(waitForTask(notification, task), dstRootDirectory.value)
+        return CopyVolumeResult(waitForTask(notification, task), dstRootDirectory.value)
     }
 }

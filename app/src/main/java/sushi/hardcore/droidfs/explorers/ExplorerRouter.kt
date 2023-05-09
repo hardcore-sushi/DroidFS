@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.explorers
 
 import android.content.Context
 import android.content.Intent
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 
 class ExplorerRouter(private val context: Context, private val intent: Intent) {
@@ -16,7 +15,6 @@ class ExplorerRouter(private val context: Context, private val intent: Intent) {
             IntentUtils.forwardIntent(intent, explorerIntent)
         } else if (pickMode) {
             explorerIntent = Intent(context, ExplorerActivityPick::class.java)
-            explorerIntent.putExtra("destinationVolume", IntentUtils.getParcelableExtra<EncryptedVolume>(intent, "volume")!!)
             explorerIntent.flags = Intent.FLAG_ACTIVITY_FORWARD_RESULT
         }
         if (explorerIntent == null) {

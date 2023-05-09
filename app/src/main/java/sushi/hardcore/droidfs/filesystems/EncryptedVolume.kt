@@ -218,25 +218,4 @@ abstract class EncryptedVolume: Parcelable {
         }
         return result
     }
-
-    fun recursiveRemoveDirectory(path: String): String? {
-        readDir(path)?.let { elements ->
-            for (e in elements) {
-                val fullPath = PathUtils.pathJoin(path, e.name)
-                if (e.isDirectory) {
-                    val result = recursiveRemoveDirectory(fullPath)
-                    result?.let { return it }
-                } else {
-                    if (!deleteFile(fullPath)) {
-                        return fullPath
-                    }
-                }
-            }
-        }
-        return if (!rmdir(path)) {
-            path
-        } else {
-            null
-        }
-    }
 }

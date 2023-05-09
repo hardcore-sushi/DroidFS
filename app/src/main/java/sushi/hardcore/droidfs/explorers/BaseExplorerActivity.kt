@@ -29,6 +29,7 @@ import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
 import sushi.hardcore.droidfs.content_providers.ExternalProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
+import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.file_viewers.*
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
@@ -42,7 +43,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private var foldersFirst = true
     private var mapFolders = true
     private var currentSortOrderIndex = 0
-    private var volumeId = -1
+    protected var volumeId = -1
     protected lateinit var encryptedVolume: EncryptedVolume
     private lateinit var volumeName: String
     private lateinit var explorerViewModel: ExplorerViewModel
@@ -52,7 +53,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             explorerViewModel.currentDirectoryPath = value
         }
     protected lateinit var fileOperationService: FileOperationService
-    protected val taskScope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    protected val activityScope = MainScope()
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     protected lateinit var app: VolumeManagerApp
@@ -171,11 +172,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 override fun onServiceConnected(className: ComponentName, service: IBinder) {
                     val binder = service as FileOperationService.LocalBinder
                     fileOperationService = binder.getService()
-                    binder.setEncryptedVolume(encryptedVolume)
                 }
-                override fun onServiceDisconnected(arg0: ComponentName) {
-
-                }
+                override fun onServiceDisconnected(arg0: ComponentName) {}
             }, Context.BIND_AUTO_CREATE)
         }
     }
@@ -439,7 +437,33 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun importFilesFromUris(uris: List<Uri>, callback: (String?) -> Unit) {
+    protected fun onTaskResult(
+        result: TaskResult<out String?>,
+        failedErrorMessage: Int,
+        successMessage: Int = -1,
+        onSuccess: (() -> Unit)? = null,
+    ) {
+        when (result.state) {
+            TaskResult.State.SUCCESS -> {
+                if (onSuccess == null) {
+                    Toast.makeText(this, successMessage, Toast.LENGTH_SHORT).show()
+                } else {
+                    onSuccess()
+                }
+            }
+            TaskResult.State.FAILED -> {
+                CustomAlertDialogBuilder(this, theme)
+                    .setTitle(R.string.error)
+                    .setMessage(getString(failedErrorMessage, result.failedItem))
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            }
+            TaskResult.State.ERROR -> result.showErrorAlertDialog(this, theme)
+            TaskResult.State.CANCELLED -> {}
+        }
+    }
+
+    protected fun importFilesFromUris(uris: List<Uri>, callback: () -> Unit) {
         val items = ArrayList<OperationFile>()
         for (uri in uris) {
             val fileName = PathUtils.getFilenameFromURI(this, uri)
@@ -458,13 +482,10 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (items.size > 0) {
             checkPathOverwrite(items, currentDirectoryPath) { checkedItems ->
                 checkedItems?.let {
-                    taskScope.launch {
-                        val taskResult = fileOperationService.importFilesFromUris(checkedItems.map { it.dstPath!! }, uris)
-                        if (taskResult.cancelled) {
-                            setCurrentPath(currentDirectoryPath)
-                        } else {
-                            callback(taskResult.failedItem)
-                        }
+                    activityScope.launch {
+                        val result = fileOperationService.importFilesFromUris(volumeId, checkedItems.map { it.dstPath!! }, uris)
+                        onTaskResult(result, R.string.import_failed, onSuccess = callback)
+                        setCurrentPath(currentDirectoryPath)
                     }
                 }
             }
@@ -589,7 +610,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     override fun onDestroy() {
         super.onDestroy()
         if (!isChangingConfigurations) { //activity won't be recreated
-            taskScope.cancel()
+            activityScope.cancel()
         }
     }
 
