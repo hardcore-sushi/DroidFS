@@ -261,5 +261,6 @@
     <string name="config_load_error">The configuration file cannot be loaded. Make sure the volume is accessible.</string>
     <string name="wrong_password">The configuration file cannot be decrypted. Please check your password.</string>
     <string name="filesystem_id_changed">The filesystem id in the config file is different to the last time we opened this volume. This could mean an attacker replaced the filesystem with a different one.</string>
+    <string name="inaccessible_base_dir">The volume doesn\'t exist or is inaccessible.</string>
     <string name="task_failed">The task failed: %s</string>
 </resources>
