@@ -68,7 +68,10 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
                 result.errorCode = errorCode.value ?: 0
                 result.errorStringId = when (errorCode.value) {
                     // Values from src/cryfs/impl/ErrorCodes.h
-                    11 -> R.string.wrong_password
+                    11 -> {
+                        result.worthRetry = true
+                        R.string.wrong_password
+                    }
                     16 -> R.string.inaccessible_base_dir
                     19 -> R.string.config_load_error
                     20 -> R.string.filesystem_id_changed

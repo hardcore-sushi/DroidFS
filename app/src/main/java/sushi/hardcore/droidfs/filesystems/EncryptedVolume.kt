@@ -8,7 +8,6 @@ import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
-import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
@@ -16,13 +15,19 @@ import java.io.OutputStream
 
 abstract class EncryptedVolume: Parcelable {
 
-    class InitResult(val errorCode: Int, val errorStringId: Int, val volume: EncryptedVolume?) {
+    class InitResult(
+        val errorCode: Int,
+        val errorStringId: Int,
+        val worthRetry: Boolean,
+        val volume: EncryptedVolume?,
+    ) {
         class Builder {
             var errorCode = 0
             var errorStringId = 0
+            var worthRetry = false
             var volume: EncryptedVolume? = null
 
-            fun build() = InitResult(errorCode, errorStringId, volume)
+            fun build() = InitResult(errorCode, errorStringId, worthRetry, volume)
         }
     }
 

@@ -83,7 +83,10 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
                 result.errorCode = sessionId
                 result.errorStringId = when (sessionId) {
                     -1 -> R.string.config_load_error
-                    -2 -> R.string.wrong_password
+                    -2 -> {
+                        result.worthRetry = true
+                        R.string.wrong_password
+                    }
                     else -> 0
                 }
             } else {

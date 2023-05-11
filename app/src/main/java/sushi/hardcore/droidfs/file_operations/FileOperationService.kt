@@ -20,6 +20,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
@@ -124,18 +126,20 @@ class FileOperationService : Service() {
 
     private suspend fun <T> waitForTask(notification: FileOperationNotification, task: Deferred<T>): TaskResult<out T> {
         tasks[notification.notificationId] = task
-        return serviceScope.async {
-            try {
-                TaskResult.completed(task.await())
-            } catch (e: CancellationException) {
-                TaskResult.cancelled()
-            } catch (e: Throwable) {
-                e.printStackTrace()
-                TaskResult.error(e.localizedMessage)
-            } finally {
-                cancelNotification(notification)
+        return coroutineScope {
+            withContext(serviceScope.coroutineContext) {
+                try {
+                    TaskResult.completed(task.await())
+                } catch (e: CancellationException) {
+                    TaskResult.cancelled()
+                } catch (e: Throwable) {
+                    e.printStackTrace()
+                    TaskResult.error(e.localizedMessage)
+                } finally {
+                    cancelNotification(notification)
+                }
             }
-        }.await()
+        }
     }
 
     private suspend fun <T> volumeTask(

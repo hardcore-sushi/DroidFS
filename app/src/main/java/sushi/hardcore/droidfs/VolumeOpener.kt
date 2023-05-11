@@ -190,7 +190,9 @@ class VolumeOpener(
                     .setTitle(R.string.open_volume_failed)
                     .setMessage(getErrorMsg(result))
                     .setPositiveButton(R.string.ok) { _, _ ->
-                        askForPassword(volume, isVolumeSaved, callbacks, savePasswordHash)
+                        if (result.worthRetry) {
+                            askForPassword(volume, isVolumeSaved, callbacks, savePasswordHash)
+                        }
                     }
                     .show()
             } else {
