@@ -9,9 +9,11 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.lifecycleScope
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
+import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
@@ -37,45 +39,29 @@ class ExplorerActivity : BaseExplorerActivity() {
                 val srcVolumeId = resultIntent.getIntExtra("volumeId", -1)
                 val srcEncryptedVolume = app.volumeManager.getVolume(srcVolumeId)!!
                 val path = resultIntent.getStringExtra("path")
-                val operationFiles = ArrayList<OperationFile>()
                 if (path == null){ //multiples elements
                     val paths = resultIntent.getStringArrayListExtra("paths")
                     val types = resultIntent.getIntegerArrayListExtra("types")
                     if (types != null && paths != null){
-                        for (i in paths.indices) {
-                            operationFiles.add(
-                                OperationFile(paths[i], types[i])
-                            )
-                            if (types[i] == Stat.S_IFDIR) {
-                                srcEncryptedVolume.recursiveMapFiles(paths[i])?.forEach {
-                                    operationFiles.add(OperationFile.fromExplorerElement(it))
+                        object : LoadingTask<List<OperationFile>>(this, theme, R.string.discovering_files) {
+                            override suspend fun doTask(): List<OperationFile> {
+                                val operationFiles = ArrayList<OperationFile>()
+                                for (i in paths.indices) {
+                                    operationFiles.add(OperationFile(paths[i], types[i]))
+                                    if (types[i] == Stat.S_IFDIR) {
+                                        srcEncryptedVolume.recursiveMapFiles(paths[i])?.forEach {
+                                            operationFiles.add(OperationFile.fromExplorerElement(it))
+                                        }
+                                    }
                                 }
+                                return operationFiles
                             }
+                        }.startTask(lifecycleScope) { operationFiles ->
+                            importFilesFromVolume(srcVolumeId, operationFiles)
                         }
                     }
                 } else {
-                    operationFiles.add(
-                        OperationFile(path, Stat.S_IFREG)
-                    )
-                }
-                if (operationFiles.size > 0){
-                    checkPathOverwrite(operationFiles, currentDirectoryPath) { items ->
-                        if (items != null) {
-                            // stop loading thumbnails while writing files
-                            explorerAdapter.loadThumbnails = false
-                            activityScope.launch {
-                                onTaskResult(
-                                    fileOperationService.copyElements(
-                                        volumeId,
-                                        items,
-                                        srcVolumeId
-                                    ), R.string.import_failed, R.string.success_import
-                                )
-                                explorerAdapter.loadThumbnails = true
-                                setCurrentPath(currentDirectoryPath)
-                            }
-                        }
-                    }
+                    importFilesFromVolume(srcVolumeId, arrayListOf(OperationFile(path, Stat.S_IFREG)))
                 }
             }
         }
@@ -118,6 +104,27 @@ class ExplorerActivity : BaseExplorerActivity() {
                 }
             }
         }
+    }
+
+    private fun importFilesFromVolume(srcVolumeId: Int, operationFiles: List<OperationFile>) {
+        checkPathOverwrite(operationFiles, currentDirectoryPath) { items ->
+            if (items != null) {
+                // stop loading thumbnails while writing files
+                explorerAdapter.loadThumbnails = false
+                activityScope.launch {
+                    onTaskResult(
+                        fileOperationService.copyElements(
+                            volumeId,
+                            items,
+                            srcVolumeId
+                        ), R.string.import_failed, R.string.success_import
+                    )
+                    explorerAdapter.loadThumbnails = true
+                    setCurrentPath(currentDirectoryPath)
+                }
+            }
+        }
+
     }
 
     private fun onImportComplete(urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
@@ -289,11 +296,6 @@ class ExplorerActivity : BaseExplorerActivity() {
             R.id.copy -> {
                 for (i in explorerAdapter.selectedItems){
                     itemsToProcess.add(OperationFile.fromExplorerElement(explorerElements[i]))
-                    if (explorerElements[i].isDirectory){
-                        encryptedVolume.recursiveMapFiles(explorerElements[i].fullPath)?.forEach {
-                            itemsToProcess.add(OperationFile.fromExplorerElement(it))
-                        }
-                    }
                 }
                 currentItemAction = ItemsActions.COPY
                 unselectAll()
@@ -301,20 +303,31 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.validate -> {
                 if (currentItemAction == ItemsActions.COPY){
-                    checkPathOverwrite(itemsToProcess, currentDirectoryPath) {
-                        // copying before being cleared
-                        it?.toMutableList()?.let { items ->
-                            activityScope.launch {
-                                onTaskResult(
-                                    fileOperationService.copyElements(volumeId, items),
-                                    R.string.copy_failed,
-                                    R.string.copy_success,
-                                )
-                                setCurrentPath(currentDirectoryPath)
+                    object : LoadingTask<List<OperationFile>>(this, theme, R.string.discovering_files) {
+                        override suspend fun doTask(): List<OperationFile> {
+                            val items = itemsToProcess.toMutableList()
+                            itemsToProcess.filter { it.isDirectory }.forEach { dir ->
+                                encryptedVolume.recursiveMapFiles(dir.srcPath)?.forEach {
+                                    items.add(OperationFile.fromExplorerElement(it))
+                                }
                             }
+                            return items
                         }
-                        cancelItemAction()
-                        invalidateOptionsMenu()
+                    }.startTask(lifecycleScope) { items ->
+                        checkPathOverwrite(items, currentDirectoryPath) {
+                            it?.let { checkedItems ->
+                                activityScope.launch {
+                                    onTaskResult(
+                                        fileOperationService.copyElements(volumeId, checkedItems),
+                                        R.string.copy_failed,
+                                        R.string.copy_success,
+                                    )
+                                    setCurrentPath(currentDirectoryPath)
+                                }
+                            }
+                            cancelItemAction()
+                            invalidateOptionsMenu()
+                        }
                     }
                 } else if (currentItemAction == ItemsActions.MOVE){
                     itemsToProcess.forEach {

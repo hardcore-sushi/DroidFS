@@ -373,10 +373,10 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }.show()
     }
 
-    protected fun checkPathOverwrite(items: ArrayList<OperationFile>, dstDirectoryPath: String, callback: (ArrayList<OperationFile>?) -> Unit) {
+    protected fun checkPathOverwrite(items: List<OperationFile>, dstDirectoryPath: String, callback: (List<OperationFile>?) -> Unit) {
         val srcDirectoryPath = items[0].parentPath
         var ready = true
-        for (i in 0 until items.size) {
+        for (i in items.indices) {
             val testDstPath: String
             if (items[i].dstPath == null){
                 testDstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].srcPath))
@@ -410,7 +410,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         with(EditTextDialog(this, R.string.enter_new_name) {
                             items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].parentPath), it)
                             if (items[i].isDirectory) {
-                                for (j in 0 until items.size){
+                                for (j in items.indices) {
                                     if (PathUtils.isChildOf(items[j].srcPath, items[i].srcPath)) {
                                         items[j].dstPath = PathUtils.pathJoin(items[i].dstPath!!, PathUtils.getRelativePath(items[i].srcPath, items[j].srcPath))
                                     }
