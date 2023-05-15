@@ -246,4 +246,10 @@
     <string name="black_theme">Чёрная тема</string>
     <string name="password_fallback">Возврат к паролю</string>
     <string name="password_fallback_summary">Запрашивать пароль при отмене аутентификации по отпечатку пальца</string>
+    <string name="unknown_error_code">Неизвестный код ошибки: %d</string>
+    <string name="config_load_error">Невозможно загрузить файл конфигурации. Убедитесь, что том доступен.</string>
+    <string name="wrong_password">Невозможно расшифровать файл конфигурации. Проверьте пароль.</string>
+    <string name="filesystem_id_changed">Идентификатор файловой системы в файле конфигурации отличается сохранённого при последнем использовании тома. Это может означать, что злоумышленник подменил файловую систему.</string>
+    <string name="inaccessible_base_dir">Том не существует или недоступен.</string>
+    <string name="task_failed">Задача не выполнена: %s</string>
 </resources>
