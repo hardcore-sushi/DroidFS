@@ -242,6 +242,7 @@
     <string name="file_op_delete_msg">Eliminando archivos…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, Sólo lectura)</string>
+    <string name="volume_type_inaccessible">(%s, inaccesible)</string>
     <string name="io_error">I/O Error.</string>
     <string name="use_fingerprint">Utilizar huella dactilar en lugar de la contraseña actual</string>
     <string name="remember_volume">Recordar volumen</string>
@@ -256,4 +257,10 @@
     <string name="black_theme">Tema en negro</string>
     <string name="password_fallback">Reintroducir contraseña</string>
     <string name="password_fallback_summary">Solicitar la contraseña cuando se cancela la autenticación por huella dactilar</string>
+    <string name="unknown_error_code">Código de error desconocido: %d</string>
+    <string name="config_load_error">No se puede cargar el archivo de configuración. Asegúrese de que el volumen es accesible.</string>
+    <string name="wrong_password">No se puede descifrar el archivo de configuración. Por favor, compruebe su contraseña.</string>
+    <string name="filesystem_id_changed">El id del sistema de ficheros en el fichero de configuración es diferente a la última vez que se abrió este volumen. Esto podría significar que un atacante sustituyó el sistema de archivos por otro diferente.</string>
+    <string name="inaccessible_base_dir">El volumen no existe o es inaccesible.</string>
+    <string name="task_failed">La tarea ha fallado: %s</string>
 </resources>
