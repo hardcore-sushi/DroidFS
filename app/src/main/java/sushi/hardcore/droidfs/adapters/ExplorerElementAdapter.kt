@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.adapters
 
 import android.annotation.SuppressLint
 import android.graphics.Bitmap
-import android.graphics.drawable.Drawable
 import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
@@ -11,13 +10,12 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.graphics.drawable.toBitmap
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
-import com.bumptech.glide.Glide
-import com.bumptech.glide.request.target.DrawableImageViewTarget
-import com.bumptech.glide.request.transition.Transition
 import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.ThumbnailsLoader
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
@@ -29,7 +27,7 @@ class ExplorerElementAdapter(
     val activity: AppCompatActivity,
     val encryptedVolume: EncryptedVolume?,
     private val listener: Listener,
-    val thumbnailMaxSize: Long,
+    thumbnailMaxSize: Long,
 ) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
@@ -40,12 +38,18 @@ class ExplorerElementAdapter(
         notifyDataSetChanged()
     }
     var isUsingListLayout = true
+    private var thumbnailsLoader: ThumbnailsLoader? = null
     private var thumbnailsCache: LruCache<String, Bitmap>? = null
     var loadThumbnails = true
 
     init {
         if (encryptedVolume != null) {
-            thumbnailsCache = LruCache((Runtime.getRuntime().maxMemory() / 1024 / 8).toInt())
+            thumbnailsLoader = ThumbnailsLoader(activity, encryptedVolume, thumbnailMaxSize, activity.lifecycleScope).apply {
+                initialize()
+            }
+            thumbnailsCache = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 4).toInt()) {
+                override fun sizeOf(key: String, value: Bitmap) = value.byteCount
+            }
         }
     }
 
@@ -115,40 +119,11 @@ class ExplorerElementAdapter(
     }
 
     class FileViewHolder(itemView: View) : RegularElementViewHolder(itemView) {
-        private var target: DrawableImageViewTarget? = null
-        private var job: Job? = null
-        private val scope = CoroutineScope(Dispatchers.IO)
-
-        private fun loadThumbnail(fullPath: String, adapter: ExplorerElementAdapter) {
-            adapter.encryptedVolume?.let { volume ->
-                job = scope.launch {
-                    volume.loadWholeFile(fullPath, maxSize = adapter.thumbnailMaxSize).first?.let {
-                        if (isActive) {
-                            withContext(Dispatchers.Main) {
-                                if (isActive && !adapter.activity.isFinishing && !adapter.activity.isDestroyed) {
-                                    target = Glide.with(adapter.activity).load(it).skipMemoryCache(true).into(object : DrawableImageViewTarget(icon) {
-                                        override fun onResourceReady(
-                                            resource: Drawable,
-                                            transition: Transition<in Drawable>?
-                                        ) {
-                                            target = null
-                                            val bitmap = resource.toBitmap()
-                                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config, true))
-                                            super.onResourceReady(resource, transition)
-                                        }
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        private var task = -1
 
         fun cancelThumbnailLoading(adapter: ExplorerElementAdapter) {
-            job?.cancel()
-            target?.let {
-                Glide.with(adapter.activity).clear(it)
+            if (task != -1) {
+                adapter.thumbnailsLoader?.cancel(task)
             }
         }
 
@@ -161,7 +136,10 @@ class ExplorerElementAdapter(
                         icon.setImageBitmap(thumbnail)
                         setDefaultIcon = false
                     } else if (adapter.loadThumbnails) {
-                        loadThumbnail(fullPath, adapter)
+                        task = adapter.thumbnailsLoader!!.loadAsync(fullPath, icon) { resource ->
+                            val bitmap = resource.toBitmap()
+                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config, true))
+                        }
                     }
                 }
             }
