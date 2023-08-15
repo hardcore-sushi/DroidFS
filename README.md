@@ -10,6 +10,11 @@ For mortals: Encrypted storage compatible with already existing softwares.
 <img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" height="500">
 </p>
 
+# Support
+The creator of DroidFS works as a freelance developer and privacy consultant. I am currently looking for new clients! If you are interested, take a look at the [website](https://arkensys.fr.to). Alternatively, you can directly support DroidFS by making a [donation](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/DONATE.txt).
+
+Thank you so much ❤️.
+
 # Disclaimer
 DroidFS is provided "as is", without any warranty of any kind.
 It shouldn't be considered as an absolute safe way to store files.
