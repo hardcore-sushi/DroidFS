@@ -1,0 +1,20 @@
+<resources>
+    <string-array name="sort_orders_entries">
+        <item>Name</item>
+        <item>Größe</item>
+        <item>Datum</item>
+        <item>Name (absteigend)</item>
+        <item>Größe (absteigend)</item>
+        <item>Datum (absteigend)</item>
+    </string-array>
+
+    <string-array name="color_names">
+        <item>Grün</item>
+        <item>Rot</item>
+        <item>Blau</item>
+        <item>Gelb</item>
+        <item>Orange</item>
+        <item>Lila</item>
+        <item>Rosa</item>
+    </string-array>
+</resources>
