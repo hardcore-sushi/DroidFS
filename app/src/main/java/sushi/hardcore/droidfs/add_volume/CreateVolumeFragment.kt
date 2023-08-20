@@ -256,7 +256,7 @@ class CreateVolumeFragment: Fragment() {
 
     private fun onVolumeCreated(id: Int?, volumeShortName: String) {
         (activity as AddVolumeActivity).apply {
-            if (rememberVolume || id == null) {
+            if (id == null) {
                 finish()
             } else {
                 startExplorer(id, volumeShortName)
