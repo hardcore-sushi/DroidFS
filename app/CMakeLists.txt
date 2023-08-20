@@ -5,6 +5,8 @@ project(DroidFS)
 option(GOCRYPTFS "build libgocryptfs" ON)
 option(CRYFS "build libcryfs" ON)
 
+add_library(memfile SHARED src/main/native/memfile.cpp)
+
 if (GOCRYPTFS)
 	add_library(gocryptfs SHARED IMPORTED)
 	set_target_properties(

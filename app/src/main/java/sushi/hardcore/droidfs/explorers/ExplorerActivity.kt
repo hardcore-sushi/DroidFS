@@ -17,7 +17,6 @@ import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
-import sushi.hardcore.droidfs.content_providers.ExternalProvider
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
@@ -386,12 +385,27 @@ class ExplorerActivity : BaseExplorerActivity() {
                 true
             }
             R.id.share -> {
-                val paths: MutableList<String> = ArrayList()
-                for (i in explorerAdapter.selectedItems) {
-                    paths.add(explorerElements[i].fullPath)
-                }
                 app.isStartingExternalApp = true
-                ExternalProvider.share(this, theme, encryptedVolume, paths)
+                val files = explorerAdapter.selectedItems.map { i ->
+                    explorerElements[i].let {
+                        Pair(it.fullPath, it.stat.size)
+                    }
+                }
+                object : LoadingTask<Pair<Intent?, String?>>(this, theme, R.string.loading_msg_export) {
+                    override suspend fun doTask(): Pair<Intent?, String?> {
+                        return fileShare.share(files)
+                    }
+                }.startTask(lifecycleScope) { (intent, failedItem) ->
+                    if (intent == null) {
+                        CustomAlertDialogBuilder(this, theme)
+                            .setTitle(R.string.error)
+                            .setMessage(getString(R.string.export_failed, failedItem))
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                    } else {
+                        startActivity(Intent.createChooser(intent, getString(R.string.share_chooser)))
+                    }
+                }
                 unselectAll()
                 true
             }

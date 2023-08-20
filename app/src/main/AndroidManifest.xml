@@ -68,8 +68,14 @@
         </receiver>
 
         <provider
-            android:name=".content_providers.RestrictedFileProvider"
-            android:authorities="${applicationId}.temporary_provider"
+            android:name=".content_providers.MemoryFileProvider"
+            android:authorities="${applicationId}.memory_provider"
+            android:exported="true"
+            android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE" />
+
+        <provider
+            android:name=".content_providers.DiskFileProvider"
+            android:authorities="${applicationId}.disk_provider"
             android:exported="true"
             android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE" />
     </application>

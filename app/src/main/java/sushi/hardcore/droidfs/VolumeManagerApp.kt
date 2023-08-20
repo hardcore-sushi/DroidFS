@@ -6,7 +6,8 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
-import sushi.hardcore.droidfs.content_providers.RestrictedFileProvider
+import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
+import sushi.hardcore.droidfs.content_providers.DiskFileProvider
 
 class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     companion object {
@@ -45,7 +46,8 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
             if (!usfKeepOpen) {
                 volumeManager.closeAll()
             }
-            RestrictedFileProvider.wipeAll(applicationContext)
+            DiskFileProvider.wipe()
+            MemoryFileProvider.wipe()
         }
     }
 }
