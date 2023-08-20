@@ -22,17 +22,30 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import sushi.hardcore.droidfs.BaseActivity
+import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.FileShare
+import sushi.hardcore.droidfs.FileTypes
+import sushi.hardcore.droidfs.LoadingTask
+import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
-import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
 import sushi.hardcore.droidfs.content_providers.DiskFileProvider
+import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_operations.TaskResult
-import sushi.hardcore.droidfs.FileShare
-import sushi.hardcore.droidfs.file_viewers.*
+import sushi.hardcore.droidfs.file_viewers.AudioPlayer
+import sushi.hardcore.droidfs.file_viewers.ImageViewer
+import sushi.hardcore.droidfs.file_viewers.PdfViewer
+import sushi.hardcore.droidfs.file_viewers.TextEditor
+import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
@@ -114,7 +127,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
-        setCurrentPath(currentDirectoryPath)
         linearLayoutManager = LinearLayoutManager(this@BaseExplorerActivity)
         recycler_view_explorer.adapter = explorerAdapter
         isUsingListLayout = sharedPrefs.getBoolean("useListLayout", true)
@@ -285,8 +297,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         invalidateOptionsMenu()
     }
 
-    private fun displayExplorerElements(totalSize: Long) {
-        totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+    private fun displayExplorerElements() {
         synchronized(this) {
             ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         }
@@ -349,11 +360,16 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         }
                     }
                 }
-                displayExplorerElements(totalSize)
+                displayExplorerElements()
+                totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
                 onDisplayed?.invoke()
             }
         } else {
-            displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
+            displayExplorerElements()
+            totalSizeText.text = getString(
+                R.string.total_size,
+                PathUtils.formatSize(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
+            )
             onDisplayed?.invoke()
         }
     }
@@ -577,7 +593,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
-                            setCurrentPath(currentDirectoryPath)
+                            displayExplorerElements()
                             dialog.dismiss()
                         }
                         .setNegativeButton(R.string.cancel, null)
