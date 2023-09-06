@@ -231,7 +231,8 @@
     <string name="gocryptfs_disabled">Поддержка Gocryptfs отключена</string>
     <string name="cryfs_disabled">Поддержка CryFS отключена</string>
     <string name="file_op_delete_msg">Удаление файлов…</string>
-    <string name="volume_type_read_only">(%s, только для чтения)</string>
+    <string name="volume_type_read_only">(%s, только чтение)</string>
+    <string name="volume_type_inaccessible">(%s, недоступен)</string>
     <string name="io_error">Ошибка ввода/вывода.</string>
     <string name="use_fingerprint">Использовать отпечатка пальца вместо пароля</string>
     <string name="remember_volume">Запомнить том</string>
@@ -246,4 +247,19 @@
     <string name="black_theme">Чёрная тема</string>
     <string name="password_fallback">Возврат к паролю</string>
     <string name="password_fallback_summary">Запрашивать пароль при отмене аутентификации по отпечатку пальца</string>
+    <string name="unknown_error_code">Неизвестный код ошибки: %d</string>
+    <string name="config_load_error">Невозможно загрузить файл конфигурации. Убедитесь, что том доступен.</string>
+    <string name="wrong_password">Невозможно расшифровать файл конфигурации. Проверьте пароль.</string>
+    <string name="filesystem_id_changed">Идентификатор файловой системы в файле конфигурации отличается сохранённого при последнем использовании тома. Это может означать, что злоумышленник подменил файловую систему.</string>
+    <string name="inaccessible_base_dir">Том не существует или недоступен.</string>
+    <string name="task_failed">Задача не выполнена: %s</string>
+    <string name="usf_expose">Показывать открытые тома</string>
+    <string name="usf_expose_summary">Разрешить другим приложениям просматривать открытые тома через поставщиков документов</string>
+    <string name="usf_saf_write">Разрешить запись</string>
+    <string name="usf_saf_write_summary">Разрешить другим приложениям изменять открытые файлы</string>
+    <string name="tmp_export_failed">Экспорт не выполнен: %s</string>
+    <string name="export_failed_create">невозможно создать экспортируемый файл</string>
+    <string name="export_failed_export">невозможно экспортировать файл</string>
+    <string name="export_mem">Экспорт в память…</string>
+    <string name="export_disk">Экспорт в хранилище…</string>
 </resources>
