@@ -164,7 +164,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             } else {
                 val adapter = IconTextDialogAdapter(this)
                 adapter.items = listOf(
-                    listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfert),
+                    listOf("importFromOtherVolumes", R.string.import_from_other_volume, R.drawable.icon_transfer),
                     listOf("importFiles", R.string.import_files, R.drawable.icon_encrypt),
                     listOf("importFolder", R.string.import_folder, R.drawable.icon_import_folder),
                     listOf("createFile", R.string.new_file, R.drawable.icon_file_unknown),
@@ -385,26 +385,24 @@ class ExplorerActivity : BaseExplorerActivity() {
                 true
             }
             R.id.share -> {
-                app.isStartingExternalApp = true
                 val files = explorerAdapter.selectedItems.map { i ->
                     explorerElements[i].let {
                         Pair(it.fullPath, it.stat.size)
                     }
                 }
-                object : LoadingTask<Pair<Intent?, String?>>(this, theme, R.string.loading_msg_export) {
-                    override suspend fun doTask(): Pair<Intent?, String?> {
-                        return fileShare.share(files)
+                app.isExporting = true
+                object : LoadingTask<Pair<Intent?, Int?>>(this, theme, R.string.loading_msg_export) {
+                    override suspend fun doTask(): Pair<Intent?, Int?> {
+                        return fileShare.share(files, volumeId)
                     }
-                }.startTask(lifecycleScope) { (intent, failedItem) ->
+                }.startTask(lifecycleScope) { (intent, error) ->
                     if (intent == null) {
-                        CustomAlertDialogBuilder(this, theme)
-                            .setTitle(R.string.error)
-                            .setMessage(getString(R.string.export_failed, failedItem))
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
+                        onExportFailed(error!!)
                     } else {
+                        app.isStartingExternalApp = true
                         startActivity(Intent.createChooser(intent, getString(R.string.share_chooser)))
                     }
+                    app.isExporting = false
                 }
                 unselectAll()
                 true

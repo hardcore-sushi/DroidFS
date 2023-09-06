@@ -3,10 +3,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:installLocation="auto">
 
-    <permission
-        android:name="${applicationId}.WRITE_TEMPORARY_STORAGE"
-        android:protectionLevel="signature" />
-
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
@@ -68,16 +64,21 @@
         </receiver>
 
         <provider
-            android:name=".content_providers.MemoryFileProvider"
-            android:authorities="${applicationId}.memory_provider"
-            android:exported="true"
-            android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE" />
+            android:name=".content_providers.TemporaryFileProvider"
+            android:authorities="${applicationId}.temporary_provider"
+            android:exported="true"/>
 
         <provider
-            android:name=".content_providers.DiskFileProvider"
-            android:authorities="${applicationId}.disk_provider"
+            android:authorities="${applicationId}.volume_provider"
+            android:name=".content_providers.VolumeProvider"
             android:exported="true"
-            android:writePermission="${applicationId}.WRITE_TEMPORARY_STORAGE" />
+            android:grantUriPermissions="true"
+            android:permission="android.permission.MANAGE_DOCUMENTS">
+            <intent-filter>
+                <action android:name="android.content.action.DOCUMENTS_PROVIDER" />
+            </intent-filter>
+        </provider>
+
     </application>
 
 </manifest>

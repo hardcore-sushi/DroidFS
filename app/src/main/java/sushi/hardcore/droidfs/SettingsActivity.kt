@@ -7,8 +7,16 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import android.widget.Toast
-import androidx.preference.*
+import androidx.preference.ListPreference
+import androidx.preference.Preference
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.PreferenceManager
+import androidx.preference.SwitchPreference
+import androidx.preference.SwitchPreferenceCompat
+import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
+import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
+import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
@@ -149,6 +157,47 @@ class SettingsActivity : BaseActivity() {
                 } else {
                     true
                 }
+            }
+            val switchKeepOpen = findPreference<SwitchPreference>("usf_keep_open")!!
+            val switchExternalOpen = findPreference<SwitchPreference>("usf_open")!!
+            val switchExpose = findPreference<SwitchPreference>("usf_expose")!!
+            val switchSafWrite = findPreference<SwitchPreference>("usf_saf_write")!!
+
+            fun updateView(usfOpen: Boolean? = null, usfKeepOpen: Boolean? = null, usfExpose: Boolean? = null) {
+                val usfKeepOpen = usfKeepOpen ?: switchKeepOpen.isChecked
+                switchExpose.isEnabled = usfKeepOpen
+                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || (usfKeepOpen && usfExpose ?: switchExpose.isChecked)
+            }
+
+            updateView()
+            switchKeepOpen.setOnPreferenceChangeListener { _, checked ->
+                updateView(usfKeepOpen = checked as Boolean)
+                true
+            }
+            switchExternalOpen.setOnPreferenceChangeListener { _, checked ->
+                updateView(usfOpen = checked as Boolean)
+                true
+            }
+            switchExpose.setOnPreferenceChangeListener { _, checked ->
+                if (checked as Boolean) {
+                    if (!Compat.isMemFileSupported()) {
+                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                            .setTitle(R.string.error)
+                            .setMessage("Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of ${Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION}.")
+                            .setPositiveButton(R.string.ok, null)
+                            .show()
+                        return@setOnPreferenceChangeListener false
+                    }
+                }
+                VolumeProvider.usfExpose = checked
+                updateView(usfExpose = checked)
+                VolumeProvider.notifyRootsChanged(requireContext())
+                true
+            }
+            switchSafWrite.setOnPreferenceChangeListener { _, checked ->
+                VolumeProvider.usfSafWrite = checked as Boolean
+                TemporaryFileProvider.usfSafWrite = checked
+                true
             }
         }
     }

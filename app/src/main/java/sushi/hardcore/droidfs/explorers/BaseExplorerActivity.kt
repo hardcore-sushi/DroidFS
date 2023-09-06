@@ -29,6 +29,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.EncryptedFileProvider
 import sushi.hardcore.droidfs.FileShare
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.LoadingTask
@@ -36,8 +37,7 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
-import sushi.hardcore.droidfs.content_providers.DiskFileProvider
-import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
+import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_operations.TaskResult
@@ -84,9 +84,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private lateinit var numberOfFilesText: TextView
     private lateinit var numberOfFoldersText: TextView
     private lateinit var totalSizeText: TextView
-    protected val fileShare by lazy {
-        FileShare(encryptedVolume, this)
-    }
+    protected val fileShare by lazy { FileShare(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -204,22 +202,38 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         startActivity(intent)
     }
 
+    protected fun onExportFailed(errorResId: Int) {
+        CustomAlertDialogBuilder(this, theme)
+            .setTitle(R.string.error)
+            .setMessage(getString(R.string.tmp_export_failed, getString(errorResId)))
+            .setPositiveButton(R.string.ok, null)
+            .show()
+    }
+
     private fun openWithExternalApp(path: String, size: Long) {
-        app.isStartingExternalApp = true
-        object : LoadingTask<Intent?>(this, theme, R.string.loading_msg_export) {
-            override suspend fun doTask(): Intent? {
-                return fileShare.openWith(path, size)
+        app.isExporting = true
+        val exportedFile = TemporaryFileProvider.instance.encryptedFileProvider.createFile(path, size)
+        if (exportedFile == null) {
+            onExportFailed(R.string.export_failed_create)
+            return
+        }
+        val msg = when (exportedFile) {
+            is EncryptedFileProvider.ExportedMemFile -> R.string.export_mem
+            is EncryptedFileProvider.ExportedDiskFile -> R.string.export_disk
+            else -> R.string.loading_msg_export
+        }
+        object : LoadingTask<Pair<Intent?, Int?>>(this, theme, msg) {
+            override suspend fun doTask(): Pair<Intent?, Int?> {
+                return fileShare.openWith(exportedFile, size, volumeId)
             }
-        }.startTask(lifecycleScope) { openIntent ->
-            if (openIntent == null) {
-                CustomAlertDialogBuilder(this, theme)
-                    .setTitle(R.string.error)
-                    .setMessage(getString(R.string.export_failed, path))
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
+        }.startTask(lifecycleScope) { (intent, error) ->
+            if (intent == null) {
+                onExportFailed(error!!)
             } else {
-                startActivity(openIntent)
+                app.isStartingExternalApp = true
+                startActivity(intent)
             }
+            app.isExporting = false
         }
     }
 
@@ -644,8 +658,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     override fun onResume() {
         super.onResume()
         if (app.isStartingExternalApp) {
-            MemoryFileProvider.wipe()
-            DiskFileProvider.wipe()
+            TemporaryFileProvider.instance.wipe()
         }
         if (encryptedVolume.isClosed()) {
             finish()

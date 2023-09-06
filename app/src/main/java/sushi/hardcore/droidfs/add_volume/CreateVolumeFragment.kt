@@ -211,11 +211,11 @@ class CreateVolumeFragment: Fragment() {
                         .show()
                 } else {
                     val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
-                    val volume = VolumeData(volumeName, isHiddenVolume, result)
+                    val volume = VolumeData(VolumeData.newUuid(), volumeName, isHiddenVolume, result)
                     var isVolumeSaved = false
                     volumeDatabase.apply {
                         if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
-                            removeVolume(volumeName)
+                            removeVolume(volume)
                         if (rememberVolume) {
                             isVolumeSaved = saveVolume(volume)
                         }

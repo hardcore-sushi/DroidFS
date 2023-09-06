@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs
 
 import android.os.ParcelFileDescriptor
+import android.system.Os
 
 class MemFile private constructor(private val fd: Int) {
     companion object {
@@ -15,8 +16,7 @@ class MemFile private constructor(private val fd: Int) {
         }
     }
 
-    private external fun close(fd: Int)
-
-    fun getParcelFileDescriptor(): ParcelFileDescriptor = ParcelFileDescriptor.fromFd(fd)
-    fun close() = close(fd)
+    fun dup(): ParcelFileDescriptor = ParcelFileDescriptor.fromFd(fd)
+    fun toParcelFileDescriptor(): ParcelFileDescriptor = ParcelFileDescriptor.adoptFd(fd)
+    fun close() = Os.close(ParcelFileDescriptor.adoptFd(fd).fileDescriptor)
 }

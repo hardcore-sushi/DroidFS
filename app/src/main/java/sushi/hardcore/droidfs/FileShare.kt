@@ -4,66 +4,48 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.webkit.MimeTypeMap
-import sushi.hardcore.droidfs.content_providers.DiskFileProvider
-import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
+import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.util.Version
 import java.io.File
 
-class FileShare(private val encryptedVolume: EncryptedVolume, private val context: Context) {
-
+class FileShare(context: Context) {
     companion object {
-        private const val content_type_all = "*/*"
-        fun getContentType(filename: String, previousContentType: String?): String {
-            if (content_type_all != previousContentType) {
+        private const val CONTENT_TYPE_ANY = "*/*"
+        private fun getContentType(filename: String, previousContentType: String?): String {
+            if (CONTENT_TYPE_ANY != previousContentType) {
                 var contentType = MimeTypeMap.getSingleton()
                     .getMimeTypeFromExtension(File(filename).extension)
                 if (contentType == null) {
-                    contentType = content_type_all
+                    contentType = CONTENT_TYPE_ANY
                 }
                 if (previousContentType == null) {
                     return contentType
                 } else if (previousContentType != contentType) {
-                    return content_type_all
+                    return CONTENT_TYPE_ANY
                 }
             }
             return previousContentType
         }
     }
 
-    private val fileProvider: TemporaryFileProvider<*>
+    private val usfSafWrite = PreferenceManager.getDefaultSharedPreferences(context).getBoolean("usf_saf_write", false)
 
-    init {
-        var provider: MemoryFileProvider? = null
-        System.getProperty("os.version")?.let {
-            if (Version(it) >= Version("3.17")) {
-                provider = MemoryFileProvider()
-            }
-        }
-        fileProvider = provider ?: DiskFileProvider()
+    private fun exportFile(exportedFile: EncryptedFileProvider.ExportedFile, size: Long, volumeId: Int, previousContentType: String? = null): Pair<Uri, String>? {
+        val uri = TemporaryFileProvider.instance.exportFile(exportedFile, size, volumeId) ?: return null
+        return Pair(uri, getContentType(File(exportedFile.path).name, previousContentType))
     }
 
-    private fun exportFile(path: String, size: Long, previousContentType: String? = null): Pair<Uri?, String?> {
-        val fileName = File(path).name
-        val uri = fileProvider.newFile(fileName, size)
-        if (uri != null) {
-            if (encryptedVolume.exportFile(context, path, uri)) {
-                return Pair(uri, getContentType(fileName, previousContentType))
-            }
-        }
-        return Pair(null, null)
-    }
-
-    fun share(files: List<Pair<String, Long>>): Pair<Intent?, String?> {
+    fun share(files: List<Pair<String, Long>>, volumeId: Int): Pair<Intent?, Int?> {
         var contentType: String? = null
         val uris = ArrayList<Uri>(files.size)
         for ((path, size) in files) {
-            val result = exportFile(path, size, contentType)
-            contentType = if (result.first == null) {
-                return Pair(null, path)
+            val exportedFile = TemporaryFileProvider.instance.encryptedFileProvider.createFile(path, size)
+                ?: return Pair(null, R.string.export_failed_create)
+            val result = exportFile(exportedFile, size, volumeId, contentType)
+            contentType = if (result == null) {
+                return Pair(null, R.string.export_failed_export)
             } else {
-                uris.add(result.first!!)
+                uris.add(result.first)
                 result.second
             }
         }
@@ -79,15 +61,18 @@ class FileShare(private val encryptedVolume: EncryptedVolume, private val contex
         }, null)
     }
 
-    fun openWith(path: String, size: Long): Intent? {
-        val result = exportFile(path, size)
-        return if (result.first != null) {
-            Intent(Intent.ACTION_VIEW).apply {
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                setDataAndType(result.first, result.second)
-            }
+    fun openWith(exportedFile: EncryptedFileProvider.ExportedFile, size: Long, volumeId: Int): Pair<Intent?, Int?> {
+        val result = exportFile(exportedFile, size, volumeId)
+        return if (result == null) {
+            Pair(null, R.string.export_failed_export)
         } else {
-            null
+            Pair(Intent(Intent.ACTION_VIEW).apply {
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                if (usfSafWrite) {
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                }
+                setDataAndType(result.first, result.second)
+            }, null)
         }
     }
 }

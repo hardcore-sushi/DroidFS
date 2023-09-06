@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.adapters.VolumeAdapter
 import sushi.hardcore.droidfs.add_volume.AddVolumeActivity
+import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivityMainBinding
 import sushi.hardcore.droidfs.databinding.DialogDeleteVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerRouter
@@ -195,7 +196,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     private fun removeVolume(volume: VolumeData) {
         volumeManager.getVolumeId(volume)?.let { volumeManager.closeVolume(it) }
-        volumeDatabase.removeVolume(volume.name)
+        volumeDatabase.removeVolume(volume)
     }
 
     private fun removeVolumes(volumes: List<VolumeData>, i: Int = 0, doDeleteVolumeContent: Boolean? = null) {
@@ -324,7 +325,14 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                             DocumentFile.fromFile(File(volume.name)),
                             DocumentFile.fromFile(hiddenVolumeFile.parentFile!!),
                         ) {
-                            VolumeData(volume.shortName, true, volume.type, volume.encryptedHash, volume.iv)
+                            VolumeData(
+                                VolumeData.newUuid(),
+                                volume.shortName,
+                                true,
+                                volume.type,
+                                volume.encryptedHash,
+                                volume.iv
+                            )
                         }
                     }
                 }
@@ -398,6 +406,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     val path = PathUtils.getFullPathFromTreeUri(dstRootDirectory.uri, this)
                     if (path == null) null
                     else VolumeData(
+                        VolumeData.newUuid(),
                         PathUtils.pathJoin(path, name),
                         false,
                         volume.type,
@@ -466,7 +475,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 DocumentFile.fromFile(srcPath).renameTo(newName)
             }
             if (success) {
-                volumeDatabase.renameVolume(volume.name, newDBName)
+                volumeDatabase.renameVolume(volume, newDBName)
+                VolumeProvider.notifyRootsChanged(this)
                 unselect(position)
                 if (volume.name == volumeOpener.defaultVolumeName) {
                     with (sharedPrefs.edit()) {

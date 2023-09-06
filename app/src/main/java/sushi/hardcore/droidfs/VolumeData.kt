@@ -8,10 +8,19 @@ import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 import java.io.FileInputStream
+import java.util.UUID
 
-class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte, var encryptedHash: ByteArray? = null, var iv: ByteArray? = null): Parcelable {
+class VolumeData(
+    val uuid: String,
+    val name: String,
+    val isHidden: Boolean = false,
+    val type: Byte,
+    var encryptedHash: ByteArray? = null,
+    var iv: ByteArray? = null
+) : Parcelable {
 
     constructor(parcel: Parcel) : this(
+        parcel.readString()!!,
         parcel.readString()!!,
         parcel.readByte() != 0.toByte(),
         parcel.readByte(),
@@ -23,12 +32,7 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
         File(name).name
     }
 
-    fun getFullPath(filesDir: String): String {
-        return if (isHidden)
-            getHiddenVolumeFullPath(filesDir, name)
-        else
-            name
-    }
+    fun getFullPath(filesDir: String) = getFullPath(name, isHidden, filesDir)
 
     fun canRead(filesDir: String): Boolean {
         val volumePath = getFullPath(filesDir)
@@ -62,6 +66,7 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
 
     override fun writeToParcel(dest: Parcel, flags: Int) {
         with (dest) {
+            writeString(uuid)
             writeString(name)
             writeByte(if (isHidden) 1 else 0)
             writeByte(type)
@@ -74,12 +79,10 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
         if (other !is VolumeData) {
             return false
         }
-        return other.name == name && other.isHidden == isHidden
+        return other.uuid == uuid
     }
 
-    override fun hashCode(): Int {
-        return name.hashCode()+isHidden.hashCode()
-    }
+    override fun hashCode() = uuid.hashCode()
 
     companion object {
         const val VOLUMES_DIRECTORY = "volumes"
@@ -90,8 +93,17 @@ class VolumeData(val name: String, val isHidden: Boolean = false, val type: Byte
             override fun newArray(size: Int) = arrayOfNulls<VolumeData>(size)
         }
 
+        fun newUuid(): String = UUID.randomUUID().toString()
+
         fun getHiddenVolumeFullPath(filesDir: String, name: String): String {
             return PathUtils.pathJoin(filesDir, VOLUMES_DIRECTORY, name)
+        }
+
+        fun getFullPath(name: String, isHidden: Boolean, filesDir: String): String {
+            return if (isHidden)
+                getHiddenVolumeFullPath(filesDir, name)
+            else
+                name
         }
     }
 }

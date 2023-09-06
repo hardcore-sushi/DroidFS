@@ -3,7 +3,7 @@ package sushi.hardcore.droidfs.util
 import java.lang.Integer.max
 
 class Version(inputVersion: String) : Comparable<Version> {
-    private var version: String
+    private val version: String
 
     init {
         val regex = "[0-9]+(\\.[0-9]+)*".toRegex()

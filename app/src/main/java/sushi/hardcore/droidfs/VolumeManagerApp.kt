@@ -6,8 +6,7 @@ import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
-import sushi.hardcore.droidfs.content_providers.MemoryFileProvider
-import sushi.hardcore.droidfs.content_providers.DiskFileProvider
+import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 
 class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     companion object {
@@ -21,8 +20,9 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
         }
     }
     private var usfKeepOpen = false
+    var isExporting = false
     var isStartingExternalApp = false
-    val volumeManager = VolumeManager()
+    val volumeManager = VolumeManager(this)
 
     override fun onCreate() {
         super<Application>.onCreate()
@@ -46,8 +46,9 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
             if (!usfKeepOpen) {
                 volumeManager.closeAll()
             }
-            DiskFileProvider.wipe()
-            MemoryFileProvider.wipe()
+            if (!usfKeepOpen || !isExporting) {
+                TemporaryFileProvider.instance.wipe()
+            }
         }
     }
 }

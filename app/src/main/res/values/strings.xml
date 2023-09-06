@@ -263,4 +263,14 @@
     <string name="filesystem_id_changed">The filesystem id in the config file is different to the last time we opened this volume. This could mean an attacker replaced the filesystem with a different one.</string>
     <string name="inaccessible_base_dir">The volume doesn\'t exist or is inaccessible.</string>
     <string name="task_failed">The task failed: %s</string>
+    <string name="usf_expose">Expose open volumes</string>
+    <string name="usf_expose_summary">Allow other applications to browse open volumes as documents providers</string>
+    <string name="usf_saf_write">Grant write access</string>
+    <string name="usf_saf_write_summary">Grant write access when opening files with other applications</string>
+    <string name="saf">Storage Access Framework</string>
+    <string name="tmp_export_failed">Export failed: %s</string>
+    <string name="export_failed_create">can\'t create exported file</string>
+    <string name="export_failed_export">failed to export file</string>
+    <string name="export_mem">Exporting to memory…</string>
+    <string name="export_disk">Exporting to disk…</string>
 </resources>
