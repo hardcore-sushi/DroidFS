@@ -374,7 +374,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 )
             }
         }
-        menu.findItem(R.id.rename).isVisible = onlyOneAndWriteable
+        menu.findItem(R.id.rename).isVisible = onlyOneAndWriteable && !volumeManager.isOpen(volumeAdapter.volumes[volumeAdapter.selectedItems.first()])
         supportActionBar?.setDisplayHomeAsUpEnabled(isSelecting || explorerRouter.pickMode || explorerRouter.dropMode)
         return true
     }
