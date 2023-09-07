@@ -263,4 +263,14 @@
     <string name="filesystem_id_changed">Die Dateisystem-ID in der Konfigurationsdatei ist eine andere als beim letzten Öffnen dieses Datenträgers. Dies könnte bedeuten, dass ein Angreifer das Dateisystem durch ein anderes ersetzt hat.</string>
     <string name="inaccessible_base_dir">Das Volume existiert nicht oder ist unzugänglich.</string>
     <string name="task_failed">Die Aufgabe ist fehlgeschlagen: %s</string>
+    <string name="usf_expose">Geöffnete Datenträger anzeigen</string>
+    <string name="usf_expose_summary">Anderen Anwendungen das Durchsuchen offener Datenträger als Dokumentanbieter erlauben</string>
+    <string name="usf_saf_write">Schreibzugriff gewähren</string>
+    <string name="usf_saf_write_summary">Schreibzugriff beim Öffnen von Dateien mit anderen Anwendungen gewähren</string>
+    <string name="saf">Storage Access Framework</string>
+    <string name="tmp_export_failed">Export fehlgeschlagen: %s</string>
+    <string name="export_failed_create">kann exportierte Datei nicht erstellen</string>
+    <string name="export_failed_export">Fehler beim Exportieren der Datei</string>
+    <string name="export_mem">Exportieren in den Arbeitsspeicher...</string>
+    <string name="export_disk">Exportieren auf den Datenträger...</string>
 </resources>
