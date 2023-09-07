@@ -22,15 +22,30 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import kotlinx.coroutines.*
-import sushi.hardcore.droidfs.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import sushi.hardcore.droidfs.BaseActivity
+import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.EncryptedFileProvider
+import sushi.hardcore.droidfs.FileShare
+import sushi.hardcore.droidfs.FileTypes
+import sushi.hardcore.droidfs.LoadingTask
+import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.adapters.ExplorerElementAdapter
 import sushi.hardcore.droidfs.adapters.OpenAsDialogAdapter
-import sushi.hardcore.droidfs.content_providers.ExternalProvider
+import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.file_operations.TaskResult
-import sushi.hardcore.droidfs.file_viewers.*
+import sushi.hardcore.droidfs.file_viewers.AudioPlayer
+import sushi.hardcore.droidfs.file_viewers.ImageViewer
+import sushi.hardcore.droidfs.file_viewers.PdfViewer
+import sushi.hardcore.droidfs.file_viewers.TextEditor
+import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
@@ -69,6 +84,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private lateinit var numberOfFilesText: TextView
     private lateinit var numberOfFoldersText: TextView
     private lateinit var totalSizeText: TextView
+    protected val fileShare by lazy { FileShare(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -109,7 +125,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
-        setCurrentPath(currentDirectoryPath)
         linearLayoutManager = LinearLayoutManager(this@BaseExplorerActivity)
         recycler_view_explorer.adapter = explorerAdapter
         isUsingListLayout = sharedPrefs.getBoolean("useListLayout", true)
@@ -187,12 +202,43 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         startActivity(intent)
     }
 
-    private fun openWithExternalApp(fullPath: String) {
-        app.isStartingExternalApp = true
-        ExternalProvider.open(this, theme, encryptedVolume, fullPath)
+    protected fun onExportFailed(errorResId: Int) {
+        CustomAlertDialogBuilder(this, theme)
+            .setTitle(R.string.error)
+            .setMessage(getString(R.string.tmp_export_failed, getString(errorResId)))
+            .setPositiveButton(R.string.ok, null)
+            .show()
     }
 
-    private fun showOpenAsDialog(path: String) {
+    private fun openWithExternalApp(path: String, size: Long) {
+        app.isExporting = true
+        val exportedFile = TemporaryFileProvider.instance.encryptedFileProvider.createFile(path, size)
+        if (exportedFile == null) {
+            onExportFailed(R.string.export_failed_create)
+            return
+        }
+        val msg = when (exportedFile) {
+            is EncryptedFileProvider.ExportedMemFile -> R.string.export_mem
+            is EncryptedFileProvider.ExportedDiskFile -> R.string.export_disk
+            else -> R.string.loading_msg_export
+        }
+        object : LoadingTask<Pair<Intent?, Int?>>(this, theme, msg) {
+            override suspend fun doTask(): Pair<Intent?, Int?> {
+                return fileShare.openWith(exportedFile, size, volumeId)
+            }
+        }.startTask(lifecycleScope) { (intent, error) ->
+            if (intent == null) {
+                onExportFailed(error!!)
+            } else {
+                app.isStartingExternalApp = true
+                startActivity(intent)
+            }
+            app.isExporting = false
+        }
+    }
+
+    private fun showOpenAsDialog(explorerElement: ExplorerElement) {
+        val path = explorerElement.fullPath
         val adapter = OpenAsDialogAdapter(this, usf_open)
         CustomAlertDialogBuilder(this, theme)
             .setSingleChoiceItems(adapter, -1) { dialog, which ->
@@ -203,7 +249,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                     "pdf" -> startFileViewer(PdfViewer::class.java, path)
                     "text" -> startFileViewer(TextEditor::class.java, path)
                     "external" -> if (usf_open) {
-                        openWithExternalApp(path)
+                        openWithExternalApp(path, explorerElement.stat.size)
                     }
                 }
                 dialog.dismiss()
@@ -250,7 +296,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 FileTypes.isAudio(fullPath) -> {
                     startFileViewer(AudioPlayer::class.java, fullPath)
                 }
-                else -> showOpenAsDialog(fullPath)
+                else -> showOpenAsDialog(explorerElements[position])
             }
         }
         invalidateOptionsMenu()
@@ -265,8 +311,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         invalidateOptionsMenu()
     }
 
-    private fun displayExplorerElements(totalSize: Long) {
-        totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+    private fun displayExplorerElements() {
         synchronized(this) {
             ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         }
@@ -329,11 +374,16 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         }
                     }
                 }
-                displayExplorerElements(totalSize)
+                displayExplorerElements()
+                totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
                 onDisplayed?.invoke()
             }
         } else {
-            displayExplorerElements(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
+            displayExplorerElements()
+            totalSizeText.text = getString(
+                R.string.total_size,
+                PathUtils.formatSize(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
+            )
             onDisplayed?.invoke()
         }
     }
@@ -557,7 +607,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
-                            setCurrentPath(currentDirectoryPath)
+                            displayExplorerElements()
                             dialog.dismiss()
                         }
                         .setNegativeButton(R.string.cancel, null)
@@ -575,22 +625,13 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 true
             }
             R.id.open_as -> {
-                showOpenAsDialog(
-                    PathUtils.pathJoin(
-                        currentDirectoryPath,
-                        explorerElements[explorerAdapter.selectedItems.first()].name
-                    )
-                )
+                showOpenAsDialog(explorerElements[explorerAdapter.selectedItems.first()])
                 true
             }
             R.id.external_open -> {
                 if (usf_open){
-                    openWithExternalApp(
-                        PathUtils.pathJoin(
-                            currentDirectoryPath,
-                            explorerElements[explorerAdapter.selectedItems.first()].name
-                        )
-                    )
+                    val explorerElement = explorerElements[explorerAdapter.selectedItems.first()]
+                    openWithExternalApp(explorerElement.fullPath, explorerElement.stat.size)
                     unselectAll()
                 }
                 true
@@ -617,7 +658,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     override fun onResume() {
         super.onResume()
         if (app.isStartingExternalApp) {
-            ExternalProvider.removeFilesAsync(this)
+            TemporaryFileProvider.instance.wipe()
         }
         if (encryptedVolume.isClosed()) {
             finish()

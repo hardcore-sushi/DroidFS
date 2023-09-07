@@ -13,4 +13,11 @@ object Compat {
             bundle.getParcelable(name)
         }
     }
+
+   val MEMFD_CREATE_MINIMUM_KERNEL_VERSION = Version("3.17")
+
+    fun isMemFileSupported(): Boolean {
+        val kernel = System.getProperty("os.version") ?: return false
+        return Version(kernel) >= MEMFD_CREATE_MINIMUM_KERNEL_VERSION
+    }
 }

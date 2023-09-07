@@ -160,7 +160,7 @@ class ChangePasswordActivity: BaseActivity() {
                     )
                 }
                 if (success) {
-                    if (volumeDatabase.isHashSaved(volume.name)) {
+                    if (volumeDatabase.isHashSaved(volume)) {
                         volumeDatabase.removeHash(volume)
                     }
                 }

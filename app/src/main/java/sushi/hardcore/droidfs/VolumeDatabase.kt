@@ -9,47 +9,40 @@ import android.util.Log
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
+import java.util.UUID
 
-class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 5) {
+class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 6) {
     companion object {
-        const val TAG = "VolumeDatabase"
-        const val TABLE_NAME = "Volumes"
-        const val COLUMN_NAME = "name"
-        const val COLUMN_HIDDEN = "hidden"
-        const val COLUMN_TYPE = "type"
-        const val COLUMN_HASH = "hash"
-        const val COLUMN_IV = "iv"
-
-        private fun contentValuesFromVolume(volume: VolumeData): ContentValues {
-            val contentValues = ContentValues()
-            contentValues.put(COLUMN_NAME, volume.name)
-            contentValues.put(COLUMN_HIDDEN, volume.isHidden)
-            contentValues.put(COLUMN_TYPE, byteArrayOf(volume.type))
-            contentValues.put(COLUMN_HASH, volume.encryptedHash)
-            contentValues.put(COLUMN_IV, volume.iv)
-            return contentValues
-        }
+        private const val TAG = "VolumeDatabase"
+        private const val TABLE_NAME = "Volumes"
+        private const val COLUMN_UUID = "uuid"
+        private const val COLUMN_NAME = "name"
+        private const val COLUMN_HIDDEN = "hidden"
+        private const val COLUMN_TYPE = "type"
+        private const val COLUMN_HASH = "hash"
+        private const val COLUMN_IV = "iv"
     }
-    override fun onCreate(db: SQLiteDatabase) {
+
+    private fun createTable(db: SQLiteDatabase) =
         db.execSQL(
-            "CREATE TABLE IF NOT EXISTS $TABLE_NAME (" +
-                    "$COLUMN_NAME TEXT PRIMARY KEY," +
-                    "$COLUMN_HIDDEN SHORT," +
-                    "$COLUMN_TYPE BLOB," +
-                    "$COLUMN_HASH BLOB," +
-                    "$COLUMN_IV BLOB" +
-                ");"
+        "CREATE TABLE IF NOT EXISTS $TABLE_NAME (" +
+                "$COLUMN_UUID TEXT PRIMARY KEY," +
+                "$COLUMN_NAME TEXT," +
+                "$COLUMN_HIDDEN SHORT," +
+                "$COLUMN_TYPE BLOB," +
+                "$COLUMN_HASH BLOB," +
+                "$COLUMN_IV BLOB" +
+            ");"
         )
+
+    override fun onCreate(db: SQLiteDatabase) {
+        createTable(db)
         File(context.filesDir, VolumeData.VOLUMES_DIRECTORY).mkdir()
     }
 
     private fun getNewVolumePath(volumeName: String): File {
         return File(
-            VolumeData(
-                volumeName,
-                true,
-                EncryptedVolume.GOCRYPTFS_VOLUME_TYPE
-            ).getFullPath(context.filesDir.path)
+            VolumeData.getFullPath(volumeName, true, context.filesDir.path)
         ).canonicalFile
     }
 
@@ -101,10 +94,29 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
                 }
             }
         }
+        if (oldVersion < 6) {
+            val volumeCount = db.rawQuery("SELECT COUNT(*) FROM $TABLE_NAME", null).let { cursor ->
+                cursor.moveToNext()
+                cursor.getInt(0).also {
+                    cursor.close()
+                }
+            }
+            db.execSQL("ALTER TABLE $TABLE_NAME RENAME TO OLD;")
+            createTable(db)
+            val uuids = (0 until volumeCount).joinToString(", ") { "('${VolumeData.newUuid()}')" }
+            val baseColumns = "$COLUMN_NAME, $COLUMN_HIDDEN, $COLUMN_TYPE, $COLUMN_HASH, $COLUMN_IV"
+            // add uuids to old data
+            db.execSQL("INSERT INTO $TABLE_NAME " +
+                    "SELECT uuid, $baseColumns FROM " +
+                    "(SELECT $baseColumns, ROW_NUMBER() OVER () i FROM OLD) NATURAL JOIN " +
+                    "(SELECT column1 uuid, ROW_NUMBER() OVER () i FROM (VALUES $uuids));")
+            db.execSQL("DROP TABLE OLD;")
+        }
     }
 
     private fun extractVolumeData(cursor: Cursor): VolumeData {
         return VolumeData(
+            cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_UUID)),
             cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)),
             cursor.getShort(cursor.getColumnIndexOrThrow(COLUMN_HIDDEN)) == 1.toShort(),
             cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_TYPE))[0],
@@ -142,7 +154,14 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
 
     fun saveVolume(volume: VolumeData): Boolean {
         if (!isVolumeSaved(volume.name, volume.isHidden)) {
-            return (writableDatabase.insert(TABLE_NAME, null, contentValuesFromVolume(volume)) >= 0.toLong())
+            return (writableDatabase.insert(TABLE_NAME, null, ContentValues().apply {
+                put(COLUMN_UUID, volume.uuid)
+                put(COLUMN_NAME, volume.name)
+                put(COLUMN_HIDDEN, volume.isHidden)
+                put(COLUMN_TYPE, byteArrayOf(volume.type))
+                put(COLUMN_HASH, volume.encryptedHash)
+                put(COLUMN_IV, volume.iv)
+            }) == 1.toLong())
         }
         return false
     }
@@ -157,8 +176,8 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
         return list
     }
 
-    fun isHashSaved(volumeName: String): Boolean {
-        val cursor = readableDatabase.query(TABLE_NAME, arrayOf(COLUMN_NAME, COLUMN_HASH), "$COLUMN_NAME=?", arrayOf(volumeName), null, null, null)
+    fun isHashSaved(volume: VolumeData): Boolean {
+        val cursor = readableDatabase.rawQuery("SELECT $COLUMN_HASH FROM $TABLE_NAME WHERE $COLUMN_UUID=?", arrayOf(volume.uuid))
         var isHashSaved = false
         if (cursor.moveToNext()) {
             if (cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_HASH)) != null) {
@@ -170,32 +189,33 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
     }
 
     fun addHash(volume: VolumeData): Boolean {
-        return writableDatabase.update(TABLE_NAME, contentValuesFromVolume(volume), "$COLUMN_NAME=?", arrayOf(volume.name)) > 0
+        return writableDatabase.update(TABLE_NAME, ContentValues().apply {
+            put(COLUMN_HASH, volume.encryptedHash)
+            put(COLUMN_IV, volume.iv)
+        }, "$COLUMN_UUID=?", arrayOf(volume.uuid)) > 0
     }
 
     fun removeHash(volume: VolumeData): Boolean {
         return writableDatabase.update(
-            TABLE_NAME, contentValuesFromVolume(
-            VolumeData(
-                volume.name,
-                volume.isHidden,
-                volume.type,
-                null,
-                null
-            )
-        ), "$COLUMN_NAME=?", arrayOf(volume.name)) > 0
-    }
-
-    fun renameVolume(oldName: String, newName: String): Boolean {
-        return writableDatabase.update(TABLE_NAME,
+            TABLE_NAME,
             ContentValues().apply {
-                put(COLUMN_NAME, newName)
-            },
-            "$COLUMN_NAME=?",arrayOf(oldName)
+                put(COLUMN_HASH, null as ByteArray?)
+                put(COLUMN_IV, null as ByteArray?)
+            }, "$COLUMN_UUID=?", arrayOf(volume.uuid)
         ) > 0
     }
 
-    fun removeVolume(volumeName: String): Boolean {
-        return writableDatabase.delete(TABLE_NAME, "$COLUMN_NAME=?", arrayOf(volumeName)) > 0
+    fun renameVolume(volume: VolumeData, newName: String): Boolean {
+        return writableDatabase.update(
+            TABLE_NAME,
+            ContentValues().apply {
+                put(COLUMN_NAME, newName)
+            },
+            "$COLUMN_UUID=?", arrayOf(volume.uuid)
+        ) > 0
+    }
+
+    fun removeVolume(volume: VolumeData): Boolean {
+        return writableDatabase.delete(TABLE_NAME, "$COLUMN_UUID=?", arrayOf(volume.uuid)) > 0
     }
 }

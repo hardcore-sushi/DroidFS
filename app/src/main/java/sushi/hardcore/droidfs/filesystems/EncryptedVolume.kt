@@ -160,7 +160,6 @@ abstract class EncryptedVolume: Parcelable {
                 if (written == length) {
                     offset += written
                 } else {
-                    inputStream.close()
                     success = false
                     break
                 }

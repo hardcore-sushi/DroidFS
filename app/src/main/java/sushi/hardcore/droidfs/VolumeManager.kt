@@ -1,12 +1,14 @@
 package sushi.hardcore.droidfs
 
+import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 
-class VolumeManager {
+class VolumeManager(private val context: Context) {
     private var id = 0
     private val volumes = HashMap<Int, EncryptedVolume>()
     private val volumesData = HashMap<VolumeData, Int>()
@@ -15,6 +17,7 @@ class VolumeManager {
     fun insert(volume: EncryptedVolume, data: VolumeData): Int {
         volumes[id] = volume
         volumesData[data] = id
+        VolumeProvider.notifyRootsChanged(context)
         return id++
     }
 
@@ -30,6 +33,10 @@ class VolumeManager {
         return volumes[id]
     }
 
+    fun listVolumes(): List<Pair<Int, VolumeData>> {
+        return volumesData.map { (data, id) -> Pair(id, data) }
+    }
+
     fun getCoroutineScope(volumeId: Int): CoroutineScope {
         return scopes[volumeId] ?: CoroutineScope(SupervisorJob() + Dispatchers.IO).also { scopes[volumeId] = it }
     }
@@ -41,6 +48,7 @@ class VolumeManager {
             volumesData.filter { it.value == id }.forEach {
                 volumesData.remove(it.key)
             }
+            VolumeProvider.notifyRootsChanged(context)
         }
     }
 
@@ -51,5 +59,6 @@ class VolumeManager {
         }
         volumes.clear()
         volumesData.clear()
+        VolumeProvider.notifyRootsChanged(context)
     }
 }

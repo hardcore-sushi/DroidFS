@@ -350,7 +350,7 @@ class SelectPathFragment: Fragment() {
     }
 
     private fun addVolume(volumeName: String, isHidden: Boolean, volumeType: Byte) {
-        val volumeData = VolumeData(volumeName, isHidden, volumeType)
+        val volumeData = VolumeData(VolumeData.newUuid(), volumeName, isHidden, volumeType)
         if (binding.switchRemember.isChecked) {
             volumeDatabase.saveVolume(volumeData)
         }
