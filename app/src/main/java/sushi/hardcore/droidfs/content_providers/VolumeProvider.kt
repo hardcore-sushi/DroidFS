@@ -243,7 +243,7 @@ class VolumeProvider: DocumentsProvider() {
             null
         } else {
             document.encryptedVolume.closeFile(f)
-            document.rootId+"/"+newFile
+            document.rootId+newFile
         }
     }
 
