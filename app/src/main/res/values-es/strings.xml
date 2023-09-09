@@ -255,7 +255,6 @@
     <string name="theme_color_summary">Cambiar el color del tema de la aplicación</string>
     <string name="black_theme">Tema en negro</string>
     <string name="password_fallback">Reintroducir contraseña</string>
-    <string name="password_fallback_summary">Solicitar la contraseña cuando se cancela la autenticación por huella dactilar</string>
     <string name="password_fallback_summary">Solicitar contraseña cuando se cancela la autenticación por huella dactilar</string>
     <string name="unknown_error_code">Código de error desconocido: %d</string>
     <string name="config_load_error">No se puede cargar el archivo de configuración. Asegúrese de que el volumen es accesible.</string>
@@ -271,6 +270,6 @@
     <string name="tmp_export_failed">Falló la exportación: %s</string>
     <string name="export_failed_create">no se pudo crear el archivo exportado</string>
     <string name="export_failed_export">Error al exportar el archivo</string>
-    <string name="export_mem">Exportando a memoria...</string>
-    <string name="export_disk">Exportar a disco...</string>
+    <string name="export_mem">Exportando a memoria…</string>
+    <string name="export_disk">Exportar a disco…</string>
 </resources>

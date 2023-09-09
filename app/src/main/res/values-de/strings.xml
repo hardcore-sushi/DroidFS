@@ -1,4 +1,4 @@
-<Ressourcen>
+<resources>
     <string name="app_name">DroidFS</string>
     <string name="create_volume">Laufwerk erstellen</string>
     <string name="open">Öffnen</string>
@@ -7,7 +7,7 @@
     <string name="password">Passwort</string>
     <string name="import_files">Dateien importieren/verschlüsseln</string>
     <string name="import_folder">Ordner importieren/verschlüsseln</string>
-    <string name="discovering_files">Dateien aufspüren...</string>
+    <string name="discovering_files">Dateien aufspüren…</string>
     <string name="mkdir">Ordner erstellen</string>
     <string name="dir_empty">Verzeichnis leeren</string>
     <string name="warning">Warnung!</string>
@@ -96,17 +96,17 @@
     <string name="new_file">Neue Datei erstellen</string>
     <string name="enter_file_name">Dateiname:</string>
     <string name="file_creation_failed">Die Datei konnte nicht erstellt werden.</string>
-    <string name="loading">Laden...</string>
-    <string name="loading_msg_create">Erzeuge Datenträger...</string>
-    <string name="loading_msg_change_password">Kennwort ändern...</string>
-    <string name="loading_msg_open">Datenträger öffnen...</string>
-    <string name="loading_msg_export">Dateien exportieren...</string>
+    <string name="loading">Laden…</string>
+    <string name="loading_msg_create">Erzeuge Datenträger…</string>
+    <string name="loading_msg_change_password">Kennwort ändern…</string>
+    <string name="loading_msg_open">Datenträger öffnen…</string>
+    <string name="loading_msg_export">Dateien exportieren…</string>
     <string name="query_cursor_null_error_msg">Zugriff auf diese Datei nicht möglich</string>
     <string name="about">Über uns</string>
     <string name="github">GitHub</string>
-    <string name="github_summary">Das DroidFS-Repository auf GitHub. Quellcode, Dokumentation, Bugtracker...</string>
+    <string name="github_summary">Das DroidFS-Repository auf GitHub. Quellcode, Dokumentation, Bugtracker…</string>
     <string name="gitea">Gitea</string>
-    <string name="gitea_summary">Das DroidFS-Repository auf der Chapril Gitea-Instanz. Im Gegensatz zu GitHub ist Gitea vollständig freie Software und wird selbst gehostet. Quellcode, Dokumentation, Bugtracker...</string>
+    <string name="gitea_summary">Das DroidFS-Repository auf der Chapril Gitea-Instanz. Im Gegensatz zu GitHub ist Gitea vollständig freie Software und wird selbst gehostet. Quellcode, Dokumentation, Bugtracker…</string>
     <string name="share">Share</string>
     <string name="decrypt_files">Exportieren/Entschlüsseln</string>
     <string name="copy_failed">Kopie von %s fehlgeschlagen.</string>
@@ -149,11 +149,11 @@
     <string name="camera_perm_needed">Die Kameraerlaubnis wird benötigt, um Fotos zu machen.</string>
     <string name="choose_resolution">Wählen Sie eine Auflösung</string>
     <string name="file_operations">Dateioperationen</string>
-    <string name="file_op_copy_msg">Kopieren von Dateien...</string>
-    <string name="file_op_import_msg">Dateien importieren...</string>
-    <string name="file_op_export_msg">Dateien exportieren...</string>
-    <string name="file_op_move_msg">Dateien verschieben...</string>
-    <string name="file_op_wiping_msg">Dateien löschen...</string>
+    <string name="file_op_copy_msg">Kopieren von Dateien…</string>
+    <string name="file_op_import_msg">Dateien importieren…</string>
+    <string name="file_op_export_msg">Dateien exportieren…</string>
+    <string name="file_op_move_msg">Dateien verschieben…</string>
+    <string name="file_op_wiping_msg">Dateien löschen…</string>
     <string name="folders_first">Ordner zuerst</string>
     <string name="folders_first_summary">Ordner am Anfang der Liste anzeigen</string>
     <string name="auto_fit_title">Bildschirm des Videoplayers wird automatisch gedreht</string>
@@ -215,7 +215,7 @@
     <string name="error_marshmallow_required">Diese Funktion ist nur unter Android 6.0 (Marshmallow) oder höher verfügbar.</string>
     <string name="copy_hidden_volume">Kopieren in gemeinsamen Speicher</string>
     <string name="copy_external_volume">Eine versteckte Kopie erstellen</string>
-    <string name="copy_volume_notification">Datenträger kopieren...</string>
+    <string name="copy_volume_notification">Datenträger kopieren…</string>
     <string name="hidden_volume_already_exists">Ein versteckter Datenträger mit dem gleichen Namen existiert bereits.</string>
     <string name="pdf_document">PDF-Dokument</string>
     <string name="thumbnail_max_size">Maximale Größe für Miniaturansichten</string>
@@ -239,7 +239,7 @@
     <string name="cryfs">CryFS</string>
     <string name="gocryptfs_disabled">Die Unterstützung von Gocryptfs wurde deaktiviert</string>
     <string name="cryfs_disabled">CryFS-Unterstützung wurde deaktiviert</string>
-    <string name="file_op_delete_msg">Löschen von Dateien...</string>
+    <string name="file_op_delete_msg">Löschen von Dateien…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, schreibgeschützt)</string>
     <string name="volume_type_inaccessible">(%s, unzugänglich)</string>
@@ -271,6 +271,6 @@
     <string name="tmp_export_failed">Export fehlgeschlagen: %s</string>
     <string name="export_failed_create">kann exportierte Datei nicht erstellen</string>
     <string name="export_failed_export">Fehler beim Exportieren der Datei</string>
-    <string name="export_mem">Exportieren in den Arbeitsspeicher...</string>
-    <string name="export_disk">Exportieren auf den Datenträger...</string>
+    <string name="export_mem">Exportieren in den Arbeitsspeicher…</string>
+    <string name="export_disk">Exportieren auf den Datenträger…</string>
 </resources>
