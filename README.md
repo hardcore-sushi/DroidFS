@@ -39,23 +39,29 @@ Some available features are considered risky and are therefore disabled by defau
 
   Note: apps with root access don't care about this flag: they can take screenshots or record the screen of any app without any permissions.
   </li>
-  <li><h4>Allow opening files with other applications*:</h4>
-  Decrypt and open file using external apps. These apps could save and send the files thus opened.
-  </li>
   <li><h4>Allow exporting files:</h4>
   Decrypt and write file to disk (external storage). Any app with storage permissions could access exported files.
   </li>
   <li><h4>Allow sharing files via the android share menu*:</h4>
   Decrypt and share file with other apps. These apps could save and send the files thus shared.
   </li>
-  <li><h4>Keep volume open when the app goes in background:</h4>
-  Don't close the volume when you leave the app but keep running it in the background. Anyone going back to the activity could have access to the volume.
-  </li>
   <li><h4>Allow saving password hash using fingerprint:</h4>
   Generate an AES-256 GCM key in the Android Keystore (protected by fingerprint authentication), then use it to encrypt the volume password hash and store it to the DroidFS internal storage. This require Android v6.0+. If your device is not encrypted, extracting the encryption key with physical access may be possible.
   </li>
+  <li><h4>Keep volume open when the app goes in background:</h4>
+  Don't close the volume when you leave the app but keep running it in the background. Anyone going back to the activity could have access to the volume.
+  </li>
+  <li><h4>Allow opening files with other applications*:</h4>
+  Decrypt and open file using external apps. These apps could save and send the files thus opened.
+  </li>
+  <li><h4>Expose open volumes*:</h4>
+  Allow open volumes to be browsed in the system file explorer ([DocumentProvider](https://developer.android.com/guide/topics/providers/document-provider) API). Encrypted files can then be selected from other applications, potentially with permanent access.
+  </li>
+  <li><h4>Grant write access:</h4>
+  Files opened with another applications can be modified by them. This applies to both previous unsafe features.
+  </li>
 </ul>
-* Features requiring temporary writing of the plain file to disk (DroidFS internal storage). This file could be read by apps with root access or by physical access if your device is not encrypted.
+* These features may require temporarily writing the plain file to disk (DroidFS internal storage). This file can be read by applications with root access or by physical access if your device is not encrypted. For files small enough and on a 3.17+ kernel, DroidFS will try to use memory-only storage using `memfd_create(2)` (can break some apps).
 
 # Download
 <a href="https://f-droid.org/packages/sushi.hardcore.droidfs">
@@ -99,7 +105,7 @@ DroidFS needs some permissions for certain features. However, you are free to de
 </ul>
 
 # Limitations
-DroidFS works as a wrapper around modified versions of the original encrypted container implementations ([libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) and [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs)). These programs were designed to run on standard x86 Linux systems: they access the underlying file system with file paths and syscalls. However, on Android, you can't access files from other applications using file paths. Instead, one has to use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. Obviously, neither Gocryptfs nor CryFS support this API. As a result, DroidFS cannot open volumes provided by other applications (such as cloud storage clients), nor can it allow other applications to access encrypted volumes once opened.
+DroidFS works as a wrapper around modified versions of the original encrypted container implementations ([libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) and [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs)). These programs were designed to run on standard x86 Linux systems: they access the underlying file system with file paths and syscalls. However, on Android, you can't access files from other applications using file paths. Instead, one has to use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. Obviously, neither Gocryptfs nor CryFS support this API. As a result, DroidFS cannot open volumes provided by other applications (such as cloud storage clients). If you want to synchronize your volumes on a cloud, the cloud application must synchronize the encrypted directory from disk.
 
 Due to Android's storage restrictions, encrypted volumes located on SD cards must be placed under `/Android/data/sushi.hardcore.droidfs/` if you want DroidFS to be able to modify them.
 

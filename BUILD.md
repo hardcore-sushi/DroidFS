@@ -62,6 +62,14 @@ $ cd app/libcryfs
 $ git submodule update --depth=1 --init
 ```
 
+To be able to open PDF files internally, [pdf.js](https://github.com/mozilla/pdf.js) must be downloaded:
+```
+$ mkdir libpdfviewer/app/pdfjs-dist && cd libpdfviewer/app/pdfjs-dist
+$ wget https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.8.162.tgz
+$ tar xf pdfjs-dist-3.8.162.tgz package/build/pdf.min.js package/build/pdf.worker.min.js
+$ mv package/build . && rm pdfjs-dist-3.8.162.tgz
+```
+
 # Build
 Retrieve your Android NDK installation path, usually something like `/home/\<user\>/Android/SDK/ndk/\<NDK version\>`. Then, make it available in your shell:
 ```
