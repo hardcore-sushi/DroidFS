@@ -189,10 +189,10 @@ internal class CircleClipTapView(context: Context, attrs: AttributeSet): View(co
         super.onDraw(canvas)
 
         // Background
-        canvas?.clipPath(shapePath)
-        canvas?.drawPath(shapePath, backgroundPaint)
+        canvas.clipPath(shapePath)
+        canvas.drawPath(shapePath, backgroundPaint)
 
         // Circle
-        canvas?.drawCircle(cX, cY, currentRadius, circlePaint)
+        canvas.drawCircle(cX, cY, currentRadius, circlePaint)
     }
 }

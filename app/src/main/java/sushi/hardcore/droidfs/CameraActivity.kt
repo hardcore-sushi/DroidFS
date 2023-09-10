@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.DynamicRange
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -414,7 +415,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             refreshVideoCapture()
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, videoCapture)
             if (qualities == null) {
-                qualities = QualitySelector.getSupportedQualities(camera!!.cameraInfo)
+                qualities = SucklessRecorder.getVideoCapabilities(camera!!.cameraInfo).getSupportedQualities(DynamicRange.UNSPECIFIED)
             }
             videoCapture
         } else {

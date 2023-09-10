@@ -161,7 +161,7 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
                 put(COLUMN_TYPE, byteArrayOf(volume.type))
                 put(COLUMN_HASH, volume.encryptedHash)
                 put(COLUMN_IV, volume.iv)
-            }) == 1.toLong())
+            }) >= 0.toLong())
         }
         return false
     }
