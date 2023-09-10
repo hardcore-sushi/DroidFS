@@ -118,9 +118,10 @@ dependencies {
     implementation 'com.github.bumptech.glide:glide:4.15.1'
     implementation "androidx.biometric:biometric-ktx:1.2.0-alpha05"
 
-    def exoplayer_version = "2.19.1"
-    implementation "com.google.android.exoplayer:exoplayer-core:$exoplayer_version"
-    implementation "com.google.android.exoplayer:exoplayer-ui:$exoplayer_version"
+    def media3_version = "1.1.1"
+    implementation "androidx.media3:media3-exoplayer:$media3_version"
+    implementation 'androidx.media3:media3-ui:1.1.1'
+    implementation "androidx.media3:media3-datasource:$media3_version"
 
     implementation "androidx.concurrent:concurrent-futures:1.1.0"
 

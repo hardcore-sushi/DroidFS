@@ -8,19 +8,19 @@
         android:layout_gravity="center"
         android:background="@android:color/transparent"
         android:gravity="center"
-        android:layoutDirection="ltr"
         android:padding="@dimen/exo_styled_controls_padding"
-        android:clipToPadding="false">
+        android:clipToPadding="false"
+        android:layoutDirection="ltr">
 
         <ImageButton android:id="@id/exo_prev"
             style="@style/ExoStyledControls.Button.Center.Previous"/>
 
-        <include layout="@layout/exo_styled_player_control_rewind_button" />
+        <include layout="@layout/exo_player_control_rewind_button" />
 
         <ImageButton android:id="@id/exo_play_pause"
             style="@style/ExoStyledControls.Button.Center.PlayPause"/>
 
-        <include layout="@layout/exo_styled_player_control_ffwd_button" />
+        <include layout="@layout/exo_player_control_ffwd_button" />
 
         <ImageButton android:id="@id/exo_next"
             style="@style/ExoStyledControls.Button.Center.Next"/>
