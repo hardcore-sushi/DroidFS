@@ -95,21 +95,23 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
             }
         }
         if (oldVersion < 6) {
-            val volumeCount = db.rawQuery("SELECT COUNT(*) FROM $TABLE_NAME", null).let { cursor ->
-                cursor.moveToNext()
-                cursor.getInt(0).also {
-                    cursor.close()
-                }
+            val cursor = db.rawQuery("SELECT $COLUMN_NAME FROM $TABLE_NAME;", null)
+            val volumeNames = arrayOfNulls<String>(cursor.count)
+            var i = 0
+            while (cursor.moveToNext()) {
+                volumeNames[i++] = cursor.getString(0)
             }
+            cursor.close()
             db.execSQL("ALTER TABLE $TABLE_NAME RENAME TO OLD;")
             createTable(db)
-            val uuids = (0 until volumeCount).joinToString(", ") { "('${VolumeData.newUuid()}')" }
-            val baseColumns = "$COLUMN_NAME, $COLUMN_HIDDEN, $COLUMN_TYPE, $COLUMN_HASH, $COLUMN_IV"
+            val uuidsValues = volumeNames.indices.joinToString(", ") { "('${VolumeData.newUuid()}', ?)" }
             // add uuids to old data
-            db.execSQL("INSERT INTO $TABLE_NAME " +
-                    "SELECT uuid, $baseColumns FROM " +
-                    "(SELECT $baseColumns, ROW_NUMBER() OVER () i FROM OLD) NATURAL JOIN " +
-                    "(SELECT column1 uuid, ROW_NUMBER() OVER () i FROM (VALUES $uuids));")
+            db.execSQL(
+                "INSERT INTO $TABLE_NAME " +
+                        "WITH uuids($COLUMN_UUID, $COLUMN_NAME) AS (VALUES $uuidsValues) " +
+                        "SELECT * FROM OLD NATURAL JOIN uuids;",
+                volumeNames
+            )
             db.execSQL("DROP TABLE OLD;")
         }
     }
