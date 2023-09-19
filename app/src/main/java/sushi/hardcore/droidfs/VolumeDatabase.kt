@@ -9,7 +9,6 @@ import android.util.Log
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
-import java.util.UUID
 
 class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Constants.VOLUME_DATABASE_NAME, null, 6) {
     companion object {
@@ -102,17 +101,23 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
                 volumeNames[i++] = cursor.getString(0)
             }
             cursor.close()
-            db.execSQL("ALTER TABLE $TABLE_NAME RENAME TO OLD;")
-            createTable(db)
-            val uuidsValues = volumeNames.indices.joinToString(", ") { "('${VolumeData.newUuid()}', ?)" }
-            // add uuids to old data
-            db.execSQL(
-                "INSERT INTO $TABLE_NAME " +
-                        "WITH uuids($COLUMN_UUID, $COLUMN_NAME) AS (VALUES $uuidsValues) " +
-                        "SELECT * FROM OLD NATURAL JOIN uuids;",
-                volumeNames
-            )
-            db.execSQL("DROP TABLE OLD;")
+            if (volumeNames.isEmpty()) {
+                db.execSQL("DROP TABLE $TABLE_NAME;")
+                createTable(db)
+            } else {
+                db.execSQL("ALTER TABLE $TABLE_NAME RENAME TO OLD;")
+                createTable(db)
+                val uuidsValues = volumeNames.indices.joinToString(", ") { "('${VolumeData.newUuid()}', ?)" }
+                // add uuids to old data
+                db.execSQL(
+                    "INSERT INTO $TABLE_NAME " +
+                            "WITH uuids($COLUMN_UUID, $COLUMN_NAME) AS (VALUES $uuidsValues) " +
+                            "SELECT $COLUMN_UUID, OLD.$COLUMN_NAME, $COLUMN_HIDDEN, $COLUMN_TYPE, $COLUMN_HASH, $COLUMN_IV " +
+                            "FROM OLD JOIN uuids ON OLD.name = uuids.name;",
+                    volumeNames
+                )
+                db.execSQL("DROP TABLE OLD;")
+            }
         }
     }
 

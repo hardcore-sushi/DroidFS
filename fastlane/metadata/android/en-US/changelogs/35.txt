@@ -1,0 +1,1 @@
+- Really fix database upgrade crash
