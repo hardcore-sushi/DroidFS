@@ -24,4 +24,6 @@ class Version(inputVersion: String) : Comparable<Version> {
             }
             0
         }
+
+    override fun toString() = version
 }
