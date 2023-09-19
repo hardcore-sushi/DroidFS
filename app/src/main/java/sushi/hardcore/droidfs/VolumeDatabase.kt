@@ -39,6 +39,37 @@ class VolumeDatabase(private val context: Context): SQLiteOpenHelper(context, Co
         File(context.filesDir, VolumeData.VOLUMES_DIRECTORY).mkdir()
     }
 
+    override fun onOpen(db: SQLiteDatabase) {
+        //check if database has been corrupted by v2.1.1
+        val cursor = db.rawQuery("SELECT * FROM $TABLE_NAME WHERE $COLUMN_TYPE IS NULL;", null)
+        if (cursor.count > 0) {
+            Log.w(TAG, "Found ${cursor.count} corrupted volumes")
+            while (cursor.moveToNext()) {
+                // fix columns left shift
+                val uuid = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_UUID)+5)
+                val name = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_NAME)-1)
+                val isHidden = cursor.getShort(cursor.getColumnIndexOrThrow(COLUMN_HIDDEN)-1) == 1.toShort()
+                val type = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_TYPE)-1)[0]
+                val hash = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_HASH)-1)
+                val iv = cursor.getBlob(cursor.getColumnIndexOrThrow(COLUMN_IV)-1)
+                if (db.delete(TABLE_NAME, "$COLUMN_IV=?", arrayOf(uuid)) < 1) {
+                    Log.e(TAG, "Failed to remove volume $name")
+                }
+                if (db.insert(TABLE_NAME, null, ContentValues().apply {
+                        put(COLUMN_UUID, uuid)
+                        put(COLUMN_NAME, name)
+                        put(COLUMN_HIDDEN, isHidden)
+                        put(COLUMN_TYPE, byteArrayOf(type))
+                        put(COLUMN_HASH, hash)
+                        put(COLUMN_IV, iv)
+                    }) < 0) {
+                    Log.e(TAG, "Failed to insert volume $name")
+                }
+            }
+        }
+        cursor.close()
+    }
+
     private fun getNewVolumePath(volumeName: String): File {
         return File(
             VolumeData.getFullPath(volumeName, true, context.filesDir.path)
