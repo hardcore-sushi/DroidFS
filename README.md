@@ -55,7 +55,7 @@ Some available features are considered risky and are therefore disabled by defau
   Decrypt and open file using external apps. These apps could save and send the files thus opened.
   </li>
   <li><h4>Expose open volumes*:</h4>
-  Allow open volumes to be browsed in the system file explorer (<a href="https://developer.android.com/guide/topics/providers/document-provider">DocumentProvider</a> API). Encrypted files can then be selected from other applications, potentially with permanent access.
+  Allow open volumes to be browsed in the system file explorer (<a href="https://developer.android.com/guide/topics/providers/document-provider">DocumentProvider</a> API). Encrypted files can then be selected from other applications, potentially with permanent access. This feature requires "*Keep volume open when the app goes in background*" to be enabled.
   </li>
   <li><h4>Grant write access:</h4>
   Files opened with another applications can be modified by them. This applies to both previous unsafe features.
