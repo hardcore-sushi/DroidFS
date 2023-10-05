@@ -252,4 +252,20 @@
     <string name="black_theme">لون أسود داكن</string>
     <string name="password_fallback">العودة إلى كلمة المرور</string>
     <string name="password_fallback_summary">طلب كلمة المرور في حال فشل المصادقة ببصمة الأصبع</string>
+    <string name="unknown_error_code">خطأ غير معروف: %d</string>
+    <string name="config_load_error">لا يمكن تحميل ملف الإعدادات. تأكد من صحّة مسار المجلد الآمن.</string>
+    <string name="wrong_password">لقد تعذر فك تشفر ملف الإعدادات. رجاءً قم بالتحقق من كلمة المرور.</string>
+    <string name="filesystem_id_changed">لقد إختلف معرف نظام الملفات الموجود في ملف الإعدادات عن آخر مرة فتحنا فيها هذا المجلد. قد يعني هذا أن أحد ما قد قام باستبدال ملفاتك بملفات أخرى بهدف إختراقك.</string>
+    <string name="inaccessible_base_dir">إن المجلد المشفر غير موجود أو لا يمكن الوصول إليه.</string>
+    <string name="task_failed">لقد فشلت عملية: %s</string>
+    <string name="usf_expose">كشف المجلدات المفتوحة</string>
+    <string name="usf_expose_summary">السماح للتطبيقات الأخرى بالوصول إلى المجلدات المشفرة عن طريق نظام "توفير المستندات" الخاص بنظام الأندرويد</string>
+    <string name="usf_saf_write">منح صلاحيات الكتابة</string>
+    <string name="usf_saf_write_summary">منح صلاحيات الكتابة عند فتح الملفات مع التطبيقات الأخرى</string>
+    <string name="saf">"إطار الوصول للقرص"</string>
+    <string name="tmp_export_failed">لقد فشل تصدير: %s</string>
+    <string name="export_failed_create">تعذر إنشاء الملف المستخرج</string>
+    <string name="export_failed_export">فشل إستخراج الملف</string>
+    <string name="export_mem">يتم الإستخراج إلى الذاكرة المؤقتة…</string>
+    <string name="export_disk">يتم الإستخراج إلى القرص…</string>
 </resources>
