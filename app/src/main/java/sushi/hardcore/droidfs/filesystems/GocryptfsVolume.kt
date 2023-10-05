@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
 import android.util.Log
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
 import kotlin.math.min
@@ -75,13 +76,23 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
             }
         }
 
-        fun init(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): GocryptfsVolume? {
+        fun init(root_cipher_dir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ByteArray?): InitResult {
             val sessionId = nativeInit(root_cipher_dir, password, givenHash, returnedHash)
-            return if (sessionId == -1) {
-                null
+            val result = InitResult.Builder()
+            if (sessionId < 0) {
+                result.errorCode = sessionId
+                result.errorStringId = when (sessionId) {
+                    -1 -> R.string.config_load_error
+                    -2 -> {
+                        result.worthRetry = true
+                        R.string.wrong_password
+                    }
+                    else -> 0
+                }
             } else {
-                GocryptfsVolume(sessionId)
+                result.volume = GocryptfsVolume(sessionId)
             }
+            return result.build()
         }
 
         init {

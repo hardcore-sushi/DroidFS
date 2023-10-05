@@ -39,6 +39,14 @@ class VolumeOpener(
         }
     }
 
+    private fun getErrorMsg(result: EncryptedVolume.InitResult): String {
+        return if (result.errorStringId == 0) {
+            activity.getString(R.string.unknown_error_code, result.errorCode)
+        } else {
+            activity.getString(result.errorStringId)
+        }
+    }
+
     @SuppressLint("NewApi") // fingerprintProtector is non-null only when SDK_INT >= 23
     fun openVolume(volume: VolumeData, isVolumeSaved: Boolean, callbacks: VolumeOpenerCallbacks) {
         val volumeId = volumeManager.getVolumeId(volume)
@@ -60,17 +68,18 @@ class VolumeOpener(
                                 callbacks.onHashStorageReset()
                             }
                             override fun onPasswordHashDecrypted(hash: ByteArray) {
-                                object : LoadingTask<EncryptedVolume?>(activity, theme, R.string.loading_msg_open) {
-                                    override suspend fun doTask(): EncryptedVolume? {
-                                        val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, null, hash, null)
+                                object : LoadingTask<EncryptedVolume.InitResult>(activity, theme, R.string.loading_msg_open) {
+                                    override suspend fun doTask(): EncryptedVolume.InitResult {
+                                        val result = EncryptedVolume.init(volume, activity.filesDir.path, null, hash, null)
                                         Arrays.fill(hash, 0)
-                                        return encryptedVolume
+                                        return result
                                     }
-                                }.startTask(activity.lifecycleScope) { encryptedVolume ->
+                                }.startTask(activity.lifecycleScope) { result ->
+                                    val encryptedVolume = result.volume
                                     if (encryptedVolume == null) {
                                         CustomAlertDialogBuilder(activity, theme)
                                             .setTitle(R.string.open_volume_failed)
-                                            .setMessage(R.string.open_failed_hash_msg)
+                                            .setMessage(getErrorMsg(result))
                                             .setPositiveButton(R.string.ok, null)
                                             .show()
                                     } else {
@@ -168,19 +177,22 @@ class VolumeOpener(
         } else {
             null
         }
-        object : LoadingTask<EncryptedVolume?>(activity, theme, R.string.loading_msg_open) {
-            override suspend fun doTask(): EncryptedVolume? {
-                val encryptedVolume = EncryptedVolume.init(volume, activity.filesDir.path, password, null, returnedHash)
+        object : LoadingTask<EncryptedVolume.InitResult>(activity, theme, R.string.loading_msg_open) {
+            override suspend fun doTask(): EncryptedVolume.InitResult {
+                val result = EncryptedVolume.init(volume, activity.filesDir.path, password, null, returnedHash)
                 Arrays.fill(password, 0)
-                return encryptedVolume
+                return result
             }
-        }.startTask(activity.lifecycleScope) { encryptedVolume ->
+        }.startTask(activity.lifecycleScope) { result ->
+            val encryptedVolume = result.volume
             if (encryptedVolume == null) {
                 CustomAlertDialogBuilder(activity, theme)
                     .setTitle(R.string.open_volume_failed)
-                    .setMessage(R.string.open_volume_failed_msg)
+                    .setMessage(getErrorMsg(result))
                     .setPositiveButton(R.string.ok) { _, _ ->
-                        askForPassword(volume, isVolumeSaved, callbacks, savePasswordHash)
+                        if (result.worthRetry) {
+                            askForPassword(volume, isVolumeSaved, callbacks, savePasswordHash)
+                        }
                     }
                     .show()
             } else {

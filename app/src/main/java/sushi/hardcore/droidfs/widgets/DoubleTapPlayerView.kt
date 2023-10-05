@@ -17,14 +17,14 @@ import android.widget.LinearLayout
 import androidx.core.view.GestureDetectorCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updatePadding
-import com.google.android.exoplayer2.ui.StyledPlayerView
+import androidx.media3.ui.PlayerView
 import sushi.hardcore.droidfs.R
 
 class DoubleTapPlayerView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : StyledPlayerView(context, attrs, defStyleAttr) {
+) : PlayerView(context, attrs, defStyleAttr) {
 
     companion object {
         const val SEEK_SECONDS = 10

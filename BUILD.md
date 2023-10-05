@@ -45,21 +45,29 @@ $ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
 If you want Gocryptfs support, you need to download OpenSSL:
 ```
 $ cd ../libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1t.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ wget https://www.openssl.org/source/openssl-1.1.1t.tar.gz.asc
-$ gpg --verify openssl-1.1.1t.tar.gz.asc openssl-1.1.1t.tar.gz
+$ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz.asc
+$ gpg --verify openssl-1.1.1w.tar.gz.asc openssl-1.1.1w.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.
 ```
-$ tar -xzf openssl-1.1.1t.tar.gz
+$ tar -xzf openssl-1.1.1w.tar.gz
 ```
 If you want CryFS support, initialize libcryfs:
 ```
 $ cd app/libcryfs
 $ git submodule update --depth=1 --init
+```
+
+To be able to open PDF files internally, [pdf.js](https://github.com/mozilla/pdf.js) must be downloaded:
+```
+$ mkdir libpdfviewer/app/pdfjs-dist && cd libpdfviewer/app/pdfjs-dist
+$ wget https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.8.162.tgz
+$ tar xf pdfjs-dist-3.8.162.tgz package/build/pdf.min.js package/build/pdf.worker.min.js
+$ mv package/build . && rm pdfjs-dist-3.8.162.tgz
 ```
 
 # Build
@@ -76,7 +84,7 @@ $ ./build.sh ffmpeg
 This step is only required if you want Gocryptfs support.
 ```
 $ cd app/libgocryptfs
-$ OPENSSL_PATH="./openssl-1.1.1t" ./build.sh
+$ OPENSSL_PATH="./openssl-1.1.1w" ./build.sh
  ```
 ## Compile APKs
 Gradle build libgocryptfs and libcryfs by default.

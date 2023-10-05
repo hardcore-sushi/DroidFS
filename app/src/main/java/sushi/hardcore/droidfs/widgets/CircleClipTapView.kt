@@ -185,14 +185,14 @@ internal class CircleClipTapView(context: Context, attrs: AttributeSet): View(co
         updatePathShape()
     }
 
-    override fun onDraw(canvas: Canvas?) {
+    override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 
         // Background
-        canvas?.clipPath(shapePath)
-        canvas?.drawPath(shapePath, backgroundPaint)
+        canvas.clipPath(shapePath)
+        canvas.drawPath(shapePath, backgroundPaint)
 
         // Circle
-        canvas?.drawCircle(cX, cY, currentRadius, circlePaint)
+        canvas.drawCircle(cX, cY, currentRadius, circlePaint)
     }
 }

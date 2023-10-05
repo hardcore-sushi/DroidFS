@@ -1,0 +1,8 @@
+- Fixed volume copy
+- More accurate error messages when opening volumes
+- Video recording improvements
+- Updated dependencies
+- Fixed camera output file rotation
+- Updated Arabic translation
+- Better handling of file operations
+- Ask again for password only if it's wrong

@@ -14,7 +14,7 @@ class ExplorerActivityPick : BaseExplorerActivity() {
     private var isFinishingIntentionally = false
     override fun init() {
         setContentView(R.layout.activity_explorer_pick)
-        resultIntent.putExtra("volume", encryptedVolume)
+        resultIntent.putExtra("volumeId", volumeId)
     }
 
     override fun bindFileOperationService() {

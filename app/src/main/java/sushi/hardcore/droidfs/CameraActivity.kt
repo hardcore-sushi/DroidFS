@@ -2,10 +2,7 @@ package sushi.hardcore.droidfs
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
-import android.hardware.camera2.CameraCharacteristics
-import android.hardware.camera2.CameraManager
 import android.os.Build
 import android.os.Bundle
 import android.text.InputType
@@ -14,20 +11,20 @@ import android.view.*
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
-import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.DynamicRange
 import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.Preview
 import androidx.camera.core.UseCase
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.extensions.ExtensionMode
 import androidx.camera.extensions.ExtensionsManager
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -47,6 +44,7 @@ import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.video_recording.AsynchronousSeekableWriter
 import sushi.hardcore.droidfs.video_recording.FFmpegMuxer
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -56,6 +54,8 @@ import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executor
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @SuppressLint("RestrictedApi")
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
@@ -78,6 +78,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
         }
     private lateinit var sensorOrientationListener: SensorOrientationListener
+    private var currentRotation = 0
     private var previousOrientation: Float = 0f
     private lateinit var orientedIcons: List<ImageView>
     private lateinit var encryptedVolume: EncryptedVolume
@@ -380,11 +381,18 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(captureMode)
             .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
-            .apply {
-                currentResolution?.let {
-                    setTargetResolution(it)
+            .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { supportedSizes, _ ->
+                resolutions = supportedSizes.sortedBy {
+                    -it.width*it.height
                 }
-            }
+                currentResolution?.let { targetResolution ->
+                    return@setResolutionFilter supportedSizes.sortedBy {
+                        sqrt((it.width - targetResolution.width).toDouble().pow(2) + (it.height - targetResolution.height).toDouble().pow(2))
+                    }
+                }
+                supportedSizes
+            }.build())
+            .setTargetRotation(currentRotation)
             .build()
     }
 
@@ -396,7 +404,9 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             recorderBuilder.setQualitySelector(QualitySelector.from(qualities!![currentQualityIndex]))
         }
         videoRecorder = recorderBuilder.build()
-        videoCapture = VideoCapture.withOutput(videoRecorder!!)
+        videoCapture = VideoCapture.withOutput(videoRecorder!!).apply {
+            targetRotation = currentRotation
+        }
     }
 
     private fun rebindUseCases(): UseCase {
@@ -405,20 +415,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             refreshVideoCapture()
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, videoCapture)
             if (qualities == null) {
-                qualities = QualitySelector.getSupportedQualities(camera!!.cameraInfo)
+                qualities = SucklessRecorder.getVideoCapabilities(camera!!.cameraInfo).getSupportedQualities(DynamicRange.UNSPECIFIED)
             }
             videoCapture
         } else {
             refreshImageCapture()
             camera = cameraProvider.bindToLifecycle(this, cameraSelector, cameraPreview, imageCapture)
-            if (resolutions == null) {
-                val info = Camera2CameraInfo.from(camera!!.cameraInfo)
-                val cameraManager = getSystemService(Context.CAMERA_SERVICE) as CameraManager
-                val characteristics = cameraManager.getCameraCharacteristics(info.cameraId)
-                characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)?.let { streamConfigurationMap ->
-                    resolutions = streamConfigurationMap.getOutputSizes(imageCapture!!.imageFormat).map { it.swap() }
-                }
-            }
             imageCapture
         })!!
         adaptPreviewSize(currentUseCase.attachedSurfaceResolution!!.swap())
@@ -510,37 +512,32 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     .show()
                 return
             }
-            startTimerThen {
-                var withAudio = true
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-                        withAudio = false
-                    }
+            val writer = AsynchronousSeekableWriter(object : SeekableWriter {
+                private var offset = 0L
+
+                override fun close() {
+                    encryptedVolume.closeFile(fileHandle)
                 }
-                videoRecording = videoRecorder?.prepareRecording(
-                    this,
-                    MuxerOutputOptions(
-                        FFmpegMuxer(object : SeekableWriter {
-                            private var offset = 0L
 
-                            override fun close() {
-                                encryptedVolume.closeFile(fileHandle)
-                            }
+                override fun seek(offset: Long) {
+                    this.offset = offset
+                }
 
-                            override fun seek(offset: Long) {
-                                this.offset = offset
-                            }
-
-                            override fun write(buffer: ByteArray) {
-                                offset += encryptedVolume.write(fileHandle, offset, buffer, 0, buffer.size.toLong())
-                            }
-                        })
-                    )
-                )?.apply {
-                    if (withAudio) {
-                        withAudioEnabled()
-                    }
-                }?.start(executor) {
+                override fun write(buffer: ByteArray, size: Int) {
+                    offset += encryptedVolume.write(fileHandle, offset, buffer, 0, size.toLong())
+                }
+            })
+            val pendingRecording = videoRecorder!!.prepareRecording(
+                this,
+                MuxerOutputOptions(FFmpegMuxer(writer))
+            ).also {
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                    it.withAudioEnabled()
+                }
+            }
+            startTimerThen {
+                writer.start()
+                videoRecording = pendingRecording.start(executor) {
                     val buttons = arrayOf(binding.imageCaptureMode, binding.imageRatio, binding.imageTimer, binding.imageModeSwitch, binding.imageCameraSwitch)
                     when (it) {
                         is VideoRecordEvent.Start -> {
@@ -606,6 +603,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         previousOrientation = realOrientation
         imageCapture?.targetRotation = newOrientation
         videoCapture?.targetRotation = newOrientation
+        currentRotation = newOrientation
     }
 }
 

@@ -35,6 +35,7 @@ import android.media.MediaCodec.BufferInfo;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Range;
 import android.view.Surface;
 
@@ -1054,6 +1055,7 @@ public class SucklessEncoderImpl implements Encoder {
             if (mIsVideoEncoder) {
                 Timebase inputTimebase;
                 if (DeviceQuirks.get(CameraUseInconsistentTimebaseQuirk.class) != null) {
+                    Logger.w(mTag, "CameraUseInconsistentTimebaseQuirk is enabled");
                     inputTimebase = null;
                 } else {
                     inputTimebase = mInputTimebase;
@@ -1065,7 +1067,7 @@ public class SucklessEncoderImpl implements Encoder {
         }
 
         @Override
-        public void onInputBufferAvailable(MediaCodec mediaCodec, int index) {
+        public void onInputBufferAvailable(@NonNull MediaCodec mediaCodec, int index) {
             mEncoderExecutor.execute(() -> {
                 if (mStopped) {
                     Logger.w(mTag, "Receives input frame after codec is reset.");
@@ -1131,6 +1133,15 @@ public class SucklessEncoderImpl implements Encoder {
                         if (checkBufferInfo(bufferInfo)) {
                             if (!mHasFirstData) {
                                 mHasFirstData = true;
+                                // Only print the first data to avoid flooding the log.
+                                Logger.d(mTag,
+                                        "data timestampUs = " + bufferInfo.presentationTimeUs
+                                                + ", data timebase = " + mInputTimebase
+                                                + ", current system uptimeMs = "
+                                                + SystemClock.uptimeMillis()
+                                                + ", current system realtimeMs = "
+                                                + SystemClock.elapsedRealtime()
+                                );
                             }
                             BufferInfo outBufferInfo = resolveOutputBufferInfo(bufferInfo);
                             mLastSentAdjustedTimeUs = outBufferInfo.presentationTimeUs;
@@ -1254,43 +1265,10 @@ public class SucklessEncoderImpl implements Encoder {
                         mVideoTimestampConverter.convertToUptimeUs(bufferInfo.presentationTimeUs);
             }
 
-            // MediaCodec may send out of order buffer
-            if (bufferInfo.presentationTimeUs <= mLastPresentationTimeUs) {
-                Logger.d(mTag, "Drop buffer by out of order buffer from MediaCodec.");
-                return false;
-            }
             mLastPresentationTimeUs = bufferInfo.presentationTimeUs;
-
-            // Ignore buffers are not in start/stop range. One situation is to ignore outdated
-            // frames when using the Surface of MediaCodec#createPersistentInputSurface. After
-            // the persistent Surface stops, it will keep a small number of old frames in its
-            // buffer, and send those old frames in the next startup.
-            if (!mStartStopTimeRangeUs.contains(bufferInfo.presentationTimeUs)) {
-                Logger.d(mTag, "Drop buffer by not in start-stop range.");
-                // If data hasn't reached the expected stop timestamp, set the stop timestamp.
-                if (mPendingCodecStop
-                        && bufferInfo.presentationTimeUs >= mStartStopTimeRangeUs.getUpper()) {
-                    if (mStopTimeoutFuture != null) {
-                        mStopTimeoutFuture.cancel(true);
-                    }
-                    mLastDataStopTimestamp = bufferInfo.presentationTimeUs;
-                    signalCodecStop();
-                    mPendingCodecStop = false;
-                }
-                return false;
-            }
 
             if (updatePauseRangeStateAndCheckIfBufferPaused(bufferInfo)) {
                 Logger.d(mTag, "Drop buffer by pause.");
-                return false;
-            }
-
-            // We should check if the adjusted time is valid. see b/189114207.
-            if (getAdjustedTimeUs(bufferInfo) <= mLastSentAdjustedTimeUs) {
-                Logger.d(mTag, "Drop buffer by adjusted time is less than the last sent time.");
-                if (mIsVideoEncoder && isKeyFrame(bufferInfo)) {
-                    mIsKeyFrameRequired = true;
-                }
                 return false;
             }
 

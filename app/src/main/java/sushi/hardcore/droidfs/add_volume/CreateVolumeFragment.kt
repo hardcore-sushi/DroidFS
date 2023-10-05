@@ -190,14 +190,14 @@ class CreateVolumeFragment: Fragment() {
                             encryptedVolume,
                         ), EncryptedVolume.GOCRYPTFS_VOLUME_TYPE)
                     } else {
-                        generateResult(CryfsVolume.create(
+                        encryptedVolume.value = CryfsVolume.create(
                             volumePath,
                             CryfsVolume.getLocalStateDir(activity.filesDir.path),
                             password,
                             returnedHash,
                             resources.getStringArray(R.array.cryfs_encryption_ciphers)[binding.spinnerCipher.selectedItemPosition],
-                            encryptedVolume,
-                        ), EncryptedVolume.CRYFS_VOLUME_TYPE)
+                        )
+                        generateResult(encryptedVolume.value != null, EncryptedVolume.CRYFS_VOLUME_TYPE)
                     }
                     Arrays.fill(password, 0)
                     return result
@@ -211,11 +211,11 @@ class CreateVolumeFragment: Fragment() {
                         .show()
                 } else {
                     val volumeName = if (isHiddenVolume) File(volumePath).name else volumePath
-                    val volume = VolumeData(volumeName, isHiddenVolume, result)
+                    val volume = VolumeData(VolumeData.newUuid(), volumeName, isHiddenVolume, result)
                     var isVolumeSaved = false
                     volumeDatabase.apply {
                         if (isVolumeSaved(volumeName, isHiddenVolume)) // cleaning old saved path
-                            removeVolume(volumeName)
+                            removeVolume(volume)
                         if (rememberVolume) {
                             isVolumeSaved = saveVolume(volume)
                         }
@@ -256,7 +256,7 @@ class CreateVolumeFragment: Fragment() {
 
     private fun onVolumeCreated(id: Int?, volumeShortName: String) {
         (activity as AddVolumeActivity).apply {
-            if (rememberVolume || id == null) {
+            if (id == null) {
                 finish()
             } else {
                 startExplorer(id, volumeShortName)

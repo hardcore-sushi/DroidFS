@@ -1,24 +1,4 @@
-# Add project specific ProGuard rules here.
-# You can control the set of applied configuration files using the
-# proguardFiles setting in build.gradle.
-#
-# For more details, see
-#   http://developer.android.com/guide/developing/tools/proguard.html
-
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
-
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
-
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+-keepattributes SourceFile,LineNumberTable
 
 -keep class sushi.hardcore.droidfs.SettingsActivity$**
 -keep class sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -28,4 +8,17 @@
 -keepclassmembers class sushi.hardcore.droidfs.video_recording.FFmpegMuxer {
     void writePacket(byte[]);
     void seek(long);
+}
+# Required for Intent.getParcelableExtra() to work on Android 13
+-keep class sushi.hardcore.droidfs.VolumeData {
+    public int describeContents();
+}
+-keep class sushi.hardcore.droidfs.VolumeData$* {
+    static public android.os.Parcelable$Creator CREATOR;
+}
+-keep class sushi.hardcore.droidfs.filesystems.EncryptedVolume {
+    public int describeContents();
+}
+-keep class sushi.hardcore.droidfs.filesystems.EncryptedVolume$* {
+    static public android.os.Parcelable$Creator CREATOR;
 }

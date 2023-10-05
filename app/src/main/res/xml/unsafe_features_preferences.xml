@@ -1,6 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <PreferenceCategory android:title="@string/about">
+
+        <Preference
+            android:icon="@drawable/icon_notes"
+            android:summary="@string/usf_read_doc"
+            android:title="@string/usf_doc">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://forge.chapril.org/hardcoresushi/DroidFS#unsafe-features" />
+        </Preference>
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/ux">
 
         <SwitchPreference
@@ -18,22 +31,12 @@
             android:icon="@drawable/icon_lock_open"
             android:key="usf_decrypt"
             android:title="@string/usf_decrypt" />
-        <SwitchPreference
-            android:defaultValue="false"
-            android:icon="@drawable/icon_open_in_new"
-            android:key="usf_open"
-            android:title="@string/usf_open" />
+
         <SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/icon_share"
             android:key="usf_share"
             android:title="@string/usf_share" />
-
-        <SwitchPreference
-            android:defaultValue="false"
-            android:icon="@drawable/icon_lock_open"
-            android:key="usf_keep_open"
-            android:title="@string/usf_keep_open" />
 
     </PreferenceCategory>
 
@@ -45,18 +48,35 @@
             android:key="usf_fingerprint"
             android:title="@string/usf_fingerprint" />
 
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_lock_open"
+            android:key="usf_keep_open"
+            android:title="@string/usf_keep_open" />
+
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/about">
+    <PreferenceCategory android:title="@string/saf">
 
-        <Preference
-            android:icon="@drawable/icon_notes"
-            android:summary="@string/usf_read_doc"
-            android:title="@string/usf_doc">
-            <intent
-                android:action="android.intent.action.VIEW"
-                android:data="https://git.drycat.fr/hardcore-sushi/DroidFS#unsafe-features" />
-        </Preference>
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_open_in_new"
+            android:key="usf_open"
+            android:title="@string/usf_open" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_transfer"
+            android:key="usf_expose"
+            android:title="@string/usf_expose"
+            android:summary="@string/usf_expose_summary" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_edit"
+            android:key="usf_saf_write"
+            android:title="@string/usf_saf_write"
+            android:summary="@string/usf_saf_write_summary" />
 
     </PreferenceCategory>
 

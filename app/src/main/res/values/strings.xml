@@ -28,7 +28,6 @@
     <string name="dir_not_empty">The selected directory isn\'t empty</string>
     <string name="create_volume_failed">The volume creation has failed.</string>
     <string name="open_volume_failed">Open failed</string>
-    <string name="open_volume_failed_msg">Failed to open the volume. Please check your password.</string>
     <string name="share_chooser">Share File</string>
     <string name="storage_perm_denied">Storage permission denied</string>
     <string name="storage_perm_denied_msg">DroidFS can\'t work without storage permissions.</string>
@@ -59,7 +58,6 @@
     <string name="listdir_null_error_msg">Unable to access this directory</string>
     <string name="fingerprint_save_checkbox_text">Save password hash using fingerprint</string>
     <string name="fingerprint_instruction">Please touch the fingerprint sensor</string>
-    <string name="open_failed_hash_msg">Failed to open the volume. The password may have changed.</string>
     <string name="illegal_block_size_exception">IllegalBlockSizeException</string>
     <string name="illegal_block_size_exception_msg">This can happen if you have added a new fingerprint. Resetting hash storage can solve this problem.</string>
     <string name="reset_hash_storage">Reset hash storage</string>
@@ -244,6 +242,7 @@
     <string name="file_op_delete_msg">Deleting files…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, read-only)</string>
+    <string name="volume_type_inaccessible">(%s, inaccessible)</string>
     <string name="io_error">I/O Error.</string>
     <string name="use_fingerprint">Use fingerprint instead of current password</string>
     <string name="remember_volume">Remember volume</string>
@@ -258,4 +257,20 @@
     <string name="black_theme">Black theme</string>
     <string name="password_fallback">Fallback to password</string>
     <string name="password_fallback_summary">Prompt for password when fingerprint authentication is cancelled</string>
+    <string name="unknown_error_code">Unknown error code: %d</string>
+    <string name="config_load_error">The configuration file cannot be loaded. Make sure the volume is accessible.</string>
+    <string name="wrong_password">The configuration file cannot be decrypted. Please check your password.</string>
+    <string name="filesystem_id_changed">The filesystem id in the config file is different to the last time we opened this volume. This could mean an attacker replaced the filesystem with a different one.</string>
+    <string name="inaccessible_base_dir">The volume doesn\'t exist or is inaccessible.</string>
+    <string name="task_failed">The task failed: %s</string>
+    <string name="usf_expose">Expose open volumes</string>
+    <string name="usf_expose_summary">Allow other applications to browse open volumes as documents providers</string>
+    <string name="usf_saf_write">Grant write access</string>
+    <string name="usf_saf_write_summary">Grant write access when opening files with other applications</string>
+    <string name="saf">Storage Access Framework</string>
+    <string name="tmp_export_failed">Export failed: %s</string>
+    <string name="export_failed_create">can\'t create exported file</string>
+    <string name="export_failed_export">failed to export file</string>
+    <string name="export_mem">Exporting to memory…</string>
+    <string name="export_disk">Exporting to disk…</string>
 </resources>

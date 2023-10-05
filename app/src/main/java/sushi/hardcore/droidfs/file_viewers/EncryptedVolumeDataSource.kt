@@ -1,15 +1,19 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.net.Uri
-import com.google.android.exoplayer2.C
-import com.google.android.exoplayer2.upstream.DataSource
-import com.google.android.exoplayer2.upstream.DataSpec
-import com.google.android.exoplayer2.upstream.TransferListener
+import androidx.media3.common.C
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.TransferListener
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import kotlin.math.min
 
-class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, private val filePath: String): DataSource {
+@OptIn(UnstableApi::class)
+class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, private val filePath: String):
+    DataSource {
     private var fileHandle = -1L
     private var fileOffset: Long = 0
     private var bytesRemaining: Long = -1

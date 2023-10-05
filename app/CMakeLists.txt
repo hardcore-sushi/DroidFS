@@ -5,6 +5,9 @@ project(DroidFS)
 option(GOCRYPTFS "build libgocryptfs" ON)
 option(CRYFS "build libcryfs" ON)
 
+add_library(memfile SHARED src/main/native/memfile.c)
+target_link_libraries(memfile log)
+
 if (GOCRYPTFS)
 	add_library(gocryptfs SHARED IMPORTED)
 	set_target_properties(
@@ -72,4 +75,5 @@ target_link_libraries(
         avformat
         avcodec
         avutil
+        log
 )

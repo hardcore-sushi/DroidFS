@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.filesystems
 
 import android.os.Parcel
 import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
@@ -21,7 +22,8 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             givenHash: ByteArray?,
             returnedHash: ObjRef<ByteArray?>?,
             createBaseDir: Boolean,
-            cipher: String?
+            cipher: String?,
+            errorCode: ObjRef<Int?>,
         ): Long
         private external fun nativeChangeEncryptionKey(
             baseDir: String,
@@ -58,22 +60,34 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
             returnedHash: ObjRef<ByteArray?>?,
             createBaseDir: Boolean,
             cipher: String?
-        ): CryfsVolume? {
-            val fusePtr = nativeInit(baseDir, localStateDir, password, givenHash, returnedHash, createBaseDir, cipher)
-            return if (fusePtr == 0L) {
-                null
+        ): InitResult {
+            val errorCode = ObjRef<Int?>(null)
+            val fusePtr = nativeInit(baseDir, localStateDir, password, givenHash, returnedHash, createBaseDir, cipher, errorCode)
+            val result = InitResult.Builder()
+            if (fusePtr == 0L) {
+                result.errorCode = errorCode.value ?: 0
+                result.errorStringId = when (errorCode.value) {
+                    // Values from src/cryfs/impl/ErrorCodes.h
+                    11 -> {
+                        result.worthRetry = true
+                        R.string.wrong_password
+                    }
+                    16 -> R.string.inaccessible_base_dir
+                    19 -> R.string.config_load_error
+                    20 -> R.string.filesystem_id_changed
+                    else -> 0
+                }
             } else {
-                CryfsVolume(fusePtr)
+                result.volume = CryfsVolume(fusePtr)
             }
+            return result.build()
         }
 
-        fun create(baseDir: String, localStateDir: String, password: ByteArray, returnedHash: ObjRef<ByteArray?>?, cipher: String?, volume: ObjRef<EncryptedVolume?>): Boolean {
-            return init(baseDir, localStateDir, password, null, returnedHash, true, cipher)?.also {
-                volume.value = it
-            } != null
+        fun create(baseDir: String, localStateDir: String, password: ByteArray, returnedHash: ObjRef<ByteArray?>?, cipher: String?): EncryptedVolume? {
+            return init(baseDir, localStateDir, password, null, returnedHash, true, cipher).volume
         }
 
-        fun init(baseDir: String, localStateDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ObjRef<ByteArray?>?): CryfsVolume? {
+        fun init(baseDir: String, localStateDir: String, password: ByteArray?, givenHash: ByteArray?, returnedHash: ObjRef<ByteArray?>?): InitResult {
             return init(baseDir, localStateDir, password, givenHash, returnedHash, false, null)
         }
 

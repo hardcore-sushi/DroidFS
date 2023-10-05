@@ -7,7 +7,7 @@ import java.nio.ByteBuffer
 
 class FFmpegMuxer(val writer: SeekableWriter): MediaMuxer {
     external fun allocContext(): Long
-    external fun addVideoTrack(formatContext: Long, bitrate: Int, width: Int, height: Int, orientationHint: Int): Int
+    external fun addVideoTrack(formatContext: Long, bitrate: Int, frameRate: Int, width: Int, height: Int, orientationHint: Int): Int
     external fun addAudioTrack(formatContext: Long, bitrate: Int, sampleRate: Int, channelCount: Int): Int
     external fun writeHeaders(formatContext: Long): Int
     external fun writePacket(formatContext: Long, buffer: ByteArray, pts: Long, streamIndex: Int, isKeyFrame: Boolean)
@@ -54,6 +54,7 @@ class FFmpegMuxer(val writer: SeekableWriter): MediaMuxer {
             addVideoTrack(
                 formatContext!!,
                 bitrate,
+                mediaFormat.getInteger("frame-rate"),
                 mediaFormat.getInteger("width"),
                 mediaFormat.getInteger("height"),
                 orientation
@@ -82,7 +83,7 @@ class FFmpegMuxer(val writer: SeekableWriter): MediaMuxer {
     }
 
     fun writePacket(buff: ByteArray) {
-        writer.write(buff)
+        writer.write(buff, buff.size)
     }
     fun seek(offset: Long) {
         writer.seek(offset)

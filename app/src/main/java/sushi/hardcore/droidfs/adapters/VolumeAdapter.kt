@@ -92,8 +92,10 @@ class VolumeAdapter(
             itemView.findViewById<TextView>(R.id.text_info).text = context.getString(
                 if (volume.canWrite(context.filesDir.path)) {
                     R.string.volume_type
-                } else {
+                } else if (volume.canRead(context.filesDir.path)) {
                     R.string.volume_type_read_only
+                } else {
+                    R.string.volume_type_inaccessible
                 },
                 context.getString(if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE) {
                     R.string.gocryptfs

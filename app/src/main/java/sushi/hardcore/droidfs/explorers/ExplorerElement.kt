@@ -6,7 +6,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import java.text.Collator
 
 class ExplorerElement(val name: String, val stat: Stat, val parentPath: String) {
-    val fullPath: String = PathUtils.pathJoin(parentPath, name)
+    val fullPath: String = PathUtils.pathJoin(parentPath.ifEmpty { "/" }, name)
     val collationKey = Collator.getInstance().getCollationKeyForFileName(fullPath)
 
     val isDirectory: Boolean

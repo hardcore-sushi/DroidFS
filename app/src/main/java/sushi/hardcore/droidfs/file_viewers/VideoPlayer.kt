@@ -3,8 +3,8 @@ package sushi.hardcore.droidfs.file_viewers
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.view.View
-import com.google.android.exoplayer2.ExoPlayer
-import com.google.android.exoplayer2.ui.StyledPlayerView
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
@@ -19,7 +19,7 @@ class VideoPlayer: MediaPlayer() {
         setContentView(binding.root)
         applyNavigationBarMargin(binding.root)
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
-        binding.videoPlayer.setControllerVisibilityListener(StyledPlayerView.ControllerVisibilityListener { visibility ->
+        binding.videoPlayer.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
             binding.topBar.visibility = visibility
             if (visibility == View.VISIBLE) {
                 showPartialSystemUi()

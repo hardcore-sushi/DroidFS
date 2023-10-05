@@ -1,0 +1,2 @@
+- Fix crash on Android 13
+- Upgrade CameraX version

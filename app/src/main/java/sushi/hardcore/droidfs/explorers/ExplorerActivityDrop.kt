@@ -73,23 +73,15 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
         }
     }
 
-    private fun onImported(failedItem: String?){
+    private fun onImported() {
         setCurrentPath(currentDirectoryPath)
-        if (failedItem == null) {
-            CustomAlertDialogBuilder(this, theme)
-                    .setTitle(R.string.success_import)
-                    .setMessage(R.string.success_import_msg)
-                    .setCancelable(false)
-                    .setPositiveButton(R.string.ok){_, _ ->
-                        finish()
-                    }
-                    .show()
-        } else {
-            CustomAlertDialogBuilder(this, theme)
-                    .setTitle(R.string.error)
-                    .setMessage(getString(R.string.import_failed, failedItem))
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-        }
+        CustomAlertDialogBuilder(this, theme)
+            .setTitle(R.string.success_import)
+            .setMessage(R.string.success_import_msg)
+            .setCancelable(false)
+            .setPositiveButton(R.string.ok) { _, _ ->
+                finish()
+            }
+            .show()
     }
 }

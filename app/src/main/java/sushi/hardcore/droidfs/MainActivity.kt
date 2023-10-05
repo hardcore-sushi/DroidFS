@@ -20,10 +20,12 @@ import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.adapters.VolumeAdapter
 import sushi.hardcore.droidfs.add_volume.AddVolumeActivity
+import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivityMainBinding
 import sushi.hardcore.droidfs.databinding.DialogDeleteVolumeBinding
 import sushi.hardcore.droidfs.explorers.ExplorerRouter
 import sushi.hardcore.droidfs.file_operations.FileOperationService
+import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -46,9 +48,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             finish()
         }
     }
-    private var changePasswordPosition: Int? = null
+    private var selectedVolumePosition: Int? = null
     private var changePassword = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
-        changePasswordPosition?.let { unselect(it) }
+        selectedVolumePosition?.let { unselect(it) }
     }
     private val pickDirectory = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null)
@@ -147,6 +149,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             recreate()
         } else {
             volumeAdapter.refresh()
+            invalidateOptionsMenu()
             if (volumeAdapter.volumes.isNotEmpty()) {
                 binding.textNoVolumes.visibility = View.GONE
             }
@@ -193,7 +196,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     private fun removeVolume(volume: VolumeData) {
         volumeManager.getVolumeId(volume)?.let { volumeManager.closeVolume(it) }
-        volumeDatabase.removeVolume(volume.name)
+        volumeDatabase.removeVolume(volume)
     }
 
     private fun removeVolumes(volumes: List<VolumeData>, i: Int = 0, doDeleteVolumeContent: Boolean? = null) {
@@ -292,9 +295,9 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 true
             }
             R.id.change_password -> {
-                changePasswordPosition = volumeAdapter.selectedItems.elementAt(0)
+                selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
                 changePassword.launch(Intent(this, ChangePasswordActivity::class.java).apply {
-                    putExtra("volume", volumeAdapter.volumes[changePasswordPosition!!])
+                    putExtra("volume", volumeAdapter.volumes[selectedVolumePosition!!])
                 })
                 true
             }
@@ -304,26 +307,32 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 true
             }
             R.id.copy -> {
-                val position = volumeAdapter.selectedItems.elementAt(0)
-                val volume = volumeAdapter.volumes[position]
-                when {
-                    volume.isHidden -> {
-                        PathUtils.safePickDirectory(pickDirectory, this, theme)
-                    }
-                    File(filesDir, volume.shortName).exists() -> {
+                selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
+                val volume = volumeAdapter.volumes[selectedVolumePosition!!]
+                if (volume.isHidden) {
+                    PathUtils.safePickDirectory(pickDirectory, this, theme)
+                } else {
+                    val hiddenVolumeFile = File(VolumeData.getHiddenVolumeFullPath(filesDir.path, volume.shortName))
+                    if (hiddenVolumeFile.exists()) {
                         CustomAlertDialogBuilder(this, theme)
                             .setTitle(R.string.error)
                             .setMessage(R.string.hidden_volume_already_exists)
                             .setPositiveButton(R.string.ok, null)
                             .show()
-                    }
-                    else -> {
-                        unselect(position)
+                    } else {
+                        unselect(selectedVolumePosition!!)
                         copyVolume(
                             DocumentFile.fromFile(File(volume.name)),
-                            DocumentFile.fromFile(filesDir),
+                            DocumentFile.fromFile(hiddenVolumeFile.parentFile!!),
                         ) {
-                            VolumeData(volume.shortName, true, volume.type, volume.encryptedHash, volume.iv)
+                            VolumeData(
+                                VolumeData.newUuid(),
+                                volume.shortName,
+                                true,
+                                volume.type,
+                                volume.encryptedHash,
+                                volume.iv
+                            )
                         }
                     }
                 }
@@ -373,15 +382,14 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 )
             }
         }
-        menu.findItem(R.id.rename).isVisible = onlyOneAndWriteable
+        menu.findItem(R.id.rename).isVisible = onlyOneAndWriteable && !volumeManager.isOpen(volumeAdapter.volumes[volumeAdapter.selectedItems.first()])
         supportActionBar?.setDisplayHomeAsUpEnabled(isSelecting || explorerRouter.pickMode || explorerRouter.dropMode)
         return true
     }
 
     private fun onDirectoryPicked(uri: Uri) {
-        val position = volumeAdapter.selectedItems.elementAt(0)
-        val volume = volumeAdapter.volumes[position]
-        unselect(position)
+        val volume = volumeAdapter.volumes[selectedVolumePosition!!]
+        unselect(selectedVolumePosition!!)
         val dstDocumentFile = DocumentFile.fromTreeUri(this, uri)
         if (dstDocumentFile == null) {
             CustomAlertDialogBuilder(this, theme)
@@ -398,6 +406,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                     val path = PathUtils.getFullPathFromTreeUri(dstRootDirectory.uri, this)
                     if (path == null) null
                     else VolumeData(
+                        VolumeData.newUuid(),
                         PathUtils.pathJoin(path, name),
                         false,
                         volume.type,
@@ -409,14 +418,21 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         }
     }
 
+    /**
+     * Copy a volume.
+     *
+     * @param srcDocumentFile [DocumentFile] of the volume to copy
+     * @param dstDocumentFile [DocumentFile] of the destination PARENT FOLDER
+     * @param getResultVolume A function that returns the [VolumeData] corresponding to the destination volume. Takes the [DocumentFile] of the newly created volume (not the parent folder).
+     */
     private fun copyVolume(srcDocumentFile: DocumentFile, dstDocumentFile: DocumentFile, getResultVolume: (DocumentFile) -> VolumeData?) {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
-            when {
-                result.taskResult.cancelled -> {
+            when (result.taskResult.state) {
+                TaskResult.State.CANCELLED -> {
                     result.dstRootDirectory?.delete()
                 }
-                result.taskResult.failedItem == null -> {
+                TaskResult.State.SUCCESS -> {
                     result.dstRootDirectory?.let {
                         getResultVolume(it)?.let { volume ->
                             volumeDatabase.saveVolume(volume)
@@ -429,13 +445,14 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         }
                     }
                 }
-                else -> {
+                TaskResult.State.FAILED -> {
                     CustomAlertDialogBuilder(this@MainActivity, theme)
                         .setTitle(R.string.error)
-                        .setMessage(getString(R.string.copy_failed, result.taskResult.failedItem.name))
+                        .setMessage(getString(R.string.copy_failed, result.taskResult.failedItem!!.name))
                         .setPositiveButton(R.string.ok, null)
                         .show()
                 }
+                TaskResult.State.ERROR -> result.taskResult.showErrorAlertDialog(this@MainActivity, theme)
             }
         }
     }
@@ -458,7 +475,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 DocumentFile.fromFile(srcPath).renameTo(newName)
             }
             if (success) {
-                volumeDatabase.renameVolume(volume.name, newDBName)
+                volumeDatabase.renameVolume(volume, newDBName)
+                VolumeProvider.notifyRootsChanged(this)
                 unselect(position)
                 if (volume.name == volumeOpener.defaultVolumeName) {
                     with (sharedPrefs.edit()) {

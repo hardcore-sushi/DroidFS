@@ -1,0 +1,6 @@
+- New unsafe feature: Expose open volumes
+- Ability to grant read-write access to external apps
+- New German translation
+- Dependencies updates
+- UX fixes
+- Crashes fixes

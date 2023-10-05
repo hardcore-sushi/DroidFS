@@ -21,6 +21,7 @@ import static androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP;
 import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.camera.core.impl.utils.CloseGuardHelper;
@@ -56,13 +57,15 @@ public final class SucklessRecording implements AutoCloseable {
     private final SucklessRecorder mRecorder;
     private final long mRecordingId;
     private final OutputOptions mOutputOptions;
+    private final boolean mIsPersistent;
     private final CloseGuardHelper mCloseGuard = CloseGuardHelper.create();
 
     SucklessRecording(@NonNull SucklessRecorder recorder, long recordingId, @NonNull OutputOptions options,
-            boolean finalizedOnCreation) {
+            boolean isPersistent, boolean finalizedOnCreation) {
         mRecorder = recorder;
         mRecordingId = recordingId;
         mOutputOptions = options;
+        mIsPersistent = isPersistent;
 
         if (finalizedOnCreation) {
             mIsClosed.set(true);
@@ -83,6 +86,7 @@ public final class SucklessRecording implements AutoCloseable {
         return new SucklessRecording(pendingRecording.getRecorder(),
                 recordingId,
                 pendingRecording.getOutputOptions(),
+                pendingRecording.isPersistent(),
                 /*finalizedOnCreation=*/false);
     }
 
@@ -103,12 +107,27 @@ public final class SucklessRecording implements AutoCloseable {
         return new SucklessRecording(pendingRecording.getRecorder(),
                 recordingId,
                 pendingRecording.getOutputOptions(),
+                pendingRecording.isPersistent(),
                 /*finalizedOnCreation=*/true);
     }
 
     @NonNull
     OutputOptions getOutputOptions() {
         return mOutputOptions;
+    }
+
+    /**
+     * Returns whether this recording is a persistent recording.
+     *
+     * <p>A persistent recording will only be stopped by explicitly calling of
+     * {@link Recording#stop()} and will ignore the lifecycle events or source state changes.
+     * Users are responsible of stopping a persistent recording.
+     *
+     * @return {@code true} if the recording is a persistent recording, otherwise {@code false}.
+     */
+    @ExperimentalPersistentRecording
+    public boolean isPersistent() {
+        return mIsPersistent;
     }
 
     /**
@@ -196,11 +215,7 @@ public final class SucklessRecording implements AutoCloseable {
      */
     @Override
     public void close() {
-        mCloseGuard.close();
-        if (mIsClosed.getAndSet(true)) {
-            return;
-        }
-        mRecorder.stop(this);
+        stopWithError(VideoRecordEvent.Finalize.ERROR_NONE, /*errorCause=*/ null);
     }
 
     @Override
@@ -208,7 +223,8 @@ public final class SucklessRecording implements AutoCloseable {
     protected void finalize() throws Throwable {
         try {
             mCloseGuard.warnIfOpen();
-            stop();
+            stopWithError(VideoRecordEvent.Finalize.ERROR_RECORDING_GARBAGE_COLLECTED,
+                    new RuntimeException("Recording stopped due to being garbage collected."));
         } finally {
             super.finalize();
         }
@@ -233,6 +249,15 @@ public final class SucklessRecording implements AutoCloseable {
     @RestrictTo(LIBRARY_GROUP)
     public boolean isClosed() {
         return mIsClosed.get();
+    }
+
+    private void stopWithError(@VideoRecordEvent.Finalize.VideoRecordError int error,
+            @Nullable Throwable errorCause) {
+        mCloseGuard.close();
+        if (mIsClosed.getAndSet(true)) {
+            return;
+        }
+        mRecorder.stop(this, error, errorCause);
     }
 }
 
