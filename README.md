@@ -11,7 +11,7 @@ For mortals: Encrypted storage compatible with already existing softwares.
 </p>
 
 # Support
-The creator of DroidFS works as a freelance developer and privacy consultant. I am currently looking for new clients! If you are interested, take a look at the [website](https://arkensys.fr.to). Alternatively, you can directly support DroidFS by making a [donation](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/DONATE.txt).
+The creator of DroidFS works as a freelance developer and privacy consultant. I am currently looking for new clients! If you are interested, take a look at the [website](https://arkensys.dedyn.io). Alternatively, you can directly support DroidFS by making a [donation](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/DONATE.txt).
 
 Thank you so much ❤️.
 
@@ -55,13 +55,14 @@ Some available features are considered risky and are therefore disabled by defau
   Decrypt and open file using external apps. These apps could save and send the files thus opened.
   </li>
   <li><h4>Expose open volumes*:</h4>
-  Allow open volumes to be browsed in the system file explorer (<a href="https://developer.android.com/guide/topics/providers/document-provider">DocumentProvider</a> API). Encrypted files can then be selected from other applications, potentially with permanent access. This feature requires "*Keep volume open when the app goes in background*" to be enabled.
+  Allow open volumes to be browsed in the system file explorer (<a href="https://developer.android.com/guide/topics/providers/document-provider">DocumentProvider</a> API). Encrypted files can then be selected from other applications, potentially with permanent access. This feature requires <i>"Keep volume open when the app goes in background"</i> to be enabled.
   </li>
   <li><h4>Grant write access:</h4>
   Files opened with another applications can be modified by them. This applies to both previous unsafe features.
   </li>
 </ul>
-* These features may require temporarily writing the plain file to disk (DroidFS internal storage). This file can be read by applications with root access or by physical access if your device is not encrypted. For files small enough and on a 3.17+ kernel, DroidFS will try to use memory-only storage using `memfd_create(2)` (can break some apps).
+
+\* These features may require temporarily writing the plain file to disk (DroidFS internal storage). This file can be read by applications with root access or by physical access if your device is not encrypted. For files small enough and on a 3.17+ kernel, DroidFS will try to use memory-only storage using `memfd_create(2)` (can break some apps).
 
 # Download
 <a href="https://f-droid.org/packages/sushi.hardcore.droidfs">
