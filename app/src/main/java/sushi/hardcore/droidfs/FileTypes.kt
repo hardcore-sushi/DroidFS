@@ -6,7 +6,7 @@ object FileTypes {
     private val FILE_EXTENSIONS = mapOf(
         Pair("image", listOf("png", "jpg", "jpeg", "gif", "webp", "bmp", "heic")),
         Pair("video", listOf("mp4", "webm", "mkv", "mov")),
-        Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac")),
+        Pair("audio", listOf("mp3", "ogg", "m4a", "wav", "flac", "opus")),
         Pair("pdf", listOf("pdf")),
         Pair("text", listOf(
             "asc",

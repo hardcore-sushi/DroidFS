@@ -21,7 +21,7 @@ if (hasProperty("nosplits")) {
 
 android {
     compileSdk 34
-    ndkVersion "25.2.9519653"
+    ndkVersion "26.1.10909125"
     namespace "sushi.hardcore.droidfs"
 
     compileOptions {
@@ -58,6 +58,7 @@ android {
         splits {
             abi {
                 enable true
+                reset() // fix unknown bug (https://ru.stackoverflow.com/questions/1557805/abis-armeabi-mips-mips64-riscv64-are-not-supported-for-platform)
                 universalApk true
             }
         }
