@@ -236,14 +236,21 @@ class VolumeProvider: DocumentsProvider() {
     ): String? {
         if (!usfExpose || !usfSafWrite) return null
         val document = parseDocumentId(parentDocumentId) ?: return null
-        val newFile = PathUtils.pathJoin(document.path, displayName)
-        val f = document.encryptedVolume.openFileWriteMode(newFile)
-        return if (f == -1L) {
-            Log.e(TAG, "Failed to create file: $document")
-            null
+        val path = PathUtils.pathJoin(document.path, displayName)
+        var success = false
+        if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
+            success = document.encryptedVolume.mkdir(path)
         } else {
-            document.encryptedVolume.closeFile(f)
-            document.rootId+newFile
+            val f = document.encryptedVolume.openFileWriteMode(path)
+            if (f != -1L) {
+                document.encryptedVolume.closeFile(f)
+                success = true
+            }
+        }
+        return if (success) {
+            document.rootId+path
+        } else {
+            null
         }
     }
 
