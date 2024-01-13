@@ -10,6 +10,12 @@
         android:text="@string/dir_empty"
         android:visibility="gone"/>
 
+    <ProgressBar
+        android:id="@+id/loader"
+        android:layout_centerInParent="true"
+        android:layout_width="40dp"
+        android:layout_height="40dp"/>
+
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:id="@+id/refresher"
         android:layout_width="match_parent"

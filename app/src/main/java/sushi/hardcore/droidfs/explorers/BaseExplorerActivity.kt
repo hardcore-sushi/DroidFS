@@ -11,10 +11,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ImageButton
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -23,10 +25,13 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.EncryptedFileProvider
@@ -69,6 +74,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     protected lateinit var fileOperationService: FileOperationService
     protected val activityScope = MainScope()
+    private var directoryLoadingTask: Job? = null
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     protected lateinit var app: VolumeManagerApp
@@ -79,6 +85,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private lateinit var titleText: TextView
     private lateinit var recycler_view_explorer: RecyclerView
     private lateinit var refresher: SwipeRefreshLayout
+    private lateinit var loader: ProgressBar
     private lateinit var textDirEmpty: TextView
     private lateinit var currentPathText: TextView
     private lateinit var numberOfFilesText: TextView
@@ -101,6 +108,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         init()
         recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
         refresher = findViewById(R.id.refresher)
+        loader = findViewById(R.id.loader)
         textDirEmpty = findViewById(R.id.text_dir_empty)
         currentPathText = findViewById(R.id.current_path_text)
         numberOfFilesText = findViewById(R.id.number_of_files_text)
@@ -312,17 +320,15 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     private fun displayExplorerElements() {
-        synchronized(this) {
-            ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
-        }
+        ExplorerElement.sortBy(sortOrderValues[currentSortOrderIndex], foldersFirst, explorerElements)
         unselectAll(false)
+        loader.isVisible = false
+        recycler_view_explorer.isVisible = true
         explorerAdapter.explorerElements = explorerElements
-        val sharedPrefsEditor = sharedPrefs.edit()
-        sharedPrefsEditor.putString(Constants.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
-        sharedPrefsEditor.apply()
     }
 
-    private fun recursiveSetSize(directory: ExplorerElement) {
+    private suspend fun recursiveSetSize(directory: ExplorerElement) {
+        yield()
         for (child in encryptedVolume.readDir(directory.fullPath) ?: return) {
             if (child.isDirectory) {
                 recursiveSetSize(child)
@@ -346,15 +352,16 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) {
-        synchronized(this) {
-            explorerElements = encryptedVolume.readDir(path) ?: return
-            if (path != "/") {
-                explorerElements.add(
-                    0,
-                    ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
-                )
-            }
+    protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) = lifecycleScope.launch {
+        directoryLoadingTask?.cancelAndJoin()
+        recycler_view_explorer.isVisible = false
+        loader.isVisible = true
+        explorerElements = encryptedVolume.readDir(path) ?: return@launch
+        if (path != "/") {
+            explorerElements.add(
+                0,
+                ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
+            )
         }
         textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
         currentDirectoryPath = path
@@ -362,22 +369,19 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
         displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
         if (mapFolders) {
-            lifecycleScope.launch {
-                var totalSize: Long = 0
-                withContext(Dispatchers.IO) {
-                    synchronized(this@BaseExplorerActivity) {
-                        for (element in explorerElements) {
-                            if (element.isDirectory) {
-                                recursiveSetSize(element)
-                            }
-                            totalSize += element.stat.size
-                        }
+            var totalSize: Long = 0
+            directoryLoadingTask = launch(Dispatchers.IO) {
+                for (element in explorerElements) {
+                    if (element.isDirectory) {
+                        recursiveSetSize(element)
                     }
+                    totalSize += element.stat.size
                 }
-                displayExplorerElements()
-                totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
-                onDisplayed?.invoke()
             }
+            directoryLoadingTask!!.join()
+            displayExplorerElements()
+            totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
+            onDisplayed?.invoke()
         } else {
             displayExplorerElements()
             totalSizeText.text = getString(
@@ -607,7 +611,13 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
-                            displayExplorerElements()
+                            // displayExplorerElements must not be called if directoryLoadingTask is active
+                            if (directoryLoadingTask?.isActive != true) {
+                                displayExplorerElements()
+                            }
+                            val sharedPrefsEditor = sharedPrefs.edit()
+                            sharedPrefsEditor.putString(Constants.SORT_ORDER_KEY, sortOrderValues[currentSortOrderIndex])
+                            sharedPrefsEditor.apply()
                             dialog.dismiss()
                         }
                         .setNegativeButton(R.string.cancel, null)
