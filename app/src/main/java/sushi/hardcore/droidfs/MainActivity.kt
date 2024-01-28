@@ -28,6 +28,7 @@ import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
@@ -354,7 +355,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_activity, menu)
-        menu.findItem(R.id.settings).isVisible = !explorerRouter.pickMode && !explorerRouter.dropMode
+        val settingsVisible = !explorerRouter.pickMode && !explorerRouter.dropMode
+        menu.findItem(R.id.settings).isVisible = settingsVisible
+        if (settingsVisible) {
+            UIUtils.getMenuIconNeutralTint(this, menu).applyTo(R.id.settings, R.drawable.icon_settings)
+        }
         val isSelecting = volumeAdapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.select_all).isVisible = isSelecting
         menu.findItem(R.id.lock).isVisible = isSelecting && volumeAdapter.selectedItems.any {

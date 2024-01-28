@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.ParcelFileDescriptor
 import android.system.Os
 import android.util.Log
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -22,6 +23,23 @@ class EncryptedFileProvider(context: Context) {
     companion object {
         private const val TAG = "EncryptedFileProvider"
         fun getTmpFilesDir(context: Context) = File(context.cacheDir, "tmp")
+
+        var exportMethod = ExportMethod.AUTO
+    }
+
+    enum class ExportMethod {
+        AUTO,
+        DISK,
+        MEMORY;
+
+        companion object {
+            fun parse(value: String) = when (value) {
+                "auto" -> EncryptedFileProvider.ExportMethod.AUTO
+                "disk" -> EncryptedFileProvider.ExportMethod.DISK
+                "memory" -> EncryptedFileProvider.ExportMethod.MEMORY
+                else -> throw IllegalArgumentException("Invalid export method: $value")
+            }
+        }
     }
 
     private val memoryInfo = ActivityManager.MemoryInfo()
@@ -33,6 +51,11 @@ class EncryptedFileProvider(context: Context) {
         (context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager).getMemoryInfo(
             memoryInfo
         )
+
+        PreferenceManager.getDefaultSharedPreferences(context)
+            .getString("export_method", null)?.let {
+                exportMethod = ExportMethod.parse(it)
+            }
     }
 
     class ExportedDiskFile private constructor(
@@ -118,16 +141,18 @@ class EncryptedFileProvider(context: Context) {
         path: String,
         size: Long,
     ): ExportedFile? {
-        return if (size > memoryInfo.availMem * 0.8) {
-            ExportedDiskFile.create(
-                path,
-                tmpFilesDir,
-                handler,
-            )
-        } else if (isMemFileSupported) {
-            ExportedMemFile.create(path, size) as ExportedFile
-        } else {
-            null
+        val diskFile by lazy { ExportedDiskFile.create(path, tmpFilesDir, handler) }
+        val memFile by lazy { ExportedMemFile.create(path, size) }
+        return when (exportMethod) {
+            ExportMethod.MEMORY -> memFile
+            ExportMethod.DISK -> diskFile
+            ExportMethod.AUTO -> {
+                if (isMemFileSupported && size < memoryInfo.availMem * 0.8) {
+                    memFile
+                } else {
+                    diskFile
+                }
+            }
         }
     }
 

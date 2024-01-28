@@ -62,7 +62,7 @@ Some available features are considered risky and are therefore disabled by defau
   </li>
 </ul>
 
-\* These features may require temporarily writing the plain file to disk (DroidFS internal storage). This file can be read by applications with root access or by physical access if your device is not encrypted. For files small enough and on a 3.17+ kernel, DroidFS will try to use memory-only storage using `memfd_create(2)` (can break some apps).
+\* These features can work in two ways: temporarily writing the plain file to disk (DroidFS internal storage) or sharing it via memory. By default, DroidFS will choose to keep the file only in memory as it's more secure, but will fallback to disk export if the file is too large to be held in memory. This behavior can be changed with the *"Export method"* parameter in the settings. Please note that some applications require the file to be stored on disk, and therefore do not work with memory-exported files.
 
 # Download
 <a href="https://f-droid.org/packages/sushi.hardcore.droidfs">

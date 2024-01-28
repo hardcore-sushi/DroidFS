@@ -38,6 +38,12 @@
         <item>Pink</item>
     </string-array>
 
+    <string-array name="export_methods">
+        <item>Auto (depending on available memory)</item>
+        <item>Temporary export on disk (reliable but may leave traces)</item>
+        <item>Memory file (safer but doesn\'t always work)</item>
+    </string-array>
+
     <!-- don't translate the following otherwise the app will crash -->
     <string-array name="sort_orders_values">
         <item>name</item>
@@ -56,5 +62,11 @@
         <item>orange</item>
         <item>purple</item>
         <item>pink</item>
+    </string-array>
+
+    <string-array name="export_methods_values">
+        <item>auto</item>
+        <item>disk</item>
+        <item>memory</item>
     </string-array>
 </resources>

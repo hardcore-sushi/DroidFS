@@ -78,6 +78,15 @@
             android:title="@string/usf_saf_write"
             android:summary="@string/usf_saf_write_summary" />
 
+        <ListPreference
+            android:key="export_method"
+            android:entries="@array/export_methods"
+            android:entryValues="@array/export_methods_values"
+            android:defaultValue="auto"
+            android:title="@string/export_method"
+            android:summary="@string/export_method_summary"
+            android:icon="@drawable/icon_settings"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

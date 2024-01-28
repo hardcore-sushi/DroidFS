@@ -273,4 +273,7 @@
     <string name="export_failed_export">failed to export file</string>
     <string name="export_mem">Exporting to memory…</string>
     <string name="export_disk">Exporting to disk…</string>
+    <string name="memfd_create_unsupported">Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of %s.</string>
+    <string name="export_method">Export method</string>
+    <string name="export_method_summary">File export method. Used for sharing, external opening and accessing exposed files.</string>
 </resources>

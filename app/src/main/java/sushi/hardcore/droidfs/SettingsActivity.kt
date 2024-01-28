@@ -179,17 +179,7 @@ class SettingsActivity : BaseActivity() {
                 true
             }
             switchExpose.setOnPreferenceChangeListener { _, checked ->
-                if (checked as Boolean) {
-                    if (!Compat.isMemFileSupported()) {
-                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
-                            .setTitle(R.string.error)
-                            .setMessage("Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of ${Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION}.")
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                        return@setOnPreferenceChangeListener false
-                    }
-                }
-                VolumeProvider.usfExpose = checked
+                VolumeProvider.usfExpose = checked as Boolean
                 updateView(usfExpose = checked)
                 VolumeProvider.notifyRootsChanged(requireContext())
                 true
@@ -197,6 +187,19 @@ class SettingsActivity : BaseActivity() {
             switchSafWrite.setOnPreferenceChangeListener { _, checked ->
                 VolumeProvider.usfSafWrite = checked as Boolean
                 TemporaryFileProvider.usfSafWrite = checked
+                true
+            }
+
+            findPreference<ListPreference>("export_method")!!.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue as String == "memory" && !Compat.isMemFileSupported()) {
+                    CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.memfd_create_unsupported, Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                    return@setOnPreferenceChangeListener false
+                }
+                EncryptedFileProvider.exportMethod = EncryptedFileProvider.ExportMethod.parse(newValue)
                 true
             }
         }

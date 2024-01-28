@@ -13,7 +13,7 @@ import sushi.hardcore.droidfs.Constants.DEFAULT_VOLUME_KEY
 import sushi.hardcore.droidfs.databinding.DialogOpenVolumeBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.ObjRef
-import sushi.hardcore.droidfs.util.WidgetUtil
+import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 
@@ -123,7 +123,7 @@ class VolumeOpener(
                 apply()
             }
         }
-        val password = WidgetUtil.encodeEditTextContent(dialogBinding!!.editPassword)
+        val password = UIUtils.encodeEditTextContent(dialogBinding!!.editPassword)
         val savePasswordHash = dialogBinding!!.checkboxSavePassword.isChecked
         dialogBinding = null
         // openVolumeWithPassword is responsible for wiping the password

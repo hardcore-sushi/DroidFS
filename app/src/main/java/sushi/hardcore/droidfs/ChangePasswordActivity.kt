@@ -16,7 +16,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.ObjRef
-import sushi.hardcore.droidfs.util.WidgetUtil
+import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 
@@ -89,8 +89,8 @@ class ChangePasswordActivity: BaseActivity() {
     }
 
     private fun changeVolumePassword() {
-        val newPassword = WidgetUtil.encodeEditTextContent(binding.editNewPassword)
-        val newPasswordConfirm = WidgetUtil.encodeEditTextContent(binding.editPasswordConfirm)
+        val newPassword = UIUtils.encodeEditTextContent(binding.editNewPassword)
+        val newPasswordConfirm = UIUtils.encodeEditTextContent(binding.editPasswordConfirm)
         @SuppressLint("NewApi")
         if (!newPassword.contentEquals(newPasswordConfirm)) {
             Toast.makeText(this, R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
@@ -135,7 +135,7 @@ class ChangePasswordActivity: BaseActivity() {
             null
         }
         val currentPassword = if (givenHash == null) {
-            WidgetUtil.encodeEditTextContent(binding.editCurrentPassword)
+            UIUtils.encodeEditTextContent(binding.editCurrentPassword)
         } else {
             null
         }

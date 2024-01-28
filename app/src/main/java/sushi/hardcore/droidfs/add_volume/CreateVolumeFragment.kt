@@ -20,7 +20,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.ObjRef
-import sushi.hardcore.droidfs.util.WidgetUtil
+import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.*
@@ -146,8 +146,8 @@ class CreateVolumeFragment: Fragment() {
     }
 
     private fun createVolume() {
-        val password = WidgetUtil.encodeEditTextContent(binding.editPassword)
-        val passwordConfirm = WidgetUtil.encodeEditTextContent(binding.editPasswordConfirm)
+        val password = UIUtils.encodeEditTextContent(binding.editPassword)
+        val passwordConfirm = UIUtils.encodeEditTextContent(binding.editPasswordConfirm)
         if (!password.contentEquals(passwordConfirm)) {
             Toast.makeText(requireContext(), R.string.passwords_mismatch, Toast.LENGTH_SHORT).show()
             Arrays.fill(password, 0)
