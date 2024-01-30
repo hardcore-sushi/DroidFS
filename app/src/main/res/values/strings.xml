@@ -276,4 +276,7 @@
     <string name="memfd_create_unsupported">Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of %s.</string>
     <string name="export_method">Export method</string>
     <string name="export_method_summary">File export method. Used for sharing, external opening and accessing exposed files.</string>
+    <string name="debug">Debug</string>
+    <string name="logcat_title">DroidFS Logcat</string>
+    <string name="logcat_saved">Logcat saved</string>
 </resources>

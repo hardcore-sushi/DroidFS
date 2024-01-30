@@ -120,6 +120,10 @@ class SettingsActivity : BaseActivity() {
                     false
                 }
             }
+            findPreference<Preference>("logcat")?.setOnPreferenceClickListener { _ ->
+                startActivity(Intent(requireContext(), LogcatActivity::class.java))
+                true
+            }
         }
     }
 

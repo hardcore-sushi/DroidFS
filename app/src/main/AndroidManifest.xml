@@ -53,6 +53,7 @@
         <activity android:name=".file_viewers.AudioPlayer" android:configChanges="screenSize|orientation" />
         <activity android:name=".file_viewers.TextEditor" android:configChanges="screenSize|orientation" />
         <activity android:name=".CameraActivity" android:screenOrientation="nosensor" />
+        <activity android:name=".LogcatActivity"/>
 
         <service android:name=".WiperService" android:exported="false" android:stopWithTask="false"/>
         <service android:name=".file_operations.FileOperationService" android:exported="false"/>
