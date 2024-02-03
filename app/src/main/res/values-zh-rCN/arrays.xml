@@ -1,0 +1,20 @@
+<resources>
+    <string-array name="sort_orders_entries">
+        <item>名称</item>
+        <item>大小</item>
+        <item>日期</item>
+        <item>名称 (降序)</item>
+        <item>大小 (降序)</item>
+        <item>日期 (降序)</item>
+    </string-array>
+
+    <string-array name="color_names">
+        <item>绿</item>
+        <item>红</item>
+        <item>蓝</item>
+        <item>黄</item>
+        <item>橙</item>
+        <item>紫</item>
+        <item>粉</item>
+    </string-array>
+</resources>
