@@ -262,4 +262,10 @@
     <string name="export_failed_export">невозможно экспортировать файл</string>
     <string name="export_mem">Экспорт в память…</string>
     <string name="export_disk">Экспорт в хранилище…</string>
+    <string name="memfd_create_unsupported">Текущее ядро не поддерживает memfd_create(). Для работы данной функции требуется версия ядра не ниже %s.</string>
+    <string name="export_method">Метод экспорта</string>
+    <string name="export_method_summary">Метод экспорта файлов. Используется для обмена, открытия во внешнем приложении и доступа к открытым файлам.</string>
+    <string name="debug">Отладка</string>
+    <string name="logcat_title">Журнал logcat DroidFS</string>
+    <string name="logcat_saved">Журнал logcat сохранён</string>
 </resources>
