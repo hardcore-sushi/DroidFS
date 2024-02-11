@@ -17,4 +17,10 @@
         <item>Фиолетовый</item>
         <item>Розовый</item>
     </string-array>
+
+    <string-array name="export_methods">
+        <item>Автовыбор (зависит от доступной памяти)</item>
+        <item>Временный файл в хранилище (надёжно, но могут остаться следы)</item>
+        <item>Файл в памяти (безопаснее, но не всегда возможно)</item>
+    </string-array>
 </resources>
