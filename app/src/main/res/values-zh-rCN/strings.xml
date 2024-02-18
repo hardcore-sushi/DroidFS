@@ -146,7 +146,7 @@
     <string name="error_retrieving_filename">通过URI检索文件失败: %s</string>
     <string name="hidden_volume">隐藏卷</string>
     <string name="error_slash_in_name">卷名不应当包含斜杠</string>
-    <string name="hidden_volume_warning">隐藏卷存放在DroidFS的私有文件夹下，其他应用在没有Root权限的情况下无法读取隐藏卷。但若你卸载DroidFS或者在应用管理器中清除DroidFS的数据，隐藏卷内的文件都会丢失。请提前做好备份！</string>
+    <string name="hidden_volume_warning">隐藏卷存放在DroidFS的私有文件夹内，其他应用在没有Root权限的情况下无法读取隐藏卷。但若你卸载DroidFS或者在应用管理器中清除DroidFS的数据，隐藏卷内的文件都会丢失。请提前做好备份！</string>
     <string name="camera_perm_needed">照相需要授予相机权限</string>
     <string name="choose_resolution">选择分辨率</string>
     <string name="file_operations">文件操作</string>
@@ -185,7 +185,7 @@
     <string name="remove_fingerprint">移除指纹验证</string>
     <string name="unrecoverable_key_exception_msg">%s. 无法加载加密密钥</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
-    <string name="delete_hidden_volume_question">%s 是隐藏的，你希望DroidFS暂时不在UI上显示该卷的入口还是删除该卷内的文件?</string>
+    <string name="delete_hidden_volume_question">%s 是隐藏的，你希望DroidFS暂时不在UI上显示该卷的入口还是希望DroidFS删除该卷内的文件?</string>
     <string name="forget_only">仅删除UI上的入口</string>
     <string name="delete_volume">删除卷</string>
     <string name="hidden_volume_description">在DroidFS的私有文件夹中存放该卷</string>
