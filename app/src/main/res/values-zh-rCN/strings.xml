@@ -8,7 +8,7 @@
     <string name="password">密码</string>
     <string name="import_files">导入文件</string>
     <string name="import_folder">导入文件夹</string>
-    <string name="discovering_files">正在发现文件…</string>
+    <string name="discovering_files">正在清点文件…</string>
     <string name="mkdir">新建文件夹</string>
     <string name="dir_empty">文件夹空</string>
     <string name="warning">警告！</string>
@@ -31,7 +31,7 @@
     <string name="open_volume_failed">打开失败</string>
     <string name="share_chooser">分享文件</string>
     <string name="storage_perm_denied">存储空间权限被拒绝</string>
-    <string name="storage_perm_denied_msg">在没有存储权限时DroidFS无法工作</string>
+    <string name="storage_perm_denied_msg">没有存储权限时DroidFS无法工作</string>
     <string name="get_size_failed">无法获取文件的大小</string>
     <string name="parent_folder">上一级文件夹</string>
     <string name="enter_volume_path">输入卷的路径</string>
@@ -146,7 +146,7 @@
     <string name="error_retrieving_filename">通过URI检索文件失败: %s</string>
     <string name="hidden_volume">隐藏卷</string>
     <string name="error_slash_in_name">卷名不应当包含斜杠</string>
-    <string name="hidden_volume_warning">隐藏卷存放在DroidFS的私有文件夹内，其他应用在没有Root权限的情况下无法读取隐藏卷。但若你卸载DroidFS或者在应用管理器中清除DroidFS的数据，隐藏卷内的文件都会丢失。请提前做好备份！</string>
+    <string name="hidden_volume_warning">隐藏卷存放在DroidFS的私有文件夹内，其他应用在没有Root权限的情况下无法读取隐藏卷。如果你卸载DroidFS或者在应用管理器中清除了DroidFS的数据，隐藏卷内的文件会全部消失。请提前做好备份！</string>
     <string name="camera_perm_needed">照相需要授予相机权限</string>
     <string name="choose_resolution">选择分辨率</string>
     <string name="file_operations">文件操作</string>
@@ -164,7 +164,7 @@
     <string name="sort_by">分类方式</string>
     <string name="cut">剪切</string>
     <string name="map_folders">显示文件夹大小</string>
-    <string name="map_folders_summary">通过递归映射来计算文件夹的大小(如果文件夹很大，启用该功能将导致UI卡顿)</string>
+    <string name="map_folders_summary">通过递归映射来计算文件夹的大小(如果文件夹很大，启用该功能将导致APP卡顿)</string>
     <string name="camera_optimization">相机优化</string>
     <string name="maximize_quality">最大质量</string>
     <string name="minimize_latency">最低延迟</string>
@@ -185,7 +185,7 @@
     <string name="remove_fingerprint">移除指纹验证</string>
     <string name="unrecoverable_key_exception_msg">%s. 无法加载加密密钥</string>
     <string name="unrecoverable_key_exception">UnrecoverableKeyException</string>
-    <string name="delete_hidden_volume_question">%s 是隐藏的，你希望DroidFS暂时不在UI上显示该卷的入口还是希望DroidFS删除该卷内的文件?</string>
+    <string name="delete_hidden_volume_question">%s 是隐藏的，你希望DroidFS暂时不在UI上显示该卷的入口还是希望DroidFS删除卷内的文件?</string>
     <string name="forget_only">仅删除UI上的入口</string>
     <string name="delete_volume">删除卷</string>
     <string name="hidden_volume_description">在DroidFS的私有文件夹中存放该卷</string>
