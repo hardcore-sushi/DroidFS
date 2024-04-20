@@ -24,7 +24,7 @@
     <string name="export_failed">Dışa aktarılamadı: %s</string>
     <string name="success_export">Başarılı bir şekilde dışa aktarıldı !</string>
     <string name="remove_failed">Silinemedi:  %s</string>
-    <string name="passwords_mismatch">Şifreler uyuşmuyor/string>
+    <string name="passwords_mismatch">Şifreler uyuşmuyor</string>
     <string name="dir_not_empty">Seçili klasör boş değil</string>
     <string name="create_volume_failed">Birim oluşturualamadı.</string>
     <string name="open_volume_failed">Açılamadı</string>
