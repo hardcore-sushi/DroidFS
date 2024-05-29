@@ -273,4 +273,10 @@
     <string name="export_failed_export">Error al exportar el archivo</string>
     <string name="export_mem">Exportando a memoria…</string>
     <string name="export_disk">Exportar a disco…</string>
+    <string name="memfd_create_unsupported">El kernel actual no soporta memfd_create(). Esta característica requiere una versión mínima del kernel de %s.</string>
+    <string name="export_method">Método de exportación</string>
+    <string name="export_method_summary">Método de exportación de archivos. Se utiliza para compartir, abrir externamente y acceder a archivos expuestos.</string>
+    <string name="debug">Depurar</string>
+    <string name="logcat_title">Logcat de DroidFS</string>
+    <string name="logcat_saved">Logcat guardado</string>
 </resources>
