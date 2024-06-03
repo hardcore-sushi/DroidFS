@@ -189,9 +189,11 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
-                                EditTextDialog(this, R.string.enter_file_name) {
-                                    createNewFile(it)
-                                }.show()
+                                createNewFile {
+                                    encryptedVolume.closeFile(it)
+                                    setCurrentPath(currentDirectoryPath)
+                                    invalidateOptionsMenu()
+                                }
                             }
                             "createFolder" -> {
                                 openDialogCreateFolder()
@@ -217,26 +219,6 @@ class ExplorerActivity : BaseExplorerActivity() {
     override fun onExplorerElementLongClick(position: Int) {
         super.onExplorerElementLongClick(position)
         cancelItemAction()
-    }
-
-    private fun createNewFile(fileName: String){
-        if (fileName.isEmpty()) {
-            Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
-        } else {
-            val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
-            val handleID = encryptedVolume.openFileWriteMode(filePath)
-            if (handleID == -1L) {
-                CustomAlertDialogBuilder(this, theme)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.file_creation_failed)
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-            } else {
-                encryptedVolume.closeFile(handleID)
-                setCurrentPath(currentDirectoryPath)
-                invalidateOptionsMenu()
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

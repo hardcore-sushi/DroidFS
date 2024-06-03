@@ -268,6 +268,27 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             .show()
     }
 
+    protected fun createNewFile(callback: (Long) -> Unit) {
+        EditTextDialog(this, R.string.enter_file_name) {
+            if (it.isEmpty()) {
+                Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
+                createNewFile(callback)
+            } else {
+                val filePath = PathUtils.pathJoin(currentDirectoryPath, it)
+                val handleID = encryptedVolume.openFileWriteMode(filePath)
+                if (handleID == -1L) {
+                    CustomAlertDialogBuilder(this, theme)
+                        .setTitle(R.string.error)
+                        .setMessage(R.string.file_creation_failed)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                } else {
+                    callback(handleID)
+                }
+            }
+        }.show()
+    }
+
     private fun setVolumeNameTitle() {
         titleText.text = getString(R.string.volume, volumeName)
     }
