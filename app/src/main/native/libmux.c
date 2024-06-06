@@ -40,7 +40,7 @@ struct Muxer {
     jmethodID seek_method_id;
 };
 
-int write_packet(void* opaque, uint8_t* buff, int buff_size) {
+int write_packet(void* opaque, const uint8_t* buff, int buff_size) {
     struct Muxer* muxer = opaque;
     JNIEnv *env;
     (*muxer->jvm)->GetEnv(muxer->jvm, (void **) &env, JNI_VERSION_1_6);
@@ -108,8 +108,8 @@ Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_addVideoTrack(JNIEnv *e
     stream->codecpar->height = height;
     stream->codecpar->format = AV_PIX_FMT_YUVJ420P;
     stream->time_base = (AVRational) {1, frame_rate};
-    uint8_t* matrix = av_stream_new_side_data(stream, AV_PKT_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9);
-    av_display_rotation_set((int32_t *) matrix, orientation_hint);
+    AVPacketSideData *side_data_packet = av_packet_side_data_new(&stream->codecpar->coded_side_data, &stream->codecpar->nb_coded_side_data, AV_PKT_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9, 0);
+    av_display_rotation_set((int32_t *) side_data_packet->data, orientation_hint);
     return stream->index;
 }
 

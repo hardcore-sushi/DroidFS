@@ -1,18 +1,21 @@
 # Introduction
 DroidFS relies on modified versions of the original encrypted filesystems programs to open volumes. [CryFS](https://github.com/cryfs/cryfs) is written in C++ while [gocryptfs](https://github.com/rfjakob/gocryptfs) is written in [Go](https://golang.org). Thus, building DroidFS requires the compilation of native code. However, for the sake of simplicity, the application has been designed in a modular way: you can build a version of DroidFS that supports both Gocryptfs and CryFS, or only one of the two.
 
-Moreover, DroidFS aims to be accessible to as many people as possible. If you encounter any problems or need help with the build, feel free to open an issue, a discussion, or contact me by [email](mailto:hardcore.sushi@disroot.org) or on [Matrix](https://matrix.org): @hardcoresushi:matrix.underworld.fr
+Moreover, DroidFS aims to be accessible to as many people as possible. If you encounter any problems or need help with the build, feel free to open an issue, a discussion, or contact me (currently the main developer) by [email](mailto:gh@arkensys.dedyn.io) or on [Matrix](https://matrix.org): @hardcoresushi:matrix.underworld.fr
 
 # Setup
+
+The following two steps assume you're using a Debian-based Linux distribution. Package names might be similar for other distributions. Don't hesitate to ask if you're having trouble with this.
+
 Install required packages:
 ```
-$ sudo apt-get install openjdk-11-jdk-headless build-essential pkg-config git gnupg2 wget apksigner
+$ sudo apt-get install openjdk-17-jdk-headless build-essential pkg-config git gnupg2 wget apksigner npm
 ```
-You also need to manually install the [Android SDK](https://developer.android.com/studio/index.html#command-tools) and the [Android Native Development Kit (NDK)](https://developer.android.com/ndk/downloads) (r23 versions are recommended).
+You also need to manually install the [Android SDK](https://developer.android.com/studio/index.html#command-tools) and the [Android Native Development Kit (NDK)](https://github.com/android/ndk/wiki/Unsupported-Downloads#r25c) version `25.2.9519653` (r25c). libcryfs cannot be built with newer NDK versions at the moment due to compatibility issues with [boost](https://www.boost.org). If you succeed in building it with a more recent version of NDK, please report it.
 
-If you want a support for Gocryptfs volumes, you must install [Go](https://golang.org/doc/install) and libssl:
+If you want a support for Gocryptfs volumes, you need to install [Go](https://golang.org/doc/install):
 ```
-$ sudo apt-get install golang-go libssl-dev
+$ sudo apt-get install golang-go
 ```
 The code should be authenticated before being built. To verify the signatures, you will need my PGP key:
 ```
@@ -45,29 +48,21 @@ $ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
 If you want Gocryptfs support, you need to download OpenSSL:
 ```
 $ cd ../libgocryptfs
-$ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz
+$ wget https://openssl.org/source/openssl-3.3.1.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ wget https://www.openssl.org/source/openssl-1.1.1w.tar.gz.asc
-$ gpg --verify openssl-1.1.1w.tar.gz.asc openssl-1.1.1w.tar.gz
+$ https://openssl.org/source/openssl-3.3.1.tar.gz.asc
+$ gpg --verify openssl-3.3.1.tar.gz.asc openssl-3.3.1.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.
 ```
-$ tar -xzf openssl-1.1.1w.tar.gz
+$ tar -xzf openssl-3.3.1.tar.gz
 ```
 If you want CryFS support, initialize libcryfs:
 ```
 $ cd app/libcryfs
 $ git submodule update --depth=1 --init
-```
-
-To be able to open PDF files internally, [pdf.js](https://github.com/mozilla/pdf.js) must be downloaded:
-```
-$ mkdir libpdfviewer/app/pdfjs-dist && cd libpdfviewer/app/pdfjs-dist
-$ wget https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.8.162.tgz
-$ tar xf pdfjs-dist-3.8.162.tgz package/build/pdf.min.js package/build/pdf.worker.min.js
-$ mv package/build . && rm pdfjs-dist-3.8.162.tgz
 ```
 
 # Build
@@ -84,8 +79,8 @@ $ ./build.sh ffmpeg
 This step is only required if you want Gocryptfs support.
 ```
 $ cd app/libgocryptfs
-$ OPENSSL_PATH="./openssl-1.1.1w" ./build.sh
- ```
+$ ANDROID_NDK_ROOT="$ANDROID_NDK_HOME" OPENSSL_PATH="./openssl-3.3.1" ./build.sh
+```
 ## Compile APKs
 Gradle build libgocryptfs and libcryfs by default.
 

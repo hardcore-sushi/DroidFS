@@ -74,7 +74,7 @@ else
 			--disable-appkit \
 			--disable-alsa \
 			--disable-debug \
-			>/dev/null &&
+			 &&
 		make -j $(nproc --all) >/dev/null) &&
 		mkdir -p build/$1/libavformat build/$1/libavcodec build/$1/libavutil &&
 		cp $FFMPEG_DIR/libavformat/*.h $FFMPEG_DIR/libavformat/libavformat.so build/$1/libavformat &&
