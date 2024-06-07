@@ -68,7 +68,11 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFiles = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris != null) {
             for (uri in uris) {
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                try {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
             }
             importFilesFromUris(uris) {
                 onImportComplete(uris)
