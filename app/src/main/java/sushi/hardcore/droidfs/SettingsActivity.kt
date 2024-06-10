@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
@@ -90,9 +91,15 @@ class SettingsActivity : BaseActivity() {
 
         private fun refreshTheme() {
             with(requireActivity()) {
-                startActivity(Intent(this, SettingsActivity::class.java))
+                startActivity(
+                    Intent(this, SettingsActivity::class.java),
+                    ActivityOptions.makeCustomAnimation(
+                        this,
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out
+                    ).toBundle()
+                )
                 finish()
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }
 

@@ -2,23 +2,13 @@ package sushi.hardcore.droidfs.widgets
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.res.Configuration
 import android.media.session.PlaybackState
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
-import android.view.ViewGroup
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.LinearLayout
-import androidx.core.view.GestureDetectorCompat
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updatePadding
 import androidx.media3.ui.PlayerView
-import sushi.hardcore.droidfs.R
 
 class DoubleTapPlayerView @JvmOverloads constructor(
     context: Context,
@@ -75,22 +65,7 @@ class DoubleTapPlayerView @JvmOverloads constructor(
             handler.postDelayed(stopDoubleTap, 700)
         }
     }
-    private val gestureDetector = GestureDetectorCompat(context, gestureListener)
-    private val density by lazy {
-        context.resources.displayMetrics.density
-    }
-    private val originalExoIconPaddingBottom by lazy {
-        resources.getDimension(R.dimen.exo_icon_padding_bottom)
-    }
-    private val originalExoIconSize by lazy {
-        resources.getDimension(R.dimen.exo_icon_size)
-    }
-
-    init {
-        if (resources.configuration.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            handleOrientationChange(Configuration.ORIENTATION_LANDSCAPE)
-        }
-    }
+    private val gestureDetector = GestureDetector(context, gestureListener)
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -134,36 +109,5 @@ class DoubleTapPlayerView @JvmOverloads constructor(
                 }
             }
         }
-    }
-
-    private fun updateButtonSize(orientation: Int) {
-        val size = (if (orientation == Configuration.ORIENTATION_LANDSCAPE) 45*density else originalExoIconSize).toInt()
-        listOf(R.id.exo_prev, R.id.exo_rew_with_amount, R.id.exo_play_pause, R.id.exo_ffwd_with_amount, R.id.exo_next).forEach {
-            findViewById<View>(it).updateLayoutParams {
-                width = size
-                height = size
-            }
-        }
-        // fix text vertical alignment inside icons
-        val paddingBottom = (if (orientation == Configuration.ORIENTATION_LANDSCAPE) 15*density else originalExoIconPaddingBottom).toInt()
-        listOf(R.id.exo_rew_with_amount, R.id.exo_ffwd_with_amount).forEach {
-            findViewById<Button>(it).updatePadding(bottom = paddingBottom)
-        }
-    }
-
-    private fun handleOrientationChange(orientation: Int) {
-        val centerControls = findViewById<LinearLayout>(R.id.exo_center_controls)
-        (centerControls.parent as ViewGroup).removeView(centerControls)
-        findViewById<FrameLayout>(if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            R.id.center_controls_bar
-        } else {
-            R.id.center_controls_external
-        }).addView(centerControls)
-        updateButtonSize(orientation)
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        handleOrientationChange(newConfig.orientation)
     }
 }
