@@ -279,4 +279,6 @@
     <string name="debug">Debug</string>
     <string name="logcat_title">DroidFS Logcat</string>
     <string name="logcat_saved">Logcat saved</string>
+    <string name="later">Later</string>
+    <string name="notification_denied_msg">Notification permission has been denied. Background file operations won\'t be visible. You can change this in the app\'s permission settings.</string>
 </resources>

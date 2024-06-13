@@ -190,15 +190,9 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         setContentView(R.layout.activity_explorer)
     }
 
-    protected open fun bindFileOperationService(){
-        Intent(this, FileOperationService::class.java).also {
-            bindService(it, object : ServiceConnection {
-                override fun onServiceConnected(className: ComponentName, service: IBinder) {
-                    val binder = service as FileOperationService.LocalBinder
-                    fileOperationService = binder.getService()
-                }
-                override fun onServiceDisconnected(arg0: ComponentName) {}
-            }, Context.BIND_AUTO_CREATE)
+    protected open fun bindFileOperationService() {
+        FileOperationService.bind(this) {
+            fileOperationService = it
         }
     }
 

@@ -6,13 +6,11 @@ import android.content.Intent
 
 class NotificationBroadcastReceiver: BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == FileOperationService.ACTION_CANCEL){
+        if (intent.action == FileOperationService.ACTION_CANCEL) {
             intent.getBundleExtra("bundle")?.let { bundle ->
-                (bundle.getBinder("binder") as FileOperationService.LocalBinder?)?.let { binder ->
-                    val notificationId = bundle.getInt("notificationId")
-                    val service = binder.getService()
-                    service.cancelOperation(notificationId)
-                }
+                // TODO: use peekService instead?
+                val binder = (bundle.getBinder("binder") as FileOperationService.LocalBinder?)
+                binder?.getService()?.cancelOperation(bundle.getInt("taskId"))
             }
         }
     }

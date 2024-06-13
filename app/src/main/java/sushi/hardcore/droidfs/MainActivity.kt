@@ -132,13 +132,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             }
         }
         startService(Intent(this, WiperService::class.java))
-        Intent(this, FileOperationService::class.java).also {
-            bindService(it, object : ServiceConnection {
-                override fun onServiceConnected(className: ComponentName, service: IBinder) {
-                    fileOperationService = (service as FileOperationService.LocalBinder).getService()
-                }
-                override fun onServiceDisconnected(arg0: ComponentName) {}
-            }, Context.BIND_AUTO_CREATE)
+        FileOperationService.bind(this) {
+            fileOperationService = it
         }
     }
 
@@ -434,9 +429,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
             when (result.taskResult.state) {
-                TaskResult.State.CANCELLED -> {
-                    result.dstRootDirectory?.delete()
-                }
                 TaskResult.State.SUCCESS -> {
                     result.dstRootDirectory?.let {
                         getResultVolume(it)?.let { volume ->
@@ -458,6 +450,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         .show()
                 }
                 TaskResult.State.ERROR -> result.taskResult.showErrorAlertDialog(this@MainActivity, theme)
+                TaskResult.State.CANCELLED -> {}
             }
         }
     }
