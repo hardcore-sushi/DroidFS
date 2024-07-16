@@ -1,12 +1,8 @@
 package sushi.hardcore.droidfs
 
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -131,7 +127,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 }
             }
         }
-        startService(Intent(this, WiperService::class.java))
         FileOperationService.bind(this) {
             fileOperationService = it
         }
@@ -184,9 +179,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     private fun unselect(position: Int) {
-        volumeAdapter.selectedItems.remove(position)
-        volumeAdapter.onVolumeChanged(position)
-        onSelectionChanged(0) // unselect() is always called when only one element is selected
+        volumeAdapter.unselect(position)
         invalidateOptionsMenu()
     }
 
@@ -285,7 +278,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             R.id.delete_password_hash -> {
                 for (i in volumeAdapter.selectedItems) {
                     if (volumeDatabase.removeHash(volumeAdapter.volumes[i]))
-                        volumeAdapter.onVolumeChanged(i)
+                        volumeAdapter.onVolumeDataChanged(i)
                 }
                 unselectAll(false)
                 true
@@ -475,6 +468,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             if (success) {
                 volumeDatabase.renameVolume(volume, newDBName)
                 VolumeProvider.notifyRootsChanged(this)
+                volumeAdapter.onVolumeDataChanged(position)
                 unselect(position)
                 if (volume.name == volumeOpener.defaultVolumeName) {
                     with (sharedPrefs.edit()) {

@@ -75,7 +75,6 @@
     <string name="usf_screenshot">允许截屏</string>
     <string name="usf_fingerprint">允许通过指纹保存密码哈希</string>
     <string name="usf_volume_management">加密卷管理</string>
-    <string name="usf_keep_open">当应用切入后台时已打开的卷不再自动锁上</string>
     <string name="unsafe_features">以下功能会降低安全性</string>
     <string name="manage_unsafe_features">管理非安全功能</string>
     <string name="manage_unsafe_features_summary">打开/关闭非安全功能</string>

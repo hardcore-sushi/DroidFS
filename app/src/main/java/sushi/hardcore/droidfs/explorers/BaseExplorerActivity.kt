@@ -1,12 +1,8 @@
 package sushi.hardcore.droidfs.explorers
 
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -15,7 +11,6 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.addCallback
-import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -27,7 +22,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
@@ -55,6 +49,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.UIUtils
+import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
@@ -100,7 +95,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         usf_open = sharedPrefs.getBoolean("usf_open", false)
         volumeName = intent.getStringExtra("volumeName") ?: ""
         volumeId = intent.getIntExtra("volumeId", -1)
-        encryptedVolume = app.volumeManager.getVolume(volumeId)!!
+        encryptedVolume = app.volumeManager.getVolume(volumeId)!!.also { finishOnClose(it) }
         sortOrderEntries = resources.getStringArray(R.array.sort_orders_entries)
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
@@ -199,7 +194,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private fun startFileViewer(cls: Class<*>, filePath: String) {
         val intent = Intent(this, cls).apply {
             putExtra("path", filePath)
-            putExtra("volume", encryptedVolume)
+            putExtra("volumeId", volumeId)
             putExtra("sortOrder", sortOrderValues[currentSortOrderIndex])
         }
         startActivity(intent)
@@ -679,10 +674,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (app.isStartingExternalApp) {
             TemporaryFileProvider.instance.wipe()
         }
-        if (encryptedVolume.isClosed()) {
-            finish()
-        } else {
-            setCurrentPath(currentDirectoryPath)
-        }
+        setCurrentPath(currentDirectoryPath)
     }
 }

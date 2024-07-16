@@ -74,7 +74,6 @@
     <string name="usf_screenshot">Permitir capturas de pantalla</string>
     <string name="usf_fingerprint">Permitir guardar el hash de la contraseña mediante la huella dactilar</string>
     <string name="usf_volume_management">Gestión del volumen</string>
-    <string name="usf_keep_open">Mantener el volumen abierto cuando la aplicación está en segundo plano</string>
     <string name="unsafe_features">Características inseguras</string>
     <string name="manage_unsafe_features">Gestionar las características inseguras</string>
     <string name="manage_unsafe_features_summary">Activar/desactivar funciones inseguras</string>

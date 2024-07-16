@@ -181,7 +181,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "importFromOtherVolumes" -> {
                                 val intent = Intent(this, MainActivity::class.java)
                                 intent.action = "pick"
-                                intent.putExtra("volume", encryptedVolume)
                                 pickFromOtherVolumes.launch(intent)
                             }
                             "importFiles" -> {
@@ -205,7 +204,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "camera" -> {
                                 val intent = Intent(this, CameraActivity::class.java)
                                 intent.putExtra("path", currentDirectoryPath)
-                                intent.putExtra("volume", encryptedVolume)
+                                intent.putExtra("volumeId", volumeId)
                                 startActivity(intent)
                             }
                         }

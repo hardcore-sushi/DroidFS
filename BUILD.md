@@ -52,7 +52,7 @@ $ wget https://openssl.org/source/openssl-3.3.1.tar.gz
 ```
 Verify OpenSSL signature:
 ```
-$ https://openssl.org/source/openssl-3.3.1.tar.gz.asc
+$ wget https://openssl.org/source/openssl-3.3.1.tar.gz.asc
 $ gpg --verify openssl-3.3.1.tar.gz.asc openssl-3.3.1.tar.gz
 ```
 Continue **ONLY** if the signature is **VALID**.

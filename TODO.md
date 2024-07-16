@@ -8,7 +8,8 @@ Here's a list of features that it would be nice to have in DroidFS. As this is a
 
 ## UX
 - File associations editor
-- Optional discovery before file operations
+- Discovery before exporting
+- Making discovery before file operations optional
 - Modifiable CryFS scrypt parameters
 - Alert dialog showing details of file operations
 - Internal file browser to select volumes

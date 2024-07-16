@@ -73,7 +73,6 @@
     <string name="usf_screenshot">السماح بلقطة شاشة</string>
     <string name="usf_fingerprint">السماح بحفظ تجزئة كلمة المرور باستخدام بصمة الإصبع</string>
     <string name="usf_volume_management">إدارة مجلد التشفير</string>
-    <string name="usf_keep_open">إبقاء مجلد التشفير مفتوحاً عند الخروج من التطبيق</string>
     <string name="unsafe_features">الميزات غير الآمنة</string>
     <string name="manage_unsafe_features">إدارة الميزات غير الآمنة</string>
     <string name="manage_unsafe_features_summary">تمكين / تعطيل الميزات غير الآمنة</string>

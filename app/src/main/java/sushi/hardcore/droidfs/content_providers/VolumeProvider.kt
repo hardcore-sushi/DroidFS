@@ -18,6 +18,7 @@ import sushi.hardcore.droidfs.VolumeManager
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
+import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import java.io.File
 
@@ -40,23 +41,23 @@ class VolumeProvider: DocumentsProvider() {
             DocumentsContract.Document.COLUMN_SIZE,
             DocumentsContract.Document.COLUMN_LAST_MODIFIED,
         )
-        var usfExpose = false
-        var usfSafWrite = false
 
         fun notifyRootsChanged(context: Context) {
             context.contentResolver.notifyChange(DocumentsContract.buildRootsUri(AUTHORITY), null)
         }
     }
 
+    private val usfExposeDelegate = AndroidUtils.LiveBooleanPreference("usf_expose", false)
+    private val usfExpose by usfExposeDelegate
+    private val usfSafWriteDelegate = AndroidUtils.LiveBooleanPreference("usf_saf_write", false)
+    private val usfSafWrite by usfSafWriteDelegate
     private lateinit var volumeManager: VolumeManager
     private val volumes = HashMap<String, Pair<Int, VolumeData>>()
     private lateinit var encryptedFileProvider: EncryptedFileProvider
 
     override fun onCreate(): Boolean {
         val context = (context ?: return false)
-        val sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context)
-        usfExpose = sharedPreferences.getBoolean("usf_expose", false)
-        usfSafWrite = sharedPreferences.getBoolean("usf_saf_write", false)
+        AndroidUtils.LiveBooleanPreference.init(context, usfExposeDelegate, usfSafWriteDelegate)
         volumeManager = (context.applicationContext as VolumeManagerApp).volumeManager
         encryptedFileProvider = EncryptedFileProvider(context)
         return true

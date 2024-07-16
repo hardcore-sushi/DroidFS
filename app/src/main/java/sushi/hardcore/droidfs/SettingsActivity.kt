@@ -8,21 +8,23 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreference
 import androidx.preference.SwitchPreferenceCompat
-import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
+import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 class SettingsActivity : BaseActivity() {
+    private val notificationPermissionHelper = AndroidUtils.NotificationPermissionHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -169,20 +171,23 @@ class SettingsActivity : BaseActivity() {
                     true
                 }
             }
+            val switchBackground = findPreference<SwitchPreference>("usf_background")!!
             val switchKeepOpen = findPreference<SwitchPreference>("usf_keep_open")!!
             val switchExternalOpen = findPreference<SwitchPreference>("usf_open")!!
             val switchExpose = findPreference<SwitchPreference>("usf_expose")!!
             val switchSafWrite = findPreference<SwitchPreference>("usf_saf_write")!!
 
-            fun updateView(usfOpen: Boolean? = null, usfKeepOpen: Boolean? = null, usfExpose: Boolean? = null) {
-                val usfKeepOpen = usfKeepOpen ?: switchKeepOpen.isChecked
-                switchExpose.isEnabled = usfKeepOpen
-                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || (usfKeepOpen && usfExpose ?: switchExpose.isChecked)
+            fun updateView(usfOpen: Boolean? = null, usfBackground: Boolean? = null, usfExpose: Boolean? = null) {
+                val usfBackground = usfBackground ?: switchBackground.isChecked
+                switchKeepOpen.isEnabled = usfBackground
+                switchExpose.isEnabled = usfBackground
+                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || (usfBackground && usfExpose ?: switchExpose.isChecked)
             }
 
             updateView()
-            switchKeepOpen.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfKeepOpen = checked as Boolean)
+            switchBackground.setOnPreferenceChangeListener { _, checked ->
+                updateView(usfBackground = checked as Boolean)
+                switchKeepOpen.isChecked = switchKeepOpen.isChecked && checked
                 true
             }
             switchExternalOpen.setOnPreferenceChangeListener { _, checked ->
@@ -190,17 +195,25 @@ class SettingsActivity : BaseActivity() {
                 true
             }
             switchExpose.setOnPreferenceChangeListener { _, checked ->
-                VolumeProvider.usfExpose = checked as Boolean
-                updateView(usfExpose = checked)
+                updateView(usfExpose = checked as Boolean)
                 VolumeProvider.notifyRootsChanged(requireContext())
                 true
             }
-            switchSafWrite.setOnPreferenceChangeListener { _, checked ->
-                VolumeProvider.usfSafWrite = checked as Boolean
-                TemporaryFileProvider.usfSafWrite = checked
+
+            switchKeepOpen.setOnPreferenceChangeListener { _, checked ->
+                if (checked as Boolean) {
+                    (requireActivity() as SettingsActivity).notificationPermissionHelper.askAndRun {
+                        requireContext().let {
+                            if (AndroidUtils.isServiceRunning(it, KeepAliveService::class.java)) {
+                                ContextCompat.startForegroundService(it, Intent(it, KeepAliveService::class.java).apply {
+                                    action = KeepAliveService.ACTION_FOREGROUND
+                                })
+                            }
+                        }
+                    }
+                }
                 true
             }
-
             findPreference<ListPreference>("export_method")!!.setOnPreferenceChangeListener { _, newValue ->
                 if (newValue as String == "memory" && !Compat.isMemFileSupported()) {
                     CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)

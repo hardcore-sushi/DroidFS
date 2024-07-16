@@ -74,7 +74,6 @@
     <string name="usf_screenshot">Allow screenshots</string>
     <string name="usf_fingerprint">Allow saving password hash using fingerprint</string>
     <string name="usf_volume_management">Volume Management</string>
-    <string name="usf_keep_open">Keep volume open when the app goes in background</string>
     <string name="unsafe_features">Unsafe Features</string>
     <string name="manage_unsafe_features">Manage unsafe features</string>
     <string name="manage_unsafe_features_summary">Enable/Disable unsafe features</string>
@@ -281,4 +280,11 @@
     <string name="logcat_saved">Logcat saved</string>
     <string name="later">Later</string>
     <string name="notification_denied_msg">Notification permission has been denied. Background file operations won\'t be visible. You can change this in the app\'s permission settings.</string>
+    <string name="keep_alive_notification_title">Keep alive service</string>
+    <string name="keep_alive_notification_text">One or more volumes are kept open.</string>
+    <string name="close_all">Close all</string>
+    <string name="usf_background">Disable volume auto-locking</string>
+    <string name="usf_background_summary">Don\'t lock volumes when the app goes in background</string>
+    <string name="usf_keep_open">Keep volumes open</string>
+    <string name="usf_keep_open_summary">Maintain the app always running in the background to keep volumes open</string>
 </resources>

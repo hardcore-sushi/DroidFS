@@ -1,6 +1,5 @@
 package sushi.hardcore.droidfs.filesystems
 
-import android.os.Parcel
 import android.util.Log
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -100,8 +99,6 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         }
     }
 
-    constructor(parcel: Parcel) : this(parcel.readInt())
-
     override fun openFileReadMode(path: String): Long {
         return native_open_read_mode(sessionID, path).toLong()
     }
@@ -120,11 +117,6 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
 
     override fun getAttr(path: String): Stat? {
         return native_get_attr(sessionID, path)
-    }
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) = with(parcel) {
-        writeByte(GOCRYPTFS_VOLUME_TYPE)
-        writeInt(sessionID)
     }
 
     override fun close() {

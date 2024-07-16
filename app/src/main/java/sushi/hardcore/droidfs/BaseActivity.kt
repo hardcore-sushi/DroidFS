@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.preference.PreferenceManager
 
 open class BaseActivity: AppCompatActivity() {
     protected lateinit var sharedPrefs: SharedPreferences
@@ -12,7 +13,7 @@ open class BaseActivity: AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        sharedPrefs = (application as VolumeManagerApp).sharedPreferences
+        sharedPrefs = PreferenceManager.getDefaultSharedPreferences(this)
         theme = Theme.fromSharedPrefs(sharedPrefs)
         if (applyCustomTheme) {
             setTheme(theme.toResourceId())

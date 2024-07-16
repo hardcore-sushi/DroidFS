@@ -18,10 +18,12 @@ import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
@@ -40,7 +42,10 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         filePath = intent.getStringExtra("path")!!
         originalParentPath = PathUtils.getParentPath(filePath)
-        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
+        encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
+            intent.getIntExtra("volumeId", -1)
+        )!!
+        finishOnClose(encryptedVolume)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
@@ -172,12 +177,5 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected fun goBackToExplorer() {
         finish()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        if (encryptedVolume.isClosed()) {
-            finish()
-        }
     }
 }

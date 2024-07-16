@@ -1,7 +1,5 @@
 package sushi.hardcore.droidfs.file_operations
 
-import android.Manifest
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -11,7 +9,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
-import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Binder
@@ -21,7 +18,6 @@ import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
@@ -39,12 +35,14 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.NotificationBroadcastReceiver
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManager
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
+import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
@@ -91,32 +89,11 @@ class FileOperationService : Service() {
          * If multiple activities bind simultaneously, only the latest one will be used by the service.
          */
         fun bind(activity: BaseActivity, onBound: (FileOperationService) -> Unit) {
-            var service: FileOperationService? = null
-            val launcher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-                if (granted) {
-                    service!!.processPendingTask()
-                } else {
-                    CustomAlertDialogBuilder(activity, activity.theme)
-                        .setTitle(R.string.warning)
-                        .setMessage(R.string.notification_denied_msg)
-                        .setPositiveButton(R.string.settings) { _, _ ->
-                            activity.startActivity(
-                                Intent(
-                                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                    Uri.fromParts("package", activity.packageName, null)
-                                )
-                            )
-                        }
-                        .setNegativeButton(R.string.later, null)
-                        .setOnDismissListener { service!!.processPendingTask() }
-                        .show()
-                }
-            }
+            val helper = AndroidUtils.NotificationPermissionHelper(activity)
             activity.bindService(Intent(activity, FileOperationService::class.java), object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                     onBound((binder as FileOperationService.LocalBinder).getService().also {
-                        it.notificationPermissionLauncher = launcher
-                        service = it
+                        it.notificationPermissionHelper = helper
                     })
                 }
                 override fun onServiceDisconnected(arg0: ComponentName) {}
@@ -128,7 +105,7 @@ class FileOperationService : Service() {
     private val binder = LocalBinder()
     private lateinit var volumeManger: VolumeManager
     private var serviceScope = MainScope()
-    private lateinit var notificationPermissionLauncher: ActivityResultLauncher<String>
+    private lateinit var notificationPermissionHelper: AndroidUtils.NotificationPermissionHelper<BaseActivity>
     private var askForNotificationPermission = true
     private lateinit var notificationManager: NotificationManagerCompat
     private val notifications = HashMap<Int, NotificationCompat.Builder>()
@@ -315,18 +292,30 @@ class FileOperationService : Service() {
                 continuation.resume(Pair(taskId, job))
             }
             pendingTask = task
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (
-                    ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                    && askForNotificationPermission
-                ) {
-                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                    askForNotificationPermission = false // only ask once per service instance
-                    return@suspendCoroutine
+            if (askForNotificationPermission) {
+                notificationPermissionHelper.askAndRun { granted ->
+                    if (granted) {
+                        processPendingTask()
+                    } else {
+                        CustomAlertDialogBuilder(notificationPermissionHelper.activity, notificationPermissionHelper.activity.theme)
+                            .setTitle(R.string.warning)
+                            .setMessage(R.string.notification_denied_msg)
+                            .setPositiveButton(R.string.settings) { _, _ ->
+                                (application as VolumeManagerApp).isStartingExternalApp = true
+                                notificationPermissionHelper.activity.startActivity(
+                                    Intent(
+                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                        Uri.fromParts("package", packageName, null)
+                                    )
+                                )
+                            }
+                            .setNegativeButton(R.string.later, null)
+                            .setOnDismissListener { processPendingTask() }
+                            .show()
+                    }
                 }
+                askForNotificationPermission = false // only ask once per service instance
+                return@suspendCoroutine
             }
             processPendingTask()
         }

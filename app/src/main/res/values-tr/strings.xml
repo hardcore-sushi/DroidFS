@@ -74,7 +74,6 @@
     <string name="usf_screenshot">Ekran görüntüsü almaya izin ver</string>
     <string name="usf_fingerprint">Parmak izi kullanılarak şifre hash değerinin kaydedilmesine izin ver</string>
     <string name="usf_volume_management">Birim yönetimi</string>
-    <string name="usf_keep_open">Uygulama arka plana geçtiğinde birimi açık tutun</string>
     <string name="unsafe_features">Güvenli olmayan özellikler</string>
     <string name="manage_unsafe_features">Güvenli olmayan özellikleri yönetin</string>
     <string name="manage_unsafe_features_summary">Güvenli olmayan özellikleri etkinleştirme/devre dışı bırakma</string>

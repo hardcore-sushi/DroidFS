@@ -58,10 +58,11 @@
         <activity android:name=".CameraActivity" android:screenOrientation="nosensor" />
         <activity android:name=".LogcatActivity"/>
 
-        <service android:name=".WiperService" android:exported="false" android:stopWithTask="false"/>
+        <service android:name=".KeepAliveService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <service android:name=".ClosingService" android:exported="false" android:stopWithTask="false"/>
         <service android:name=".file_operations.FileOperationService" android:exported="false" android:foregroundServiceType="dataSync"/>
 
-        <receiver android:name=".file_operations.NotificationBroadcastReceiver" android:exported="false">
+        <receiver android:name=".NotificationBroadcastReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="file_operation_cancel"/>
             </intent-filter>

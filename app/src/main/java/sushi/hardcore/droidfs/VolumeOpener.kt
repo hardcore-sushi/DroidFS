@@ -211,7 +211,7 @@ class VolumeOpener(
                         private var isClosed = false
                         override fun onFailed(pending: Boolean) {
                             if (!isClosed) {
-                                encryptedVolume.close()
+                                encryptedVolume.closeVolume()
                                 isClosed = true
                             }
                             Arrays.fill(returnedHash.value!!, 0)

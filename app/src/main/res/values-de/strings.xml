@@ -74,7 +74,6 @@
     <string name="usf_screenshot">Screenshots zulassen</string>
     <string name="usf_fingerprint">Kennwort-Hash mit Fingerabdruck speichern können</string>
     <string name="usf_volume_management">Volumenverwaltung</string>
-    <string name="usf_keep_open">Volumen offen halten, wenn die App in den Hintergrund geht</string>
     <string name="unsafe_features">Unsichere Funktionen</string>
     <string name="manage_unsafe_features">Sichere Funktionen verwalten</string>
     <string name="manage_unsafe_features_summary">Aktivieren/Deaktivieren unsicherer Funktionen</string>

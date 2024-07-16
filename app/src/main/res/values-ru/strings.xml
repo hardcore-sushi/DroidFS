@@ -71,7 +71,6 @@
     <string name="usf_screenshot">Разрешить снимки экрана</string>
     <string name="usf_fingerprint">Разрешить сохранение хеша пароля отпечатком пальца</string>
     <string name="usf_volume_management">Управление томом</string>
-    <string name="usf_keep_open">Оставлять том открытым, когда DroidFS в фоне</string>
     <string name="unsafe_features">Небезопасные функции</string>
     <string name="manage_unsafe_features">Управление небезопасными функциями</string>
     <string name="manage_unsafe_features_summary">Включить/отключить небезопасные функции</string>
