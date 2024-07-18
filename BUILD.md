@@ -38,31 +38,17 @@ __Don't continue if the verification fails!__
 
 Initialize submodules:
 ```
-$ git submodule update --depth=1 --init
+$ git submodule update --init
 ```
-[FFmpeg](https://ffmpeg.org) is needed to record encrypted video:
+If you want Gocryptfs support, initliaze libgocryptfs submodules:
 ```
-$ cd app/ffmpeg
-$ git clone --depth=1 https://git.ffmpeg.org/ffmpeg.git
+$ cd app/libgocryptfs
+$ git submodule update --init
 ```
-If you want Gocryptfs support, you need to download OpenSSL:
-```
-$ cd ../libgocryptfs
-$ wget https://openssl.org/source/openssl-3.3.1.tar.gz
-```
-Verify OpenSSL signature:
-```
-$ wget https://openssl.org/source/openssl-3.3.1.tar.gz.asc
-$ gpg --verify openssl-3.3.1.tar.gz.asc openssl-3.3.1.tar.gz
-```
-Continue **ONLY** if the signature is **VALID**.
-```
-$ tar -xzf openssl-3.3.1.tar.gz
-```
-If you want CryFS support, initialize libcryfs:
+If you want CryFS support, initialize libcryfs submodules:
 ```
 $ cd app/libcryfs
-$ git submodule update --depth=1 --init
+$ git submodule update --init
 ```
 
 # Build
@@ -70,31 +56,33 @@ Retrieve your Android NDK installation path, usually something like `/home/\<use
 ```
 $ export ANDROID_NDK_HOME="<your ndk path>"
 ```
+If you know your CPU ABI, you can specify it to build scripts in order to speed up compilation time. If you don't know it, or want to build for all ABIs, just leave the field blank.
+
 Start by compiling FFmpeg:
 ```
 $ cd app/ffmpeg
-$ ./build.sh ffmpeg
+$ ./build.sh [<ABI>]
 ```
 ## libgocryptfs
 This step is only required if you want Gocryptfs support.
 ```
 $ cd app/libgocryptfs
-$ ANDROID_NDK_ROOT="$ANDROID_NDK_HOME" OPENSSL_PATH="./openssl-3.3.1" ./build.sh
+$ ./build.sh [<ABI>]
 ```
 ## Compile APKs
 Gradle build libgocryptfs and libcryfs by default.
 
 To build DroidFS without Gocryptfs support, run:
 ```
-$ ./gradlew assembleRelease -PdisableGocryptfs=true
+$ ./gradlew assembleRelease [-Pabi=<ABI>] -PdisableGocryptfs=true
 ```
 To build DroidFS without CryFS support, run:
 ```
-$ ./gradlew assembleRelease -PdisableCryFS=true
+$ ./gradlew assembleRelease [-Pabi=<ABI>] -PdisableCryFS=true
 ```
 If you want to build DroidFS with support for both Gocryptfs and CryFS, just run:
 ```
-$ ./gradlew assembleRelease
+$ ./gradlew assembleRelease [-Pabi=<ABI>]
 ```
 
 # Sign APKs

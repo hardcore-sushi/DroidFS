@@ -16,9 +16,3 @@
 -keep class sushi.hardcore.droidfs.VolumeData$* {
     static public android.os.Parcelable$Creator CREATOR;
 }
--keep class sushi.hardcore.droidfs.filesystems.EncryptedVolume {
-    public int describeContents();
-}
--keep class sushi.hardcore.droidfs.filesystems.EncryptedVolume$* {
-    static public android.os.Parcelable$Creator CREATOR;
-}

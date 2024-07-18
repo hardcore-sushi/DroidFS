@@ -13,12 +13,6 @@ if (hasProperty("disableGocryptfs")) {
     ext.disableGocryptfs = false
 }
 
-if (hasProperty("nosplits")) {
-	ext.splits = false
-} else {
-	ext.splits = true
-}
-
 android {
     compileSdk 34
     ndkVersion '25.2.9519653'
@@ -33,6 +27,8 @@ android {
         jvmTarget = "17"
     }
 
+    def abiCodes  = [ "arm64-v8a": 1, "armeabi-v7a": 2, "x86_64": 3, "x86": 4]
+
     defaultConfig {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
@@ -40,8 +36,17 @@ android {
         versionCode 36
         versionName "2.1.3"
 
-        ndk {
-            abiFilters "x86", "x86_64", "armeabi-v7a", "arm64-v8a"
+        splits {
+            abi {
+                enable true
+                reset() // fix unknown bug (https://ru.stackoverflow.com/questions/1557805/abis-armeabi-mips-mips64-riscv64-are-not-supported-for-platform)
+                if (project.hasProperty("abi")) {
+                    include project.getProperty("abi")
+                } else {
+                    abiCodes.keySet().each { abi -> include abi }
+                    universalApk !project.hasProperty("nouniversal")
+                }
+            }
         }
 
         externalNativeBuild.cmake {
@@ -54,20 +59,20 @@ android {
         }
     }
 
-    if (project.ext.splits) {
-        splits {
-            abi {
-                enable true
-                reset() // fix unknown bug (https://ru.stackoverflow.com/questions/1557805/abis-armeabi-mips-mips64-riscv64-are-not-supported-for-platform)
-                universalApk true
-            }
-        }
-    }
-
     applicationVariants.configureEach { variant ->
         variant.resValue "string", "versionName", variant.versionName
         buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
         buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"
+        variant.outputs.each { output ->
+            def abi = output.getFilter(com.android.build.OutputFile.ABI)
+            if (abi == null) { // universal
+                output.versionCodeOverride = variant.versionCode*10
+                output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-universal.apk"
+            } else {
+                output.versionCodeOverride = variant.versionCode*10 + abiCodes[abi]
+                output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-${abi}.apk"
+            }
+        }
     }
 
     buildFeatures {
