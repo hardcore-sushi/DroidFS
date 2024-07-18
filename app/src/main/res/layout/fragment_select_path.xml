@@ -13,6 +13,7 @@
         android:focusable="true"
         android:background="?attr/selectableItemBackground"
         android:paddingHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:paddingVertical="@dimen/selectable_row_vertical_padding"
         android:layout_marginBottom="@dimen/volume_operation_vertical_gap">
 
         <ImageView

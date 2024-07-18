@@ -3,25 +3,25 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_vertical"
-    android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap">
+    android:gravity="center_vertical">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/volume_type_label"/>
+        android:text="@string/volume_type_label"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
-    <Spinner
-        android:id="@+id/spinner_volume_type"
-        android:layout_width="wrap_content"
+    <RadioGroup
+        android:id="@+id/radio_group_filesystems"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginVertical="@dimen/volume_operation_vertical_gap"/>
+        android:layout_marginVertical="10dp"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/password_label"/>
+        android:text="@string/password_label"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <EditText
         android:id="@+id/edit_password"
@@ -30,13 +30,15 @@
         android:inputType="textPassword"
         android:maxLines="1"
         android:autofillHints="password"
-        android:hint="@string/password"/>
+        android:hint="@string/password"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/password_confirmation_label"
-        android:layout_marginTop="@dimen/volume_operation_vertical_gap"/>
+        android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <EditText
         android:id="@+id/edit_password_confirm"
@@ -45,11 +47,13 @@
         android:inputType="textPassword"
         android:maxLines="1"
         android:autofillHints="password"
-        android:hint="@string/password_confirmation_hint"/>
+        android:hint="@string/password_confirmation_hint"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
         android:layout_marginVertical="@dimen/volume_operation_vertical_gap">
 
         <TextView

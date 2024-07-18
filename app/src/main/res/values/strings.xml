@@ -287,4 +287,6 @@
     <string name="usf_background_summary">Don\'t lock volumes when the app goes in background</string>
     <string name="usf_keep_open">Keep volumes open</string>
     <string name="usf_keep_open_summary">Maintain the app always running in the background to keep volumes open</string>
+    <string name="gocryptfs_details">Fast, but doesn\'t hide file sizes and directory structure</string>
+    <string name="cryfs_details">Slower, but protects metadata and prevents replacement attacks</string>
 </resources>

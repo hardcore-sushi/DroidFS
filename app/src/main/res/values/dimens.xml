@@ -12,4 +12,5 @@
     <dimen name="dialog_padding_top">10dp</dimen>
     <dimen name="dialog_text_size">16sp</dimen>
     <dimen name="title_file_name_text_size">20sp</dimen>
+    <dimen name="selectable_row_vertical_padding">10dp</dimen>
 </resources>

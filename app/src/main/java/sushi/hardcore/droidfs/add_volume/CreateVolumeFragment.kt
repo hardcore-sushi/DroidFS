@@ -7,13 +7,23 @@ import android.text.InputType
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import sushi.hardcore.droidfs.*
+import sushi.hardcore.droidfs.BuildConfig
+import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.FingerprintProtector
+import sushi.hardcore.droidfs.LoadingTask
+import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.Theme
+import sushi.hardcore.droidfs.VolumeData
+import sushi.hardcore.droidfs.VolumeDatabase
+import sushi.hardcore.droidfs.VolumeManagerApp
+import sushi.hardcore.droidfs.databinding.FileSystemRadioBinding
 import sushi.hardcore.droidfs.databinding.FragmentCreateVolumeBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -23,9 +33,11 @@ import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
-import java.util.*
+import java.util.Arrays
 
 class CreateVolumeFragment: Fragment() {
+    internal data class FileSystemInfo(val nameResource: Int, val detailsResource: Int, val ciphersResource: Int)
+
     companion object {
         private const val KEY_THEME_VALUE = "theme"
         private const val KEY_VOLUME_PATH = "path"
@@ -33,6 +45,17 @@ class CreateVolumeFragment: Fragment() {
         private const val KEY_REMEMBER_VOLUME = "remember"
         private const val KEY_PIN_PASSWORDS = Constants.PIN_PASSWORDS_KEY
         private const val KEY_USF_FINGERPRINT = "fingerprint"
+        
+        private val GOCRYPTFS_INFO = FileSystemInfo(
+            R.string.gocryptfs,
+            R.string.gocryptfs_details,
+            R.array.gocryptfs_encryption_ciphers,
+        )
+        private val CRYFS_INFO = FileSystemInfo(
+            R.string.cryfs,
+            R.string.cryfs_details,
+            R.array.cryfs_encryption_ciphers,
+        )
 
         fun newInstance(
             theme: Theme,
@@ -57,7 +80,7 @@ class CreateVolumeFragment: Fragment() {
 
     private lateinit var binding: FragmentCreateVolumeBinding
     private lateinit var theme: Theme
-    private val volumeTypes = ArrayList<String>(2)
+    private val fileSystemInfos = ArrayList<FileSystemInfo>(2)
     private lateinit var volumePath: String
     private var isHiddenVolume: Boolean = false
     private var rememberVolume: Boolean = false
@@ -92,17 +115,10 @@ class CreateVolumeFragment: Fragment() {
             binding.checkboxSavePassword.visibility = View.GONE
         }
         if (!BuildConfig.GOCRYPTFS_DISABLED) {
-            volumeTypes.add(resources.getString(R.string.gocryptfs))
+            fileSystemInfos.add(GOCRYPTFS_INFO)
         }
         if (!BuildConfig.CRYFS_DISABLED) {
-            volumeTypes.add(resources.getString(R.string.cryfs))
-        }
-        binding.spinnerVolumeType.adapter = ArrayAdapter(
-            requireContext(),
-            android.R.layout.simple_spinner_item,
-            volumeTypes
-        ).apply {
-            setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+            fileSystemInfos.add(CRYFS_INFO)
         }
         val encryptionCipherAdapter = ArrayAdapter(
             requireContext(),
@@ -111,19 +127,29 @@ class CreateVolumeFragment: Fragment() {
         ).apply {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
-        binding.spinnerVolumeType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                val ciphersArray = if (volumeTypes[position] == resources.getString(R.string.gocryptfs)) {
-                    R.array.gocryptfs_encryption_ciphers
-                } else {
-                    R.array.cryfs_encryption_ciphers
+        for ((i, fs) in fileSystemInfos.iterator().withIndex()) {
+            with(FileSystemRadioBinding.inflate(layoutInflater)) {
+                title.text = getString(fs.nameResource)
+                details.text = getString(fs.detailsResource)
+                radio.isChecked = i == 0
+                root.setOnClickListener {
+                    radio.performClick()
                 }
-                with(encryptionCipherAdapter) {
-                    clear()
-                    addAll(resources.getStringArray(ciphersArray).asList())
+                radio.setOnCheckedChangeListener { _, isChecked ->
+                    if (isChecked) {
+                        with(encryptionCipherAdapter) {
+                            clear()
+                            addAll(resources.getStringArray(fs.ciphersResource).asList())
+                        }
+                        binding.radioGroupFilesystems.children.forEach {
+                            if (it != root) {
+                                it.findViewById<RadioButton>(R.id.radio).isChecked = false
+                            }
+                        }
+                    }
                 }
+                binding.radioGroupFilesystems.addView(root)
             }
-            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
         binding.spinnerCipher.adapter = encryptionCipherAdapter
         if (pinPasswords) {
@@ -143,6 +169,15 @@ class CreateVolumeFragment: Fragment() {
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         (activity as AddVolumeActivity).onFragmentLoaded(false)
+    }
+
+    private fun getSelectedFileSystemIndex(): Int {
+        for ((i, child) in binding.radioGroupFilesystems.children.iterator().withIndex()) {
+            if (child.findViewById<RadioButton>(R.id.radio).isChecked) {
+                return i
+            }
+        }
+        return -1
     }
 
     private fun createVolume() {
@@ -173,7 +208,7 @@ class CreateVolumeFragment: Fragment() {
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    val result = if (volumeTypes[binding.spinnerVolumeType.selectedItemPosition] == resources.getString(R.string.gocryptfs)) {
+                    val result = if (fileSystemInfos[getSelectedFileSystemIndex()] == GOCRYPTFS_INFO) {
                         val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
                             0 -> -1   // auto
                             1 -> 0    // AES-GCM
