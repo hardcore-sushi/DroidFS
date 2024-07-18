@@ -1,8 +1,8 @@
 <resources>
     <string-array name="gocryptfs_encryption_ciphers">
+        <item>@string/auto</item>
         <item>AES-GCM</item>
         <item>XChaCha20-Poly1305</item>
-        <item>@string/auto</item>
     </string-array>
 
     <string-array name="cryfs_encryption_ciphers">

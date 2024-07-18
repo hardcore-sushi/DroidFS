@@ -299,6 +299,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
                 val volume = volumeAdapter.volumes[selectedVolumePosition!!]
                 if (volume.isHidden) {
+                    (application as VolumeManagerApp).isStartingExternalApp = true
                     PathUtils.safePickDirectory(pickDirectory, this, theme)
                 } else {
                     val hiddenVolumeFile = File(VolumeData.getHiddenVolumeFullPath(filesDir.path, volume.shortName))

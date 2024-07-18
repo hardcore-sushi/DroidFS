@@ -175,9 +175,9 @@ class CreateVolumeFragment: Fragment() {
                         volumeFile.mkdirs()
                     val result = if (volumeTypes[binding.spinnerVolumeType.selectedItemPosition] == resources.getString(R.string.gocryptfs)) {
                         val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
-                            0 -> 0
-                            1 -> 1
-                            else -> -1
+                            0 -> -1   // auto
+                            1 -> 0    // AES-GCM
+                            else -> 1 // XChaCha20-Poly1305
                         }
                         generateResult(GocryptfsVolume.createAndOpenVolume(
                             volumePath,

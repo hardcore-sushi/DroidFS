@@ -17,12 +17,13 @@ import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
-import androidx.activity.result.ActivityResultLauncher
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -90,14 +91,27 @@ class FileOperationService : Service() {
          */
         fun bind(activity: BaseActivity, onBound: (FileOperationService) -> Unit) {
             val helper = AndroidUtils.NotificationPermissionHelper(activity)
-            activity.bindService(Intent(activity, FileOperationService::class.java), object : ServiceConnection {
+            lateinit var service: FileOperationService
+            val serviceConnection = object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                     onBound((binder as FileOperationService.LocalBinder).getService().also {
-                        it.notificationPermissionHelper = helper
+                        service = it
+                        it.notificationPermissionHelpers.addLast(helper)
                     })
                 }
                 override fun onServiceDisconnected(arg0: ComponentName) {}
-            }, Context.BIND_AUTO_CREATE)
+            }
+            activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
+                override fun onDestroy(owner: LifecycleOwner) {
+                    activity.unbindService(serviceConnection)
+                    service.notificationPermissionHelpers.removeLast()
+                }
+            })
+            activity.bindService(
+                Intent(activity, FileOperationService::class.java),
+                serviceConnection,
+                Context.BIND_AUTO_CREATE
+            )
         }
     }
 
@@ -105,7 +119,7 @@ class FileOperationService : Service() {
     private val binder = LocalBinder()
     private lateinit var volumeManger: VolumeManager
     private var serviceScope = MainScope()
-    private lateinit var notificationPermissionHelper: AndroidUtils.NotificationPermissionHelper<BaseActivity>
+    private val notificationPermissionHelpers = ArrayDeque<AndroidUtils.NotificationPermissionHelper<BaseActivity>>(2)
     private var askForNotificationPermission = true
     private lateinit var notificationManager: NotificationManagerCompat
     private val notifications = HashMap<Int, NotificationCompat.Builder>()
@@ -293,25 +307,27 @@ class FileOperationService : Service() {
             }
             pendingTask = task
             if (askForNotificationPermission) {
-                notificationPermissionHelper.askAndRun { granted ->
-                    if (granted) {
-                        processPendingTask()
-                    } else {
-                        CustomAlertDialogBuilder(notificationPermissionHelper.activity, notificationPermissionHelper.activity.theme)
-                            .setTitle(R.string.warning)
-                            .setMessage(R.string.notification_denied_msg)
-                            .setPositiveButton(R.string.settings) { _, _ ->
-                                (application as VolumeManagerApp).isStartingExternalApp = true
-                                notificationPermissionHelper.activity.startActivity(
-                                    Intent(
-                                        Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                                        Uri.fromParts("package", packageName, null)
+                with (notificationPermissionHelpers.last()) {
+                    askAndRun { granted ->
+                        if (granted) {
+                            processPendingTask()
+                        } else {
+                            CustomAlertDialogBuilder(activity, activity.theme)
+                                .setTitle(R.string.warning)
+                                .setMessage(R.string.notification_denied_msg)
+                                .setPositiveButton(R.string.settings) { _, _ ->
+                                    (application as VolumeManagerApp).isStartingExternalApp = true
+                                    activity.startActivity(
+                                        Intent(
+                                            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                                            Uri.fromParts("package", packageName, null)
+                                        )
                                     )
-                                )
-                            }
-                            .setNegativeButton(R.string.later, null)
-                            .setOnDismissListener { processPendingTask() }
-                            .show()
+                                }
+                                .setNegativeButton(R.string.later, null)
+                                .setOnDismissListener { processPendingTask() }
+                                .show()
+                        }
                     }
                 }
                 askForNotificationPermission = false // only ask once per service instance

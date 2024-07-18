@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -31,7 +30,7 @@ object AndroidUtils {
      *
      * Must be initialized before [Activity.onCreate].
      */
-    class NotificationPermissionHelper<A: AppCompatActivity>(val activity: A) {
+    class NotificationPermissionHelper<out A: AppCompatActivity>(val activity: A) {
         private var listener: ((Boolean) -> Unit)? = null
         private val launcher = activity.registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
             listener?.invoke(granted)
