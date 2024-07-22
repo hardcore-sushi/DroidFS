@@ -32,8 +32,8 @@
     <string name="storage_perm_denied_msg">إن DroidFS لا يمكنه العمل بدون صلاحبات التخزين.</string>
     <string name="get_size_failed">لقد فشلت عملية استرداد حجم الملف.</string>
     <string name="parent_folder">المجلد الأصلي</string>
-    <string name="enter_volume_path">رجاءاً أدخل مسار المجلد المشفر</string>
-    <string name="enter_volume_name">رجاءاً أدخل اسم المجلد المشفر</string>
+    <string name="empty_volume_path">رجاءاً أدخل مسار المجلد المشفر</string>
+    <string name="empty_volume_name">رجاءاً أدخل اسم المجلد المشفر</string>
     <string name="external_open">فتح بتطبيق خارجي</string>
     <string name="single_delete_confirm">هل أنت متأكد من حذف %s ?</string>
     <string name="multiple_delete_confirm">هل أنت متأكد من حذف هذه %s العناصر ?</string>

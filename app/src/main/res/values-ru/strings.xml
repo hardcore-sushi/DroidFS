@@ -31,8 +31,8 @@
     <string name="storage_perm_denied_msg">DroidFS не может работать без разрешения на доступ к хранилищу.</string>
     <string name="get_size_failed">Невозможно получить размер файла.</string>
     <string name="parent_folder">Родительская папка</string>
-    <string name="enter_volume_path">Введите путь тома</string>
-    <string name="enter_volume_name">Введите название тома</string>
+    <string name="empty_volume_path">Введите путь тома</string>
+    <string name="empty_volume_name">Введите название тома</string>
     <string name="external_open">Открыть внешним приложением</string>
     <string name="single_delete_confirm">Удалить %s?</string>
     <string name="multiple_delete_confirm">Удалить %s элементов?</string>

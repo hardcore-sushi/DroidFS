@@ -79,10 +79,12 @@ class VolumeData(
         if (other !is VolumeData) {
             return false
         }
-        return other.uuid == uuid
+        return other.uuid == uuid || (other.name == name && other.isHidden == isHidden)
     }
 
-    override fun hashCode() = uuid.hashCode()
+    override fun hashCode(): Int {
+        return name.hashCode()+isHidden.hashCode()
+    }
 
     companion object {
         const val VOLUMES_DIRECTORY = "volumes"
