@@ -103,6 +103,9 @@ DroidFS needs some permissions for certain features. However, you are free to de
   <li><h4>Record audio:</h4>
   Required if you want sound on video recorded with DroidFS.
   </li>
+  <li><h4>Notifications:</h4>
+  Used to report file operations progress and notify about volumes kept open.
+  </li>
 </ul>
 
 # Limitations
