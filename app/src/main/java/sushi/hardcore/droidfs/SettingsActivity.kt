@@ -177,25 +177,32 @@ class SettingsActivity : BaseActivity() {
             val switchExpose = findPreference<SwitchPreference>("usf_expose")!!
             val switchSafWrite = findPreference<SwitchPreference>("usf_saf_write")!!
 
-            fun updateView(usfOpen: Boolean? = null, usfBackground: Boolean? = null, usfExpose: Boolean? = null) {
-                val usfBackground = usfBackground ?: switchBackground.isChecked
-                switchKeepOpen.isEnabled = usfBackground
-                switchExpose.isEnabled = usfBackground
-                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || (usfBackground && usfExpose ?: switchExpose.isChecked)
+            fun onUsfBackgroundChanged(usfBackground: Boolean) {
+                fun updateSwitchPreference(switch: SwitchPreference) = with (switch) {
+                    isChecked = isChecked && usfBackground
+                    isEnabled = usfBackground
+                    onPreferenceChangeListener?.onPreferenceChange(switch, isChecked)
+                }
+                updateSwitchPreference(switchKeepOpen)
+                updateSwitchPreference(switchExpose)
             }
+            onUsfBackgroundChanged(switchBackground.isChecked)
 
-            updateView()
+            fun updateSafWrite(usfOpen: Boolean? = null, usfExpose: Boolean? = null) {
+                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || usfExpose ?: switchExpose.isChecked
+            }
+            updateSafWrite()
+
             switchBackground.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfBackground = checked as Boolean)
-                switchKeepOpen.isChecked = switchKeepOpen.isChecked && checked
+                onUsfBackgroundChanged(checked as Boolean)
                 true
             }
             switchExternalOpen.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfOpen = checked as Boolean)
+                updateSafWrite(usfOpen = checked as Boolean)
                 true
             }
             switchExpose.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfExpose = checked as Boolean)
+                updateSafWrite(usfExpose = checked as Boolean)
                 VolumeProvider.notifyRootsChanged(requireContext())
                 true
             }

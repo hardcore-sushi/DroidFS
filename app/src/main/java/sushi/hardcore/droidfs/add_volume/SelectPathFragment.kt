@@ -258,9 +258,8 @@ class SelectPathFragment: Fragment() {
                 .setPositiveButton(R.string.ok, null)
                 .show()
         } else {
-            binding.editVolumeName.setText(path)
             inputViewModel.showEditText = true
-            updateUi(path)
+            binding.editVolumeName.setText(path)
         }
     }
 
