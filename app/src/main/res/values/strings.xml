@@ -77,7 +77,7 @@
     <string name="unsafe_features">Unsafe Features</string>
     <string name="manage_unsafe_features">Manage unsafe features</string>
     <string name="manage_unsafe_features_summary">Enable/Disable unsafe features</string>
-    <string name="usf_home_warning_msg">DroidFS try to be as secure as possible. However, security often involves lack of comfort. This is why DroidFS offer you additional unsafe features that you can enable/disable according to your needs.\n\nWarning: this features can be UNSAFE. Do not use them unless you know exactly what you are doing. It is highly recommended to read the documentation before enabling them.</string>
+    <string name="usf_home_warning_msg">DroidFS aims to be as secure as possible. However, security often involves lack of comfort. This is why DroidFS offers you additional unsafe features that you can enable and disable according to your needs.\n\nWarning: this features can be UNSAFE. Do not use them unless you know exactly what you are doing. It is highly recommended to read the documentation before enabling them.</string>
     <string name="see_unsafe_features">See unsafe features</string>
     <string name="open_as">Open as</string>
     <string name="image">Image</string>

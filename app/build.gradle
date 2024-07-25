@@ -33,8 +33,8 @@ android {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
         targetSdkVersion 34
-        versionCode 36
-        versionName "2.1.3"
+        versionCode 37
+        versionName "2.2.0"
 
         splits {
             abi {
