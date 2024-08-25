@@ -267,7 +267,7 @@
     <string name="export_failed_export">فشل إستخراج الملف</string>
     <string name="export_mem">يتم الإستخراج إلى الذاكرة المؤقتة…</string>
     <string name="export_disk">يتم الإستخراج إلى القرص…</string>
-	<string name="memfd_create_unsupported">النظام الحالي لايدعم هذه الميزة. هذه الميزة تحتاج إلى إصدار نواة رقم % على الأقل.</string>
+    <string name="memfd_create_unsupported">النظام الحالي لايدعم هذه الميزة. هذه الميزة تحتاج إلى إصدار نواة رقم % على الأقل.</string>
     <string name="export_method">طريقة التصدير</string>
     <string name="export_method_summary">طريقة تصدير الملف. تستخدم لمشاركة وكشف وفتح الملفات بشكل خارجي.</string>
     <string name="debug">كشف الإخطاء البرمجية</string>
