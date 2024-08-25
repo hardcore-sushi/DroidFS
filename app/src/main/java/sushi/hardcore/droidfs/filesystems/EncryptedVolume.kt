@@ -2,18 +2,21 @@ package sushi.hardcore.droidfs.filesystems
 
 import android.content.Context
 import android.net.Uri
-import android.os.Parcel
-import android.os.Parcelable
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
+import sushi.hardcore.droidfs.util.Observable
 import java.io.File
 import java.io.FileOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-abstract class EncryptedVolume: Parcelable {
+abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
+
+    interface Observer {
+        fun onClose()
+    }
 
     class InitResult(
         val errorCode: Int,
@@ -34,18 +37,6 @@ abstract class EncryptedVolume: Parcelable {
     companion object {
         const val GOCRYPTFS_VOLUME_TYPE: Byte = 0
         const val CRYFS_VOLUME_TYPE: Byte = 1
-
-        @JvmField
-        val CREATOR = object : Parcelable.Creator<EncryptedVolume> {
-            override fun createFromParcel(parcel: Parcel): EncryptedVolume {
-                return when (parcel.readByte()) {
-                    GOCRYPTFS_VOLUME_TYPE -> GocryptfsVolume(parcel)
-                    CRYFS_VOLUME_TYPE -> CryfsVolume(parcel)
-                    else -> throw invalidVolumeType()
-                }
-            }
-            override fun newArray(size: Int) = arrayOfNulls<EncryptedVolume>(size)
-        }
 
         /**
          * Get the type of a volume.
@@ -92,8 +83,6 @@ abstract class EncryptedVolume: Parcelable {
         }
     }
 
-    override fun describeContents() = 0
-
     abstract fun openFileReadMode(path: String): Long
     abstract fun openFileWriteMode(path: String): Long
     abstract fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
@@ -107,8 +96,13 @@ abstract class EncryptedVolume: Parcelable {
     abstract fun rmdir(path: String): Boolean
     abstract fun getAttr(path: String): Stat?
     abstract fun rename(srcPath: String, dstPath: String): Boolean
-    abstract fun close()
+    protected abstract fun close()
     abstract fun isClosed(): Boolean
+
+    fun closeVolume() {
+        observers.forEach { it.onClose() }
+        close()
+    }
 
     fun pathExists(path: String): Boolean {
         return getAttr(path) != null

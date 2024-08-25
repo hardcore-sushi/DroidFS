@@ -33,8 +33,8 @@
     <string name="storage_perm_denied_msg">DroidFS no puede funcionar sin permisos de almacenamiento.</string>
     <string name="get_size_failed">No se ha podido recuperar el tamaño del archivo.</string>
     <string name="parent_folder">Carpeta superior</string>
-    <string name="enter_volume_path">Por favor, introduce la ruta del volumen</string>
-    <string name="enter_volume_name">Por favor, introduce el nombre del volumen</string>
+    <string name="empty_volume_path">Por favor, introduce la ruta del volumen</string>
+    <string name="empty_volume_name">Por favor, introduce el nombre del volumen</string>
     <string name="external_open">Abrir con una aplicación externa</string>
     <string name="single_delete_confirm">¿Estás seguro de que quieres borrar %s ?</string>
     <string name="multiple_delete_confirm">¿Estás seguro de que quiere borrar %s objetos?</string>
@@ -74,7 +74,6 @@
     <string name="usf_screenshot">Permitir capturas de pantalla</string>
     <string name="usf_fingerprint">Permitir guardar el hash de la contraseña mediante la huella dactilar</string>
     <string name="usf_volume_management">Gestión del volumen</string>
-    <string name="usf_keep_open">Mantener el volumen abierto cuando la aplicación está en segundo plano</string>
     <string name="unsafe_features">Características inseguras</string>
     <string name="manage_unsafe_features">Gestionar las características inseguras</string>
     <string name="manage_unsafe_features_summary">Activar/desactivar funciones inseguras</string>
@@ -242,6 +241,7 @@
     <string name="file_op_delete_msg">Eliminando archivos…</string>
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, Sólo lectura)</string>
+    <string name="volume_type_inaccessible">(%s, inaccesible)</string>
     <string name="io_error">I/O Error.</string>
     <string name="use_fingerprint">Utilizar huella dactilar en lugar de la contraseña actual</string>
     <string name="remember_volume">Recordar volumen</string>
@@ -272,4 +272,10 @@
     <string name="export_failed_export">Error al exportar el archivo</string>
     <string name="export_mem">Exportando a memoria…</string>
     <string name="export_disk">Exportar a disco…</string>
+    <string name="memfd_create_unsupported">El kernel actual no soporta memfd_create(). Esta característica requiere una versión mínima del kernel de %s.</string>
+    <string name="export_method">Método de exportación</string>
+    <string name="export_method_summary">Método de exportación de archivos. Se utiliza para compartir, abrir externamente y acceder a archivos expuestos.</string>
+    <string name="debug">Depurar</string>
+    <string name="logcat_title">Logcat de DroidFS</string>
+    <string name="logcat_saved">Logcat guardado</string>
 </resources>

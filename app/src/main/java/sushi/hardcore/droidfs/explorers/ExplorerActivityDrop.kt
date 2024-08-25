@@ -9,6 +9,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
+import java.nio.CharBuffer
+import java.nio.charset.StandardCharsets
 
 class ExplorerActivityDrop : BaseExplorerActivity() {
 
@@ -30,15 +32,15 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
         return when (item.itemId) {
             R.id.validate -> {
                 val extras = intent.extras
-                val errorMsg: String? = if (extras != null && extras.containsKey(Intent.EXTRA_STREAM)) {
+                val success = if (extras != null && extras.containsKey(Intent.EXTRA_STREAM)) {
                     when (intent.action) {
                         Intent.ACTION_SEND -> {
                             val uri = IntentUtils.getParcelableExtra<Uri>(intent, Intent.EXTRA_STREAM)
                             if (uri == null) {
-                                getString(R.string.share_intent_parsing_failed)
+                                false
                             } else {
                                 importFilesFromUris(listOf(uri), ::onImported)
-                                null
+                                true
                             }
                         }
                         Intent.ACTION_SEND_MULTIPLE -> {
@@ -50,20 +52,34 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                             }
                             if (uris != null) {
                                 importFilesFromUris(uris, ::onImported)
-                                null
+                                true
                             } else {
-                                getString(R.string.share_intent_parsing_failed)
+                                false
                             }
                         }
-                        else -> getString(R.string.share_intent_parsing_failed)
+                        else -> false
                     }
+                } else if ((intent.clipData?.itemCount ?: 0) > 0) {
+                    val byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(intent.clipData!!.getItemAt(0).text))
+                    val byteArray = ByteArray(byteBuffer.remaining())
+                    byteBuffer.get(byteArray)
+                    val size = byteArray.size.toLong()
+                    createNewFile {
+                        var offset = 0L
+                        while (offset < size) {
+                            offset += encryptedVolume.write(it, offset, byteArray, offset, size-offset)
+                        }
+                        encryptedVolume.closeFile(it)
+                        onImported()
+                    }
+                    true
                 } else {
-                    getString(R.string.share_intent_parsing_failed)
+                    false
                 }
-                errorMsg?.let {
+                if (!success) {
                     CustomAlertDialogBuilder(this, theme)
                             .setTitle(R.string.error)
-                            .setMessage(it)
+                            .setMessage(R.string.share_intent_parsing_failed)
                             .setPositiveButton(R.string.ok, null)
                             .show()
                 }

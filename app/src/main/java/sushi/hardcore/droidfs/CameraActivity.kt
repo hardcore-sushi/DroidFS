@@ -7,7 +7,10 @@ import android.os.Build
 import android.os.Bundle
 import android.text.InputType
 import android.util.Size
-import android.view.*
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.Surface
+import android.view.View
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
@@ -42,8 +45,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.databinding.ActivityCameraBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.video_recording.AsynchronousSeekableWriter
 import sushi.hardcore.droidfs.video_recording.FFmpegMuxer
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
@@ -52,7 +55,9 @@ import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.Random
 import java.util.concurrent.Executor
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -113,7 +118,10 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
         supportActionBar?.hide()
-        encryptedVolume = IntentUtils.getParcelableExtra(intent, "volume")!!
+        encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
+            intent.getIntExtra("volumeId", -1)
+        )!!
+        finishOnClose(encryptedVolume)
         outputDirectory = intent.getStringExtra("path")!!
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -577,11 +585,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
 
     override fun onResume() {
         super.onResume()
-        if (encryptedVolume.isClosed()) {
-            finish()
-        } else {
-            sensorOrientationListener.addListener(this)
-        }
+        sensorOrientationListener.addListener(this)
     }
 
     override fun onOrientationChange(newOrientation: Int) {

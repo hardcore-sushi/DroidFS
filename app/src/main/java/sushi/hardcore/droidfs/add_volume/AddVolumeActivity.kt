@@ -67,17 +67,17 @@ class AddVolumeActivity: BaseActivity() {
         finish()
     }
 
-    fun onVolumeSelected(volume: VolumeData, rememberVolume: Boolean) {
-        if (rememberVolume) {
-            setResult(RESULT_USER_BACK)
-            finish()
-        } else {
-            volumeOpener.openVolume(volume, false, object : VolumeOpener.VolumeOpenerCallbacks {
-                override fun onVolumeOpened(id: Int) {
-                    startExplorer(id, volume.shortName)
-                }
-            })
-        }
+    fun onVolumeAdded() {
+        setResult(RESULT_USER_BACK)
+        finish()
+    }
+
+    fun openVolume(volume: VolumeData, isVolumeKnown: Boolean) {
+        volumeOpener.openVolume(volume, isVolumeKnown, object : VolumeOpener.VolumeOpenerCallbacks {
+            override fun onVolumeOpened(id: Int) {
+                startExplorer(id, volume.shortName)
+            }
+        })
     }
 
     fun createVolume(volumePath: String, isHidden: Boolean, rememberVolume: Boolean) {

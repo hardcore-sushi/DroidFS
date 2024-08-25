@@ -1,12 +1,8 @@
 package sushi.hardcore.droidfs
 
-import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.ServiceConnection
 import android.net.Uri
 import android.os.Bundle
-import android.os.IBinder
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -28,6 +24,7 @@ import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.File
@@ -130,14 +127,8 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 }
             }
         }
-        startService(Intent(this, WiperService::class.java))
-        Intent(this, FileOperationService::class.java).also {
-            bindService(it, object : ServiceConnection {
-                override fun onServiceConnected(className: ComponentName, service: IBinder) {
-                    fileOperationService = (service as FileOperationService.LocalBinder).getService()
-                }
-                override fun onServiceDisconnected(arg0: ComponentName) {}
-            }, Context.BIND_AUTO_CREATE)
+        FileOperationService.bind(this) {
+            fileOperationService = it
         }
     }
 
@@ -188,9 +179,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
     }
 
     private fun unselect(position: Int) {
-        volumeAdapter.selectedItems.remove(position)
-        volumeAdapter.onVolumeChanged(position)
-        onSelectionChanged(0) // unselect() is always called when only one element is selected
+        volumeAdapter.unselect(position)
         invalidateOptionsMenu()
     }
 
@@ -289,7 +278,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             R.id.delete_password_hash -> {
                 for (i in volumeAdapter.selectedItems) {
                     if (volumeDatabase.removeHash(volumeAdapter.volumes[i]))
-                        volumeAdapter.onVolumeChanged(i)
+                        volumeAdapter.onVolumeDataChanged(i)
                 }
                 unselectAll(false)
                 true
@@ -310,6 +299,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                 selectedVolumePosition = volumeAdapter.selectedItems.elementAt(0)
                 val volume = volumeAdapter.volumes[selectedVolumePosition!!]
                 if (volume.isHidden) {
+                    (application as VolumeManagerApp).isStartingExternalApp = true
                     PathUtils.safePickDirectory(pickDirectory, this, theme)
                 } else {
                     val hiddenVolumeFile = File(VolumeData.getHiddenVolumeFullPath(filesDir.path, volume.shortName))
@@ -354,7 +344,11 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.main_activity, menu)
-        menu.findItem(R.id.settings).isVisible = !explorerRouter.pickMode && !explorerRouter.dropMode
+        val settingsVisible = !explorerRouter.pickMode && !explorerRouter.dropMode
+        menu.findItem(R.id.settings).isVisible = settingsVisible
+        if (settingsVisible) {
+            UIUtils.getMenuIconNeutralTint(this, menu).applyTo(R.id.settings, R.drawable.icon_settings)
+        }
         val isSelecting = volumeAdapter.selectedItems.isNotEmpty()
         menu.findItem(R.id.select_all).isVisible = isSelecting
         menu.findItem(R.id.lock).isVisible = isSelecting && volumeAdapter.selectedItems.any {
@@ -429,9 +423,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         lifecycleScope.launch {
             val result = fileOperationService.copyVolume(srcDocumentFile, dstDocumentFile)
             when (result.taskResult.state) {
-                TaskResult.State.CANCELLED -> {
-                    result.dstRootDirectory?.delete()
-                }
                 TaskResult.State.SUCCESS -> {
                     result.dstRootDirectory?.let {
                         getResultVolume(it)?.let { volume ->
@@ -453,6 +444,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         .show()
                 }
                 TaskResult.State.ERROR -> result.taskResult.showErrorAlertDialog(this@MainActivity, theme)
+                TaskResult.State.CANCELLED -> {}
             }
         }
     }
@@ -477,6 +469,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
             if (success) {
                 volumeDatabase.renameVolume(volume, newDBName)
                 VolumeProvider.notifyRootsChanged(this)
+                volumeAdapter.onVolumeDataChanged(position)
                 unselect(position)
                 if (volume.name == volumeOpener.defaultVolumeName) {
                     with (sharedPrefs.edit()) {

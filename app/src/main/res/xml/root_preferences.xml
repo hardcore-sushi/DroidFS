@@ -93,6 +93,16 @@
 
     </PreferenceCategory>
 
+    <PreferenceCategory android:title="@string/debug">
+
+        <Preference
+            android:key="logcat"
+            android:title="Logcat"
+            android:summary="View the DroidFS logcat"
+            android:icon="@drawable/icon_debug"/>
+
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/about">
 
         <Preference
@@ -110,7 +120,6 @@
         </Preference>
 
         <Preference
-            android:key="version"
             android:icon="@drawable/icon_info"
             android:title="@string/version"
             android:summary="@string/versionName"/> <!--added by gradle at build time-->

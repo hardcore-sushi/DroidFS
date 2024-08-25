@@ -13,6 +13,7 @@
         android:focusable="true"
         android:background="?attr/selectableItemBackground"
         android:paddingHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:paddingVertical="@dimen/selectable_row_vertical_padding"
         android:layout_marginBottom="@dimen/volume_operation_vertical_gap">
 
         <ImageView
@@ -54,44 +55,24 @@
 
     </RelativeLayout>
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/text_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:text="@string/volume_path_label"
+        android:layout_marginBottom="10dp"/>
+
+    <EditText
+        android:id="@+id/edit_volume_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap">
-
-        <TextView
-            android:id="@+id/text_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/volume_path_label"/>
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <EditText
-                android:id="@+id/edit_volume_name"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="0.5"
-                android:inputType="text"
-                android:maxLines="1"
-                android:importantForAutofill="no"
-                android:hint="@string/volume_path_hint"/>
-
-            <ImageButton
-                android:id="@+id/button_pick_directory"
-                android:layout_width="@dimen/image_button_size"
-                android:layout_height="@dimen/image_button_size"
-                android:scaleType="fitCenter"
-                android:background="#00000000"
-                android:src="@drawable/icon_folder"
-                android:contentDescription="@string/pick_directory" />
-
-        </LinearLayout>
-
-    </LinearLayout>
+        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
+        android:hint="@string/volume_path_hint"
+        android:importantForAutofill="no"
+        android:inputType="textNoSuggestions"
+        android:maxLines="1"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/text_warning"
@@ -101,12 +82,40 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
         android:visibility="gone"/>
 
+    <Button
+        android:id="@+id/button_pick_directory"
+        android:layout_width="wrap_content"
+        style="@style/RoundButton"
+        android:drawableStart="@drawable/icon_folder_search"
+        android:text="@string/pick_directory"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"/>
+
+    <TextView
+        android:id="@+id/text_or"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="@string/or"
+        android:layout_marginBottom="10dp"/>
+
+    <Button
+        android:id="@+id/button_enter_path"
+        android:layout_width="wrap_content"
+        style="@style/RoundButton"
+        android:drawableStart="@drawable/icon_edit"
+        android:text="@string/enter_volume_path"
+        android:layout_gravity="center_horizontal"/>
+
     <androidx.appcompat.widget.SwitchCompat
         android:id="@+id/switch_remember"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/remember_volume"
         android:checked="true"
+        android:visibility="gone"
+        android:layout_marginTop="20dp"
         android:layout_gravity="center"/>
 
     <androidx.appcompat.widget.AppCompatButton
@@ -116,6 +125,7 @@
         android:layout_gravity="center"
         android:layout_marginHorizontal="@dimen/volume_operation_button_horizontal_margin"
         android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        android:visibility="gone"
         android:text="@string/create_volume" />
 
 </LinearLayout>

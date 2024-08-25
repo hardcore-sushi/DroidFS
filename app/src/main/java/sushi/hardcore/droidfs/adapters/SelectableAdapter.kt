@@ -40,6 +40,12 @@ abstract class SelectableAdapter<T>(private val onSelectionChanged: (Int) -> Uni
         return true
     }
 
+    fun unselect(position: Int) {
+        selectedItems.remove(position)
+        onSelectionChanged(selectedItems.size)
+        notifyItemChanged(position)
+    }
+
     fun selectAll() {
         for (i in getItems().indices) {
             if (!selectedItems.contains(i) && isSelectable(i)) {

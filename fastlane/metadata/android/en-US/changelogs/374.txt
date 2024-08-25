@@ -1,0 +1,8 @@
+- Reworked UI for adding volumes
+- New unsafe feature to keep the app running as a foreground service
+- Allow choosing file export method
+- Logcat viewer (for easier debugging)
+- New turkish, chinese-simplified, and hebrew translations
+- UX improvements
+- Bug fixes
+- Translations updates

@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.util
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.os.storage.StorageManager
 import android.provider.DocumentsContract
@@ -111,24 +112,27 @@ object PathUtils {
             }
         }
         Log.d(PATH_RESOLVER_TAG, "getExternalFilesDirs failed")
-        try {
-            val process = ProcessBuilder("mount").redirectErrorStream(true).start().apply { waitFor() }
-            process.inputStream.readBytes().decodeToString().split("\n").forEach { line ->
-                if (line.startsWith("/dev/block/vold")) {
-                    Log.d(PATH_RESOLVER_TAG, "mount: $line")
-                    val fields = line.split(" ")
-                    if (fields.size >= 3) {
-                        val path = fields[2]
-                        if (File(path).name == name) {
-                            return path
+        // Don't risk to be killed by SELinux on newer Android versions
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.Q) {
+            try {
+                val process = ProcessBuilder("mount").redirectErrorStream(true).start().apply { waitFor() }
+                process.inputStream.readBytes().decodeToString().split("\n").forEach { line ->
+                    if (line.startsWith("/dev/block/vold")) {
+                        Log.d(PATH_RESOLVER_TAG, "mount: $line")
+                        val fields = line.split(" ")
+                        if (fields.size >= 3) {
+                            val path = fields[2]
+                            if (File(path).name == name) {
+                                return path
+                            }
                         }
                     }
                 }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+            Log.d(PATH_RESOLVER_TAG, "mount processing failed")
         }
-        Log.d(PATH_RESOLVER_TAG, "mount processing failed")
         return null
     }
 

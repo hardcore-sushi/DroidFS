@@ -32,8 +32,8 @@
     <string name="storage_perm_denied_msg">DroidFS não pode funcionar sem permissão ao armazenamento.</string>
     <string name="get_size_failed">Falha na recuperação do tamanho do arquivo.</string>
     <string name="parent_folder">Pasta principal</string>
-    <string name="enter_volume_path">Por favor, digite a localização do volume</string>
-    <string name="enter_volume_name">Por favor, digite o nome do volume</string>
+    <string name="empty_volume_path">Por favor, digite a localização do volume</string>
+    <string name="empty_volume_name">Por favor, digite o nome do volume</string>
     <string name="external_open">Abrir com app externo</string>
     <string name="single_delete_confirm">Você tem certeza que quer excluir %s?</string>
     <string name="multiple_delete_confirm">Você realmente deseja excluir estos %s itens?</string>
@@ -73,7 +73,6 @@
     <string name="usf_screenshot">Permitir capturas da tela</string>
     <string name="usf_fingerprint">Permitir salvar o hash da senha usando impressão digital</string>
     <string name="usf_volume_management">Gerenciador de volumes</string>
-    <string name="usf_keep_open">Mantenha o volume aberto quando o app ficar em segundo plano</string>
     <string name="unsafe_features">Opções perigosas</string>
     <string name="manage_unsafe_features">Gerenciar opções perigosas</string>
     <string name="manage_unsafe_features_summary">Alternar opções perigosas</string>

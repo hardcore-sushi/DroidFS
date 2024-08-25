@@ -8,8 +8,9 @@ Here's a list of features that it would be nice to have in DroidFS. As this is a
 
 ## UX
 - File associations editor
-- Optional discovery before file operations
-- Modifiable CryFS scrypt parameters
+- Discovery before exporting
+- Making discovery before file operations optional
+- Modifiable scrypt parameters
 - Alert dialog showing details of file operations
 - Internal file browser to select volumes
 
@@ -18,8 +19,6 @@ Here's a list of features that it would be nice to have in DroidFS. As this is a
 - [fscrypt](https://www.kernel.org/doc/html/latest/filesystems/fscrypt.html): filesystem encryption at the kernel level
 
 ## Health
-- F-Droid ABI split
-- OpenSSL & FFmpeg as git submodules (useful for F-Droid)
 - Remove all android:configChanges from AndroidManifest.xml
 - More efficient thumbnails cache
 - Guide for translators

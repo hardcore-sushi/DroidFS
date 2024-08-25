@@ -68,7 +68,11 @@ class ExplorerActivity : BaseExplorerActivity() {
     private val pickFiles = registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris != null) {
             for (uri in uris) {
-                contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                try {
+                    contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                } catch (e: SecurityException) {
+                    e.printStackTrace()
+                }
             }
             importFilesFromUris(uris) {
                 onImportComplete(uris)
@@ -177,7 +181,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "importFromOtherVolumes" -> {
                                 val intent = Intent(this, MainActivity::class.java)
                                 intent.action = "pick"
-                                intent.putExtra("volume", encryptedVolume)
                                 pickFromOtherVolumes.launch(intent)
                             }
                             "importFiles" -> {
@@ -189,9 +192,11 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
-                                EditTextDialog(this, R.string.enter_file_name) {
-                                    createNewFile(it)
-                                }.show()
+                                createNewFile {
+                                    encryptedVolume.closeFile(it)
+                                    setCurrentPath(currentDirectoryPath)
+                                    invalidateOptionsMenu()
+                                }
                             }
                             "createFolder" -> {
                                 openDialogCreateFolder()
@@ -199,7 +204,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "camera" -> {
                                 val intent = Intent(this, CameraActivity::class.java)
                                 intent.putExtra("path", currentDirectoryPath)
-                                intent.putExtra("volume", encryptedVolume)
+                                intent.putExtra("volumeId", volumeId)
                                 startActivity(intent)
                             }
                         }
@@ -217,26 +222,6 @@ class ExplorerActivity : BaseExplorerActivity() {
     override fun onExplorerElementLongClick(position: Int) {
         super.onExplorerElementLongClick(position)
         cancelItemAction()
-    }
-
-    private fun createNewFile(fileName: String){
-        if (fileName.isEmpty()) {
-            Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
-        } else {
-            val filePath = PathUtils.pathJoin(currentDirectoryPath, fileName)
-            val handleID = encryptedVolume.openFileWriteMode(filePath)
-            if (handleID == -1L) {
-                CustomAlertDialogBuilder(this, theme)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.file_creation_failed)
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-            } else {
-                encryptedVolume.closeFile(handleID)
-                setCurrentPath(currentDirectoryPath)
-                invalidateOptionsMenu()
-            }
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {

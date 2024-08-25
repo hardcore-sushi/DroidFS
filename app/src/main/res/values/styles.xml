@@ -8,7 +8,7 @@
         <item name="android:statusBarColor">@color/primary</item>
         <item name="infoBarBackgroundColor">#181818</item>
         <item name="buttonBackgroundColor">#5B5A5C</item>
-        <item name="buttonStyle">@style/DarkButton</item>
+        <item name="buttonStyle">@style/Button</item>
     </style>
 
     <style name="DarkRed" parent="BaseTheme">
@@ -35,7 +35,6 @@
         <item name="android:navigationBarColor">@color/black</item>
         <item name="infoBarBackgroundColor">@color/black</item>
         <item name="buttonBackgroundColor">#3B3A3C</item>
-        <item name="buttonStyle">@style/BlackButton</item>
     </style>
     <style name="BlackRed" parent="BlackGreen">
         <item name="colorAccent">@color/red</item>
@@ -56,11 +55,17 @@
         <item name="colorAccent">@color/pink</item>
     </style>
 
-    <style name="DarkButton" parent="Widget.AppCompat.Button">
+    <style name="Button" parent="Widget.AppCompat.Button">
         <item name="android:background">@drawable/button_background</item>
     </style>
-    <style name="BlackButton" parent="Widget.AppCompat.Button">
-        <item name="android:background">@drawable/button_background</item>
+
+    <style name="RoundButton" parent="Widget.AppCompat.Button">
+        <item name="android:background">@drawable/round_button_background</item>
+        <item name="textAllCaps">false</item>
+        <item name="android:layout_height">35sp</item>
+        <item name="android:paddingStart">15dp</item>
+        <item name="android:paddingEnd">15dp</item>
+        <item name="android:drawablePadding">5dp</item>
     </style>
 
     <style name="infoBarTextView">

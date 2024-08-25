@@ -7,6 +7,7 @@ Currently, DroidFS supports the following encrypted containers:
 - Compatible with original encrypted volume implementations
 - Internal support for video, audio, images, text and PDF files
 - Built-in camera to take on-the-fly encrypted photos and videos
+- Ability to expose volumes to other applications
 - Unlocking volumes using fingerprint authentication
 - Volume auto-locking when the app goes in background
 
@@ -15,6 +16,7 @@ Currently, DroidFS supports the following encrypted containers:
 <b>Biometric/Fingerprint hardware:</b> needed to encrypt/decrypt password hashes using a fingerprint protected key.
 <b>Camera:</b> required to take encrypted photos or videos directly from the app.
 <b>Record audio:</b> required if you want sound on videos recorded with DroidFS.
+<b>Notifications:</b> used to report file operations progress and notify about volumes kept open
 
 All of these permissions can be denied if you don't want to use the corresponding feature.
 

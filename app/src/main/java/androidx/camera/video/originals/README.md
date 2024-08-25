@@ -5,7 +5,7 @@ Create the `new` folder if needed:
 mkdir -p new
 ```
 
-Put new CameraX files from upstream in the `new` folder.
+Put the new CameraX files from upstream (`androidx.camera.video.Recorder`, `androidx.camera.video.Recording`, `androidx.camera.video.PendingRecording` and `androidx.camera.video.internal.encoder.EncoderImpl`) in the `new` folder.
 
 Perform the 3 way merge:
 ```

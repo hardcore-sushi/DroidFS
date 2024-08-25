@@ -10,7 +10,6 @@ import android.os.ParcelFileDescriptor
 import android.provider.OpenableColumns
 import android.util.Log
 import android.webkit.MimeTypeMap
-import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -18,6 +17,7 @@ import sushi.hardcore.droidfs.BuildConfig
 import sushi.hardcore.droidfs.EncryptedFileProvider
 import sushi.hardcore.droidfs.VolumeManager
 import sushi.hardcore.droidfs.VolumeManagerApp
+import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
 import java.util.UUID
@@ -36,9 +36,10 @@ class TemporaryFileProvider : ContentProvider() {
 
         lateinit var instance: TemporaryFileProvider
             private set
-        var usfSafWrite = false
     }
 
+    private val usfSafWriteDelegate = AndroidUtils.LiveBooleanPreference("usf_saf_write", false)
+    private val usfSafWrite by usfSafWriteDelegate
     private lateinit var volumeManager: VolumeManager
     lateinit var encryptedFileProvider: EncryptedFileProvider
     private val files = HashMap<Uri, ProvidedFile>()
@@ -46,8 +47,7 @@ class TemporaryFileProvider : ContentProvider() {
     override fun onCreate(): Boolean {
         return context?.let {
             volumeManager = (it.applicationContext as VolumeManagerApp).volumeManager
-            usfSafWrite =
-                PreferenceManager.getDefaultSharedPreferences(it).getBoolean("usf_saf_write", false)
+            usfSafWriteDelegate.init(it)
             encryptedFileProvider = EncryptedFileProvider(it)
             instance = this
             val tmpFilesDir = EncryptedFileProvider.getTmpFilesDir(it)

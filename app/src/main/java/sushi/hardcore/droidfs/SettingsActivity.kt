@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs
 
+import android.app.ActivityOptions
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
@@ -7,21 +8,23 @@ import android.os.Bundle
 import android.text.InputType
 import android.view.MenuItem
 import android.widget.Toast
+import androidx.core.content.ContextCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreference
 import androidx.preference.SwitchPreferenceCompat
-import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
+import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 class SettingsActivity : BaseActivity() {
+    private val notificationPermissionHelper = AndroidUtils.NotificationPermissionHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,9 +93,15 @@ class SettingsActivity : BaseActivity() {
 
         private fun refreshTheme() {
             with(requireActivity()) {
-                startActivity(Intent(this, SettingsActivity::class.java))
+                startActivity(
+                    Intent(this, SettingsActivity::class.java),
+                    ActivityOptions.makeCustomAnimation(
+                        this,
+                        android.R.anim.fade_in,
+                        android.R.anim.fade_out
+                    ).toBundle()
+                )
                 finish()
-                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
             }
         }
 
@@ -119,6 +128,10 @@ class SettingsActivity : BaseActivity() {
                     showMaxSizeDialog()
                     false
                 }
+            }
+            findPreference<Preference>("logcat")?.setOnPreferenceClickListener { _ ->
+                startActivity(Intent(requireContext(), LogcatActivity::class.java))
+                true
             }
         }
     }
@@ -158,45 +171,66 @@ class SettingsActivity : BaseActivity() {
                     true
                 }
             }
+            val switchBackground = findPreference<SwitchPreference>("usf_background")!!
             val switchKeepOpen = findPreference<SwitchPreference>("usf_keep_open")!!
             val switchExternalOpen = findPreference<SwitchPreference>("usf_open")!!
             val switchExpose = findPreference<SwitchPreference>("usf_expose")!!
             val switchSafWrite = findPreference<SwitchPreference>("usf_saf_write")!!
 
-            fun updateView(usfOpen: Boolean? = null, usfKeepOpen: Boolean? = null, usfExpose: Boolean? = null) {
-                val usfKeepOpen = usfKeepOpen ?: switchKeepOpen.isChecked
-                switchExpose.isEnabled = usfKeepOpen
-                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || (usfKeepOpen && usfExpose ?: switchExpose.isChecked)
+            fun onUsfBackgroundChanged(usfBackground: Boolean) {
+                fun updateSwitchPreference(switch: SwitchPreference) = with (switch) {
+                    isChecked = isChecked && usfBackground
+                    isEnabled = usfBackground
+                    onPreferenceChangeListener?.onPreferenceChange(switch, isChecked)
+                }
+                updateSwitchPreference(switchKeepOpen)
+                updateSwitchPreference(switchExpose)
             }
+            onUsfBackgroundChanged(switchBackground.isChecked)
 
-            updateView()
-            switchKeepOpen.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfKeepOpen = checked as Boolean)
+            fun updateSafWrite(usfOpen: Boolean? = null, usfExpose: Boolean? = null) {
+                switchSafWrite.isEnabled = usfOpen ?: switchExternalOpen.isChecked || usfExpose ?: switchExpose.isChecked
+            }
+            updateSafWrite()
+
+            switchBackground.setOnPreferenceChangeListener { _, checked ->
+                onUsfBackgroundChanged(checked as Boolean)
                 true
             }
             switchExternalOpen.setOnPreferenceChangeListener { _, checked ->
-                updateView(usfOpen = checked as Boolean)
+                updateSafWrite(usfOpen = checked as Boolean)
                 true
             }
             switchExpose.setOnPreferenceChangeListener { _, checked ->
-                if (checked as Boolean) {
-                    if (!Compat.isMemFileSupported()) {
-                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
-                            .setTitle(R.string.error)
-                            .setMessage("Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of ${Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION}.")
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
-                        return@setOnPreferenceChangeListener false
-                    }
-                }
-                VolumeProvider.usfExpose = checked
-                updateView(usfExpose = checked)
+                updateSafWrite(usfExpose = checked as Boolean)
                 VolumeProvider.notifyRootsChanged(requireContext())
                 true
             }
-            switchSafWrite.setOnPreferenceChangeListener { _, checked ->
-                VolumeProvider.usfSafWrite = checked as Boolean
-                TemporaryFileProvider.usfSafWrite = checked
+
+            switchKeepOpen.setOnPreferenceChangeListener { _, checked ->
+                if (checked as Boolean) {
+                    (requireActivity() as SettingsActivity).notificationPermissionHelper.askAndRun {
+                        requireContext().let {
+                            if (AndroidUtils.isServiceRunning(it, KeepAliveService::class.java)) {
+                                ContextCompat.startForegroundService(it, Intent(it, KeepAliveService::class.java).apply {
+                                    action = KeepAliveService.ACTION_FOREGROUND
+                                })
+                            }
+                        }
+                    }
+                }
+                true
+            }
+            findPreference<ListPreference>("export_method")!!.setOnPreferenceChangeListener { _, newValue ->
+                if (newValue as String == "memory" && !Compat.isMemFileSupported()) {
+                    CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                        .setTitle(R.string.error)
+                        .setMessage(getString(R.string.memfd_create_unsupported, Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION))
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                    return@setOnPreferenceChangeListener false
+                }
+                EncryptedFileProvider.exportMethod = EncryptedFileProvider.ExportMethod.parse(newValue)
                 true
             }
         }

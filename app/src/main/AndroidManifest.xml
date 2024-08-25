@@ -4,6 +4,9 @@
     android:installLocation="auto">
 
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -53,11 +56,13 @@
         <activity android:name=".file_viewers.AudioPlayer" android:configChanges="screenSize|orientation" />
         <activity android:name=".file_viewers.TextEditor" android:configChanges="screenSize|orientation" />
         <activity android:name=".CameraActivity" android:screenOrientation="nosensor" />
+        <activity android:name=".LogcatActivity"/>
 
-        <service android:name=".WiperService" android:exported="false" android:stopWithTask="false"/>
-        <service android:name=".file_operations.FileOperationService" android:exported="false"/>
+        <service android:name=".KeepAliveService" android:exported="false" android:foregroundServiceType="dataSync" />
+        <service android:name=".ClosingService" android:exported="false" android:stopWithTask="false"/>
+        <service android:name=".file_operations.FileOperationService" android:exported="false" android:foregroundServiceType="dataSync"/>
 
-        <receiver android:name=".file_operations.NotificationBroadcastReceiver" android:exported="false">
+        <receiver android:name=".NotificationBroadcastReceiver" android:exported="false">
             <intent-filter>
                 <action android:name="file_operation_cancel"/>
             </intent-filter>

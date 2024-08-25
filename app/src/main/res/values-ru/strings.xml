@@ -31,8 +31,8 @@
     <string name="storage_perm_denied_msg">DroidFS не может работать без разрешения на доступ к хранилищу.</string>
     <string name="get_size_failed">Невозможно получить размер файла.</string>
     <string name="parent_folder">Родительская папка</string>
-    <string name="enter_volume_path">Введите путь тома</string>
-    <string name="enter_volume_name">Введите название тома</string>
+    <string name="empty_volume_path">Введите путь тома</string>
+    <string name="empty_volume_name">Введите название тома</string>
     <string name="external_open">Открыть внешним приложением</string>
     <string name="single_delete_confirm">Удалить %s?</string>
     <string name="multiple_delete_confirm">Удалить %s элементов?</string>
@@ -71,7 +71,6 @@
     <string name="usf_screenshot">Разрешить снимки экрана</string>
     <string name="usf_fingerprint">Разрешить сохранение хеша пароля отпечатком пальца</string>
     <string name="usf_volume_management">Управление томом</string>
-    <string name="usf_keep_open">Оставлять том открытым, когда DroidFS в фоне</string>
     <string name="unsafe_features">Небезопасные функции</string>
     <string name="manage_unsafe_features">Управление небезопасными функциями</string>
     <string name="manage_unsafe_features_summary">Включить/отключить небезопасные функции</string>
@@ -262,4 +261,23 @@
     <string name="export_failed_export">невозможно экспортировать файл</string>
     <string name="export_mem">Экспорт в память…</string>
     <string name="export_disk">Экспорт в хранилище…</string>
+    <string name="memfd_create_unsupported">Текущее ядро не поддерживает memfd_create(). Для работы данной функции требуется версия ядра не ниже %s.</string>
+    <string name="export_method">Метод экспорта</string>
+    <string name="export_method_summary">Метод экспорта файлов. Используется для обмена, открытия во внешнем приложении и доступа к открытым файлам.</string>
+    <string name="debug">Отладка</string>
+    <string name="logcat_title">Журнал logcat DroidFS</string>
+    <string name="logcat_saved">Журнал logcat сохранён</string>
+    <string name="later">Позже</string>
+    <string name="notification_denied_msg">Разрешение на отображение уведомления не получено. Фоновые операции с файлами не будут видны. Это можно изменить в настройках разрешений приложения.</string>
+    <string name="keep_alive_notification_title">Служба поддержки работы</string>
+    <string name="keep_alive_notification_text">Один или несколько томов остаются открытыми.</string>
+    <string name="close_all">Закрыть все</string>
+    <string name="usf_background">Отключить автоблокировку томов</string>
+    <string name="usf_background_summary">Не блокировать тома автоматически при работе приложения в фоновом режиме</string>
+    <string name="usf_keep_open">Держать тома открытыми</string>
+    <string name="usf_keep_open_summary">Поддерживать постоянную работу приложения в фоновом режиме, чтобы тома оставались открытыми</string>
+    <string name="gocryptfs_details">Быстрый, но не скрывает размеры файлов и структуру папок</string>
+    <string name="cryfs_details">Медленнее, но защищает метаданные и предотвращает атаки замещения</string>
+    <string name="or">или</string>
+    <string name="enter_volume_path">Введите путь к тому</string>
 </resources>

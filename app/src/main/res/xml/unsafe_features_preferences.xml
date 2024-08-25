@@ -51,8 +51,16 @@
         <SwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/icon_lock_open"
+            android:key="usf_background"
+            android:title="@string/usf_background"
+            android:summary="@string/usf_background_summary" />
+
+        <SwitchPreference
+            android:defaultValue="false"
+            android:icon="@drawable/icon_lock_open"
             android:key="usf_keep_open"
-            android:title="@string/usf_keep_open" />
+            android:title="@string/usf_keep_open"
+            android:summary="@string/usf_keep_open_summary"/>
 
     </PreferenceCategory>
 
@@ -77,6 +85,15 @@
             android:key="usf_saf_write"
             android:title="@string/usf_saf_write"
             android:summary="@string/usf_saf_write_summary" />
+
+        <ListPreference
+            android:key="export_method"
+            android:entries="@array/export_methods"
+            android:entryValues="@array/export_methods_values"
+            android:defaultValue="auto"
+            android:title="@string/export_method"
+            android:summary="@string/export_method_summary"
+            android:icon="@drawable/icon_settings"/>
 
     </PreferenceCategory>
 

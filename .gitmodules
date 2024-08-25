@@ -7,3 +7,6 @@
 [submodule "app/libcryfs"]
 	path = app/libcryfs
 	url = https://forge.chapril.org/hardcoresushi/libcryfs.git
+[submodule "app/ffmpeg/ffmpeg"]
+	path = app/ffmpeg/ffmpeg
+	url = https://git.ffmpeg.org/ffmpeg.git

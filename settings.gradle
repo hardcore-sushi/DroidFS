@@ -1,2 +1,8 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
 include ':app', ':libpdfviewer:app'
 rootProject.name = "DroidFS"

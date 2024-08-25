@@ -1,6 +1,5 @@
 package sushi.hardcore.droidfs.filesystems
 
-import android.os.Parcel
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -99,13 +98,6 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         ): Boolean {
             return nativeChangeEncryptionKey(baseDir, getLocalStateDir(filesDir), currentPassword, givenHash, newPassword, returnedHash)
         }
-    }
-
-    constructor(parcel: Parcel) : this(parcel.readLong())
-
-    override fun writeToParcel(parcel: Parcel, flags: Int) = with(parcel) {
-        writeByte(CRYFS_VOLUME_TYPE)
-        writeLong(fusePtr)
     }
 
     override fun openFileReadMode(path: String): Long {

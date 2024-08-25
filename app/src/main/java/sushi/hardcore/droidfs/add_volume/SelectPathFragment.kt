@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.add_volume
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
@@ -15,10 +16,14 @@ import android.text.TextWatcher
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.ViewModel
 import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
@@ -35,6 +40,10 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 class SelectPathFragment: Fragment() {
+    internal class InputViewModel: ViewModel() {
+        var showEditText = false
+    }
+
     companion object {
         private const val KEY_THEME_VALUE = "theme"
         private const val KEY_PICK_MODE = "pick"
@@ -74,6 +83,7 @@ class SelectPathFragment: Fragment() {
     private var originalRememberVolume = true
     private var currentVolumeData: VolumeData? = null
     private var volumeAction: Action? = null
+    private val inputViewModel: InputViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -93,17 +103,13 @@ class SelectPathFragment: Fragment() {
             theme = Compat.getParcelable(arguments, KEY_THEME_VALUE)!!
             pickMode = arguments.getBoolean(KEY_PICK_MODE)
         }
-        if (pickMode) {
-            binding.buttonAction.text = getString(R.string.add_volume)
-        }
         volumeDatabase = VolumeDatabase(requireContext())
         filesDir = requireContext().filesDir.path
         binding.containerHiddenVolume.setOnClickListener {
             binding.switchHiddenVolume.performClick()
         }
         binding.switchHiddenVolume.setOnClickListener {
-            showRightSection()
-            refreshStatus(binding.editVolumeName.text)
+            updateUi()
         }
         binding.buttonPickDirectory.setOnClickListener {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -137,22 +143,41 @@ class SelectPathFragment: Fragment() {
                 launchPickDirectory()
             }
         }
+        binding.buttonEnterPath.setOnClickListener {
+            inputViewModel.showEditText = true
+            updateUi()
+            binding.editVolumeName.requestFocus()
+            (app.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
+                binding.editVolumeName,
+                InputMethodManager.SHOW_IMPLICIT
+            )
+        }
         binding.editVolumeName.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                refreshStatus(s)
+                updateUi(s)
             }
         })
-        binding.switchRemember.setOnCheckedChangeListener { _, _ -> refreshButtonText() }
-        binding.editVolumeName.setOnEditorActionListener { _, _, _ -> onPathSelected(); true }
+        binding.switchRemember.setOnCheckedChangeListener { _, _ -> updateUi() }
+        binding.editVolumeName.setOnEditorActionListener { _, _, _ ->
+            if (binding.editVolumeName.text.isEmpty()) {
+                Toast.makeText(
+                    requireContext(),
+                    if (binding.switchHiddenVolume.isChecked) R.string.empty_volume_name else R.string.empty_volume_path,
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                onPathSelected()
+            }
+            true
+        }
         binding.buttonAction.setOnClickListener { onPathSelected() }
     }
 
     override fun onViewStateRestored(savedInstanceState: Bundle?) {
         super.onViewStateRestored(savedInstanceState)
         (activity as AddVolumeActivity).onFragmentLoaded(true)
-        showRightSection()
     }
 
     private fun launchPickDirectory() {
@@ -160,70 +185,82 @@ class SelectPathFragment: Fragment() {
         PathUtils.safePickDirectory(pickDirectory, requireContext(), theme)
     }
 
-    private fun showRightSection() {
-        if (binding.switchHiddenVolume.isChecked) {
-            binding.textLabel.text = requireContext().getString(R.string.volume_name_label)
-            binding.editVolumeName.hint = requireContext().getString(R.string.volume_name_hint)
-            binding.buttonPickDirectory.visibility = View.GONE
-        } else {
-            binding.textLabel.text = requireContext().getString(R.string.volume_path_label)
-            binding.editVolumeName.hint = requireContext().getString(R.string.volume_path_hint)
-            binding.buttonPickDirectory.visibility = View.VISIBLE
-        }
-    }
-
-    private fun refreshButtonText() {
-        binding.buttonAction.text = getString(
-            if (pickMode || volumeAction == Action.ADD) {
-                if (binding.switchRemember.isChecked || currentVolumeData != null) {
-                    R.string.add_volume
-                } else {
-                    R.string.open_volume
-                }
+    private fun updateUi(volumeName: CharSequence = binding.editVolumeName.text) {
+        var warning = -1
+        fun updateWarning() {
+            if (warning == -1) {
+                binding.textWarning.isVisible = false
             } else {
-                R.string.create_volume
+                binding.textWarning.isVisible = true
+                binding.textWarning.text = getString(warning)
             }
-        )
-    }
+        }
 
-    private fun refreshStatus(content: CharSequence) {
+        val hidden = binding.switchHiddenVolume.isChecked
+        binding.editVolumeName.isVisible = hidden || inputViewModel.showEditText
+        binding.buttonPickDirectory.isVisible = !hidden
+        binding.textOr.isVisible = !hidden && !inputViewModel.showEditText
+        binding.buttonEnterPath.isVisible = !hidden && !inputViewModel.showEditText
+        if (hidden) {
+            binding.textLabel.text = getString(R.string.volume_name_label)
+            binding.editVolumeName.hint = getString(R.string.volume_name_hint)
+        } else {
+            binding.textLabel.text = getString(R.string.volume_path_label)
+            binding.editVolumeName.hint = getString(R.string.volume_path_hint)
+        }
+        if (hidden && volumeName.contains(PathUtils.SEPARATOR)) {
+            warning = R.string.error_slash_in_name
+        }
+        // exit early if possible to avoid filesystem queries
+        if (volumeName.isEmpty() || warning != -1 || (!hidden && !inputViewModel.showEditText)) {
+            binding.buttonAction.isVisible = false
+            binding.switchRemember.isVisible = false
+            updateWarning()
+            return
+        }
         val path = File(getCurrentVolumePath())
         volumeAction = if (path.isDirectory) {
-            if (path.list()?.isEmpty() == true || content.isEmpty()) Action.CREATE else Action.ADD
+            if (path.list()?.isEmpty() == true) {
+                Action.CREATE
+            } else if (pickMode || !binding.switchRemember.isChecked) {
+                Action.OPEN
+            } else {
+                Action.ADD
+            }
         } else {
             Action.CREATE
         }
-        currentVolumeData = if (volumeAction == Action.CREATE) {
-            null
-        } else {
-            volumeDatabase.getVolume(content.toString(), binding.switchHiddenVolume.isChecked)
-        }
-        binding.textWarning.visibility = if (volumeAction == Action.CREATE && pickMode) {
-            binding.textWarning.text = getString(R.string.choose_existing_volume)
-            binding.buttonAction.isEnabled = false
-            View.VISIBLE
-        } else {
-            refreshButtonText()
-            binding.buttonAction.isEnabled = true
-            if (currentVolumeData == null) {
-                View.GONE
+        val valid = !(volumeAction == Action.CREATE && pickMode)
+        binding.switchRemember.isVisible = valid
+        binding.buttonAction.isVisible = valid
+        if (valid) {
+            binding.buttonAction.text = getString(volumeAction!!.getStringResId())
+            currentVolumeData = if (volumeAction == Action.CREATE) {
+                null
             } else {
-                binding.textWarning.text = getString(R.string.volume_alread_saved)
-                View.VISIBLE
+                volumeDatabase.getVolume(volumeName.toString(), hidden)
             }
+            if (currentVolumeData != null) {
+                warning = R.string.volume_alread_saved
+            }
+        } else {
+            warning = R.string.choose_existing_volume
         }
+        updateWarning()
     }
 
     private fun onDirectoryPicked(uri: Uri) {
         val path = PathUtils.getFullPathFromTreeUri(uri, requireContext())
-        if (path != null)
-            binding.editVolumeName.setText(path)
-        else
+        if (path == null) {
             CustomAlertDialogBuilder(requireContext(), theme)
                 .setTitle(R.string.error)
                 .setMessage(R.string.path_error)
                 .setPositiveButton(R.string.ok, null)
                 .show()
+        } else {
+            inputViewModel.showEditText = true
+            binding.editVolumeName.setText(path)
+        }
     }
 
     private fun getCurrentVolumePath(): String {
@@ -243,13 +280,7 @@ class SelectPathFragment: Fragment() {
         if (currentVolumeData == null) { // volume not known
             val currentVolumeValue = binding.editVolumeName.text.toString()
             val isHidden = binding.switchHiddenVolume.isChecked
-            if (currentVolumeValue.isEmpty()) {
-                Toast.makeText(
-                    requireContext(),
-                    if (isHidden) R.string.enter_volume_name else R.string.enter_volume_path,
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else if (isHidden && currentVolumeValue.contains(PathUtils.SEPARATOR)) {
+            if (isHidden && currentVolumeValue.contains(PathUtils.SEPARATOR)) {
                 Toast.makeText(requireContext(), R.string.error_slash_in_name, Toast.LENGTH_SHORT).show()
             } else if (isHidden && volumeAction == Action.CREATE) {
                 CustomAlertDialogBuilder(requireContext(), theme)
@@ -263,71 +294,83 @@ class SelectPathFragment: Fragment() {
                 onNewVolumeSelected(currentVolumeValue, isHidden)
             }
         } else {
-            (activity as AddVolumeActivity).onVolumeSelected(currentVolumeData!!, true)
+            with (activity as AddVolumeActivity) {
+                if (volumeAction!! == Action.OPEN) {
+                    openVolume(currentVolumeData!!, true)
+                } else {
+                    onVolumeAdded()
+                }
+            }
         }
     }
 
     private fun onNewVolumeSelected(currentVolumeValue: String, isHidden: Boolean) {
         val volumePath = getCurrentVolumePath()
-        when (volumeAction!!) {
-            Action.CREATE -> {
-                val volumeFile = File(volumePath)
-                var goodDirectory = false
-                if (volumeFile.isFile) {
-                    Toast.makeText(requireContext(), R.string.error_is_file, Toast.LENGTH_SHORT).show()
-                } else if (volumeFile.isDirectory) {
-                    val dirContent = volumeFile.list()
-                    if (dirContent != null) {
-                        if (dirContent.isEmpty()) {
-                            if (volumeFile.canWrite()) {
-                                goodDirectory = true
-                            } else {
-                                errorDirectoryNotWritable(volumePath)
-                            }
+        if (volumeAction!! == Action.CREATE) {
+            val volumeFile = File(volumePath)
+            var goodDirectory = false
+            if (volumeFile.isFile) {
+                Toast.makeText(requireContext(), R.string.error_is_file, Toast.LENGTH_SHORT).show()
+            } else if (volumeFile.isDirectory) {
+                val dirContent = volumeFile.list()
+                if (dirContent != null) {
+                    if (dirContent.isEmpty()) {
+                        if (volumeFile.canWrite()) {
+                            goodDirectory = true
                         } else {
-                            Toast.makeText(requireContext(), R.string.dir_not_empty, Toast.LENGTH_SHORT).show()
+                            errorDirectoryNotWritable(volumePath)
                         }
                     } else {
-                        Toast.makeText(requireContext(), R.string.listdir_null_error_msg, Toast.LENGTH_SHORT).show()
+                        Toast.makeText(requireContext(), R.string.dir_not_empty, Toast.LENGTH_SHORT)
+                            .show()
                     }
                 } else {
-                    if (File(PathUtils.getParentPath(volumePath)).canWrite()) {
-                        goodDirectory = true
-                    } else {
-                        errorDirectoryNotWritable(volumePath)
-                    }
+                    Toast.makeText(
+                        requireContext(),
+                        R.string.listdir_null_error_msg,
+                        Toast.LENGTH_SHORT
+                    ).show()
                 }
-                if (goodDirectory) {
-                    (activity as AddVolumeActivity).createVolume(volumePath, isHidden, binding.switchRemember.isChecked)
+            } else {
+                if (File(PathUtils.getParentPath(volumePath)).canWrite()) {
+                    goodDirectory = true
+                } else {
+                    errorDirectoryNotWritable(volumePath)
                 }
             }
-            Action.ADD -> {
-                val volumeType = EncryptedVolume.getVolumeType(volumePath)
-                if (volumeType < 0) {
-                    CustomAlertDialogBuilder(requireContext(), theme)
-                        .setTitle(R.string.error)
-                        .setMessage(R.string.error_not_a_volume)
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-                } else if (!File(volumePath).canWrite()) {
-                    val dialog = CustomAlertDialogBuilder(requireContext(), theme)
-                        .setTitle(R.string.warning)
-                        .setCancelable(false)
-                        .setPositiveButton(R.string.ok) { _, _ -> addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType) }
-                    if (PathUtils.isPathOnExternalStorage(volumePath, requireContext())) {
-                        dialog.setView(
-                            DialogSdcardErrorBinding.inflate(layoutInflater).apply {
-                                path.text = PathUtils.getPackageDataFolder(requireContext())
-                                footer.text = getString(R.string.sdcard_error_add_footer)
-                            }.root
-                        )
-                    } else {
-                        dialog.setMessage(R.string.add_cant_write_warning)
-                    }
-                    dialog.show()
+            if (goodDirectory) {
+                (activity as AddVolumeActivity).createVolume(
+                    volumePath,
+                    isHidden,
+                    binding.switchRemember.isChecked
+                )
+            }
+        } else {
+            val volumeType = EncryptedVolume.getVolumeType(volumePath)
+            if (volumeType < 0) {
+                CustomAlertDialogBuilder(requireContext(), theme)
+                    .setTitle(R.string.error)
+                    .setMessage(R.string.error_not_a_volume)
+                    .setPositiveButton(R.string.ok, null)
+                    .show()
+            } else if (!File(volumePath).canWrite()) {
+                val dialog = CustomAlertDialogBuilder(requireContext(), theme)
+                    .setTitle(R.string.warning)
+                    .setCancelable(false)
+                    .setPositiveButton(R.string.ok) { _, _ -> onExistingVolumeSelected(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType) }
+                if (PathUtils.isPathOnExternalStorage(volumePath, requireContext())) {
+                    dialog.setView(
+                        DialogSdcardErrorBinding.inflate(layoutInflater).apply {
+                            path.text = PathUtils.getPackageDataFolder(requireContext())
+                            footer.text = getString(R.string.sdcard_error_add_footer)
+                        }.root
+                    )
                 } else {
-                    addVolume(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType)
+                    dialog.setMessage(R.string.add_cant_write_warning)
                 }
+                dialog.show()
+            } else {
+                onExistingVolumeSelected(if (isHidden) currentVolumeValue else volumePath, isHidden, volumeType)
             }
         }
     }
@@ -349,11 +392,17 @@ class SelectPathFragment: Fragment() {
         dialog.show()
     }
 
-    private fun addVolume(volumeName: String, isHidden: Boolean, volumeType: Byte) {
+    private fun onExistingVolumeSelected(volumeName: String, isHidden: Boolean, volumeType: Byte) {
         val volumeData = VolumeData(VolumeData.newUuid(), volumeName, isHidden, volumeType)
         if (binding.switchRemember.isChecked) {
             volumeDatabase.saveVolume(volumeData)
         }
-        (activity as AddVolumeActivity).onVolumeSelected(volumeData, binding.switchRemember.isChecked)
+        with (activity as AddVolumeActivity) {
+            if (volumeAction!! == Action.OPEN) {
+                openVolume(volumeData, binding.switchRemember.isChecked)
+            } else {
+                onVolumeAdded()
+            }
+        }
     }
 }

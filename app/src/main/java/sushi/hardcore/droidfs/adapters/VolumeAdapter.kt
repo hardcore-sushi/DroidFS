@@ -29,6 +29,16 @@ class VolumeAdapter(
 
     init {
         reloadVolumes()
+        volumeManager.observe(object : VolumeManager.Observer {
+            override fun onVolumeStateChanged(volume: VolumeData) {
+                notifyItemChanged(volumes.indexOf(volume))
+            }
+
+            @SuppressLint("NotifyDataSetChanged")
+            override fun onAllVolumesClosed() {
+                notifyDataSetChanged()
+            }
+        })
     }
 
     interface Listener {
@@ -66,7 +76,7 @@ class VolumeAdapter(
             false
     }
 
-    fun onVolumeChanged(position: Int) {
+    fun onVolumeDataChanged(position: Int) {
         reloadVolumes()
         notifyItemChanged(position)
     }

@@ -33,8 +33,8 @@
     <string name="storage_perm_denied_msg">DroidFS can\'t work without storage permissions.</string>
     <string name="get_size_failed">Failed to retrieve file size.</string>
     <string name="parent_folder">Parent Folder</string>
-    <string name="enter_volume_path">Please enter the volume path</string>
-    <string name="enter_volume_name">Please enter the volume name</string>
+    <string name="empty_volume_path">Please enter the volume path</string>
+    <string name="empty_volume_name">Please enter the volume name</string>
     <string name="external_open">Open with external app</string>
     <string name="single_delete_confirm">Are you sure you want to delete %s ?</string>
     <string name="multiple_delete_confirm">Are you sure you want to delete these %s items ?</string>
@@ -74,11 +74,10 @@
     <string name="usf_screenshot">Allow screenshots</string>
     <string name="usf_fingerprint">Allow saving password hash using fingerprint</string>
     <string name="usf_volume_management">Volume Management</string>
-    <string name="usf_keep_open">Keep volume open when the app goes in background</string>
     <string name="unsafe_features">Unsafe Features</string>
     <string name="manage_unsafe_features">Manage unsafe features</string>
     <string name="manage_unsafe_features_summary">Enable/Disable unsafe features</string>
-    <string name="usf_home_warning_msg">DroidFS try to be as secure as possible. However, security often involves lack of comfort. This is why DroidFS offer you additional unsafe features that you can enable/disable according to your needs.\n\nWarning: this features can be UNSAFE. Do not use them unless you know exactly what you are doing. It is highly recommended to read the documentation before enabling them.</string>
+    <string name="usf_home_warning_msg">DroidFS aims to be as secure as possible. However, security often involves lack of comfort. This is why DroidFS offers you additional unsafe features that you can enable and disable according to your needs.\n\nWarning: this features can be UNSAFE. Do not use them unless you know exactly what you are doing. It is highly recommended to read the documentation before enabling them.</string>
     <string name="see_unsafe_features">See unsafe features</string>
     <string name="open_as">Open as</string>
     <string name="image">Image</string>
@@ -175,7 +174,7 @@
     <string name="seek_seconds_forward">+%d seconds</string>
     <string name="seek_seconds_backward">-%d seconds</string>
     <string name="add_volume">Add volume</string>
-    <string name="pick_directory">Pick directory</string>
+    <string name="pick_directory">Pick a directory</string>
     <string name="volume_alread_saved">Volume already saved</string>
     <string name="open_dialog_title">Opening %s:</string>
     <string name="remove">Remove</string>
@@ -273,4 +272,23 @@
     <string name="export_failed_export">failed to export file</string>
     <string name="export_mem">Exporting to memory…</string>
     <string name="export_disk">Exporting to disk…</string>
+    <string name="memfd_create_unsupported">Your current kernel does not support memfd_create(). This feature requires a minimum kernel version of %s.</string>
+    <string name="export_method">Export method</string>
+    <string name="export_method_summary">File export method. Used for sharing, external opening and accessing exposed files.</string>
+    <string name="debug">Debug</string>
+    <string name="logcat_title">DroidFS Logcat</string>
+    <string name="logcat_saved">Logcat saved</string>
+    <string name="later">Later</string>
+    <string name="notification_denied_msg">Notification permission has been denied. Background file operations won\'t be visible. You can change this in the app\'s permission settings.</string>
+    <string name="keep_alive_notification_title">Keep alive service</string>
+    <string name="keep_alive_notification_text">One or more volumes are kept open.</string>
+    <string name="close_all">Close all</string>
+    <string name="usf_background">Disable volume auto-locking</string>
+    <string name="usf_background_summary">Don\'t lock volumes when the app goes in background</string>
+    <string name="usf_keep_open">Keep volumes open</string>
+    <string name="usf_keep_open_summary">Maintain the app always running in the background to keep volumes open</string>
+    <string name="gocryptfs_details">Fast, but doesn\'t hide file sizes and directory structure</string>
+    <string name="cryfs_details">Slower, but protects metadata and prevents replacement attacks</string>
+    <string name="or">or</string>
+    <string name="enter_volume_path">Enter volume path</string>
 </resources>
