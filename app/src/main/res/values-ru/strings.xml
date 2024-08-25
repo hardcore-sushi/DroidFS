@@ -265,6 +265,7 @@
     <string name="export_method">Метод экспорта</string>
     <string name="export_method_summary">Метод экспорта файлов. Используется для обмена, открытия во внешнем приложении и доступа к открытым файлам.</string>
     <string name="debug">Отладка</string>
+    <string name="logcat_summary">Просмотр журнала DroidFS</string>
     <string name="logcat_title">Журнал logcat DroidFS</string>
     <string name="logcat_saved">Журнал logcat сохранён</string>
     <string name="later">Позже</string>
