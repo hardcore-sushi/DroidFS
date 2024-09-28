@@ -196,6 +196,7 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1list_1dir(JNIEnv
                                                           jint sessionID, jstring jplain_dir) {
     const char* plain_dir = (*env)->GetStringUTFChars(env, jplain_dir, NULL);
     const size_t plain_dir_len = strlen(plain_dir);
+    const char append_slash = plain_dir[plain_dir_len-1] != '/';
     GoString go_plain_dir = {plain_dir, plain_dir_len};
 
     struct gcf_list_dir_return elements = gcf_list_dir(sessionID, go_plain_dir);
@@ -216,7 +217,7 @@ Java_sushi_hardcore_droidfs_filesystems_GocryptfsVolume_native_1list_1dir(JNIEnv
 
             char* fullPath = malloc(sizeof(char) * (plain_dir_len + nameLen + 2));
             strcpy(fullPath, plain_dir);
-            if (plain_dir[-2] != '/') {
+            if (append_slash) {
                 strcat(fullPath, "/");
             }
             strcat(fullPath, name);
