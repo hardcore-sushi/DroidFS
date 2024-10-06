@@ -278,4 +278,17 @@
     <string name="debug">Depurar</string>
     <string name="logcat_title">Logcat de DroidFS</string>
     <string name="logcat_saved">Logcat guardado</string>
+    <string name="later">Después</string>
+    <string name="notification_denied_msg">Se ha denegado el permiso de notificación. Las operaciones de archivos en segundo plano no serán visibles. Puede cambiar esto en la configuración de permisos de la aplicación.</string>
+    <string name="keep_alive_notification_title">Mantener el servicio activo</string>
+    <string name="keep_alive_notification_text">Uno o más volúmenes se mantienen abiertos.</string>
+    <string name="close_all">Cerrar todos</string>
+    <string name="usf_background">Desactivar el auto-bloqueo del volumen</string>
+    <string name="usf_background_summary">No bloquear los volúmenes cuando la aplicación pasa a segundo plano.</string>
+    <string name="usf_keep_open">Mantener los volúmenes abiertos</string>
+    <string name="usf_keep_open_summary">Mantener la aplicación siempre en segundo plano para mantener los volúmenes abiertos</string>
+    <string name="gocryptfs_details">Rápido, pero no oculta el tamaño de los archivos ni la estructura de directorios</string>
+    <string name="cryfs_details">Más lento, pero protege los metadatos y evita los ataques de sustitución</string>
+    <string name="or">o</string>
+    <string name="enter_volume_path">Introducir la ruta del volumen</string>
 </resources>
