@@ -75,7 +75,7 @@
     <string name="usf_fingerprint">Kennwort-Hash mit Fingerabdruck speichern können</string>
     <string name="usf_volume_management">Volumenverwaltung</string>
     <string name="unsafe_features">Unsichere Funktionen</string>
-    <string name="manage_unsafe_features">Sichere Funktionen verwalten</string>
+    <string name="manage_unsafe_features">Unsichere Funktionen verwalten</string>
     <string name="manage_unsafe_features_summary">Aktivieren/Deaktivieren unsicherer Funktionen</string>
     <string name="usf_home_warning_msg">DroidFS versucht, so sicher wie möglich zu sein. Sicherheit ist jedoch oft mit mangelndem Komfort verbunden. Aus diesem Grund bietet DroidFS zusätzliche unsichere Funktionen, die Sie je nach Bedarf aktivieren/deaktivieren können.\n\nWarnung: Diese Funktionen können UNSICHER sein. Verwenden Sie sie nicht, wenn Sie nicht genau wissen, was Sie tun. Es wird dringend empfohlen, die Dokumentation zu lesen, bevor Sie sie aktivieren.</string>
     <string name="see_unsafe_features">Siehe unsichere Funktionen</string>
