@@ -160,8 +160,10 @@ class EncryptedFileProvider(context: Context) {
         exportedFile: ExportedFile,
         encryptedVolume: EncryptedVolume,
     ): Boolean {
-        val fd = exportedFile.open(ParcelFileDescriptor.MODE_WRITE_ONLY, false).fileDescriptor
-        return encryptedVolume.exportFile(exportedFile.path, FileOutputStream(fd))
+        val pfd = exportedFile.open(ParcelFileDescriptor.MODE_WRITE_ONLY, false)
+        return encryptedVolume.exportFile(exportedFile.path, FileOutputStream(pfd.fileDescriptor)).also {
+            pfd.close()
+        }
     }
 
     enum class Error {
