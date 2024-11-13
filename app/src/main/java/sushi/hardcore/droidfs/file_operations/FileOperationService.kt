@@ -104,7 +104,9 @@ class FileOperationService : Service() {
             activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
                 override fun onDestroy(owner: LifecycleOwner) {
                     activity.unbindService(serviceConnection)
-                    service.notificationPermissionHelpers.removeLast()
+                    // Could have been more efficient with a LinkedHashMap but the JDK implementation doesn't allow
+                    // to access the latest element in O(1) unless using reflection
+                    service.notificationPermissionHelpers.removeAll { it.activity == activity }
                 }
             })
             activity.bindService(

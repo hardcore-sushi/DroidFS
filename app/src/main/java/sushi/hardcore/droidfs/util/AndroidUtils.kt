@@ -28,7 +28,7 @@ object AndroidUtils {
     /**
      * A [Manifest.permission.POST_NOTIFICATIONS] permission helper.
      *
-     * Must be initialized before [Activity.onCreate].
+     * Must be initialized before [Activity.onCreate] finishes.
      */
     class NotificationPermissionHelper<out A: AppCompatActivity>(val activity: A) {
         private var listener: ((Boolean) -> Unit)? = null
