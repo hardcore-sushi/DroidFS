@@ -14,6 +14,8 @@ import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.FileTypes
@@ -21,7 +23,6 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -32,9 +33,8 @@ abstract class FileViewerActivity: BaseActivity() {
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
     private var windowTypeMask = 0
-    private var foldersFirst = true
-    private var wasMapped = false
-    protected val mappedPlaylist = mutableListOf<ExplorerElement>()
+    protected val playlist = mutableListOf<ExplorerElement>()
+    private val playlistMutex = Mutex()
     protected var currentPlaylistIndex = -1
     private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.R
 
@@ -46,7 +46,6 @@ abstract class FileViewerActivity: BaseActivity() {
             intent.getIntExtra("volumeId", -1)
         )!!
         finishOnClose(encryptedVolume)
-        foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
             windowTypeMask = typeMask
@@ -131,48 +130,53 @@ abstract class FileViewerActivity: BaseActivity() {
         }
     }
 
-    protected fun createPlaylist() {
-        if (!wasMapped){
-            encryptedVolume.recursiveMapFiles(originalParentPath)?.let { elements ->
-                for (e in elements) {
-                    if (e.isRegularFile) {
-                        if (FileTypes.isExtensionType(getFileType(), e.name) || filePath == e.fullPath) {
-                            mappedPlaylist.add(e)
-                        }
-                    }
-                }
+    protected suspend fun createPlaylist() {
+        playlistMutex.withLock {
+            if (currentPlaylistIndex != -1) {
+                // playlist already initialized
+                return
             }
-            val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
-            ExplorerElement.sortBy(sortOrder, foldersFirst, mappedPlaylist)
-            //find current index
-            for ((i, e) in mappedPlaylist.withIndex()){
-                if (filePath == e.fullPath){
-                    currentPlaylistIndex = i
-                    break
+            withContext(Dispatchers.IO) {
+                encryptedVolume.recursiveMapFiles(originalParentPath)?.filterTo(playlist) { e ->
+                    e.isRegularFile && (FileTypes.isExtensionType(getFileType(), e.name) || filePath == e.fullPath)
                 }
+                val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
+                val foldersFirst = sharedPrefs.getBoolean("folders_first", true)
+                ExplorerElement.sortBy(sortOrder, foldersFirst, playlist)
+                currentPlaylistIndex = playlist.indexOfFirst { it.fullPath == filePath }
             }
-            wasMapped = true
         }
     }
 
-    protected fun playlistNext(forward: Boolean) {
+    private fun updateCurrentItem() {
+        filePath = playlist[currentPlaylistIndex].fullPath
+    }
+
+    protected suspend fun playlistNext(forward: Boolean) {
         createPlaylist()
         currentPlaylistIndex = if (forward) {
-            (currentPlaylistIndex+1)%mappedPlaylist.size
+            (currentPlaylistIndex + 1).mod(playlist.size)
         } else {
-            var x = (currentPlaylistIndex-1)%mappedPlaylist.size
-            if (x < 0) {
-                x += mappedPlaylist.size
-            }
-            x
+            (currentPlaylistIndex - 1).mod(playlist.size)
         }
-        filePath = mappedPlaylist[currentPlaylistIndex].fullPath
+        updateCurrentItem()
     }
 
-    protected fun refreshPlaylist() {
-        mappedPlaylist.clear()
-        wasMapped = false
-        createPlaylist()
+    protected suspend fun deleteCurrentFile(): Boolean {
+        createPlaylist() // ensure we know the current position in the playlist
+        return if (encryptedVolume.deleteFile(filePath)) {
+            playlist.removeAt(currentPlaylistIndex)
+            if (playlist.size != 0) {
+                if (currentPlaylistIndex == playlist.size) {
+                    // deleted the last element of the playlist, go back to the first
+                    currentPlaylistIndex = 0
+                }
+                updateCurrentItem()
+            }
+            true
+        } else {
+            false
+        }
     }
 
     protected fun goBackToExplorer() {

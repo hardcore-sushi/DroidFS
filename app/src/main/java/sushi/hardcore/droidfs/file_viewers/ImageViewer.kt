@@ -12,10 +12,12 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
 import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
+import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
@@ -105,22 +107,21 @@ class ImageViewer: FileViewerActivity() {
                 .keepFullScreen()
                 .setTitle(R.string.warning)
                 .setPositiveButton(R.string.ok) { _, _ ->
-                    createPlaylist() //be sure the playlist is created before deleting if there is only one image
-                    if (encryptedVolume.deleteFile(filePath)) {
-                        playlistNext(true)
-                        refreshPlaylist()
-                        if (mappedPlaylist.size == 0) { //deleted all images of the playlist
-                            goBackToExplorer()
+                    lifecycleScope.launch {
+                        if (deleteCurrentFile()) {
+                            if (playlist.size == 0) { // no more image left
+                                goBackToExplorer()
+                            } else {
+                                loadImage(true)
+                            }
                         } else {
-                            loadImage(true)
+                            CustomAlertDialogBuilder(this@ImageViewer, theme)
+                                .keepFullScreen()
+                                .setTitle(R.string.error)
+                                .setMessage(getString(R.string.remove_failed, fileName))
+                                .setPositiveButton(R.string.ok, null)
+                                .show()
                         }
-                    } else {
-                        CustomAlertDialogBuilder(this, theme)
-                            .keepFullScreen()
-                            .setTitle(R.string.error)
-                            .setMessage(getString(R.string.remove_failed, fileName))
-                            .setPositiveButton(R.string.ok, null)
-                            .show()
                     }
                 }
                 .setNegativeButton(R.string.cancel, null)
@@ -198,14 +199,16 @@ class ImageViewer: FileViewerActivity() {
         rotateImage()
     }
 
-    private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false){
-        playlistNext(deltaX < 0)
-        loadImage(true)
-        if (slideshowActive) {
-            if (!slideshowSwipe) { //reset slideshow delay if user swipes
-                handler.removeCallbacks(slideshowNext)
+    private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false) {
+        lifecycleScope.launch {
+            playlistNext(deltaX < 0)
+            loadImage(true)
+            if (slideshowActive) {
+                if (!slideshowSwipe) { // reset slideshow delay if user swipes
+                    handler.removeCallbacks(slideshowNext)
+                }
+                handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
             }
-            handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
         }
     }
 
