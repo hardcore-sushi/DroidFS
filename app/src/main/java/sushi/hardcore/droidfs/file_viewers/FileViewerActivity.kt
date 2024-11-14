@@ -137,7 +137,11 @@ abstract class FileViewerActivity: BaseActivity() {
                 return
             }
             withContext(Dispatchers.IO) {
-                encryptedVolume.recursiveMapFiles(originalParentPath)?.filterTo(playlist) { e ->
+                if (sharedPrefs.getBoolean("map_folders", true)) {
+                    encryptedVolume.recursiveMapFiles(originalParentPath)
+                } else {
+                    encryptedVolume.readDir(originalParentPath)
+                }?.filterTo(playlist) { e ->
                     e.isRegularFile && (FileTypes.isExtensionType(getFileType(), e.name) || filePath == e.fullPath)
                 }
                 val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
