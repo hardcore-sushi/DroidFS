@@ -328,8 +328,8 @@ class ExplorerActivity : BaseExplorerActivity() {
                         activityScope.launch {
                             onTaskResult(
                                 fileOperationService.moveElements(volumeId, toMove, toClean),
-                                R.string.move_success,
                                 R.string.move_failed,
+                                R.string.move_success,
                             )
                             setCurrentPath(currentDirectoryPath)
                         }
