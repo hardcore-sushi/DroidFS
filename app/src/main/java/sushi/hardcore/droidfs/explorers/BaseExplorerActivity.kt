@@ -315,7 +315,14 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 FileTypes.isAudio(fullPath) -> {
                     startFileViewer(AudioPlayer::class.java, fullPath)
                 }
-                else -> showOpenAsDialog(explorerElements[position])
+                else -> {
+                    val preferredApp = getPreferredAppForFileType(fullPath)
+                    if (preferredApp != null) {
+                        openWithExternalApp(fullPath, explorerElements[position].stat.size)
+                    } else {
+                        showOpenAsDialog(explorerElements[position])
+                    }
+                }
             }
         }
         invalidateOptionsMenu()
@@ -675,5 +682,15 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             TemporaryFileProvider.instance.wipe()
         }
         setCurrentPath(currentDirectoryPath)
+    }
+
+    private fun storePreferredAppForFileType(fileType: String, appName: String) {
+        val editor = sharedPrefs.edit()
+        editor.putString("preferred_app_$fileType", appName)
+        editor.apply()
+    }
+
+    private fun getPreferredAppForFileType(fileType: String): String? {
+        return sharedPrefs.getString("preferred_app_$fileType", null)
     }
 }
