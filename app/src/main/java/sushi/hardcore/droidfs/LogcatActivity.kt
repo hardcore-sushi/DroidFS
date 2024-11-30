@@ -11,10 +11,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.databinding.ActivityLogcatBinding
 import java.io.BufferedReader
-import java.io.BufferedWriter
 import java.io.InputStreamReader
 import java.io.InterruptedIOException
-import java.io.OutputStreamWriter
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -40,12 +38,10 @@ class LogcatActivity: BaseActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                BufferedReader(InputStreamReader(Runtime.getRuntime().exec("logcat").also {
+                BufferedReader(InputStreamReader(ProcessBuilder("logcat", "-T", "500").start().also {
                     process = it
-                }.inputStream)).forEachLine {
-                    binding.content.post {
-                        binding.content.append("$it\n")
-                    }
+                }.inputStream)).lineSequence().forEach {
+                    binding.content.append(it)
                 }
             } catch (_: InterruptedIOException) {}
         }
@@ -77,11 +73,13 @@ class LogcatActivity: BaseActivity() {
 
     private fun saveTo(uri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
-            BufferedWriter(OutputStreamWriter(contentResolver.openOutputStream(uri))).use {
-                it.write(binding.content.text.toString())
-            }
-            launch(Dispatchers.Main) {
-                Toast.makeText(this@LogcatActivity, R.string.logcat_saved, Toast.LENGTH_SHORT).show()
+            contentResolver.openOutputStream(uri)?.use { output ->
+                Runtime.getRuntime().exec("logcat -d").inputStream.use { input ->
+                    input.copyTo(output)
+                }
+                launch(Dispatchers.Main) {
+                    Toast.makeText(this@LogcatActivity, R.string.logcat_saved, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

@@ -2,4 +2,8 @@
 <resources>
     <attr name="buttonBackgroundColor" format="color"/>
     <attr name="infoBarBackgroundColor" format="color"/>
+    <declare-styleable name="RingBufferTextView">
+        <attr name="updateMaxLines" format="integer"/>
+        <attr name="averageLineLength" format="integer"/>
+    </declare-styleable>
 </resources>
