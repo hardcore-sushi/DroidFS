@@ -87,6 +87,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private lateinit var numberOfFilesText: TextView
     private lateinit var numberOfFoldersText: TextView
     private lateinit var totalSizeText: TextView
+    private var gridColumnCount = Constants.DEFAULT_GRID_COLUMN_COUNT
     protected val fileShare by lazy { FileShare(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -110,6 +111,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         numberOfFilesText = findViewById(R.id.number_of_files_text)
         numberOfFoldersText = findViewById(R.id.number_of_folders_text)
         totalSizeText = findViewById(R.id.total_size_text)
+        gridColumnCount = sharedPrefs.getInt(Constants.GRID_COLUMN_COUNT_KEY, Constants.DEFAULT_GRID_COLUMN_COUNT)
+
         supportActionBar?.apply {
             setDisplayShowCustomEnabled(true)
             setCustomView(R.layout.action_bar)
@@ -173,9 +176,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             explorerAdapter.isUsingListLayout = true
             R.drawable.icon_view_grid
         } else {
-            val displayMetrics = resources.displayMetrics
-            val columnsNumber = (displayMetrics.widthPixels / displayMetrics.density / 200 + 0.5).toInt()
-            recycler_view_explorer.layoutManager = GridLayoutManager(this, columnsNumber)
+            recycler_view_explorer.layoutManager = GridLayoutManager(this, gridColumnCount)
             explorerAdapter.isUsingListLayout = false
             R.drawable.icon_view_list
         })

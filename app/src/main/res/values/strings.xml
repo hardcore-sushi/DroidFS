@@ -163,6 +163,8 @@
     <string name="cut">Cut</string>
     <string name="map_folders">Map folders</string>
     <string name="map_folders_summary">Recursively map folders to calculate their sizes (you should disable this when opening large volumes)</string>
+    <string name="grid_column_count">Grid Column Count</string>
+    <string name="grid_column_count_summary">Number of columns in grid display</string>
     <string name="camera_optimization">Camera optimization</string>
     <string name="maximize_quality">Maximize quality</string>
     <string name="minimize_latency">Minimize latency</string>
