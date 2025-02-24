@@ -16,3 +16,8 @@ local.properties
 *.o
 *.a
 *.so
+libpdfviewer
+app/ffmpeg
+app/build
+app/libcryfs
+app/libgocryptfs

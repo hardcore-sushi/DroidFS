@@ -12,6 +12,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.extractor.DefaultExtractorsFactory
+import androidx.preference.PreferenceManager
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
@@ -50,7 +51,8 @@ abstract class MediaPlayer: FileViewerActivity() {
                 }
             }
         }
-        player.repeatMode = Player.REPEAT_MODE_ALL
+
+        player.repeatMode = sharedPrefs.getInt("repeatMode", Player.REPEAT_MODE_ALL)
         player.playWhenReady = true
         player.addListener(object : Player.Listener{
             override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -78,6 +80,13 @@ abstract class MediaPlayer: FileViewerActivity() {
                         playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex + 1) % player.mediaItemCount)
                         refreshFileName()
                     }
+                }
+            }
+
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                with (sharedPrefs.edit()) {
+                    putInt("repeatMode", repeatMode)
+                    apply()
                 }
             }
         })
