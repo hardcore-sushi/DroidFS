@@ -56,6 +56,7 @@ class SettingsActivity : BaseActivity() {
     class MainSettingsFragment : PreferenceFragmentCompat() {
         private lateinit var sharedPrefs: SharedPreferences
         private lateinit var maxSizePreference: Preference
+        private lateinit var columnCountPreference: Preference
 
         private fun setThumbnailMaxSize(input: String) {
             val value: Long
@@ -85,6 +86,40 @@ class SettingsActivity : BaseActivity() {
             }) {
                 with (binding.dialogEditText) {
                     inputType = InputType.TYPE_CLASS_NUMBER
+                    hint = getString(R.string.size_hint)
+                }
+                show()
+            }
+        }
+
+        private fun setGridColumnCount(input: String) {
+            val value: Int
+            try {
+                value = input.toInt()
+            } catch (e: NumberFormatException) {
+                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
+                showGridColumnCountDialog()
+                return
+            }
+            if (value < 0) {
+                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
+                showGridColumnCountDialog()
+            } else {
+                with(sharedPrefs.edit()) {
+                    putInt(Constants.GRID_COLUMN_COUNT_KEY, value)
+                    apply()
+                }
+                columnCountPreference.summary = input
+            }
+        }
+
+        private fun showGridColumnCountDialog() {
+            with (EditTextDialog((requireActivity() as BaseActivity), R.string.grid_column_count) {
+                setGridColumnCount(it)
+            }) {
+                with (binding.dialogEditText) {
+                    inputType = InputType.TYPE_CLASS_NUMBER
+                    //TODO remove or replace
                     hint = getString(R.string.size_hint)
                 }
                 show()
@@ -126,6 +161,17 @@ class SettingsActivity : BaseActivity() {
                 )
                 maxSizePreference.setOnPreferenceClickListener {
                     showMaxSizeDialog()
+                    false
+                }
+            }
+            findPreference<Preference>(Constants.GRID_COLUMN_COUNT_KEY)?.let {
+                columnCountPreference = it
+                columnCountPreference.summary = getString(
+                    R.string.grid_column_count_summary,
+                    sharedPrefs.getInt(Constants.GRID_COLUMN_COUNT_KEY, Constants.DEFAULT_GRID_COLUMN_COUNT)
+                )
+                columnCountPreference.setOnPreferenceClickListener {
+                    showGridColumnCountDialog()
                     false
                 }
             }

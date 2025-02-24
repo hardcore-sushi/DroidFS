@@ -15,5 +15,7 @@ object Constants {
     const val REMEMBER_VOLUME_KEY = "remember_volume"
     const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"
     const val DEFAULT_THUMBNAIL_MAX_SIZE = 10_000L
+    const val GRID_COLUMN_COUNT_KEY = "grid_column_count"
+    const val DEFAULT_GRID_COLUMN_COUNT = 3
     const val PIN_PASSWORDS_KEY = "pin_passwords"
 }
