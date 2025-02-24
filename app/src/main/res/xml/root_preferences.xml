@@ -57,7 +57,7 @@
             android:summary="@string/map_folders_summary"/>
 
         <Preference
-            android:icon="@drawable/icon_view_grid"
+            android:icon="@drawable/icon_grid_column"
             android:key="grid_column_count"
             android:title="@string/grid_column_count"/>
 

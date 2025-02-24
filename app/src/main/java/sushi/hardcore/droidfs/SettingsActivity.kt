@@ -119,8 +119,6 @@ class SettingsActivity : BaseActivity() {
             }) {
                 with (binding.dialogEditText) {
                     inputType = InputType.TYPE_CLASS_NUMBER
-                    //TODO remove or replace
-                    hint = getString(R.string.size_hint)
                 }
                 show()
             }
