@@ -138,7 +138,7 @@ class ExplorerElementAdapter(
                     } else if (adapter.loadThumbnails) {
                         task = adapter.thumbnailsLoader!!.loadAsync(fullPath, icon) { resource ->
                             val bitmap = resource.toBitmap()
-                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config, true))
+                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config!!, true))
                         }
                     }
                 }

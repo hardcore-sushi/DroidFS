@@ -14,7 +14,7 @@ if (hasProperty("disableGocryptfs")) {
 }
 
 android {
-    compileSdk 34
+    compileSdk 35
     ndkVersion '25.2.9519653'
     namespace "sushi.hardcore.droidfs"
 
@@ -67,11 +67,11 @@ android {
             def abi = output.getFilter(com.android.build.OutputFile.ABI)
             if (abi == null) { // universal
                 output.versionCodeOverride = variant.versionCode*10
-                output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-universal.apk"
+                abi = "universal"
             } else {
                 output.versionCodeOverride = variant.versionCode*10 + abiCodes[abi]
-                output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-${abi}.apk"
             }
+            output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-${abi}.apk"
         }
     }
 
@@ -89,6 +89,11 @@ android {
                 optimizeCode true
                 proguardFiles 'proguard-rules.pro'
             }
+        }
+
+        debug {
+            applicationIdSuffix ".debug"
+            versionNameSuffix "-debug"
         }
     }
 
