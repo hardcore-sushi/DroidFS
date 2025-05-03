@@ -291,4 +291,5 @@
     <string name="cryfs_details">Slower, but protects metadata and prevents replacement attacks</string>
     <string name="or">or</string>
     <string name="enter_volume_path">Enter volume path</string>
+    <string name="more_options">More options</string>
 </resources>

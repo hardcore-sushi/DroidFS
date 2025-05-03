@@ -92,7 +92,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         app = application as VolumeManagerApp
-        usf_open = sharedPrefs.getBoolean("usf_open", false)
         volumeName = intent.getStringExtra("volumeName") ?: ""
         volumeId = intent.getIntExtra("volumeId", -1)
         encryptedVolume = app.volumeManager.getVolume(volumeId)!!.also { finishOnClose(it) }
@@ -100,6 +99,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         sortOrderValues = resources.getStringArray(R.array.sort_orders_values)
         foldersFirst = sharedPrefs.getBoolean("folders_first", true)
         mapFolders = sharedPrefs.getBoolean("map_folders", true)
+        loadUnsafeFeatures()
         currentSortOrderIndex = resources.getStringArray(R.array.sort_orders_values).indexOf(sharedPrefs.getString(Constants.SORT_ORDER_KEY, "name"))
         init()
         recycler_view_explorer = findViewById(R.id.recycler_view_explorer)
@@ -179,6 +179,10 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             explorerAdapter.isUsingListLayout = false
             R.drawable.icon_view_list
         })
+    }
+
+    protected open fun loadUnsafeFeatures() {
+        usf_open = sharedPrefs.getBoolean("usf_open", false)
     }
 
     protected open fun init() {

@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
@@ -16,6 +15,7 @@ import sushi.hardcore.droidfs.CameraActivity
 import sushi.hardcore.droidfs.LoadingTask
 import sushi.hardcore.droidfs.MainActivity
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.SettingsActivity
 import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.filesystems.Stat
@@ -32,6 +32,9 @@ class ExplorerActivity : BaseExplorerActivity() {
     private var usf_share = false
     private var currentItemAction = ItemsActions.NONE
     private val itemsToProcess = ArrayList<OperationFile>()
+    private val unsafeFeaturesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
+        loadUnsafeFeatures()
+    }
     private val pickFromOtherVolumes = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.let { resultIntent ->
@@ -150,6 +153,12 @@ class ExplorerActivity : BaseExplorerActivity() {
             .show()
     }
 
+    override fun loadUnsafeFeatures() {
+        super.loadUnsafeFeatures()
+        usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
+        usf_share = sharedPrefs.getBoolean("usf_share", false)
+    }
+
     override fun init() {
         super.init()
         onBackPressedDispatcher.addCallback(this) {
@@ -215,8 +224,6 @@ class ExplorerActivity : BaseExplorerActivity() {
                     .show()
             }
         }
-        usf_decrypt = sharedPrefs.getBoolean("usf_decrypt", false)
-        usf_share = sharedPrefs.getBoolean("usf_share", false)
     }
 
     override fun onExplorerElementLongClick(position: Int) {
@@ -395,6 +402,12 @@ class ExplorerActivity : BaseExplorerActivity() {
             R.id.decrypt -> {
                 app.isStartingExternalApp = true
                 pickExportDirectory.launch(null)
+                true
+            }
+            R.id.unsafe_features -> {
+                unsafeFeaturesLauncher.launch(Intent(this, SettingsActivity::class.java).apply {
+                    putExtra("screen", "UnsafeFeaturesSettingsFragment")
+                })
                 true
             }
             else -> super.onOptionsItemSelected(item)

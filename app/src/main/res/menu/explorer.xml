@@ -83,4 +83,9 @@
         android:title="@string/close_volume"
         android:icon="@drawable/icon_close"/>
 
+    <item
+        android:id="@+id/unsafe_features"
+        app:showAsAction="never"
+        android:title="@string/more_options"/>
+
 </menu>
