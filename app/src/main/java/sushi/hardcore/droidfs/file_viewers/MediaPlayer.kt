@@ -50,7 +50,7 @@ abstract class MediaPlayer: FileViewerActivity() {
                 }
             }
         }
-        player.repeatMode = Player.REPEAT_MODE_ALL
+        player.repeatMode = sharedPrefs.getInt("playerRepeatMode", Player.REPEAT_MODE_ALL)
         player.playWhenReady = true
         player.addListener(object : Player.Listener{
             override fun onVideoSizeChanged(videoSize: VideoSize) {
@@ -78,6 +78,12 @@ abstract class MediaPlayer: FileViewerActivity() {
                         playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex + 1) % player.mediaItemCount)
                         refreshFileName()
                     }
+                }
+            }
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                with (sharedPrefs.edit()) {
+                    putInt("playerRepeatMode", repeatMode)
+                    apply()
                 }
             }
         })
