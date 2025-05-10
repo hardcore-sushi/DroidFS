@@ -168,24 +168,67 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun loadImage(newImage: Boolean) {
-        fileName = File(filePath).name
-        binding.textFilename.text = fileName
-        if (newImage || imageViewModel.imageBytes == null) {
-            loadWholeFile(filePath) {
-                imageViewModel.imageBytes = it
-                requestBuilder = Glide.with(this).load(it)
-                requestBuilder?.into(binding.imageViewer)
-                imageViewModel.rotationAngle = 0f
-            }
-        } else {
-            requestBuilder = Glide.with(this).load(imageViewModel.imageBytes)
-            if (imageViewModel.rotationAngle.mod(360f) != 0f) {
-                rotateImage()
+    fileName = File(filePath).name
+    binding.textFilename.text = fileName
+    val isVideo = isVideoFile(filePath)
+    val thumbnailPath = File(filePath).parent + "/thumbnails" // path to files in volume
+    if (newImage || imageViewModel.imageBytes == null) {
+        loadWholeFile(filePath) {
+            imageViewModel.imageBytes = it
+            requestBuilder = if (isVideo) {
+                Glide.with(this)
+                    .asBitmap()
+                    .load(Uri.fromFile(File(filePath)))
+                    .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                    .override(Target.SIZE_ORIGINAL) // load the original thumbnail
             } else {
-                requestBuilder?.into(binding.imageViewer)
+                Glide.with(this)
+                    .load(it)
+                    .thumbnail(0.1f)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+            }
+            requestBuilder?.into(binding.imageViewer)
+            imageViewModel.rotationAngle = 0f
+
+            // Save the thumbnail in the path of the files.
+            if (!isVideo) {
+                requestBuilder?.downloadOnly() // load the downsized thumbnail
+                    ?.into(object : SimpleTarget<File>() {
+                        override fun onResourceReady(resource: File, transition: Transition<in File>?) {
+                            val thumbnailFile = File(thumbnailPath, fileName)
+                            if (!thumbnailFile.exists()) {
+                                thumbnailFile.createNewFile()
+                            }
+                            resource.copyTo(thumbnailFile, true)
+                        }
+                    })
             }
         }
+    } else {
+        requestBuilder = if (isVideo) {
+            Glide.with(this)
+                .asBitmap()
+                .load(Uri.fromFile(File(filePath)))
+                .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+                .override(Target.SIZE_ORIGINAL)
+        } else {
+            Glide.with(this)
+                .load(imageViewModel.imageBytes)
+                .thumbnail(0.1f)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+        }
+        if (imageViewModel.rotationAngle.mod(360f) != 0f) {
+            rotateImage()
+        } else {
+            requestBuilder?.into(binding.imageViewer)
+        }
     }
+}
+
+private fun isVideoFile(filePath: String): Boolean {
+    val mimeType = URLConnection.guessContentTypeFromName(filePath)
+    return mimeType?.startsWith("video") ?: false
+}
 
     override fun onUserInteraction() {
         super.onUserInteraction()
