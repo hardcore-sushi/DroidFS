@@ -13,7 +13,5 @@ object Constants {
     const val DEFAULT_THEME_VALUE = "dark_green"
     const val DEFAULT_VOLUME_KEY = "default_volume"
     const val REMEMBER_VOLUME_KEY = "remember_volume"
-    const val THUMBNAIL_MAX_SIZE_KEY = "thumbnail_max_size"
-    const val DEFAULT_THUMBNAIL_MAX_SIZE = 10_000L
     const val PIN_PASSWORDS_KEY = "pin_passwords"
 }

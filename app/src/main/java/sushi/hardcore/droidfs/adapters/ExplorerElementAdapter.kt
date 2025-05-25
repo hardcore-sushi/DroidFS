@@ -1,22 +1,26 @@
 package sushi.hardcore.droidfs.adapters
 
 import android.annotation.SuppressLint
-import android.graphics.Bitmap
-import android.util.LruCache
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
+import coil3.Image
+import coil3.ImageLoader
+import coil3.load
+import coil3.imageLoader
+import coil3.request.Disposable
+import coil3.request.ImageRequest
+import coil3.video.VideoFrameDecoder
+import coil3.video.videoFramePercent
 import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.ThumbnailsLoader
 import sushi.hardcore.droidfs.explorers.ExplorerElement
+import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
@@ -27,29 +31,27 @@ class ExplorerElementAdapter(
     val activity: AppCompatActivity,
     val encryptedVolume: EncryptedVolume?,
     private val listener: Listener,
-    thumbnailMaxSize: Long,
 ) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
     var explorerElements = listOf<ExplorerElement>()
     @SuppressLint("NotifyDataSetChanged")
     set(value) {
         field = value
-        thumbnailsCache?.evictAll()
         notifyDataSetChanged()
     }
     var isUsingListLayout = true
-    private var thumbnailsLoader: ThumbnailsLoader? = null
-    private var thumbnailsCache: LruCache<String, Bitmap>? = null
+    private var thumbnailsLoader: ImageLoader? = null
     var loadThumbnails = true
+    private var iconImage: Image? = null
+    private var iconVideo: Image? = null
 
     init {
         if (encryptedVolume != null) {
-            thumbnailsLoader = ThumbnailsLoader(activity, encryptedVolume, thumbnailMaxSize, activity.lifecycleScope).apply {
-                initialize()
-            }
-            thumbnailsCache = object : LruCache<String, Bitmap>((Runtime.getRuntime().maxMemory() / 4).toInt()) {
-                override fun sizeOf(key: String, value: Bitmap) = value.byteCount
-            }
+            activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_image).target { result -> iconImage = result}.build())
+            activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_video).target { result -> iconVideo = result}.build())
+            thumbnailsLoader = ImageLoader.Builder(activity).diskCache(null).fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).components {
+                add(VideoFrameDecoder.Factory())
+            }.build()
         }
     }
 
@@ -119,45 +121,35 @@ class ExplorerElementAdapter(
     }
 
     class FileViewHolder(itemView: View) : RegularElementViewHolder(itemView) {
-        private var task = -1
+        private var thumbnailLoadingTask: Disposable? = null
 
-        fun cancelThumbnailLoading(adapter: ExplorerElementAdapter) {
-            if (task != -1) {
-                adapter.thumbnailsLoader?.cancel(task)
-            }
+        fun cancelThumbnailLoading() {
+            thumbnailLoadingTask?.dispose()
         }
 
-        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int) {
-            var setDefaultIcon = true
-            (bindingAdapter as ExplorerElementAdapter?)?.let { adapter ->
-                adapter.thumbnailsCache?.let {
-                    val thumbnail = it.get(fullPath)
-                    if (thumbnail != null) {
-                        icon.setImageBitmap(thumbnail)
-                        setDefaultIcon = false
-                    } else if (adapter.loadThumbnails) {
-                        task = adapter.thumbnailsLoader!!.loadAsync(fullPath, icon) { resource ->
-                            val bitmap = resource.toBitmap()
-                            adapter.thumbnailsCache!!.put(fullPath, bitmap.copy(bitmap.config!!, true))
-                        }
-                    }
+        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int, placeholder: Image?): Disposable {
+            val adapter = (bindingAdapter as ExplorerElementAdapter?)!!
+            return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
+                icon.load(fullPath, adapter.thumbnailsLoader!!) {
+                    videoFramePercent(0.1)
+                    placeholder(placeholder)
                 }
-            }
-            if (setDefaultIcon) {
-                icon.setImageResource(defaultIconId)
+            } else {
+                icon.load(defaultIconId)
             }
         }
 
         override fun bind(explorerElement: ExplorerElement, position: Int, isSelected: Boolean) {
             super.bind(explorerElement, position, isSelected)
-            when {
+            val adapter = bindingAdapter as ExplorerElementAdapter
+            thumbnailLoadingTask = when {
                 FileTypes.isImage(explorerElement.name) -> {
-                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_image)
+                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_image, adapter.iconImage)
                 }
                 FileTypes.isVideo(explorerElement.name) -> {
-                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video)
+                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video, adapter.iconVideo)
                 }
-                else -> icon.setImageResource(
+                else -> icon.load(
                     when {
                         FileTypes.isText(explorerElement.name) -> R.drawable.icon_file_text
                         FileTypes.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
@@ -187,7 +179,7 @@ class ExplorerElementAdapter(
 
     override fun onViewDetachedFromWindow(holder: RecyclerView.ViewHolder) {
         if (holder is FileViewHolder) {
-            holder.cancelThumbnailLoading(this)
+            holder.cancelThumbnailLoading()
         }
     }
 

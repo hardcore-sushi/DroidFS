@@ -3,7 +3,6 @@ package sushi.hardcore.droidfs.file_viewers
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Matrix
-import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.view.MotionEvent
 import android.view.View
@@ -13,20 +12,22 @@ import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
-import com.bumptech.glide.Glide
-import com.bumptech.glide.RequestBuilder
-import com.bumptech.glide.load.engine.bitmap_recycle.BitmapPool
-import com.bumptech.glide.load.resource.bitmap.BitmapTransformation
+import coil3.ImageLoader
+import coil3.request.ImageRequest
+import coil3.request.target
+import coil3.request.transformations
+import coil3.size.Size
+import coil3.transform.Transformation
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
+import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.security.MessageDigest
 import kotlin.math.abs
 
 class ImageViewer: FileViewerActivity() {
@@ -36,14 +37,14 @@ class ImageViewer: FileViewerActivity() {
     }
 
     class ImageViewModel : ViewModel() {
-        var imageBytes: ByteArray? = null
         var rotationAngle: Float = 0f
     }
 
     private lateinit var fileName: String
     private lateinit var handler: Handler
     private val imageViewModel: ImageViewModel by viewModels()
-    private var requestBuilder: RequestBuilder<Drawable>? = null
+    private lateinit var imageLoader: ImageLoader
+    private var imageRequestBuilder: ImageRequest.Builder? = null
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
@@ -71,6 +72,7 @@ class ImageViewer: FileViewerActivity() {
         supportActionBar?.hide()
         showPartialSystemUi()
         applyNavigationBarMargin(binding.root)
+        imageLoader = ImageLoader.Builder(this).diskCache(null).fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).build()
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
@@ -170,20 +172,14 @@ class ImageViewer: FileViewerActivity() {
     private fun loadImage(newImage: Boolean) {
         fileName = File(filePath).name
         binding.textFilename.text = fileName
-        if (newImage || imageViewModel.imageBytes == null) {
-            loadWholeFile(filePath) {
-                imageViewModel.imageBytes = it
-                requestBuilder = Glide.with(this).load(it)
-                requestBuilder?.into(binding.imageViewer)
-                imageViewModel.rotationAngle = 0f
-            }
+        if (newImage) {
+            imageViewModel.rotationAngle = 0f
+        }
+        imageRequestBuilder = ImageRequest.Builder(this).data(filePath).target(binding.imageViewer)
+        if (imageViewModel.rotationAngle.mod(360f) != 0f) {
+            rotateImage()
         } else {
-            requestBuilder = Glide.with(this).load(imageViewModel.imageBytes)
-            if (imageViewModel.rotationAngle.mod(360f) != 0f) {
-                rotateImage()
-            } else {
-                requestBuilder?.into(binding.imageViewer)
-            }
+            imageLoader.enqueue(imageRequestBuilder!!.build())
         }
     }
 
@@ -218,26 +214,24 @@ class ImageViewer: FileViewerActivity() {
         Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
     }
 
-    class OrientationTransformation(private val orientation: Float): BitmapTransformation() {
+    class OrientationTransformation(private val orientation: Float): Transformation() {
+        lateinit var bitmap: coil3.Bitmap
 
-        lateinit var bitmap: Bitmap
+        override val cacheKey = "rot$orientation"
 
-        override fun transform(pool: BitmapPool, toTransform: Bitmap, outWidth: Int, outHeight: Int): Bitmap? {
-            return Bitmap.createBitmap(toTransform, 0, 0, toTransform.width, toTransform.height, Matrix().apply {
+        override suspend fun transform(input: coil3.Bitmap, size: Size): coil3.Bitmap {
+            return coil3.Bitmap.createBitmap(input, 0, 0, input.width, input.height, Matrix().apply {
                 postRotate(orientation)
             }, true).also {
                 bitmap = it
             }
         }
-
-        override fun updateDiskCacheKey(messageDigest: MessageDigest) {
-            messageDigest.update("rotate$orientation".toByteArray())
-        }
     }
 
     private fun rotateImage() {
-        orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle)
-        requestBuilder?.transform(orientationTransformation)?.into(binding.imageViewer)
+        orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle).also {
+            imageLoader.enqueue(imageRequestBuilder!!.transformations(it).build())
+        }
     }
 
     private fun askSaveRotation(callback: () -> Unit){

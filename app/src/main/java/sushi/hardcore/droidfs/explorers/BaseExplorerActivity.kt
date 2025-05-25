@@ -125,7 +125,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 null
             },
             this,
-            sharedPrefs.getLong(Constants.THUMBNAIL_MAX_SIZE_KEY, Constants.DEFAULT_THUMBNAIL_MAX_SIZE)*1000,
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)
         currentDirectoryPath = explorerViewModel.currentDirectoryPath
