@@ -217,9 +217,6 @@
     <string name="copy_volume_notification">Birim kopyalanıyor…</string>
     <string name="hidden_volume_already_exists">Aynı ada sahip bir gizli birim zaten mevcut.</string>
     <string name="pdf_document">PDF dökümanı</string>
-    <string name="thumbnail_max_size">Küçük resimler için maksimum boyut</string>
-    <string name="thumbnail_max_size_summary">Küçük resmin yüklenebileceği maksimum dosya boyutu. Mevcut değer: %s</string>
-    <string name="size_hint">Boyut (KB olarak)</string>
     <string name="invalid_number">Geçersiz numara</string>
     <string name="new_volume_name">Yeni birim adı:</string>
     <string name="volume_rename_failed">Birim yeniden adlandırılamadı</string>

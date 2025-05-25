@@ -218,9 +218,6 @@
     <string name="copy_volume_notification">מעתיק אמצעי אחסון…</string>
     <string name="hidden_volume_already_exists">אמצעי אחסון נסתר עם אותו שם כבר קיים.</string>
     <string name="pdf_document">מסמך PDF</string>
-    <string name="thumbnail_max_size">גודל מקסימלי עבור תמונות ממוזערות</string>
-    <string name="thumbnail_max_size_summary">גודל קובץ מקסימלי לטעינת תמונה ממוזערת. ערך נוכחי: %s</string>
-    <string name="size_hint">גודל (בקילו בייט)</string>
     <string name="invalid_number">מספר לא תקין</string>
     <string name="new_volume_name">שם אמצעי אחסון חדש:</string>
     <string name="volume_rename_failed">שינוי שם אמצעי אחסון נכשל</string>

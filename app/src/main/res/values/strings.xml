@@ -217,9 +217,6 @@
     <string name="copy_volume_notification">Copying volume…</string>
     <string name="hidden_volume_already_exists">A hidden volume with the same name already exists.</string>
     <string name="pdf_document">PDF document</string>
-    <string name="thumbnail_max_size">Maximum size for thumbnails</string>
-    <string name="thumbnail_max_size_summary">Maximum file size for which to load a thumbnail. Current value: %s</string>
-    <string name="size_hint">Size (in KB)</string>
     <string name="invalid_number">Invalid number</string>
     <string name="new_volume_name">New volume name:</string>
     <string name="volume_rename_failed">Failed to rename volume</string>

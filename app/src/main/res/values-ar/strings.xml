@@ -215,9 +215,6 @@
     <string name="copy_volume_notification">يتم نسخ المجلد المشفر…</string>
     <string name="hidden_volume_already_exists">هنالك مجلد مشفر مخفي بنفس الأسم.</string>
     <string name="pdf_document">مستند PDF</string>
-    <string name="thumbnail_max_size">الحجم الأقصى للصور المصغرة</string>
-    <string name="thumbnail_max_size_summary">الحجم الأقصى لتحميل صورة مصغرة لملف ما. القيمة الحالية: %s</string>
-    <string name="size_hint">الحجم (بل KB)</string>
     <string name="invalid_number">رقم غير صالح</string>
     <string name="new_volume_name">اسم جديد للمجلد المشفر:</string>
     <string name="volume_rename_failed">فشلت إعادة تسمية المجلد المشفر</string>

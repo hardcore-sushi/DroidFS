@@ -217,9 +217,6 @@
     <string name="copy_volume_notification">Datenträger kopieren…</string>
     <string name="hidden_volume_already_exists">Ein versteckter Datenträger mit dem gleichen Namen existiert bereits.</string>
     <string name="pdf_document">PDF-Dokument</string>
-    <string name="thumbnail_max_size">Maximale Größe für Miniaturansichten</string>
-    <string name="thumbnail_max_size_summary">Maximale Dateigröße, für die eine Vorschau geladen werden soll. Aktueller Wert: %s</string>
-    <string name="size_hint">Größe (in KB)</string>
     <string name="invalid_number">Ungültige Zahl</string>
     <string name="new_volume_name">Neuer Datenträgername:</string>
     <string name="volume_rename_failed">Datenträger konnte nicht umbenannt werden</string>

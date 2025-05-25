@@ -5,9 +5,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Build
 import android.os.Bundle
-import android.text.InputType
 import android.view.MenuItem
-import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -19,9 +17,7 @@ import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
 import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Compat
-import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
-import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 class SettingsActivity : BaseActivity() {
     private val notificationPermissionHelper = AndroidUtils.NotificationPermissionHelper(this)
@@ -55,41 +51,6 @@ class SettingsActivity : BaseActivity() {
 
     class MainSettingsFragment : PreferenceFragmentCompat() {
         private lateinit var sharedPrefs: SharedPreferences
-        private lateinit var maxSizePreference: Preference
-
-        private fun setThumbnailMaxSize(input: String) {
-            val value: Long
-            try {
-                value = input.toLong()
-            } catch (e: NumberFormatException) {
-                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
-                showMaxSizeDialog()
-                return
-            }
-            val size = value*1000
-            if (size < 0) {
-                Toast.makeText(requireContext(), R.string.invalid_number, Toast.LENGTH_SHORT).show()
-                showMaxSizeDialog()
-            } else {
-                with(sharedPrefs.edit()) {
-                    putLong(Constants.THUMBNAIL_MAX_SIZE_KEY, value)
-                    apply()
-                }
-                maxSizePreference.summary = PathUtils.formatSize(size)
-            }
-        }
-
-        private fun showMaxSizeDialog() {
-            with (EditTextDialog((requireActivity() as BaseActivity), R.string.thumbnail_max_size) {
-                setThumbnailMaxSize(it)
-            }) {
-                with (binding.dialogEditText) {
-                    inputType = InputType.TYPE_CLASS_NUMBER
-                    hint = getString(R.string.size_hint)
-                }
-                show()
-            }
-        }
 
         private fun refreshTheme() {
             with(requireActivity()) {
@@ -115,19 +76,6 @@ class SettingsActivity : BaseActivity() {
             findPreference<SwitchPreferenceCompat>("black_theme")?.setOnPreferenceChangeListener { _, _ ->
                 refreshTheme()
                 true
-            }
-            findPreference<Preference>(Constants.THUMBNAIL_MAX_SIZE_KEY)?.let {
-                maxSizePreference = it
-                maxSizePreference.summary = getString(
-                    R.string.thumbnail_max_size_summary,
-                    PathUtils.formatSize(sharedPrefs.getLong(
-                        Constants.THUMBNAIL_MAX_SIZE_KEY, Constants.DEFAULT_THUMBNAIL_MAX_SIZE
-                    )*1000)
-                )
-                maxSizePreference.setOnPreferenceClickListener {
-                    showMaxSizeDialog()
-                    false
-                }
             }
             findPreference<Preference>("logcat")?.setOnPreferenceClickListener { _ ->
                 startActivity(Intent(requireContext(), LogcatActivity::class.java))

@@ -218,9 +218,6 @@
     <string name="copy_volume_notification">正在复制卷…</string>
     <string name="hidden_volume_already_exists">一个有相同名字的隐藏卷已经存在</string>
     <string name="pdf_document">PDF文档</string>
-    <string name="thumbnail_max_size">缩略图最大体积</string>
-    <string name="thumbnail_max_size_summary">允许的缩略图文件最大体积. 当前值:</string>
-    <string name="size_hint">大小(KB):</string>
     <string name="invalid_number">无效数字</string>
     <string name="new_volume_name">新卷名:</string>
     <string name="volume_rename_failed">卷重命名失败</string>

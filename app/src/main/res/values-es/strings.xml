@@ -217,9 +217,6 @@
     <string name="copy_volume_notification">Copiando volumen…</string>
     <string name="hidden_volume_already_exists">Ya existe un volumen oculto con el mismo nombre.</string>
     <string name="pdf_document">Documento PDF</string>
-    <string name="thumbnail_max_size">Tamaño máximo de miniatura</string>
-    <string name="thumbnail_max_size_summary">Tamaño máximo de archivo en el que se cargarán las miniaturas. Valor actual: %s</string>
-    <string name="size_hint">Tamaño (en KB)</string>
     <string name="invalid_number">Número inválido</string>
     <string name="new_volume_name">Nuevo nombre del volumen:</string>
     <string name="volume_rename_failed">Fallo al renombrar el volumen</string>
