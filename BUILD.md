@@ -1,23 +1,55 @@
 # Introduction
-DroidFS relies on modified versions of the original encrypted filesystems programs to open volumes. [CryFS](https://github.com/cryfs/cryfs) is written in C++ while [gocryptfs](https://github.com/rfjakob/gocryptfs) is written in [Go](https://golang.org). Thus, building DroidFS requires the compilation of native code. However, for the sake of simplicity, the application has been designed in a modular way: you can build a version of DroidFS that supports both Gocryptfs and CryFS, or only one of the two.
+DroidFS relies on modified versions of the original encrypted filesystems programs to open volumes. [CryFS](https://github.com/cryfs/cryfs) is written in C++ while [gocryptfs](https://github.com/rfjakob/gocryptfs) is written in [Go](https://golang.org). Thus, building DroidFS requires the compilation of native code. However, for the sake of simplicity, the application has been designed in a modular way: you can build a version of DroidFS that supports both gocryptfs and CryFS, or only one of the two.
 
 Moreover, DroidFS aims to be accessible to as many people as possible. If you encounter any problems or need help with the build, feel free to open an issue, a discussion, or contact me (currently the main developer) by [email](mailto:gh@arkensys.dedyn.io) or on [Matrix](https://matrix.org): @hardcoresushi:matrix.underworld.fr
 
 # Setup
 
-The following two steps assume you're using a Debian-based Linux distribution. Package names might be similar for other distributions. Don't hesitate to ask if you're having trouble with this.
+Install the required packages:
 
-Install required packages:
+For Debian-based Linux distributions:
 ```
-$ sudo apt-get install openjdk-17-jdk-headless build-essential pkg-config git gnupg2 wget apksigner npm
+$ sudo apt-get install openjdk-17-jdk-headless build-essential pkg-config git gnupg2 wget npm
 ```
-You also need to manually install the [Android SDK](https://developer.android.com/studio/index.html#command-tools) and the [Android Native Development Kit (NDK)](https://github.com/android/ndk/wiki/Unsupported-Downloads#r25c) version `25.2.9519653` (r25c). libcryfs cannot be built with newer NDK versions at the moment due to compatibility issues with [boost](https://www.boost.org). If you succeed in building it with a more recent version of NDK, please report it.
 
-If you want a support for Gocryptfs volumes, you need to install [Go](https://golang.org/doc/install):
+For Arch Linux and derivatives:
+```
+$ sudo pacman -S jdk17-openjdk gcc make patch pkgconf git gnupg wget npm
+```
+
+If you want support for gocryptfs volumes, you also need to install [Go](https://golang.org/doc/install):
+
+On Debian:
 ```
 $ sudo apt-get install golang-go
 ```
-The code should be authenticated before being built. To verify the signatures, you will need my PGP key:
+
+On Arch:
+```
+$ sudo pacman -S go
+```
+
+Package names might be similar for other distributions. Don't hesitate to ask if you're having trouble with this.
+
+Then, you have to install the Android SDK using the `sdkmanager` [command line tool](https://developer.android.com/studio#command-line-tools-only). **You DON'T need to install Android Studio to build an Android app!** Android Studio is an infamous bloatware bundled with trackers that will be more useful for consuming your entire RAM and heating your house than for building any piece of software.
+
+You can follow [this guide](https://developer.android.com/tools/sdkmanager) to setup `sdkmanager`, but basically it should be:
+```
+$ export ANDROID_HOME="<PATH>"         <-- choose any path you like as the location of the Android SDK installation
+$ mkdir -p "$ANDROID_HOME/cmdline-tools"
+$ unzip -d "$ANDROID_HOME/cmdline-tools" commandline-tools-*.zip
+$ cd "$ANDROID_HOME/cmdline-tools"
+$ mv cmdline-tools latest
+```
+
+Then, install the Android Native Development Kit (NDK) version `25.2.9519653` (r25c):
+```
+$ "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;25.2.9519653'
+$ export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.2.9519653"
+```
+libcryfs cannot be built with newer NDK versions at the moment due to compatibility issues with [boost](https://www.boost.org). If you succeed in building it with a more recent version of the NDK, please report it.
+
+The source code should be authenticated before being built. To verify the signatures, you will need my PGP key:
 ```
 $ gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys AFE384344A45E13A
 ```
@@ -40,7 +72,7 @@ Initialize submodules:
 ```
 $ git submodule update --init
 ```
-If you want Gocryptfs support, initliaze libgocryptfs submodules:
+If you want gocryptfs support, initialize libgocryptfs submodules:
 ```
 $ cd app/libgocryptfs
 $ git submodule update --init
@@ -52,11 +84,7 @@ $ git submodule update --init
 ```
 
 # Build
-Retrieve your Android NDK installation path, usually something like `/home/\<user\>/Android/SDK/ndk/\<NDK version\>`. Then, make it available in your shell:
-```
-$ export ANDROID_NDK_HOME="<your ndk path>"
-```
-If you know your CPU ABI, you can specify it to build scripts in order to speed up compilation time. If you don't know it, or want to build for all ABIs, just leave the field blank.
+If you know your CPU ABI, you can specify it to build scripts in order to speed up compilation time. If you don't know it, or want to build for all ABIs, just leave the field empty.
 
 Start by compiling FFmpeg:
 ```
@@ -64,7 +92,7 @@ $ cd app/ffmpeg
 $ ./build.sh [<ABI>]
 ```
 ## libgocryptfs
-This step is only required if you want Gocryptfs support.
+This step is only required if you want gocryptfs support.
 ```
 $ cd app/libgocryptfs
 $ ./build.sh [<ABI>]
@@ -72,7 +100,7 @@ $ ./build.sh [<ABI>]
 ## Compile APKs
 Gradle build libgocryptfs and libcryfs by default.
 
-To build DroidFS without Gocryptfs support, run:
+To build DroidFS without gocryptfs support, run:
 ```
 $ ./gradlew assembleRelease [-Pabi=<ABI>] -PdisableGocryptfs=true
 ```
@@ -80,7 +108,7 @@ To build DroidFS without CryFS support, run:
 ```
 $ ./gradlew assembleRelease [-Pabi=<ABI>] -PdisableCryFS=true
 ```
-If you want to build DroidFS with support for both Gocryptfs and CryFS, just run:
+If you want to build DroidFS with support for both gocryptfs and CryFS, just run:
 ```
 $ ./gradlew assembleRelease [-Pabi=<ABI>]
 ```
@@ -94,6 +122,6 @@ $ keytool -genkey -keystore <output file> -alias <key alias> -keyalg EC -validit
 ```
 Then, sign the APK with:
 ```
-$ apksigner sign --out droidfs.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
+$ "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --out DroidFS-signed.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
 ```
-Now you can install `droidfs.apk` on your device.
+Now you can install `DroidFS-signed.apk` on your device.
