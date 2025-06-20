@@ -18,10 +18,10 @@ class PdfViewer: FileViewerActivity() {
 
     override fun viewFile() {
         pdfViewer = PdfViewer(this)
-        val fileName = File(filePath).name
+        val fileName = File(fileViewerViewModel.filePath!!).name
         title = fileName
-        val fileSize = encryptedVolume.getAttr(filePath)?.size
-        loadWholeFile(filePath, fileSize) {
+        val fileSize = encryptedVolume.getAttr(fileViewerViewModel.filePath!!)?.size
+        loadWholeFile(fileViewerViewModel.filePath!!, fileSize) {
             pdfViewer.loadPdf(ByteArrayInputStream(it), fileName, fileSize)
         }
     }

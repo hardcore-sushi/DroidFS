@@ -23,10 +23,10 @@ class TextEditor: FileViewerActivity() {
     }
 
     override fun viewFile() {
-        fileName = File(filePath).name
+        fileName = File(fileViewerViewModel.filePath!!).name
         title = fileName
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        loadWholeFile(filePath) {
+        loadWholeFile(fileViewerViewModel.filePath!!) {
             try {
                 loadLayout(String(it))
                 onBackPressedDispatcher.addCallback(this) {
@@ -67,12 +67,12 @@ class TextEditor: FileViewerActivity() {
     private fun save(): Boolean{
         var success = false
         val content = editor.text.toString().toByteArray()
-        val fileHandle = encryptedVolume.openFileWriteMode(filePath)
+        val fileHandle = encryptedVolume.openFileWriteMode(fileViewerViewModel.filePath!!)
         if (fileHandle != -1L) {
             var offset: Long = 0
             while (offset < content.size && encryptedVolume.write(fileHandle, offset, content, offset, content.size.toLong()).also { offset += it } > 0) {}
             if (offset == content.size.toLong()){
-                success = encryptedVolume.truncate(filePath, offset)
+                success = encryptedVolume.truncate(fileViewerViewModel.filePath!!, offset)
             }
             encryptedVolume.closeFile(fileHandle)
         }

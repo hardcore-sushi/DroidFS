@@ -5,11 +5,13 @@ import android.os.Bundle
 import android.view.View
 import android.view.WindowInsets
 import android.widget.FrameLayout
+import androidx.activity.viewModels
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.core.view.updateLayoutParams
 import androidx.core.view.updateMargins
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -28,20 +30,27 @@ import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class FileViewerActivity: BaseActivity() {
+
+    class FileViewerViewModel : ViewModel() {
+        val playlist = mutableListOf<ExplorerElement>()
+        var currentPlaylistIndex = -1
+        var filePath: String? = null
+    }
+
     protected lateinit var encryptedVolume: EncryptedVolume
-    protected lateinit var filePath: String
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
     private var windowTypeMask = 0
-    protected val playlist = mutableListOf<ExplorerElement>()
     private val playlistMutex = Mutex()
-    protected var currentPlaylistIndex = -1
+    protected val fileViewerViewModel: FileViewerViewModel by viewModels()
     private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.R
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        filePath = intent.getStringExtra("path")!!
-        originalParentPath = PathUtils.getParentPath(filePath)
+        if (fileViewerViewModel.filePath == null) {
+            fileViewerViewModel.filePath = intent.getStringExtra("path")!!
+        }
+        originalParentPath = PathUtils.getParentPath(fileViewerViewModel.filePath!!)
         encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
             intent.getIntExtra("volumeId", -1)
         )!!
@@ -132,7 +141,7 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected suspend fun createPlaylist() {
         playlistMutex.withLock {
-            if (currentPlaylistIndex != -1) {
+            if (fileViewerViewModel.currentPlaylistIndex != -1) {
                 // playlist already initialized
                 return
             }
@@ -141,39 +150,39 @@ abstract class FileViewerActivity: BaseActivity() {
                     encryptedVolume.recursiveMapFiles(originalParentPath)
                 } else {
                     encryptedVolume.readDir(originalParentPath)
-                }?.filterTo(playlist) { e ->
-                    e.isRegularFile && (FileTypes.isExtensionType(getFileType(), e.name) || filePath == e.fullPath)
+                }?.filterTo(fileViewerViewModel.playlist) { e ->
+                    e.isRegularFile && (FileTypes.isExtensionType(getFileType(), e.name) || fileViewerViewModel.filePath == e.fullPath)
                 }
                 val sortOrder = intent.getStringExtra("sortOrder") ?: "name"
                 val foldersFirst = sharedPrefs.getBoolean("folders_first", true)
-                ExplorerElement.sortBy(sortOrder, foldersFirst, playlist)
-                currentPlaylistIndex = playlist.indexOfFirst { it.fullPath == filePath }
+                ExplorerElement.sortBy(sortOrder, foldersFirst, fileViewerViewModel.playlist)
+                fileViewerViewModel.currentPlaylistIndex = fileViewerViewModel.playlist.indexOfFirst { it.fullPath == fileViewerViewModel.filePath }
             }
         }
     }
 
     private fun updateCurrentItem() {
-        filePath = playlist[currentPlaylistIndex].fullPath
+        fileViewerViewModel.filePath = fileViewerViewModel.playlist[fileViewerViewModel.currentPlaylistIndex].fullPath
     }
 
     protected suspend fun playlistNext(forward: Boolean) {
         createPlaylist()
-        currentPlaylistIndex = if (forward) {
-            (currentPlaylistIndex + 1).mod(playlist.size)
+        fileViewerViewModel.currentPlaylistIndex = if (forward) {
+            (fileViewerViewModel.currentPlaylistIndex + 1).mod(fileViewerViewModel.playlist.size)
         } else {
-            (currentPlaylistIndex - 1).mod(playlist.size)
+            (fileViewerViewModel.currentPlaylistIndex - 1).mod(fileViewerViewModel.playlist.size)
         }
         updateCurrentItem()
     }
 
     protected suspend fun deleteCurrentFile(): Boolean {
         createPlaylist() // ensure we know the current position in the playlist
-        return if (encryptedVolume.deleteFile(filePath)) {
-            playlist.removeAt(currentPlaylistIndex)
-            if (playlist.size != 0) {
-                if (currentPlaylistIndex == playlist.size) {
+        return if (encryptedVolume.deleteFile(fileViewerViewModel.filePath!!)) {
+            fileViewerViewModel.playlist.removeAt(fileViewerViewModel.currentPlaylistIndex)
+            if (fileViewerViewModel.playlist.isNotEmpty()) {
+                if (fileViewerViewModel.currentPlaylistIndex == fileViewerViewModel.playlist.size) {
                     // deleted the last element of the playlist, go back to the first
-                    currentPlaylistIndex = 0
+                    fileViewerViewModel.currentPlaylistIndex = 0
                 }
                 updateCurrentItem()
             }

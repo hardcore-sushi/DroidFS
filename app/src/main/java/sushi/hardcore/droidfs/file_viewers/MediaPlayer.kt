@@ -41,11 +41,11 @@ abstract class MediaPlayer: FileViewerActivity() {
     private fun initializePlayer(){
         player = ExoPlayer.Builder(this).setSeekForwardIncrementMs(5000).build()
         bindPlayer(player)
-        player.addMediaSource(createMediaSource(filePath))
+        player.addMediaSource(createMediaSource(fileViewerViewModel.filePath!!))
         lifecycleScope.launch {
             createPlaylist()
-            playlist.forEachIndexed { index, e ->
-                if (index != currentPlaylistIndex) {
+            fileViewerViewModel.playlist.forEachIndexed { index, e ->
+                if (index != fileViewerViewModel.currentPlaylistIndex) {
                     player.addMediaSource(index, createMediaSource(e.fullPath))
                 }
             }
@@ -73,9 +73,9 @@ abstract class MediaPlayer: FileViewerActivity() {
             }
 
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                if (player.repeatMode != Player.REPEAT_MODE_ONE && currentPlaylistIndex != -1) {
+                if (player.repeatMode != Player.REPEAT_MODE_ONE && fileViewerViewModel.currentPlaylistIndex != -1) {
                     lifecycleScope.launch {
-                        playlistNext(player.currentMediaItemIndex == (currentPlaylistIndex + 1) % player.mediaItemCount)
+                        playlistNext(player.currentMediaItemIndex == (fileViewerViewModel.currentPlaylistIndex + 1) % player.mediaItemCount)
                         refreshFileName()
                     }
                 }
@@ -98,6 +98,6 @@ abstract class MediaPlayer: FileViewerActivity() {
     }
 
     private fun refreshFileName() {
-        onNewFileName(File(filePath).name)
+        onNewFileName(File(fileViewerViewModel.filePath!!).name)
     }
 }

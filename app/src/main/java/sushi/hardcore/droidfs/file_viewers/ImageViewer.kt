@@ -38,12 +38,12 @@ class ImageViewer: FileViewerActivity() {
 
     class ImageViewModel : ViewModel() {
         var rotationAngle: Float = 0f
+        var imageLoader: ImageLoader? = null
     }
 
     private lateinit var fileName: String
     private lateinit var handler: Handler
     private val imageViewModel: ImageViewModel by viewModels()
-    private lateinit var imageLoader: ImageLoader
     private var imageRequestBuilder: ImageRequest.Builder? = null
     private var x1 = 0F
     private var x2 = 0F
@@ -72,7 +72,10 @@ class ImageViewer: FileViewerActivity() {
         supportActionBar?.hide()
         showPartialSystemUi()
         applyNavigationBarMargin(binding.root)
-        imageLoader = ImageLoader.Builder(this).diskCache(null).fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).build()
+        if (imageViewModel.imageLoader == null) {
+            imageViewModel.imageLoader = ImageLoader.Builder(this).diskCache(null)
+                .fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).build()
+        }
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
@@ -111,7 +114,7 @@ class ImageViewer: FileViewerActivity() {
                 .setPositiveButton(R.string.ok) { _, _ ->
                     lifecycleScope.launch {
                         if (deleteCurrentFile()) {
-                            if (playlist.size == 0) { // no more image left
+                            if (fileViewerViewModel.playlist.isEmpty()) { // no more image left
                                 goBackToExplorer()
                             } else {
                                 loadImage(true)
@@ -170,16 +173,16 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun loadImage(newImage: Boolean) {
-        fileName = File(filePath).name
+        fileName = File(fileViewerViewModel.filePath!!).name
         binding.textFilename.text = fileName
         if (newImage) {
             imageViewModel.rotationAngle = 0f
         }
-        imageRequestBuilder = ImageRequest.Builder(this).data(filePath).target(binding.imageViewer)
+        imageRequestBuilder = ImageRequest.Builder(this).data(fileViewerViewModel.filePath).target(binding.imageViewer)
         if (imageViewModel.rotationAngle.mod(360f) != 0f) {
             rotateImage()
         } else {
-            imageLoader.enqueue(imageRequestBuilder!!.build())
+            imageViewModel.imageLoader!!.enqueue(imageRequestBuilder!!.build())
         }
     }
 
@@ -230,7 +233,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun rotateImage() {
         orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle).also {
-            imageLoader.enqueue(imageRequestBuilder!!.transformations(it).build())
+            imageViewModel.imageLoader!!.enqueue(imageRequestBuilder!!.transformations(it).build())
         }
     }
 
@@ -251,7 +254,7 @@ class ImageViewer: FileViewerActivity() {
                                     Bitmap.CompressFormat.JPEG
                                 }, 90, outputStream) == true
                         ){
-                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), filePath)) {
+                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), fileViewerViewModel.filePath!!)) {
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
                                 callback()
                             } else {
