@@ -19,7 +19,7 @@ import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 @OptIn(UnstableApi::class)
-abstract class MediaPlayer: FileViewerActivity() {
+abstract class MediaPlayer(fullscreen: Boolean): FileViewerActivity(fullscreen) {
     private lateinit var player: ExoPlayer
 
     override fun viewFile() {

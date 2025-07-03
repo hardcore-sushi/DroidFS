@@ -6,10 +6,11 @@ import androidx.media3.exoplayer.ExoPlayer
 import sushi.hardcore.droidfs.databinding.ActivityAudioPlayerBinding
 
 @OptIn(UnstableApi::class)
-class AudioPlayer: MediaPlayer(){
+class AudioPlayer: MediaPlayer(false) {
     private lateinit var binding: ActivityAudioPlayerBinding
 
     override fun viewFile() {
+        edgeToEdge()
         binding = ActivityAudioPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         super.viewFile()

@@ -1,13 +1,20 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.view.View
+import android.widget.FrameLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.view.updatePadding
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
-class VideoPlayer: MediaPlayer() {
+class VideoPlayer: MediaPlayer(true) {
     private var firstPlay = true
     private val autoFit by lazy {
         sharedPrefs.getBoolean("autoFit", false)
@@ -17,8 +24,29 @@ class VideoPlayer: MediaPlayer() {
     override fun viewFile() {
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        applyNavigationBarMargin(binding.root)
+        binding.topBar.fitsSystemWindows = true
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
+        val bottomBar = findViewById<FrameLayout>(R.id.exo_bottom_bar)
+        val progressBar = findViewById<View>(R.id.exo_progress)
+        ViewCompat.setOnApplyWindowInsetsListener(binding.videoPlayer) { _, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            bottomBar.apply {
+                updatePadding(left = insets.left, right = insets.right, bottom = insets.bottom)
+                updateLayoutParams<FrameLayout.LayoutParams> {
+                    @SuppressLint("PrivateResource")
+                    height = resources.getDimensionPixelSize(R.dimen.exo_styled_bottom_bar_height) + insets.bottom
+                }
+            }
+            progressBar.apply {
+                updatePadding(left = insets.left, right = insets.right)
+                updateLayoutParams<FrameLayout.LayoutParams> {
+                    @SuppressLint("PrivateResource")
+                    bottomMargin = resources.getDimensionPixelSize(R.dimen.exo_styled_progress_margin_bottom) + insets.bottom
+                }
+            }
+            windowInsets
+        }
+
         binding.videoPlayer.setControllerVisibilityListener(PlayerView.ControllerVisibilityListener { visibility ->
             binding.topBar.visibility = visibility
             if (visibility == View.VISIBLE) {

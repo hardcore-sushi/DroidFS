@@ -3,14 +3,12 @@ package sushi.hardcore.droidfs.file_viewers
 import android.os.Build
 import android.os.Bundle
 import android.view.View
-import android.view.WindowInsets
-import android.widget.FrameLayout
+import android.view.WindowManager
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.core.view.ViewCompat
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import androidx.core.view.updateLayoutParams
-import androidx.core.view.updateMargins
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +27,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
-abstract class FileViewerActivity: BaseActivity() {
+abstract class FileViewerActivity(private val fullscreen: Boolean = false): BaseActivity() {
 
     class FileViewerViewModel : ViewModel() {
         val playlist = mutableListOf<ExplorerElement>()
@@ -40,12 +38,20 @@ abstract class FileViewerActivity: BaseActivity() {
     protected lateinit var encryptedVolume: EncryptedVolume
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
-    private var windowTypeMask = 0
     private val playlistMutex = Mutex()
     protected val fileViewerViewModel: FileViewerViewModel by viewModels()
-    private val isLegacyFullscreen = Build.VERSION.SDK_INT <= Build.VERSION_CODES.R
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
+        if (fullscreen) {
+            setTheme(R.style.Theme_AppCompat_NoActionBar)
+            supportActionBar?.hide()
+            edgeToEdge()
+            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            }
+        }
         super.onCreate(savedInstanceState)
         if (fileViewerViewModel.filePath == null) {
             fileViewerViewModel.filePath = intent.getStringExtra("path")!!
@@ -55,60 +61,20 @@ abstract class FileViewerActivity: BaseActivity() {
             intent.getIntExtra("volumeId", -1)
         )!!
         finishOnClose(encryptedVolume)
-        windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
-        windowInsetsController.addOnControllableInsetsChangedListener { _, typeMask ->
-            windowTypeMask = typeMask
-        }
-        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         viewFile()
     }
 
     open fun showPartialSystemUi() {
-        if (isLegacyFullscreen) {
-            @Suppress("Deprecation")
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-        } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.statusBars())
-            windowInsetsController.show(WindowInsetsCompat.Type.navigationBars())
-        }
+        windowInsetsController.show(WindowInsetsCompat.Type.systemBars())
     }
 
     open fun hideSystemUi() {
-        if (isLegacyFullscreen) {
-            @Suppress("Deprecation")
-            window.decorView.systemUiVisibility =
-                View.SYSTEM_UI_FLAG_LOW_PROFILE or
-                View.SYSTEM_UI_FLAG_FULLSCREEN or
-                View.SYSTEM_UI_FLAG_HIDE_NAVIGATION or
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-        } else {
-            windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                window.setDecorFitsSystemWindows(false)
-            }
-        }
+        windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
     }
 
-    protected fun applyNavigationBarMargin(root: View) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            ViewCompat.setOnApplyWindowInsetsListener(root) { _, insets ->
-                root.updateLayoutParams<FrameLayout.LayoutParams> {
-                    val newInsets = insets.getInsetsIgnoringVisibility(WindowInsets.Type.navigationBars())
-                    this.updateMargins(
-                        left = newInsets.left,
-                        top = newInsets.top,
-                        right = newInsets.right,
-                        bottom = newInsets.bottom
-                    )
-                }
-                insets
-            }
-        } else {
-            root.fitsSystemWindows = true
-        }
+    protected fun edgeToEdge() {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        enableEdgeToEdge()
     }
 
     abstract fun getFileType(): String

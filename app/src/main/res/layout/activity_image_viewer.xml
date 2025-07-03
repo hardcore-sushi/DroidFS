@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/fullScreenBackgroundColor">
@@ -8,94 +8,101 @@
         android:id="@+id/image_viewer"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center"/>
+        android:scaleType="fitCenter"/>
 
     <RelativeLayout
-        android:id="@+id/top_bar"
+        android:id="@+id/overlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginTop="10dp">
+        android:layout_height="match_parent">
 
-        <TextView
-            android:id="@+id/text_filename"
+        <RelativeLayout
+            android:id="@+id/top_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:singleLine="true"
-            android:ellipsize="end"
-            android:textSize="@dimen/title_file_name_text_size"
-            android:layout_alignParentStart="true"
-            android:layout_toStartOf="@id/image_delete"
-            android:layout_centerVertical="true"/>
+            android:layout_alignParentTop="true"
+            android:layout_marginHorizontal="20dp"
+            android:layout_marginTop="10dp">
 
-        <ImageButton
-            android:id="@+id/image_delete"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="#00000000"
-            android:scaleType="fitCenter"
-            android:src="@drawable/icon_delete"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="20dp"
-            android:layout_toStartOf="@id/image_button_slideshow"
-            android:layout_centerVertical="true"/>
+            <TextView
+                android:id="@+id/text_filename"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_toStartOf="@id/image_delete"
+                android:ellipsize="end"
+                android:singleLine="true"
+                android:textSize="@dimen/title_file_name_text_size" />
 
-        <ImageButton
-            android:id="@+id/image_button_slideshow"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
-            android:background="#00000000"
-            android:scaleType="fitCenter"
-            android:src="@drawable/icon_slideshow"
-            android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"/>
+            <ImageButton
+                android:id="@+id/image_delete"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="20dp"
+                android:layout_toStartOf="@id/image_button_slideshow"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_delete" />
+
+            <ImageButton
+                android:id="@+id/image_button_slideshow"
+                android:layout_width="30dp"
+                android:layout_height="30dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_slideshow" />
+
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/action_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/image_previous"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                android:layout_margin="10dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/exo_icon_previous" />
+
+            <ImageButton
+                android:id="@+id/image_rotate_left"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                android:layout_margin="10dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_rotate_left" />
+
+            <ImageButton
+                android:id="@+id/image_rotate_right"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                android:layout_margin="10dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/icon_rotate_right" />
+
+            <ImageButton
+                android:id="@+id/image_next"
+                android:layout_width="@dimen/image_button_size"
+                android:layout_height="@dimen/image_button_size"
+                android:layout_margin="10dp"
+                android:background="#00000000"
+                android:scaleType="fitCenter"
+                android:src="@drawable/exo_icon_next" />
+
+        </LinearLayout>
 
     </RelativeLayout>
 
-    <LinearLayout
-        android:id="@+id/action_buttons"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:gravity="center">
-
-        <ImageButton
-            android:id="@+id/image_previous"
-            android:layout_width="@dimen/image_button_size"
-            android:layout_height="@dimen/image_button_size"
-            android:layout_margin="10dp"
-            android:scaleType="fitCenter"
-            android:background="#00000000"
-            android:src="@drawable/exo_icon_previous"/>
-
-        <ImageButton
-            android:id="@+id/image_rotate_left"
-            android:layout_width="@dimen/image_button_size"
-            android:layout_height="@dimen/image_button_size"
-            android:layout_margin="10dp"
-            android:scaleType="fitCenter"
-            android:background="#00000000"
-            android:src="@drawable/icon_rotate_left"/>
-
-        <ImageButton
-            android:id="@+id/image_rotate_right"
-            android:layout_width="@dimen/image_button_size"
-            android:layout_height="@dimen/image_button_size"
-            android:layout_margin="10dp"
-            android:scaleType="fitCenter"
-            android:background="#00000000"
-            android:src="@drawable/icon_rotate_right"/>
-
-        <ImageButton
-            android:id="@+id/image_next"
-            android:layout_width="@dimen/image_button_size"
-            android:layout_height="@dimen/image_button_size"
-            android:layout_margin="10dp"
-            android:scaleType="fitCenter"
-            android:background="#00000000"
-            android:src="@drawable/exo_icon_next"/>
-
-    </LinearLayout>
-
-</RelativeLayout>
+</FrameLayout>

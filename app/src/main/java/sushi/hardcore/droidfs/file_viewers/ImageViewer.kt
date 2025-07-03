@@ -10,6 +10,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
+import androidx.core.view.isGone
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import coil3.ImageLoader
@@ -30,7 +31,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.abs
 
-class ImageViewer: FileViewerActivity() {
+class ImageViewer: FileViewerActivity(true) {
     companion object {
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150
@@ -50,8 +51,7 @@ class ImageViewer: FileViewerActivity() {
     private var slideshowActive = false
     private var orientationTransformation: OrientationTransformation? = null
     private val hideUI = Runnable {
-        binding.actionButtons.visibility = View.GONE
-        binding.topBar.visibility = View.GONE
+        binding.overlay.visibility = View.GONE
         hideSystemUi()
     }
     private val slideshowNext = Runnable {
@@ -69,9 +69,7 @@ class ImageViewer: FileViewerActivity() {
     override fun viewFile() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
-        showPartialSystemUi()
-        applyNavigationBarMargin(binding.root)
+        binding.overlay.fitsSystemWindows = true
         if (imageViewModel.imageLoader == null) {
             imageViewModel.imageLoader = ImageLoader.Builder(this).diskCache(null)
                 .fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).build()
@@ -80,9 +78,8 @@ class ImageViewer: FileViewerActivity() {
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
                 handler.removeCallbacks(hideUI)
-                if (binding.actionButtons.visibility == View.GONE) {
-                    binding.actionButtons.visibility = View.VISIBLE
-                    binding.topBar.visibility = View.VISIBLE
+                if (binding.overlay.isGone) {
+                    binding.overlay.visibility = View.VISIBLE
                     showPartialSystemUi()
                     handler.postDelayed(hideUI, hideDelay)
                 } else {
