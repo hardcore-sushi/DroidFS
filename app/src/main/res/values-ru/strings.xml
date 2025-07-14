@@ -262,6 +262,7 @@
     <string name="export_method">Метод экспорта</string>
     <string name="export_method_summary">Метод экспорта файлов. Используется для обмена, открытия во внешнем приложении и доступа к открытым файлам.</string>
     <string name="debug">Отладка</string>
+    <string name="logcat_summary">Просмотр журнала DroidFS</string>
     <string name="logcat_title">Журнал logcat DroidFS</string>
     <string name="logcat_saved">Журнал logcat сохранён</string>
     <string name="later">Позже</string>
@@ -274,7 +275,7 @@
     <string name="usf_keep_open">Держать тома открытыми</string>
     <string name="usf_keep_open_summary">Поддерживать постоянную работу приложения в фоновом режиме, чтобы тома оставались открытыми</string>
     <string name="gocryptfs_details">Быстрый, но не скрывает размеры файлов и структуру папок</string>
-    <string name="cryfs_details">Медленнее, но защищает метаданные и предотвращает атаки замещения</string>
+    <string name="cryfs_details">Медленнее, но защищает метаданные и предотвращает атаки подмены</string>
     <string name="or">или</string>
-    <string name="enter_volume_path">Введите путь к тому</string>
+    <string name="enter_volume_path">Ввести путь к тому</string>
 </resources>
