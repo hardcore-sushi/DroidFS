@@ -4,19 +4,17 @@ import android.annotation.SuppressLint
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import coil3.Image
 import coil3.ImageLoader
-import coil3.load
 import coil3.imageLoader
+import coil3.load
 import coil3.request.Disposable
 import coil3.request.ImageRequest
 import coil3.video.VideoFrameDecoder
 import coil3.video.videoFramePercent
-import kotlinx.coroutines.*
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -25,7 +23,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
 import java.text.DateFormat
-import java.util.*
+import java.util.Locale
 
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
@@ -100,13 +98,10 @@ class ExplorerElementAdapter(
         protected val icon: ImageView by lazy {
             itemView.findViewById(R.id.icon_element)
         }
-        private val selectableContainer: LinearLayout by lazy {
-            itemView.findViewById(R.id.selectable_container)
-        }
 
         open fun bind(explorerElement: ExplorerElement, position: Int) {
             textElementName.text = explorerElement.name
-            (bindingAdapter as ExplorerElementAdapter?)?.setSelectable(selectableContainer, itemView, position)
+            (bindingAdapter as ExplorerElementAdapter?)?.setSelectable(itemView, position)
         }
     }
 

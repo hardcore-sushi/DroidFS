@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.adapters
 
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
-import sushi.hardcore.droidfs.R
 
 abstract class SelectableAdapter<T>(private val onSelectionChanged: (Int) -> Unit) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var selectedItems: MutableSet<Int> = HashSet()
@@ -69,18 +68,14 @@ abstract class SelectableAdapter<T>(private val onSelectionChanged: (Int) -> Uni
         onSelectionChanged(selectedItems.size)
     }
 
-    private fun setBackground(rootView: View, isSelected: Boolean) {
-        rootView.setBackgroundResource(if (isSelected) R.color.itemSelected else 0)
-    }
-
-    protected fun setSelectable(element: View, rootView: View, position: Int) {
+    protected fun setSelectable(element: View, position: Int) {
         element.setOnClickListener {
-            setBackground(rootView, onItemClick(position))
+            element.isActivated = onItemClick(position)
         }
         element.setOnLongClickListener {
-            setBackground(rootView, onItemLongClick(position))
+            element.isActivated = onItemLongClick(position)
             true
         }
-        setBackground(rootView, selectedItems.contains(position))
+        element.isActivated = selectedItems.contains(position)
     }
 }

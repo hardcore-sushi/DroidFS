@@ -113,7 +113,7 @@ class VolumeAdapter(
                     R.string.cryfs
                 })
             )
-            setSelectable(itemView.findViewById<LinearLayout>(R.id.selectable_container), itemView, layoutPosition)
+            setSelectable(itemView, layoutPosition)
         }
     }
 

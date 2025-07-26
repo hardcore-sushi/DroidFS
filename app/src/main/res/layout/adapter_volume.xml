@@ -1,96 +1,85 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto">
+    android:background="@drawable/selectable_item_background"
+    android:paddingEnd="4dp">
 
-    <RelativeLayout
-        android:id="@+id/selectable_container"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="?attr/selectableItemBackground"
-        tools:ignore="UselessParent"
-        android:paddingEnd="4dp">
+    <ImageView
+        android:id="@+id/image_icon"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:src="@drawable/icon_volume" />
 
-        <ImageView
-            android:id="@+id/image_icon"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:src="@drawable/icon_volume"/>
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/text_volume_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:layout_toEndOf="@id/image_icon"
-            android:layout_toStartOf="@id/layout_icons">
+            android:textSize="@dimen/adapter_text_size" />
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="5dp">
 
             <TextView
-                android:id="@+id/text_volume_name"
+                android:id="@+id/text_path"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textSize="@dimen/adapter_text_size"/>
+                android:layout_marginEnd="7dp"
+                android:ellipsize="middle"
+                android:singleLine="true"
+                android:textSize="12sp"
+                app:layout_constrainedWidth="true"
+                app:layout_constraintEnd_toStartOf="@id/text_info"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <TextView
+                android:id="@+id/text_info"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="5dp">
+                android:textSize="12sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/text_path"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:id="@+id/text_path"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="7dp"
-                    android:singleLine="true"
-                    android:ellipsize="middle"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintHorizontal_bias="0"
-                    app:layout_constrainedWidth="true"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/text_info"
-                    android:textSize="12sp"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <TextView
-                    android:id="@+id/text_info"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/text_path"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    android:textSize="12sp"/>
+    </LinearLayout>
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+    <LinearLayout
+        android:id="@+id/layout_icons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="center_vertical">
 
-        </LinearLayout>
+        <ImageView
+            android:id="@+id/icon_unlocked"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:contentDescription="@string/volume_unlocked"
+            android:src="@drawable/icon_lock_open"
+            android:visibility="gone" />
 
-        <LinearLayout
-            android:id="@+id/layout_icons"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center_vertical"
-            android:layout_alignParentEnd="true">
+        <ImageView
+            android:id="@+id/icon_fingerprint"
+            android:layout_width="26dp"
+            android:layout_height="26dp"
+            android:layout_marginStart="5dp"
+            android:contentDescription="@string/password_hash_saved"
+            android:src="@drawable/icon_fingerprint"
+            android:visibility="gone" />
 
-            <ImageView
-                android:id="@+id/icon_unlocked"
-                android:layout_width="30dp"
-                android:layout_height="30dp"
-                android:src="@drawable/icon_lock_open"
-                android:contentDescription="@string/volume_unlocked"
-                android:visibility="gone"/>
-
-            <ImageView
-                android:id="@+id/icon_fingerprint"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:src="@drawable/icon_fingerprint"
-                android:contentDescription="@string/password_hash_saved"
-                android:visibility="gone"
-                android:layout_marginStart="5dp"/>
-
-        </LinearLayout>
-
-    </RelativeLayout>
+    </LinearLayout>
 
 </LinearLayout>
