@@ -59,7 +59,7 @@ class ExplorerElement(val name: String, val stat: Stat, val parentPath: String) 
                 }
                 "size" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { (a.stat.size - b.stat.size).toInt() }
+                        doSort(a, b, foldersFirst) { a.stat.size.compareTo(b.stat.size) }
                     }
                 }
                 "date" -> {
@@ -74,7 +74,7 @@ class ExplorerElement(val name: String, val stat: Stat, val parentPath: String) 
                 }
                 "size_desc" -> {
                     explorerElements.sortWith { a, b ->
-                        doSort(a, b, foldersFirst) { (b.stat.size - a.stat.size).toInt() }
+                        doSort(a, b, foldersFirst) { b.stat.size.compareTo(a.stat.size) }
                     }
                 }
                 "date_desc" -> {
