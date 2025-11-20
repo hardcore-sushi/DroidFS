@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingHorizontal="@dimen/dialog_horizontal_padding">
 
-    <EditText
-        android:id="@+id/edit_password"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:maxLines="1"
-        android:autofillHints="password"
-        android:hint="@string/password"
-        android:imeOptions="actionDone">
-        <requestFocus/>
-    </EditText>
+        app:hintEnabled="false"
+        app:endIconMode="password_toggle">
+
+        <EditText
+            android:id="@+id/edit_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:autofillHints="password"
+            android:hint="@string/password"
+            android:imeOptions="actionDone">
+            <requestFocus/>
+        </EditText>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <CheckBox
         android:id="@+id/checkbox_default_open"
