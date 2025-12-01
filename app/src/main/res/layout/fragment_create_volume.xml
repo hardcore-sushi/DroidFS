@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -23,15 +24,23 @@
         android:text="@string/password_label"
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
-    <EditText
-        android:id="@+id/edit_password"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:maxLines="1"
-        android:autofillHints="password"
-        android:hint="@string/password"
-        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
+        app:hintEnabled="false"
+        app:endIconMode="password_toggle">
+
+        <EditText
+            android:id="@+id/edit_password"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:autofillHints="password"
+            android:hint="@string/password"
+            android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:layout_width="wrap_content"
@@ -40,15 +49,23 @@
         android:layout_marginTop="@dimen/volume_operation_vertical_gap"
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
-    <EditText
-        android:id="@+id/edit_password_confirm"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:inputType="textPassword"
-        android:maxLines="1"
-        android:autofillHints="password"
-        android:hint="@string/password_confirmation_hint"
-        android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
+        app:hintEnabled="false"
+        app:endIconMode="password_toggle">
+
+        <EditText
+            android:id="@+id/edit_password_confirm"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPassword"
+            android:maxLines="1"
+            android:autofillHints="password"
+            android:hint="@string/password_confirmation_hint"
+            android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
