@@ -218,10 +218,7 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
             float mScaleFactor = detector.getScaleFactor();
             float origScale = saveScale;
             saveScale *= mScaleFactor;
-            if (saveScale > maxScale) {
-                saveScale = maxScale;
-                mScaleFactor = maxScale / origScale;
-            } else if (saveScale < minScale) {
+            if (saveScale < minScale) {
                 saveScale = minScale;
                 mScaleFactor = minScale / origScale;
             }
