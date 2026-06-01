@@ -59,10 +59,16 @@ object PathUtils {
     }
 
     fun isChildOf(childPath: String, parentPath: String): Boolean {
-        if (parentPath.length > childPath.length){
+        if (parentPath.length >= childPath.length) {
             return false
         }
-        return childPath.substring(0, parentPath.length) == parentPath
+        if (childPath.substring(0, parentPath.length) != parentPath) {
+            return false
+        }
+        // Require a separator boundary: the prefix must end with '/' or the first
+        // char of the child after the prefix must be '/'. Prevents "/foobar" from
+        // being treated as a child of "/foo".
+        return parentPath.endsWith(SEPARATOR) || childPath[parentPath.length] == SEPARATOR
     }
 
     fun getFilenameFromURI(context: Context, uri: Uri): String? {
