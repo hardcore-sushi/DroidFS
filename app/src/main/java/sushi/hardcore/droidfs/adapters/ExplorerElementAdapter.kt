@@ -14,6 +14,7 @@ import coil3.load
 import coil3.request.Disposable
 import coil3.request.ImageRequest
 import coil3.video.VideoFrameDecoder
+import coil3.video.preferVideoFrameEmbeddedThumbnailKey
 import coil3.video.videoFramePercent
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
@@ -127,6 +128,7 @@ class ExplorerElementAdapter(
             return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
                 icon.load(fullPath, adapter.thumbnailsLoader!!) {
                     videoFramePercent(0.1)
+                    preferVideoFrameEmbeddedThumbnailKey(true)
                     placeholder(placeholder)
                 }
             } else {
