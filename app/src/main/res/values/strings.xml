@@ -273,6 +273,8 @@
     <string name="export_method">Export method</string>
     <string name="export_method_summary">File export method. Used for sharing, external opening and accessing exposed files.</string>
     <string name="debug">Debug</string>
+    <string name="logcat">Logcat</string>
+    <string name="logcat_summary">View the DroidFS logcat</string>
     <string name="logcat_title">DroidFS Logcat</string>
     <string name="logcat_saved">Logcat saved</string>
     <string name="later">Later</string>

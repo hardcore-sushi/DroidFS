@@ -92,8 +92,8 @@
 
         <Preference
             android:key="logcat"
-            android:title="Logcat"
-            android:summary="View the DroidFS logcat"
+            android:title="@string/logcat"
+            android:summary="@string/logcat_summary"
             android:icon="@drawable/icon_debug"/>
 
     </PreferenceCategory>
