@@ -8,6 +8,7 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
@@ -33,13 +34,23 @@ abstract class MediaPlayer(fullscreen: Boolean): FileViewerActivity(fullscreen) 
     protected open fun onVideoSizeChanged(width: Int, height: Int) {}
 
     private fun createMediaSource(filePath: String): MediaSource {
-        val dataSourceFactory = EncryptedVolumeDataSource.Factory(encryptedVolume, filePath)
+        val file = File(filePath)
+        val dataSourceFactory = MediaDataSourceFactory(encryptedVolume, filePath)
+        val mediaUri = Constants.FAKE_URI.buildUpon().appendPath(file.name).build()
+        val mediaItem = MediaItem.Builder()
+            .setUri(mediaUri)
+            .setMimeType(MediaContainers.mimeTypeForFileName(file.name))
+            .build()
         return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
-            .createMediaSource(MediaItem.fromUri(Constants.FAKE_URI))
+            .createMediaSource(mediaItem)
     }
 
     private fun initializePlayer(){
-        player = ExoPlayer.Builder(this).setSeekForwardIncrementMs(5000).build()
+        val renderersFactory = DefaultRenderersFactory(this)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+        player = ExoPlayer.Builder(this, renderersFactory)
+            .setSeekForwardIncrementMs(5000)
+            .build()
         bindPlayer(player)
         player.addMediaSource(createMediaSource(fileViewerViewModel.filePath!!))
         lifecycleScope.launch {

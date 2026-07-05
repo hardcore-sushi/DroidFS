@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
+import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.util.AndroidUtils
 
@@ -58,6 +59,7 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
 
     override fun onCreate() {
         super<Application>.onCreate()
+        FileTypes.init(PreferenceManager.getDefaultSharedPreferences(this))
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         AndroidUtils.LiveBooleanPreference.init(this, usfBackgroundDelegate, usfKeepOpenDelegate)
     }

@@ -24,6 +24,47 @@
             android:layout_height="match_parent"
             android:visibility="invisible"/>
 
+        <LinearLayout
+            android:id="@+id/gesture_feedback"
+            android:layout_width="220dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/video_gesture_feedback_background"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/image_gesture_feedback"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:importantForAccessibility="no"
+                app:tint="@color/neutralIconTint" />
+
+            <ProgressBar
+                android:id="@+id/progress_gesture_feedback"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dp"
+                android:layout_height="8dp"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:indeterminate="false"
+                android:max="100"
+                android:progressBackgroundTint="#55FFFFFF"
+                android:progressTint="@color/secondary" />
+
+            <TextView
+                android:id="@+id/text_gesture_feedback"
+                android:layout_width="44dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:gravity="end"
+                android:textColor="@color/textColor"
+                android:textSize="14sp" />
+
+        </LinearLayout>
+
     </FrameLayout>
 
     <RelativeLayout

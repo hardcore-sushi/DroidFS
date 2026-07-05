@@ -13,6 +13,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
+import sushi.hardcore.droidfs.widgets.PlayerControl
+import sushi.hardcore.droidfs.widgets.PlayerControlFeedbackListener
+import kotlin.math.roundToInt
 
 class VideoPlayer: MediaPlayer(true) {
     private var firstPlay = true
@@ -20,12 +23,25 @@ class VideoPlayer: MediaPlayer(true) {
         sharedPrefs.getBoolean("autoFit", false)
     }
     private lateinit var binding: ActivityVideoPlayerBinding
+    private val hideControlFeedback = Runnable {
+        binding.gestureFeedback.visibility = View.GONE
+    }
 
     override fun viewFile() {
         binding = ActivityVideoPlayerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.topBar.fitsSystemWindows = true
         binding.videoPlayer.doubleTapOverlay = binding.doubleTapOverlay
+        binding.videoPlayer.controlFeedbackListener = object : PlayerControlFeedbackListener {
+            override fun onPlayerControlChanged(control: PlayerControl, value: Float) {
+                showControlFeedback(control, value)
+            }
+
+            override fun onPlayerControlFinished() {
+                binding.gestureFeedback.removeCallbacks(hideControlFeedback)
+                binding.gestureFeedback.postDelayed(hideControlFeedback, 700)
+            }
+        }
         val bottomBar = findViewById<FrameLayout>(R.id.exo_bottom_bar)
         val progressBar = findViewById<View>(R.id.exo_progress)
         ViewCompat.setOnApplyWindowInsetsListener(binding.videoPlayer) { _, windowInsets ->
@@ -64,6 +80,21 @@ class VideoPlayer: MediaPlayer(true) {
                 }
         }
         super.viewFile()
+    }
+
+    private fun showControlFeedback(control: PlayerControl, value: Float) {
+        val progress = (value * 100).roundToInt().coerceIn(0, 100)
+        binding.gestureFeedback.removeCallbacks(hideControlFeedback)
+        binding.imageGestureFeedback.setImageResource(
+            if (control == PlayerControl.BRIGHTNESS) {
+                R.drawable.icon_brightness
+            } else {
+                R.drawable.icon_speaker_volume
+            }
+        )
+        binding.progressGestureFeedback.progress = progress
+        binding.textGestureFeedback.text = "$progress%"
+        binding.gestureFeedback.visibility = View.VISIBLE
     }
 
     override fun bindPlayer(player: ExoPlayer) {

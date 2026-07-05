@@ -12,8 +12,10 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import kotlin.math.min
 
 @OptIn(UnstableApi::class)
-class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, private val filePath: String):
-    DataSource {
+class EncryptedVolumeDataSource(
+    private val encryptedVolume: EncryptedVolume,
+    private val filePath: String
+) : DataSource {
     private var fileHandle = -1L
     private var fileOffset: Long = 0
     private var bytesRemaining: Long = -1
@@ -22,10 +24,11 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
         fileHandle = encryptedVolume.openFileReadMode(filePath)
         fileOffset = dataSpec.position
         val fileSize = encryptedVolume.getAttr(filePath)!!.size
+        val availableBytes = (fileSize - fileOffset).coerceAtLeast(0)
         bytesRemaining = if (dataSpec.length == C.LENGTH_UNSET.toLong()) {
-            fileSize - fileOffset
+            availableBytes
         } else {
-            min(fileSize, dataSpec.length)
+            min(availableBytes, dataSpec.length)
         }
         return bytesRemaining
     }
@@ -35,7 +38,10 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     }
 
     override fun close() {
-        encryptedVolume.closeFile(fileHandle)
+        if (fileHandle != -1L) {
+            encryptedVolume.closeFile(fileHandle)
+            fileHandle = -1L
+        }
     }
 
     override fun addTransferListener(transferListener: TransferListener) {
@@ -43,16 +49,16 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     }
 
     override fun read(buffer: ByteArray, offset: Int, readLength: Int): Int {
-        val originalOffset = fileOffset
-        while (fileOffset < originalOffset+readLength && encryptedVolume.read(
-                fileHandle,
-                fileOffset,
-                buffer,
-                offset+(fileOffset-originalOffset),
-                (originalOffset+readLength)-fileOffset
-            ).also { fileOffset += it } > 0
-        ) {}
-        val totalRead = fileOffset-originalOffset
+        if (readLength == 0) {
+            return 0
+        }
+
+        val bytesToRead = min(readLength.toLong(), bytesRemaining).toInt()
+        if (bytesToRead == 0) {
+            return C.RESULT_END_OF_INPUT
+        }
+
+        val totalRead = readPlain(buffer, offset, bytesToRead)
         bytesRemaining -= totalRead
         return if (totalRead == 0L) {
             C.RESULT_END_OF_INPUT
@@ -61,7 +67,29 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
         }
     }
 
-    class Factory(private val encryptedVolume: EncryptedVolume, private val filePath: String): DataSource.Factory {
+    private fun readPlain(buffer: ByteArray, offset: Int, readLength: Int): Long {
+        val startOffset = fileOffset
+        val endOffset = startOffset + readLength
+        while (fileOffset < endOffset && bytesRemaining > 0) {
+            val read = encryptedVolume.read(
+                fileHandle,
+                fileOffset,
+                buffer,
+                offset + fileOffset - startOffset,
+                endOffset - fileOffset
+            )
+            if (read <= 0) {
+                break
+            }
+            fileOffset += read
+        }
+        return fileOffset - startOffset
+    }
+
+    class Factory(
+        private val encryptedVolume: EncryptedVolume,
+        private val filePath: String
+    ) : DataSource.Factory {
         override fun createDataSource(): DataSource {
             return EncryptedVolumeDataSource(encryptedVolume, filePath)
         }

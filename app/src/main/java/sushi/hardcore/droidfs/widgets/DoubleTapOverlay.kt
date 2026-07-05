@@ -198,7 +198,7 @@ class DoubleTapOverlay @JvmOverloads constructor(
             isForward = forward
             secondsOffset = 0
         }
-        secondsOffset += DoubleTapPlayerView.SEEK_SECONDS
+        secondsOffset += PlayerSystemGestureController.SEEK_SECONDS
         secondsTextView.text = context.getString(
             if (forward)
                 R.string.seek_seconds_forward

@@ -163,6 +163,17 @@
     <string name="cut">Cut</string>
     <string name="map_folders">Map folders</string>
     <string name="map_folders_summary">Recursively map folders to calculate their sizes (you should disable this when opening large volumes)</string>
+    <string name="image_extensions">Image extensions</string>
+    <string name="video_extensions">Video extensions</string>
+    <string name="audio_extensions">Audio extensions</string>
+    <string name="pdf_extensions">PDF extensions</string>
+    <string name="text_extensions">Text extensions</string>
+    <string name="default_image_extensions">png, jpg, jpeg, gif, avif, webp, bmp, heic</string>
+    <string name="default_video_extensions">mp4, webm, mkv, mov, m4v, mts, m2ts, avi</string>
+    <string name="default_audio_extensions">mp3, ogg, m4a, wav, flac, opus</string>
+    <string name="default_pdf_extensions">pdf</string>
+    <string name="default_text_extensions">asc, asm, awk, bash, c, cfg, conf, cpp, css, csv, desktop, dot, g4, go, gradle, h, hpp, hs, html, ini, java, js, json, kt, lisp, log, lua, markdown, md, mod, org, php, pl, pro, properties, py, qml, rb, rc, rs, sh, smali, sql, srt, tex, toml, ts, txt, vala, vim, xml, yaml, yml</string>
+    <string name="duplicate_file_extensions_warning">Some extensions are assigned to more than one file type:\n\n%s\n\nThis can make files open with the wrong viewer.</string>
     <string name="camera_optimization">Camera optimization</string>
     <string name="maximize_quality">Maximize quality</string>
     <string name="minimize_latency">Minimize latency</string>

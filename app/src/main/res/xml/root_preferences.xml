@@ -51,6 +51,36 @@
             android:title="@string/map_folders"
             android:summary="@string/map_folders_summary"/>
 
+        <EditTextPreference
+            android:defaultValue="@string/default_image_extensions"
+            android:icon="@drawable/icon_file_image"
+            android:key="file_extensions_image"
+            android:title="@string/image_extensions"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_video_extensions"
+            android:icon="@drawable/icon_file_video"
+            android:key="file_extensions_video"
+            android:title="@string/video_extensions"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_audio_extensions"
+            android:icon="@drawable/icon_file_audio"
+            android:key="file_extensions_audio"
+            android:title="@string/audio_extensions"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_pdf_extensions"
+            android:icon="@drawable/icon_file_pdf"
+            android:key="file_extensions_pdf"
+            android:title="@string/pdf_extensions"/>
+
+        <EditTextPreference
+            android:defaultValue="@string/default_text_extensions"
+            android:icon="@drawable/icon_file_text"
+            android:key="file_extensions_text"
+            android:title="@string/text_extensions"/>
+
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/ux">

@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.core.content.ContextCompat
+import androidx.preference.EditTextPreference
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
@@ -81,6 +82,59 @@ class SettingsActivity : BaseActivity() {
                 startActivity(Intent(requireContext(), LogcatActivity::class.java))
                 true
             }
+            FileTypes.getExtensionTypes().forEach(::setupFileExtensionsPreference)
+        }
+
+        private fun setupFileExtensionsPreference(extensionType: String) {
+            val preferenceKey = FileTypes.getExtensionsPreferenceKey(extensionType)
+            findPreference<EditTextPreference>(preferenceKey)?.let { preference ->
+                if (!sharedPrefs.contains(preferenceKey)) {
+                    preference.text = FileTypes.getDefaultExtensions(extensionType)
+                }
+                preference.summaryProvider = Preference.SummaryProvider<EditTextPreference> {
+                    it.text ?: FileTypes.getDefaultExtensions(extensionType)
+                }
+                preference.setOnPreferenceChangeListener { _, value ->
+                    val normalizedValue = FileTypes.normalizeExtensions(value as String)
+                    if (normalizedValue.isBlank()) {
+                        false
+                    } else {
+                        preference.text = normalizedValue
+                        showDuplicateExtensionsWarning(extensionType, normalizedValue)
+                        false
+                    }
+                }
+                preference.setOnBindEditTextListener {
+                    it.setSingleLine(false)
+                }
+            }
+        }
+
+        private fun showDuplicateExtensionsWarning(extensionType: String, normalizedValue: String) {
+            val duplicates = FileTypes.getDuplicateExtensions(mapOf(extensionType to normalizedValue))
+            if (duplicates.isEmpty()) {
+                return
+            }
+
+            CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                .setTitle(R.string.warning)
+                .setMessage(getString(R.string.duplicate_file_extensions_warning, formatDuplicateExtensions(duplicates)))
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        }
+
+        private fun formatDuplicateExtensions(duplicates: Map<String, List<String>>): String {
+            return duplicates.entries.joinToString("\n") { (extension, extensionTypes) ->
+                val typeNames = extensionTypes.joinToString(", ") { extensionType ->
+                    getExtensionTypeTitle(extensionType)
+                }
+                ".$extension: $typeNames"
+            }
+        }
+
+        private fun getExtensionTypeTitle(extensionType: String): String {
+            val preferenceKey = FileTypes.getExtensionsPreferenceKey(extensionType)
+            return findPreference<EditTextPreference>(preferenceKey)?.title?.toString() ?: extensionType
         }
     }
 
