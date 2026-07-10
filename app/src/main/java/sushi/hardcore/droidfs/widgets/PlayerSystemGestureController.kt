@@ -4,22 +4,27 @@ import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
 import android.media.AudioManager
-import android.media.session.PlaybackState
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import androidx.media3.common.Player
 import kotlin.math.abs
 import kotlin.math.roundToInt
+
+interface PlayerGestureTarget {
+    val currentPosition: Long
+    val duration: Long
+    val canSeek: Boolean
+    fun seekTo(positionMs: Long)
+}
 
 class PlayerSystemGestureController(
     context: Context,
     private val viewWidth: () -> Int,
     private val viewHeight: () -> Int,
-    private val player: () -> Player?,
+    private val player: () -> PlayerGestureTarget?,
     private val doubleTapOverlay: () -> DoubleTapOverlay?,
     private val singleTapHandler: () -> Unit,
     private val hideController: () -> Unit,
@@ -98,9 +103,7 @@ class PlayerSystemGestureController(
     private fun handleDoubleTap(x: Float, y: Float) {
         val player = player() ?: return
         val doubleTapOverlay = doubleTapOverlay() ?: return
-        if (player.playbackState == PlaybackState.STATE_ERROR ||
-            player.playbackState == PlaybackState.STATE_NONE ||
-            player.playbackState == PlaybackState.STATE_STOPPED) {
+        if (!player.canSeek) {
             cancelDoubleTap()
         } else if (player.currentPosition > 500 && x < doubleTapOverlay.width * 0.35) {
             triggerSeek(false, x, y, player, doubleTapOverlay)
@@ -113,7 +116,7 @@ class PlayerSystemGestureController(
         forward: Boolean,
         x: Float,
         y: Float,
-        player: Player,
+        player: PlayerGestureTarget,
         doubleTapOverlay: DoubleTapOverlay
     ) {
         doubleTapOverlay.showAnimation(forward, x, y)
@@ -127,7 +130,7 @@ class PlayerSystemGestureController(
         )
     }
 
-    private fun seekTo(player: Player, position: Long) {
+    private fun seekTo(player: PlayerGestureTarget, position: Long) {
         when {
             position <= 0 -> player.seekTo(0)
             position >= player.duration -> player.seekTo(player.duration)

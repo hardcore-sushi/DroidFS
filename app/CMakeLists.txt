@@ -5,6 +5,10 @@ project(DroidFS)
 option(GOCRYPTFS "build libgocryptfs" ON)
 option(CRYFS "build libcryfs" ON)
 
+set(DROIDFS_AVFORMAT_LIBRARY ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavformat/libavformat.so)
+set(DROIDFS_AVCODEC_LIBRARY ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavcodec/libavcodec.so)
+set(DROIDFS_AVUTIL_LIBRARY ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavutil/libavutil.so)
+
 add_library(memfile SHARED src/main/native/memfile.c)
 target_link_libraries(memfile log)
 
@@ -35,7 +39,7 @@ add_library(
 set_target_properties(
         avformat
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavformat/libavformat.so
+        ${DROIDFS_AVFORMAT_LIBRARY}
 )
 
 add_library(
@@ -47,7 +51,7 @@ add_library(
 set_target_properties(
         avcodec
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavcodec/libavcodec.so
+        ${DROIDFS_AVCODEC_LIBRARY}
 )
 
 add_library(
@@ -59,7 +63,7 @@ add_library(
 set_target_properties(
         avutil
         PROPERTIES IMPORTED_LOCATION
-        ${PROJECT_SOURCE_DIR}/ffmpeg/build/${ANDROID_ABI}/libavutil/libavutil.so
+        ${DROIDFS_AVUTIL_LIBRARY}
 )
 
 add_library(

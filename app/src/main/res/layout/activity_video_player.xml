@@ -9,14 +9,10 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <sushi.hardcore.droidfs.widgets.DoubleTapPlayerView
+        <sushi.hardcore.droidfs.vlc.LibVlcPlayerView
             android:id="@+id/video_player"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:show_shuffle_button="true"
-            app:show_buffering="always"
-            app:animation_enabled="false"
-            app:repeat_toggle_modes="all|one" />
+            android:layout_height="match_parent" />
 
         <sushi.hardcore.droidfs.widgets.DoubleTapOverlay
             android:id="@+id/double_tap_overlay"
@@ -62,6 +58,51 @@
                 android:gravity="end"
                 android:textColor="@color/textColor"
                 android:textSize="14sp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/video_controls"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:layout_gravity="bottom"
+            android:background="#B0000000"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:visibility="visible">
+
+            <ImageButton
+                android:id="@+id/button_play_pause"
+                style="@style/ExoMediaButton"
+                android:src="@drawable/icon_pause"
+                app:tint="@color/neutralIconTint" />
+
+            <TextView
+                android:id="@+id/text_position"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="0:00"
+                android:textColor="@color/textColor"
+                android:textSize="12sp" />
+
+            <SeekBar
+                android:id="@+id/seek_bar"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:max="1000" />
+
+            <TextView
+                android:id="@+id/text_duration"
+                android:layout_width="52dp"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="0:00"
+                android:textColor="@color/textColor"
+                android:textSize="12sp" />
 
         </LinearLayout>
 
