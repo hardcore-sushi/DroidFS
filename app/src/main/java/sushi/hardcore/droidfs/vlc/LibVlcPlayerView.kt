@@ -8,7 +8,6 @@ import org.videolan.libvlc.Media
 import org.videolan.libvlc.MediaPlayer
 import org.videolan.libvlc.util.VLCVideoLayout
 import sushi.hardcore.droidfs.file_viewers.VlcMediaSource
-import sushi.hardcore.droidfs.util.CrashDiagnostics
 import sushi.hardcore.droidfs.widgets.DoubleTapOverlay
 import sushi.hardcore.droidfs.widgets.PlayerControlFeedbackListener
 import sushi.hardcore.droidfs.widgets.PlayerGestureTarget
@@ -32,6 +31,7 @@ class LibVlcPlayerView @JvmOverloads constructor(
     private var paused = true
     private var hasFile = false
     private var initialized = false
+    private var scalingMode = VlcScalingMode.BEST_FIT
 
     private val gestureTarget = object : PlayerGestureTarget {
         override val currentPosition: Long
@@ -76,15 +76,13 @@ class LibVlcPlayerView @JvmOverloads constructor(
         )
         val vlc = LibVLC(appContext, options)
         val mediaPlayer = MediaPlayer(vlc)
-        CrashDiagnostics.record(context, "LibVlcPlayerView created LibVLC/MediaPlayer")
         mediaPlayer.attachViews(this, null, false, false)
-        CrashDiagnostics.record(context, "LibVlcPlayerView attached VLC views")
         mediaPlayer.setEventListener { event ->
-            CrashDiagnostics.record(context, "LibVLC event type=${event.type}")
             when (event.type) {
                 MediaPlayer.Event.Playing -> {
                     hasFile = true
                     paused = false
+                    applyScalingMode()
                 }
                 MediaPlayer.Event.Paused -> paused = true
                 MediaPlayer.Event.Stopped -> {
@@ -101,6 +99,7 @@ class LibVlcPlayerView @JvmOverloads constructor(
                     paused = true
                     post { onPlaybackError?.invoke("LibVLC encountered an error while playing this file (event=${event.type})") }
                 }
+                MediaPlayer.Event.Vout -> applyScalingMode()
             }
         }
         libVlc = vlc
@@ -136,12 +135,17 @@ class LibVlcPlayerView @JvmOverloads constructor(
         media.setHWDecoderEnabled(true, false)
         media.addOption(":file-caching=750")
         media.addOption(":avcodec-fast")
-        CrashDiagnostics.record(context, "LibVlcPlayerView setting media from fd")
         mediaPlayer.media = media
         media.release()
-        CrashDiagnostics.record(context, "LibVlcPlayerView starting playback")
         mediaPlayer.play()
     }
+
+    fun setScalingMode(mode: VlcScalingMode) {
+        scalingMode = mode
+        applyScalingMode()
+    }
+
+    fun getScalingMode() = scalingMode
 
     fun playPause() {
         val mediaPlayer = player ?: return
@@ -165,4 +169,72 @@ class LibVlcPlayerView @JvmOverloads constructor(
     override fun onTouchEvent(event: MotionEvent): Boolean {
         return gestureController.onTouchEvent(event)
     }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        applyScalingMode()
+    }
+
+    private fun applyScalingMode() {
+        val mediaPlayer = player ?: return
+        when (scalingMode) {
+            VlcScalingMode.BEST_FIT -> {
+                mediaPlayer.setVideoScale(MediaPlayer.ScaleType.SURFACE_BEST_FIT)
+            }
+            VlcScalingMode.FILL -> {
+                mediaPlayer.setVideoScale(MediaPlayer.ScaleType.SURFACE_FILL)
+            }
+            VlcScalingMode.VERTICAL -> applyAxisFit(mediaPlayer, fitHeight = true)
+            VlcScalingMode.HORIZONTAL -> applyAxisFit(mediaPlayer, fitHeight = false)
+        }
+    }
+
+    private fun applyAxisFit(mediaPlayer: MediaPlayer, fitHeight: Boolean) {
+        val videoSize = currentVideoSize(mediaPlayer)
+        if (videoSize == null || width <= 0 || height <= 0) {
+            return
+        }
+
+        val (videoWidth, videoHeight) = videoSize
+        mediaPlayer.setVideoScale(MediaPlayer.ScaleType.SURFACE_ORIGINAL)
+        mediaPlayer.setAspectRatio(null)
+        val scale = if (fitHeight) {
+            height / videoHeight
+        } else {
+            width / videoWidth
+        }
+        mediaPlayer.setScale(scale.coerceAtLeast(0f))
+    }
+
+    private fun currentVideoSize(mediaPlayer: MediaPlayer): Pair<Float, Float>? {
+        val track = mediaPlayer.currentVideoTrack ?: return null
+
+        var videoWidth = track.width
+        var videoHeight = track.height
+        if (track.orientation == ORIENTATION_LEFT_BOTTOM ||
+            track.orientation == ORIENTATION_RIGHT_TOP) {
+            videoWidth = track.height
+            videoHeight = track.width
+        }
+        val sarNum = track.sarNum.takeIf { it > 0 } ?: 1
+        val sarDen = track.sarDen.takeIf { it > 0 } ?: 1
+        val displayWidth = videoWidth * sarNum / sarDen.toFloat()
+        val displayHeight = videoHeight.toFloat()
+        if (displayWidth <= 0f || displayHeight <= 0f) {
+            return null
+        }
+        return displayWidth to displayHeight
+    }
+
+    companion object {
+        private const val ORIENTATION_LEFT_BOTTOM = 5
+        private const val ORIENTATION_RIGHT_TOP = 6
+    }
+}
+
+enum class VlcScalingMode {
+    BEST_FIT,
+    FILL,
+    VERTICAL,
+    HORIZONTAL
 }

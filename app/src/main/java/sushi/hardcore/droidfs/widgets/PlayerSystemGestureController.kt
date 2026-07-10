@@ -11,7 +11,10 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ViewConfiguration
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.math.roundToInt
+import kotlin.math.roundToLong
 
 interface PlayerGestureTarget {
     val currentPosition: Long
@@ -48,10 +51,13 @@ class PlayerSystemGestureController(
     private var startVolume = 0
     private var isDoubleTapping = false
     private var isVerticalSwiping = false
+    private var isHorizontalSwiping = false
     private var suppressNextSingleTap = false
     private var touchStartX = 0f
     private var touchStartY = 0f
     private var isVerticalSwipeOnLeftSide = false
+    private var scrubStartPosition = 0L
+    private var scrubPosition = 0L
 
     fun onTouchEvent(event: MotionEvent): Boolean {
         gestureDetector.onTouchEvent(event)
@@ -63,12 +69,17 @@ class PlayerSystemGestureController(
     }
 
     private fun onTouchEnd() {
-        if (!isVerticalSwiping) {
-            return
+        when {
+            isVerticalSwiping -> {
+                feedbackListener()?.onPlayerControlFinished()
+                isVerticalSwiping = false
+            }
+            isHorizontalSwiping -> {
+                player()?.takeIf { it.canSeek }?.seekTo(scrubPosition)
+                feedbackListener()?.onSeekPreviewFinished()
+                isHorizontalSwiping = false
+            }
         }
-
-        feedbackListener()?.onPlayerControlFinished()
-        isVerticalSwiping = false
     }
 
     private fun onVerticalSwipeStart(leftSide: Boolean) {
@@ -94,6 +105,26 @@ class PlayerSystemGestureController(
             audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, volume, 0)
             notifyControlChanged(PlayerControl.VOLUME, volumeFraction(volume, maxVolume))
         }
+    }
+
+    private fun onHorizontalSwipeStart() {
+        val player = player() ?: return
+        hideController()
+        scrubStartPosition = player.currentPosition
+        scrubPosition = scrubStartPosition
+        feedbackListener()?.onSeekPreview(scrubPosition, player.duration)
+    }
+
+    private fun onHorizontalSwipeChanged(distanceFraction: Float) {
+        val player = player() ?: return
+        if (!player.canSeek || player.duration <= 0) {
+            return
+        }
+        val seekRange = min(player.duration, max(60_000L, player.duration / 4L))
+        scrubPosition = (scrubStartPosition + (distanceFraction * seekRange).roundToLong())
+            .coerceIn(0L, player.duration)
+        player.seekTo(scrubPosition)
+        feedbackListener()?.onSeekPreview(scrubPosition, player.duration)
     }
 
     private fun notifyControlChanged(control: PlayerControl, value: Float) {
@@ -194,25 +225,12 @@ class PlayerSystemGestureController(
             touchStartX = e.x
             touchStartY = e.y
             isVerticalSwiping = false
-            return true
-        }
-
-        override fun onScroll(
-            e1: MotionEvent?,
-            e2: MotionEvent,
-            distanceX: Float,
-            distanceY: Float
-        ): Boolean {
-            if (!isVerticalSwiping && !isVerticalSwipe(e2)) {
-                return false
-            }
-
-            handleVerticalSwipe(e2)
+            isHorizontalSwiping = false
             return true
         }
 
         override fun onSingleTapUp(e: MotionEvent): Boolean {
-            if (isDoubleTapping && !isVerticalSwiping) {
+            if (isDoubleTapping && !isVerticalSwiping && !isHorizontalSwiping) {
                 handleDoubleTap(e.x, e.y)
             }
             return true
@@ -227,14 +245,17 @@ class PlayerSystemGestureController(
         }
 
         override fun onDoubleTap(e: MotionEvent): Boolean {
-            if (!isDoubleTapping && !isVerticalSwiping) {
+            if (!isDoubleTapping && !isVerticalSwiping && !isHorizontalSwiping) {
                 keepDoubleTapping()
             }
             return true
         }
 
         override fun onDoubleTapEvent(e: MotionEvent): Boolean {
-            if (e.actionMasked == MotionEvent.ACTION_UP && isDoubleTapping && !isVerticalSwiping) {
+            if (e.actionMasked == MotionEvent.ACTION_UP &&
+                isDoubleTapping &&
+                !isVerticalSwiping &&
+                !isHorizontalSwiping) {
                 handleDoubleTap(e.x, e.y)
             }
             return true
@@ -244,6 +265,12 @@ class PlayerSystemGestureController(
             val dx = event.x - touchStartX
             val dy = event.y - touchStartY
             return abs(dy) > touchSlop && abs(dy) > abs(dx)
+        }
+
+        private fun isHorizontalSwipe(event: MotionEvent): Boolean {
+            val dx = event.x - touchStartX
+            val dy = event.y - touchStartY
+            return abs(dx) > touchSlop && abs(dx) > abs(dy)
         }
 
         private fun handleVerticalSwipe(event: MotionEvent) {
@@ -257,6 +284,49 @@ class PlayerSystemGestureController(
 
             val distanceFraction = (touchStartY - event.y) / viewHeight().coerceAtLeast(1)
             onVerticalSwipeChanged(isVerticalSwipeOnLeftSide, distanceFraction)
+        }
+
+        private fun handleHorizontalSwipe(event: MotionEvent) {
+            if (!isHorizontalSwiping) {
+                val player = player()
+                if (player?.canSeek != true) {
+                    return
+                }
+                cancelDoubleTap()
+                isHorizontalSwiping = true
+                suppressNextSingleTap = true
+                onHorizontalSwipeStart()
+            }
+
+            val distanceFraction = (event.x - touchStartX) / viewWidth().coerceAtLeast(1)
+            onHorizontalSwipeChanged(distanceFraction)
+        }
+
+        override fun onScroll(
+            e1: MotionEvent?,
+            e2: MotionEvent,
+            distanceX: Float,
+            distanceY: Float
+        ): Boolean {
+            if (isVerticalSwiping) {
+                handleVerticalSwipe(e2)
+                return true
+            }
+            if (isHorizontalSwiping) {
+                handleHorizontalSwipe(e2)
+                return true
+            }
+            return when {
+                isVerticalSwipe(e2) -> {
+                    handleVerticalSwipe(e2)
+                    true
+                }
+                isHorizontalSwipe(e2) -> {
+                    handleHorizontalSwipe(e2)
+                    true
+                }
+                else -> false
+            }
         }
     }
 }

@@ -9,7 +9,6 @@ import android.os.ProxyFileDescriptorCallback
 import android.os.storage.StorageManager
 import sushi.hardcore.droidfs.EncryptedFileProvider
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
-import sushi.hardcore.droidfs.util.CrashDiagnostics
 import java.io.Closeable
 
 class VlcMediaSource private constructor(
@@ -25,7 +24,6 @@ class VlcMediaSource private constructor(
     companion object {
         fun open(context: Context, encryptedVolume: EncryptedVolume, path: String): VlcMediaSource? {
             val size = encryptedVolume.getAttr(path)?.size ?: return null
-            CrashDiagnostics.record(context, "VlcMediaSource.open path=$path size=$size sdk=${Build.VERSION.SDK_INT}")
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 openProxy(context, encryptedVolume, path, size)
             } else {
@@ -41,10 +39,8 @@ class VlcMediaSource private constructor(
         ): VlcMediaSource? {
             val fileHandle = encryptedVolume.openFileReadMode(path)
             if (fileHandle == -1L) {
-                CrashDiagnostics.record(context, "VlcMediaSource.openProxy openFileReadMode failed")
                 return null
             }
-            CrashDiagnostics.record(context, "VlcMediaSource.openProxy fileHandle=$fileHandle")
 
             val thread = HandlerThread("VlcMediaSource").apply { start() }
             var closed = false
@@ -56,7 +52,6 @@ class VlcMediaSource private constructor(
                 }
 
                 override fun onRelease() {
-                    CrashDiagnostics.record(context, "VlcMediaSource proxy released")
                     if (!closed) {
                         closed = true
                         encryptedVolume.closeFile(fileHandle)
@@ -89,10 +84,8 @@ class VlcMediaSource private constructor(
         ): VlcMediaSource? {
             val provider = EncryptedFileProvider(context)
             val exportedFile = provider.createFile(path, size) ?: return null
-            CrashDiagnostics.record(context, "VlcMediaSource.openExported exporting whole file")
             if (!provider.exportFile(exportedFile, encryptedVolume)) {
                 exportedFile.free()
-                CrashDiagnostics.record(context, "VlcMediaSource.openExported export failed")
                 return null
             }
             val pfd = exportedFile.open(ParcelFileDescriptor.MODE_READ_ONLY, true)

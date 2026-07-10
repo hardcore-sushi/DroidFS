@@ -16,3 +16,14 @@
 -keep class sushi.hardcore.droidfs.VolumeData$* {
     static public android.os.Parcelable$Creator CREATOR;
 }
+
+# LibVLC uses JNI and reflection internally; keep its Java surface intact when
+# shrinking release builds.
+-keep class org.videolan.** { *; }
+-keepclassmembers class org.videolan.** {
+    *;
+}
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+-dontwarn org.videolan.**

@@ -102,13 +102,7 @@ android {
             matchingFallbacks = ['release']
             applicationIdSuffix ".mpvtest"
             versionNameSuffix "-mpv-test"
-            debuggable true
-            postprocessing {
-                removeUnusedCode false
-                removeUnusedResources false
-                obfuscate false
-                optimizeCode false
-            }
+            debuggable false
         }
     }
 

@@ -7,5 +7,7 @@ enum class PlayerControl {
 
 interface PlayerControlFeedbackListener {
     fun onPlayerControlChanged(control: PlayerControl, value: Float)
+    fun onSeekPreview(positionMs: Long, durationMs: Long) {}
     fun onPlayerControlFinished() {}
+    fun onSeekPreviewFinished() {}
 }

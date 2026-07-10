@@ -9,7 +9,6 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import sushi.hardcore.droidfs.content_providers.TemporaryFileProvider
 import sushi.hardcore.droidfs.util.AndroidUtils
-import sushi.hardcore.droidfs.util.CrashDiagnostics
 
 class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     companion object {
@@ -60,7 +59,6 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
 
     override fun onCreate() {
         super<Application>.onCreate()
-        CrashDiagnostics.install(this)
         FileTypes.init(PreferenceManager.getDefaultSharedPreferences(this))
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
         AndroidUtils.LiveBooleanPreference.init(this, usfBackgroundDelegate, usfKeepOpenDelegate)
@@ -90,18 +88,12 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     }
 
     override fun onResume(owner: LifecycleOwner) {
-        CrashDiagnostics.record(this, "ProcessLifecycle onResume")
         isStartingExternalApp = false
     }
 
     override fun onStop(owner: LifecycleOwner) {
-        CrashDiagnostics.record(
-            this,
-            "ProcessLifecycle onStop isStartingExternalApp=$isStartingExternalApp usfBackground=$usfBackground isExporting=$isExporting"
-        )
         if (!isStartingExternalApp) {
             if (!usfBackground) {
-                CrashDiagnostics.record(this, "Closing all volumes from ProcessLifecycle onStop")
                 volumeManager.closeAll()
             }
             if (!usfBackground || !isExporting) {

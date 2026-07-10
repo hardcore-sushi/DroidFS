@@ -23,7 +23,6 @@ import sushi.hardcore.droidfs.explorers.ExplorerRouter
 import sushi.hardcore.droidfs.file_operations.FileOperationService
 import sushi.hardcore.droidfs.file_operations.TaskResult
 import sushi.hardcore.droidfs.util.IntentUtils
-import sushi.hardcore.droidfs.util.CrashDiagnostics
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
@@ -78,13 +77,6 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
                         apply()
                     }
                 }
-                .show()
-        }
-        CrashDiagnostics.consumeReport(this)?.let { report ->
-            CustomAlertDialogBuilder(this, theme)
-                .setTitle(R.string.error)
-                .setMessage(report)
-                .setPositiveButton(R.string.ok, null)
                 .show()
         }
         explorerRouter = ExplorerRouter(this, intent)
