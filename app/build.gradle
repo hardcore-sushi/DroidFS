@@ -97,13 +97,6 @@ android {
             versionNameSuffix "-debug"
         }
 
-        mpvTest {
-            initWith release
-            matchingFallbacks = ['release']
-            applicationIdSuffix ".mpvtest"
-            versionNameSuffix "-mpv-test"
-            debuggable false
-        }
     }
 
     externalNativeBuild {
