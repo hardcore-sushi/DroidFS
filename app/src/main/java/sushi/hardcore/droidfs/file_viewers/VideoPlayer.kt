@@ -2,6 +2,7 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.view.View
@@ -25,7 +26,6 @@ import kotlin.math.roundToInt
 class VideoPlayer : FileViewerActivity(true) {
     private lateinit var binding: ActivityVideoPlayerBinding
     private val handler = Handler(Looper.getMainLooper())
-    private var currentMediaSource: VlcMediaSource? = null
     private var controlsVisible = true
     private var userSeeking = false
     private var playerInitialized = false
@@ -157,8 +157,6 @@ class VideoPlayer : FileViewerActivity(true) {
 
     override fun onDestroy() {
         handler.removeCallbacks(refreshControls)
-        currentMediaSource?.close()
-        currentMediaSource = null
         if (playerInitialized) {
             binding.videoPlayer.destroy()
         }
@@ -166,26 +164,35 @@ class VideoPlayer : FileViewerActivity(true) {
     }
 
     private fun loadCurrentFile() {
-        currentMediaSource?.close()
-        currentMediaSource = null
         clearAbRepeat(showToast = false)
         val filePath = fileViewerViewModel.filePath!!
         binding.textFileName.text = File(filePath).name
+        val requiresUnsafeExport = Build.VERSION.SDK_INT < Build.VERSION_CODES.O
+        val allowUnsafeExport = sharedPrefs.getBoolean(PREF_UNSAFE_EXTERNAL_OPEN, false)
+        if (requiresUnsafeExport && !allowUnsafeExport) {
+            showPlaybackError(getString(R.string.video_legacy_unsafe_export_required))
+            return
+        }
         val mediaSource = try {
-            VlcMediaSource.open(this, encryptedVolume, filePath)
+            VlcMediaSource.open(
+                this,
+                encryptedVolume,
+                filePath,
+                allowUnsafeExport = allowUnsafeExport
+            )
         } catch (e: Throwable) {
             showPlaybackError(getString(R.string.video_source_open_failed))
             return
         }
         if (mediaSource == null) {
-            showPlaybackError(getString(R.string.get_size_failed))
+            showPlaybackError(getString(R.string.video_source_open_failed))
             return
         }
-        currentMediaSource = mediaSource
         try {
             binding.videoPlayer.load(mediaSource)
             binding.videoPlayer.setScalingMode(currentScalingMode())
         } catch (e: Throwable) {
+            mediaSource.close()
             showPlaybackError(getString(R.string.video_load_failed))
         }
     }
@@ -483,6 +490,7 @@ class VideoPlayer : FileViewerActivity(true) {
     companion object {
         private const val PREF_REPEAT_MODE = "playerRepeatMode"
         private const val PREF_SCALING_MODE = "videoScalingMode"
+        private const val PREF_UNSAFE_EXTERNAL_OPEN = "usf_open"
         private const val REPEAT_MODE_OFF = 0
         private const val REPEAT_MODE_ONE = 1
         private const val REPEAT_MODE_ALL = 2

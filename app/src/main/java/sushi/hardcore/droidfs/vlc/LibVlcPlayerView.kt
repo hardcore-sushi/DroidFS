@@ -124,20 +124,30 @@ class LibVlcPlayerView @JvmOverloads constructor(
     }
 
     fun load(source: VlcMediaSource) {
-        val vlc = libVlc ?: return
-        val mediaPlayer = player ?: return
+        val vlc = checkNotNull(libVlc) { "LibVLC is not initialized" }
+        val mediaPlayer = checkNotNull(player) { "LibVLC player is not initialized" }
+        mediaPlayer.stop()
         mediaSource?.close()
-        mediaSource = source
+        mediaSource = null
         hasFile = false
         paused = true
 
-        val media = Media(vlc, source.fileDescriptor)
-        media.setHWDecoderEnabled(true, false)
-        media.addOption(":file-caching=750")
-        media.addOption(":avcodec-fast")
-        mediaPlayer.media = media
-        media.release()
-        mediaPlayer.play()
+        try {
+            val media = Media(vlc, source.fileDescriptor)
+            try {
+                media.setHWDecoderEnabled(true, false)
+                media.addOption(":file-caching=750")
+                media.addOption(":avcodec-fast")
+                mediaPlayer.media = media
+            } finally {
+                media.release()
+            }
+            mediaSource = source
+            mediaPlayer.play()
+        } catch (e: Exception) {
+            mediaSource = null
+            throw e
+        }
     }
 
     fun setScalingMode(mode: VlcScalingMode) {

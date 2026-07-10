@@ -10,24 +10,35 @@ import android.os.storage.StorageManager
 import sushi.hardcore.droidfs.EncryptedFileProvider
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import java.io.Closeable
+import java.util.concurrent.atomic.AtomicBoolean
 
 class VlcMediaSource private constructor(
     val parcelFileDescriptor: ParcelFileDescriptor,
     private val closeAction: () -> Unit
 ) : Closeable {
     val fileDescriptor = parcelFileDescriptor.fileDescriptor
+    private val closed = AtomicBoolean()
 
     override fun close() {
-        closeAction()
+        if (closed.compareAndSet(false, true)) {
+            closeAction()
+        }
     }
 
     companion object {
-        fun open(context: Context, encryptedVolume: EncryptedVolume, path: String): VlcMediaSource? {
+        fun open(
+            context: Context,
+            encryptedVolume: EncryptedVolume,
+            path: String,
+            allowUnsafeExport: Boolean = false
+        ): VlcMediaSource? {
             val size = encryptedVolume.getAttr(path)?.size ?: return null
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 openProxy(context, encryptedVolume, path, size)
-            } else {
+            } else if (allowUnsafeExport) {
                 openExported(context, encryptedVolume, path, size)
+            } else {
+                null
             }
         }
 
@@ -43,7 +54,14 @@ class VlcMediaSource private constructor(
             }
 
             val thread = HandlerThread("VlcMediaSource").apply { start() }
-            var closed = false
+            val handler = Handler(thread.looper)
+            val backingFileReleased = AtomicBoolean()
+            fun releaseBackingFile() {
+                if (backingFileReleased.compareAndSet(false, true)) {
+                    encryptedVolume.closeFile(fileHandle)
+                    thread.quitSafely()
+                }
+            }
             val callback = object : ProxyFileDescriptorCallback() {
                 override fun onGetSize() = size
 
@@ -52,26 +70,27 @@ class VlcMediaSource private constructor(
                 }
 
                 override fun onRelease() {
-                    if (!closed) {
-                        closed = true
-                        encryptedVolume.closeFile(fileHandle)
-                        thread.quitSafely()
-                    }
+                    releaseBackingFile()
                 }
             }
 
             val storageManager = context.getSystemService(StorageManager::class.java)
-            val pfd = storageManager.openProxyFileDescriptor(
-                ParcelFileDescriptor.MODE_READ_ONLY,
-                callback,
-                Handler(thread.looper)
-            )
+            val pfd = try {
+                storageManager.openProxyFileDescriptor(
+                    ParcelFileDescriptor.MODE_READ_ONLY,
+                    callback,
+                    handler
+                )
+            } catch (e: Exception) {
+                releaseBackingFile()
+                throw e
+            }
             return VlcMediaSource(pfd) {
-                pfd.close()
-                if (!closed) {
-                    closed = true
-                    encryptedVolume.closeFile(fileHandle)
-                    thread.quitSafely()
+                try {
+                    pfd.close()
+                } finally {
+                    // Run after any reads already queued on the proxy callback thread.
+                    handler.post { releaseBackingFile() }
                 }
             }
         }
@@ -82,6 +101,9 @@ class VlcMediaSource private constructor(
             path: String,
             size: Long
         ): VlcMediaSource? {
+            // Android before O has no ProxyFileDescriptorCallback. This export path
+            // is permitted only when the caller has verified that the user enabled
+            // the existing external-open unsafe feature.
             val provider = EncryptedFileProvider(context)
             val exportedFile = provider.createFile(path, size) ?: return null
             if (!provider.exportFile(exportedFile, encryptedVolume)) {

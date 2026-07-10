@@ -327,5 +327,6 @@
     <string name="video_playback_init_failed">Could not initialize video playback.</string>
     <string name="video_source_open_failed">Could not open this video.</string>
     <string name="video_load_failed">Could not load this video.</string>
+    <string name="video_legacy_unsafe_export_required">On Android 7.1 and older, video playback requires exporting the decrypted video to temporary memory or storage. To continue, enable “Allow opening files with other applications” under Unsafe Features.</string>
     <string name="clear">Clear</string>
 </resources>
