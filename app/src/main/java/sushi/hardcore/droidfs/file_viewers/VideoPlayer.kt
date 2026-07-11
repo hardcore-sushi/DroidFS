@@ -74,7 +74,9 @@ class VideoPlayer : FileViewerActivity(true) {
         binding.videoPlayer.onSingleTap = { toggleControls() }
         binding.videoPlayer.onHideControls = { setControlsVisible(false) }
         binding.videoPlayer.onPlaybackEnded = { onPlaybackEnded() }
-        binding.videoPlayer.onPlaybackError = { showPlaybackError(it) }
+        binding.videoPlayer.onPlaybackError = {
+            showPlaybackError(getString(R.string.video_load_failed))
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.videoControls) { view, windowInsets ->
             val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())

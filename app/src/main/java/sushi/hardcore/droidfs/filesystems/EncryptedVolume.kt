@@ -177,10 +177,11 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
     fun loadWholeFile(fullPath: String, size: Long? = null, maxSize: Long? = null): Pair<ByteArray?, Int> {
         val fileSize = size ?: getAttr(fullPath)?.size ?: -1
         return if (fileSize >= 0) {
-            maxSize?.let {
-                if (fileSize > it) {
-                    return Pair(null, 0)
-                }
+            if (maxSize != null && fileSize > maxSize) {
+                return Pair(null, 5)
+            }
+            if (fileSize > Int.MAX_VALUE) {
+                return Pair(null, 2)
             }
             try {
                 val fileBuff = ByteArray(fileSize.toInt())
@@ -188,13 +189,24 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
                 if (fileHandle == -1L) {
                     Pair(null, 3)
                 } else {
-                    var offset: Long = 0
-                    while (offset < fileSize && read(fileHandle, offset, fileBuff, offset, fileSize-offset).also { offset += it } > 0) {}
-                    closeFile(fileHandle)
-                    if (offset == fileBuff.size.toLong()) {
-                        Pair(fileBuff, 0)
-                    } else {
-                        Pair(null, 4)
+                    try {
+                        var offset = 0L
+                        while (offset < fileSize && read(
+                                fileHandle,
+                                offset,
+                                fileBuff,
+                                offset,
+                                fileSize - offset
+                            ).also { offset += it } > 0) {
+                            // Read until the requested file is complete.
+                        }
+                        if (offset == fileBuff.size.toLong()) {
+                            Pair(fileBuff, 0)
+                        } else {
+                            Pair(null, 4)
+                        }
+                    } finally {
+                        closeFile(fileHandle)
                     }
                 }
             } catch (e: OutOfMemoryError) {

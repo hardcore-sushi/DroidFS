@@ -80,9 +80,14 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
     abstract fun getFileType(): String
     abstract fun viewFile()
 
-    protected fun loadWholeFile(path: String, fileSize: Long? = null, callback: (ByteArray) -> Unit) {
+    protected fun loadWholeFile(
+        path: String,
+        fileSize: Long? = null,
+        maxSize: Long? = null,
+        callback: (ByteArray) -> Unit
+    ) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val result = encryptedVolume.loadWholeFile(path, size = fileSize)
+            val result = encryptedVolume.loadWholeFile(path, size = fileSize, maxSize = maxSize)
             if (isActive) {
                 withContext(Dispatchers.Main) {
                     if (result.second == 0) {
@@ -97,6 +102,7 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
                             2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
                             3 -> dialog.setMessage(R.string.read_file_failed)
                             4 -> dialog.setMessage(R.string.io_error)
+                            5 -> dialog.setMessage(R.string.file_too_large_to_edit)
                         }
                         dialog.show()
                     }

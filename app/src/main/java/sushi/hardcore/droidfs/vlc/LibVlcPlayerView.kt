@@ -23,13 +23,15 @@ class LibVlcPlayerView @JvmOverloads constructor(
     var onSingleTap: (() -> Unit)? = null
     var onHideControls: (() -> Unit)? = null
     var onPlaybackEnded: (() -> Unit)? = null
-    var onPlaybackError: ((String) -> Unit)? = null
+    var onPlaybackError: (() -> Unit)? = null
 
     private var libVlc: LibVLC? = null
     private var player: MediaPlayer? = null
     private var mediaSource: VlcMediaSource? = null
     private var paused = true
     private var hasFile = false
+    private var playbackAttemptActive = false
+    private var playbackStarted = false
     private var initialized = false
     private var scalingMode = VlcScalingMode.BEST_FIT
 
@@ -82,6 +84,7 @@ class LibVlcPlayerView @JvmOverloads constructor(
                 MediaPlayer.Event.Playing -> {
                     hasFile = true
                     paused = false
+                    playbackStarted = true
                     applyScalingMode()
                 }
                 MediaPlayer.Event.Paused -> paused = true
@@ -90,14 +93,29 @@ class LibVlcPlayerView @JvmOverloads constructor(
                     paused = true
                 }
                 MediaPlayer.Event.EndReached -> {
+                    val shouldHandle = playbackAttemptActive
+                    val didStart = playbackStarted
+                    playbackAttemptActive = false
                     hasFile = false
                     paused = true
-                    post { onPlaybackEnded?.invoke() }
+                    if (shouldHandle) {
+                        post {
+                            if (didStart) {
+                                onPlaybackEnded?.invoke()
+                            } else {
+                                onPlaybackError?.invoke()
+                            }
+                        }
+                    }
                 }
                 MediaPlayer.Event.EncounteredError -> {
+                    val shouldHandle = playbackAttemptActive
+                    playbackAttemptActive = false
                     hasFile = false
                     paused = true
-                    post { onPlaybackError?.invoke("LibVLC encountered an error while playing this file (event=${event.type})") }
+                    if (shouldHandle) {
+                        post { onPlaybackError?.invoke() }
+                    }
                 }
                 MediaPlayer.Event.Vout -> applyScalingMode()
             }
@@ -117,6 +135,8 @@ class LibVlcPlayerView @JvmOverloads constructor(
         }
         mediaSource?.close()
         mediaSource = null
+        playbackAttemptActive = false
+        playbackStarted = false
         libVlc?.release()
         libVlc = null
         player = null
@@ -131,6 +151,8 @@ class LibVlcPlayerView @JvmOverloads constructor(
         mediaSource = null
         hasFile = false
         paused = true
+        playbackAttemptActive = false
+        playbackStarted = false
 
         try {
             val media = Media(vlc, source.fileDescriptor)
@@ -143,9 +165,11 @@ class LibVlcPlayerView @JvmOverloads constructor(
                 media.release()
             }
             mediaSource = source
+            playbackAttemptActive = true
             mediaPlayer.play()
         } catch (e: Exception) {
             mediaSource = null
+            playbackAttemptActive = false
             throw e
         }
     }

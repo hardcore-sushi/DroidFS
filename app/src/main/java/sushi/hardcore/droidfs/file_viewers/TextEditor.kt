@@ -26,7 +26,7 @@ class TextEditor: FileViewerActivity() {
         fileName = File(fileViewerViewModel.filePath!!).name
         title = fileName
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        loadWholeFile(fileViewerViewModel.filePath!!) {
+        loadWholeFile(fileViewerViewModel.filePath!!, maxSize = MAX_TEXT_FILE_SIZE) {
             try {
                 loadLayout(String(it))
                 onBackPressedDispatcher.addCallback(this) {
@@ -126,5 +126,11 @@ class TextEditor: FileViewerActivity() {
             else -> super.onOptionsItemSelected(item)
         }
         return true
+    }
+
+    companion object {
+        // EditText keeps additional UTF-16 and layout data, so accepting a file
+        // close to the heap limit can destabilize the entire app before OOM is raised.
+        private const val MAX_TEXT_FILE_SIZE = 16L * 1024 * 1024
     }
 }
