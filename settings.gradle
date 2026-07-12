@@ -5,4 +5,6 @@ pluginManagement {
     }
 }
 include ':app', ':libpdfviewer:app'
+// The submodule's root build file is only for standalone builds and pins its own plugin versions.
+project(':libpdfviewer').buildFileName = 'droidfs-empty.gradle'
 rootProject.name = "DroidFS"

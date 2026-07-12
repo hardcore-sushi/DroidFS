@@ -8,10 +8,12 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
-import androidx.media3.extractor.DefaultExtractorsFactory
+import com.homesoft.exo.MjpegRenderersFactory
+import com.homesoft.exo.extractor.AviExtractorsFactory
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
@@ -33,13 +35,23 @@ abstract class MediaPlayer(fullscreen: Boolean): FileViewerActivity(fullscreen) 
     protected open fun onVideoSizeChanged(width: Int, height: Int) {}
 
     private fun createMediaSource(filePath: String): MediaSource {
-        val dataSourceFactory = EncryptedVolumeDataSource.Factory(encryptedVolume, filePath)
-        return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
-            .createMediaSource(MediaItem.fromUri(Constants.FAKE_URI))
+        val file = File(filePath)
+        val dataSourceFactory = MediaDataSourceFactory(encryptedVolume, filePath)
+        val mediaItem = MediaItem.Builder()
+            .setUri(Constants.FAKE_URI.buildUpon().appendPath(file.name).build())
+            .setMimeType(MediaContainers.mimeTypeForFileName(file.name))
+            .build()
+        return ProgressiveMediaSource.Factory(dataSourceFactory, AviExtractorsFactory())
+            .createMediaSource(mediaItem)
     }
 
     private fun initializePlayer(){
-        player = ExoPlayer.Builder(this).setSeekForwardIncrementMs(5000).build()
+        val renderersFactory = MjpegRenderersFactory(this)
+            .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
+            .setEnableDecoderFallback(true)
+        player = ExoPlayer.Builder(this, renderersFactory)
+            .setSeekForwardIncrementMs(5000)
+            .build()
         bindPlayer(player)
         player.addMediaSource(createMediaSource(fileViewerViewModel.filePath!!))
         lifecycleScope.launch {
