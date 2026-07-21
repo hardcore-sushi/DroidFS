@@ -23,6 +23,8 @@
         android:name="android.permission.ACCESS_NETWORK_STATE"
         tools:node="remove" /> <!--removing this permission automatically added by exoplayer-->
 
+    <uses-sdk tools:overrideLibrary="androidx.camera.core,androidx.camera.camera2,androidx.camera.camera2.pipe,androidx.camera.lifecycle,androidx.camera.video,androidx.camera.extensions,androidx.camera.view,androidx.camera.viewfinder.core,androidx.camera.featurecombinationquery,androidx.media3.muxer,androidx.core.backported.fixes,androidx.media3.common,androidx.media3.container,androidx.media3.database,androidx.media3.datasource,androidx.media3.decoder,androidx.media3.exoplayer,androidx.media3.extractor,androidx.media3.ui" />
+
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
