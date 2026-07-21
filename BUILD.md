@@ -122,6 +122,6 @@ $ keytool -genkey -keystore <output file> -alias <key alias> -keyalg EC -validit
 ```
 Then, sign the APK with:
 ```
-$ "$ANDROID_HOME/build-tools/35.0.0/apksigner" sign --out DroidFS-signed.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
+$ "$ANDROID_HOME/build-tools/36.0.0/apksigner" sign --out DroidFS-signed.apk -v --ks <keystore> app/build/outputs/apk/release/<unsigned apk file>
 ```
 Now you can install `DroidFS-signed.apk` on your device.

@@ -14,7 +14,7 @@ if (hasProperty("disableGocryptfs")) {
 }
 
 android {
-    compileSdk 35
+    compileSdk 36
     ndkVersion '25.2.9519653'
     namespace "sushi.hardcore.droidfs"
 
@@ -100,6 +100,7 @@ android {
     externalNativeBuild {
         cmake {
             path file('CMakeLists.txt')
+            version '4.1.2'
         }
     }
 
