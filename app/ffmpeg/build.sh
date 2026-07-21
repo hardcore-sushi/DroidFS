@@ -25,7 +25,7 @@ else
 				ARCH="aarch64"
 				;;
 			"armeabi-v7a")
-				CFN="armv7a-linux-androideabi19-clang"
+				CFN="armv7a-linux-androideabi21-clang"
 				ARCH="arm"
 				;;
 		esac

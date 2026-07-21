@@ -42,10 +42,10 @@ $ cd "$ANDROID_HOME/cmdline-tools"
 $ mv cmdline-tools latest
 ```
 
-Then, install the Android Native Development Kit (NDK) version `25.2.9519653` (r25c):
+Then, install the Android Native Development Kit (NDK) version `28.2.13676358` (r28c):
 ```
-$ "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;25.2.9519653'
-$ export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/25.2.9519653"
+$ "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'ndk;28.2.13676358'
+$ export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/28.2.13676358"
 ```
 libcryfs cannot be built with newer NDK versions at the moment due to compatibility issues with [boost](https://www.boost.org). If you succeed in building it with a more recent version of the NDK, please report it.
 

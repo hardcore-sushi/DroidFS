@@ -15,7 +15,7 @@ if (hasProperty("disableGocryptfs")) {
 
 android {
     compileSdk 36
-    ndkVersion '25.2.9519653'
+    ndkVersion '28.2.13676358'
     namespace "sushi.hardcore.droidfs"
 
     compileOptions {
