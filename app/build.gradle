@@ -1,5 +1,7 @@
+import com.android.build.api.variant.ResValue
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
 
 if (hasProperty("disableCryFS")) {
     ext.disableCryFS = getProperty("disableCryFS")
@@ -13,8 +15,10 @@ if (hasProperty("disableGocryptfs")) {
     ext.disableGocryptfs = false
 }
 
+ext.abiCodes  = [ "x86": 1, "x86_64": 2, "armeabi-v7a": 3, "arm64-v8a": 4]
+
 android {
-    compileSdk 36
+    compileSdk = 36
     ndkVersion '28.2.13676358'
     namespace "sushi.hardcore.droidfs"
 
@@ -23,11 +27,11 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = "17"
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
-
-    def abiCodes  = [ "x86": 1, "x86_64": 2, "armeabi-v7a": 3, "arm64-v8a": 4]
 
     defaultConfig {
         applicationId "sushi.hardcore.droidfs"
@@ -35,6 +39,9 @@ android {
         targetSdkVersion 34
         versionCode 37
         versionName "2.2.0"
+
+        buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
+        buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"
 
         splits {
             abi {
@@ -59,36 +66,23 @@ android {
         }
     }
 
-    applicationVariants.configureEach { variant ->
-        variant.resValue "string", "versionName", variant.versionName
-        buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
-        buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"
-        variant.outputs.each { output ->
-            def abi = output.getFilter(com.android.build.OutputFile.ABI)
-            if (abi == null) { // universal
-                output.versionCodeOverride = variant.versionCode*10
-                abi = "universal"
-            } else {
-                output.versionCodeOverride = variant.versionCode*10 + abiCodes[abi]
-            }
-            output.outputFileName = "DroidFS-v${variant.versionName}-${variant.name}-${abi}.apk"
-        }
-    }
-
     buildFeatures {
         viewBinding true
         buildConfig true
+        resValues true
+    }
+
+    lint {
+        // LintVital crashes in AGP 9.3.0 due to internal JavaDocParser incompatibility
+        // (see https://github.com/objectbox/objectbox-java/issues/1241). Remove when fixed upstream.
+        checkReleaseBuilds false
     }
 
     buildTypes {
         release {
-            postprocessing {
-                removeUnusedCode true
-                removeUnusedResources true
-                obfuscate false
-                optimizeCode true
-                proguardFiles 'proguard-rules.pro'
-            }
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles 'proguard-rules.pro'
         }
 
         debug {
@@ -109,12 +103,28 @@ android {
             java {
                 exclude 'androidx/camera/video/originals/**'
             }
+            kotlin {
+                exclude 'androidx/camera/video/originals/**'
+            }
         }
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    it.exclude('androidx/camera/video/originals/**')
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.resValues.put(
+            variant.makeResValueKey("string", "versionName"),
+            new ResValue(variant.outputs.first().versionName.get(), "")
+        )
+        variant.outputs.each { output ->
+            def abiFilter = output.filters.find { it.filterType.name() == 'ABI' }
+            def abi = abiFilter?.identifier
+            def abiCode = abi ? (project.ext.abiCodes[abi] ?: 0) : 0
+            def baseVersionCode = output.versionCode.get()
+            output.versionCode.set(baseVersionCode * 10 + abiCode)
+            output.outputFileName.set("DroidFS-v${android.defaultConfig.versionName}-${variant.name}-${abi ?: 'universal'}.apk")
+        }
+    }
 }
 
 dependencies {
@@ -122,6 +132,8 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.13.1'
     implementation "androidx.appcompat:appcompat:1.7.0"
     implementation "androidx.constraintlayout:constraintlayout:2.1.4"
+    implementation "androidx.recyclerview:recyclerview:1.4.0"
+
     def lifecycle_version = "2.8.3"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"

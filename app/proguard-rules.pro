@@ -1,3 +1,4 @@
+-dontobfuscate
 -keepattributes SourceFile,LineNumberTable
 
 -keep class sushi.hardcore.droidfs.SettingsActivity$**
@@ -9,10 +10,11 @@
     void writePacket(byte[]);
     void seek(long);
 }
-# Required for Intent.getParcelableExtra() to work on Android 13
--keep class sushi.hardcore.droidfs.VolumeData {
-    public int describeContents();
+# Keep all JNI native methods and their classes
+-keepclasseswithmembernames class * {
+    native <methods>;
 }
--keep class sushi.hardcore.droidfs.VolumeData$* {
-    static public android.os.Parcelable$Creator CREATOR;
+# Required for Parcelable CREATOR fields to not be removed by R8
+-keepclassmembers class * implements android.os.Parcelable {
+    static ** CREATOR;
 }
