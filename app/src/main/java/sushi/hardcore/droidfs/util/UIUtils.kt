@@ -4,6 +4,7 @@ import android.content.Context
 import android.view.Menu
 import android.widget.EditText
 import androidx.core.content.ContextCompat
+import android.text.TextUtils
 import sushi.hardcore.droidfs.R
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
@@ -12,7 +13,7 @@ import java.util.*
 object UIUtils {
     fun encodeEditTextContent(editText: EditText): ByteArray {
         val charArray = CharArray(editText.text.length)
-        editText.text.getChars(0, editText.text.length, charArray, 0)
+        TextUtils.getChars(editText.text, 0, editText.text.length, charArray, 0)
         val byteBuffer = StandardCharsets.UTF_8.encode(CharBuffer.wrap(charArray))
         Arrays.fill(charArray, Char.MIN_VALUE)
         val byteArray = ByteArray(byteBuffer.remaining())

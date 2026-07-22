@@ -1,4 +1,8 @@
 -dontobfuscate
+# Suppress warnings for FingerprintManager classes that are only available on API 23+
+-dontwarn android.hardware.fingerprint.FingerprintManager
+-dontwarn android.hardware.fingerprint.FingerprintManager$AuthenticationCallback
+-dontwarn android.hardware.fingerprint.FingerprintManager$CryptoObject
 -keepattributes SourceFile,LineNumberTable
 
 -keep class sushi.hardcore.droidfs.SettingsActivity$**
