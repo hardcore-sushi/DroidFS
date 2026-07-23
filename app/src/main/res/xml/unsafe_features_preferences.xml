@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <PreferenceCategory android:title="@string/about">
 
@@ -16,75 +17,84 @@
 
     <PreferenceCategory android:title="@string/ux">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_screenshot"
             android:key="usf_screenshot"
-            android:title="@string/usf_screenshot" />
+            android:title="@string/usf_screenshot"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/explorer">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_lock_open"
             android:key="usf_decrypt"
-            android:title="@string/usf_decrypt" />
+            android:title="@string/usf_decrypt"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_share"
             android:key="usf_share"
-            android:title="@string/usf_share" />
+            android:title="@string/usf_share"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/usf_volume_management">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_fingerprint"
             android:key="usf_fingerprint"
-            android:title="@string/usf_fingerprint" />
+            android:title="@string/usf_fingerprint"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_lock_open"
             android:key="usf_background"
             android:title="@string/usf_background"
-            android:summary="@string/usf_background_summary" />
+            android:summary="@string/usf_background_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_lock_open"
             android:key="usf_keep_open"
             android:title="@string/usf_keep_open"
-            android:summary="@string/usf_keep_open_summary"/>
+            android:summary="@string/usf_keep_open_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/saf">
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_open_in_new"
             android:key="usf_open"
-            android:title="@string/usf_open" />
+            android:title="@string/usf_open"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_transfer"
             android:key="usf_expose"
             android:title="@string/usf_expose"
-            android:summary="@string/usf_expose_summary" />
+            android:summary="@string/usf_expose_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <SwitchPreference
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_edit"
             android:key="usf_saf_write"
             android:title="@string/usf_saf_write"
-            android:summary="@string/usf_saf_write_summary" />
+            android:summary="@string/usf_saf_write_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch" />
 
         <ListPreference
             android:key="export_method"

@@ -16,7 +16,8 @@
             android:defaultValue="false"
             android:icon="@drawable/icon_night"
             android:key="black_theme"
-            android:title="@string/black_theme"/>
+            android:title="@string/black_theme"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
     </PreferenceCategory>
 
@@ -35,21 +36,24 @@
             app:icon="@drawable/icon_folder"
             android:key="folders_first"
             android:title="@string/folders_first"
-            android:summary="@string/folders_first_summary"/>
+            android:summary="@string/folders_first_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
             android:icon="@drawable/icon_image"
             android:key="thumbnails"
             android:title="@string/thumbnails"
-            android:summary="@string/thumbnails_summary"/>
+            android:summary="@string/thumbnails_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
         <SwitchPreferenceCompat
             android:defaultValue="true"
             app:icon="@drawable/icon_folder_search"
             android:key="map_folders"
             android:title="@string/map_folders"
-            android:summary="@string/map_folders_summary"/>
+            android:summary="@string/map_folders_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
     </PreferenceCategory>
 
@@ -60,21 +64,24 @@
             android:summary="@string/auto_fit_summary"
             android:key="autoFit"
             android:defaultValue="false"
-            android:icon="@drawable/icon_screen_rotation"/>
+            android:icon="@drawable/icon_screen_rotation"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
         <SwitchPreferenceCompat
             android:title="@string/password_fallback"
             android:summary="@string/password_fallback_summary"
             android:key="passwordFallback"
             android:defaultValue="true"
-            android:icon="@drawable/icon_password"/>
+            android:icon="@drawable/icon_password"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
         <SwitchPreferenceCompat
             android:title="@string/pin_passwords_title"
             android:summary="@string/pin_passwords_summary"
             android:key="pin_passwords"
             android:defaultValue="false"
-            android:icon="@drawable/icon_num_pad"/>
+            android:icon="@drawable/icon_num_pad"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
 
     </PreferenceCategory>
 

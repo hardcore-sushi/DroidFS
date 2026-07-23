@@ -1,50 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="DarkGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
-        <item name="colorAccent">@color/secondary</item>
-        <item name="colorBackgroundFloating">@color/dialogDarkBackground</item>
+    <style name="DarkGreenDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="colorSurfaceContainerHigh">@color/dialogBackground</item>
+        <item name="colorSecondary">@color/green</item>
     </style>
     <style name="DarkRedDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/red</item>
+        <item name="colorSecondary">@color/red</item>
     </style>
     <style name="DarkBlueDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/blue</item>
+        <item name="colorSecondary">@color/blue</item>
     </style>
     <style name="DarkYellowDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/yellow</item>
+        <item name="colorSecondary">@color/yellow</item>
     </style>
     <style name="DarkOrangeDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/orange</item>
+        <item name="colorSecondary">@color/orange</item>
     </style>
     <style name="DarkPurpleDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/purple</item>
+        <item name="colorSecondary">@color/purple</item>
     </style>
     <style name="DarkPinkDialog" parent="DarkGreenDialog">
-        <item name="colorAccent">@color/pink</item>
+        <item name="colorSecondary">@color/pink</item>
     </style>
 
-    <style name="BlackGreenDialog" parent="Theme.AppCompat.Dialog.Alert">
-        <item name="colorAccent">@color/secondary</item>
-        <item name="colorBackgroundFloating">#191919</item>
+    <style name="BlackGreenDialog" parent="DarkGreenDialog">
+        <item name="colorSurfaceContainerHigh">#191919</item>
     </style>
     <style name="BlackRedDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/red</item>
+        <item name="colorSecondary">@color/red</item>
     </style>
     <style name="BlackBlueDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/blue</item>
+        <item name="colorSecondary">@color/blue</item>
     </style>
     <style name="BlackYellowDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/yellow</item>
+        <item name="colorSecondary">@color/yellow</item>
     </style>
     <style name="BlackOrangeDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/orange</item>
+        <item name="colorSecondary">@color/orange</item>
     </style>
     <style name="BlackPurpleDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/purple</item>
+        <item name="colorSecondary">@color/purple</item>
     </style>
     <style name="BlackPinkDialog" parent="BlackGreenDialog">
-        <item name="colorAccent">@color/pink</item>
+        <item name="colorSecondary">@color/pink</item>
     </style>
 
 </resources>

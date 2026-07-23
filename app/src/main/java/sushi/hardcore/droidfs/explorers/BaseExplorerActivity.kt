@@ -78,7 +78,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     private lateinit var linearLayoutManager: LinearLayoutManager
     private var isUsingListLayout = true
     private lateinit var layoutIcon: ImageButton
-    private lateinit var titleText: TextView
     private lateinit var recycler_view_explorer: RecyclerView
     private lateinit var refresher: SwipeRefreshLayout
     private lateinit var loader: ProgressBar
@@ -110,11 +109,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         numberOfFilesText = findViewById(R.id.number_of_files_text)
         numberOfFoldersText = findViewById(R.id.number_of_folders_text)
         totalSizeText = findViewById(R.id.total_size_text)
-        supportActionBar?.apply {
-            setDisplayShowCustomEnabled(true)
-            setCustomView(R.layout.action_bar)
-            titleText = customView.findViewById(R.id.title_text)
-        }
+        setSupportActionBar(findViewById(R.id.toolbar))
         title = ""
         setVolumeNameTitle()
         explorerAdapter = ExplorerElementAdapter(
@@ -283,14 +278,14 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
     }
 
     private fun setVolumeNameTitle() {
-        titleText.text = getString(R.string.volume, volumeName)
+        supportActionBar?.title = getString(R.string.volume, volumeName)
     }
 
     override fun onSelectionChanged(size: Int) {
         if (size == 0) {
             setVolumeNameTitle()
         } else {
-            titleText.text = getString(R.string.elements_selected, size, explorerElements.count { !it.isParentFolder })
+            supportActionBar?.title = getString(R.string.elements_selected, size, explorerElements.count { !it.isParentFolder })
         }
     }
 

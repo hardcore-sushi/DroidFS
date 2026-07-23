@@ -21,6 +21,7 @@ class AddVolumeActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityAddVolumeBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         explorerRouter = ExplorerRouter(this, intent)
         volumeOpener = VolumeOpener(this)

@@ -6,10 +6,11 @@ import android.view.WindowManager
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.Theme
 
-open class CustomAlertDialogBuilder(context: Context, theme: Theme) : AlertDialog.Builder(
+open class CustomAlertDialogBuilder(context: Context, theme: Theme) : MaterialAlertDialogBuilder(
     context, if (theme.black) {
             when (theme.color) {
                 "red" -> R.style.BlackRedDialog
@@ -34,7 +35,7 @@ open class CustomAlertDialogBuilder(context: Context, theme: Theme) : AlertDialo
 ) {
     private var keepFullScreen = false
 
-    fun keepFullScreen(): AlertDialog.Builder {
+    fun keepFullScreen(): MaterialAlertDialogBuilder {
         keepFullScreen = true
         return this
     }
@@ -56,7 +57,7 @@ open class CustomAlertDialogBuilder(context: Context, theme: Theme) : AlertDialo
         val dialog = super.create()
         dialog.setOnShowListener {
             val typedValue = TypedValue()
-            context.theme.resolveAttribute(R.attr.colorAccent, typedValue, true)
+            context.theme.resolveAttribute(R.attr.colorSecondary, typedValue, true)
             for (i in listOf(AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL)) {
                 dialog.getButton(i).setTextColor(typedValue.data)
             }

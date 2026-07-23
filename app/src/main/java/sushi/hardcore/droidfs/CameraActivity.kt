@@ -18,7 +18,7 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.appcompat.widget.SwitchCompat
+import com.google.android.material.materialswitch.MaterialSwitch
 import androidx.camera.core.AspectRatio
 import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
@@ -120,7 +120,6 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        supportActionBar?.hide()
         encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
             intent.getIntExtra("volumeId", -1)
         )!!
@@ -228,7 +227,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             if (timerDuration != 0) {
                 dialog.setSelectedText(timerDuration.toString())
             }
-            val switch = dialog.root.findViewById<SwitchCompat>(R.id.switch_repeat)
+            val switch = dialog.root.findViewById<MaterialSwitch>(R.id.switch_repeat)
             switch.isChecked = repeat
             dialog.onSubmit { it ->
                 try {

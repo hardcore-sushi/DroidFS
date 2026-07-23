@@ -33,6 +33,7 @@ class LogcatActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLogcatBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
         title = getString(R.string.logcat_title)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 

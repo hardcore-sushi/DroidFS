@@ -25,6 +25,7 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/PasswordInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:hintEnabled="false"
@@ -50,6 +51,7 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"/>
 
     <com.google.android.material.textfield.TextInputLayout
+        style="@style/PasswordInput"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         app:hintEnabled="false"
@@ -95,8 +97,9 @@
         android:layout_gravity="center"
         android:text="@string/fingerprint_save_checkbox_text" />
 
-    <androidx.appcompat.widget.AppCompatButton
+    <Button
         android:id="@+id/button_create"
+        style="@style/Button"
         android:layout_width="match_parent"
         android:layout_height="@dimen/volume_operation_button_height"
         android:layout_gravity="center"

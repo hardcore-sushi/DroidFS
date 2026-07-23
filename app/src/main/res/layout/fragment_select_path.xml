@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -46,7 +47,7 @@
 
         </LinearLayout>
 
-        <androidx.appcompat.widget.SwitchCompat
+        <com.google.android.material.materialswitch.MaterialSwitch
             android:id="@+id/switch_hidden_volume"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -82,7 +83,7 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
         android:visibility="gone"/>
 
-    <Button
+    <android.widget.Button
         android:id="@+id/button_pick_directory"
         android:layout_width="wrap_content"
         style="@style/RoundButton"
@@ -100,7 +101,7 @@
         android:text="@string/or"
         android:layout_marginBottom="10dp"/>
 
-    <Button
+    <android.widget.Button
         android:id="@+id/button_enter_path"
         android:layout_width="wrap_content"
         style="@style/RoundButton"
@@ -108,7 +109,7 @@
         android:text="@string/enter_volume_path"
         android:layout_gravity="center_horizontal"/>
 
-    <androidx.appcompat.widget.SwitchCompat
+    <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/switch_remember"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -118,8 +119,9 @@
         android:layout_marginTop="20dp"
         android:layout_gravity="center"/>
 
-    <androidx.appcompat.widget.AppCompatButton
+    <Button
         android:id="@+id/button_action"
+        style="@style/Button"
         android:layout_width="match_parent"
         android:layout_height="@dimen/volume_operation_button_height"
         android:layout_gravity="center"

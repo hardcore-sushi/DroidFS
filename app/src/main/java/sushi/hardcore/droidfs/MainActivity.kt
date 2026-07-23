@@ -60,6 +60,7 @@ class MainActivity : BaseActivity(), VolumeAdapter.Listener {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
         if (sharedPrefs.getBoolean("applicationFirstOpening", true)) {
             CustomAlertDialogBuilder(this, theme)
                 .setTitle(R.string.warning)

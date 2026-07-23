@@ -44,8 +44,6 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
     override fun onCreate(savedInstanceState: Bundle?) {
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         if (fullscreen) {
-            setTheme(R.style.Theme_AppCompat_NoActionBar)
-            supportActionBar?.hide()
             edgeToEdge()
             windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {

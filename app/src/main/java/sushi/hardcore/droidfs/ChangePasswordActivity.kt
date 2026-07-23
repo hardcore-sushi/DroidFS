@@ -36,6 +36,7 @@ class ChangePasswordActivity: BaseActivity() {
         volume = IntentUtils.getParcelableExtra(intent, "volume")!!
         binding = ActivityChangePasswordBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
         title = getString(R.string.change_password)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         binding.textVolumeName.text = volume.name

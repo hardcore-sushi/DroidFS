@@ -13,4 +13,5 @@
     <dimen name="dialog_text_size">16sp</dimen>
     <dimen name="title_file_name_text_size">20sp</dimen>
     <dimen name="selectable_row_vertical_padding">10dp</dimen>
+    <dimen name="password_input_margin_top">5dp</dimen>
 </resources>

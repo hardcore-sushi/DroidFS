@@ -11,7 +11,6 @@ import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
-import androidx.preference.SwitchPreference
 import androidx.preference.SwitchPreferenceCompat
 import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
@@ -26,6 +25,7 @@ class SettingsActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
         val binding = ActivitySettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         val screen = intent.extras?.getString("screen") ?: "main"
         val fragment = if (screen == "UnsafeFeaturesSettingsFragment") {
@@ -87,7 +87,7 @@ class SettingsActivity : BaseActivity() {
     class UnsafeFeaturesSettingsFragment : PreferenceFragmentCompat() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.unsafe_features_preferences, rootKey)
-            findPreference<SwitchPreference>("usf_fingerprint")?.setOnPreferenceChangeListener { _, checked ->
+            findPreference<SwitchPreferenceCompat>("usf_fingerprint")?.setOnPreferenceChangeListener { _, checked ->
                 if (checked as Boolean) {
                     var errorMsg: String? = null
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -119,20 +119,20 @@ class SettingsActivity : BaseActivity() {
                     true
                 }
             }
-            val switchBackground = findPreference<SwitchPreference>("usf_background")!!
-            val switchKeepOpen = findPreference<SwitchPreference>("usf_keep_open")!!
-            val switchExternalOpen = findPreference<SwitchPreference>("usf_open")!!
-            val switchExpose = findPreference<SwitchPreference>("usf_expose")!!
-            val switchSafWrite = findPreference<SwitchPreference>("usf_saf_write")!!
+            val switchBackground = findPreference<SwitchPreferenceCompat>("usf_background")!!
+            val switchKeepOpen = findPreference<SwitchPreferenceCompat>("usf_keep_open")!!
+            val switchExternalOpen = findPreference<SwitchPreferenceCompat>("usf_open")!!
+            val switchExpose = findPreference<SwitchPreferenceCompat>("usf_expose")!!
+            val switchSafWrite = findPreference<SwitchPreferenceCompat>("usf_saf_write")!!
 
             fun onUsfBackgroundChanged(usfBackground: Boolean) {
-                fun updateSwitchPreference(switch: SwitchPreference) = with (switch) {
+                fun updateSwitchPreferenceCompat(switch: SwitchPreferenceCompat) = with (switch) {
                     isChecked = isChecked && usfBackground
                     isEnabled = usfBackground
                     onPreferenceChangeListener?.onPreferenceChange(switch, isChecked)
                 }
-                updateSwitchPreference(switchKeepOpen)
-                updateSwitchPreference(switchExpose)
+                updateSwitchPreferenceCompat(switchKeepOpen)
+                updateSwitchPreferenceCompat(switchExpose)
             }
             onUsfBackgroundChanged(switchBackground.isChecked)
 

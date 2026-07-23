@@ -23,7 +23,6 @@ abstract class MediaPlayer(fullscreen: Boolean): FileViewerActivity(fullscreen) 
     private lateinit var player: ExoPlayer
 
     override fun viewFile() {
-        supportActionBar?.hide()
         initializePlayer()
         refreshFileName()
     }

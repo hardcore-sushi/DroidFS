@@ -14,7 +14,7 @@
         <requestFocus/>
     </EditText>
 
-    <androidx.appcompat.widget.SwitchCompat
+    <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/switch_repeat"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
