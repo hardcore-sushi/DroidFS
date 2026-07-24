@@ -24,6 +24,7 @@ import androidx.core.content.ContextCompat
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +48,6 @@ import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.io.FileNotFoundException
 import kotlin.coroutines.resume
@@ -314,7 +314,7 @@ class FileOperationService : Service() {
                         if (granted) {
                             processPendingTask()
                         } else {
-                            CustomAlertDialogBuilder(activity, activity.theme)
+                            MaterialAlertDialogBuilder(activity)
                                 .setTitle(R.string.warning)
                                 .setMessage(R.string.notification_denied_msg)
                                 .setPositiveButton(R.string.settings) { _, _ ->

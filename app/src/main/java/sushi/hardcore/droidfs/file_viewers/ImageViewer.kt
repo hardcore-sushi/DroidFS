@@ -19,12 +19,12 @@ import coil3.request.target
 import coil3.request.transformations
 import coil3.size.Size
 import coil3.transform.Transformation
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
 import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -105,8 +105,7 @@ class ImageViewer: FileViewerActivity(true) {
             }
         })
         binding.imageDelete.setOnClickListener {
-            CustomAlertDialogBuilder(this, theme)
-                .keepFullScreen()
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setPositiveButton(R.string.ok) { _, _ ->
                     lifecycleScope.launch {
@@ -117,8 +116,7 @@ class ImageViewer: FileViewerActivity(true) {
                                 loadImage(true)
                             }
                         } else {
-                            CustomAlertDialogBuilder(this@ImageViewer, theme)
-                                .keepFullScreen()
+                            MaterialAlertDialogBuilder(this@ImageViewer)
                                 .setTitle(R.string.error)
                                 .setMessage(getString(R.string.remove_failed, fileName))
                                 .setPositiveButton(R.string.ok, null)
@@ -236,8 +234,7 @@ class ImageViewer: FileViewerActivity(true) {
 
     private fun askSaveRotation(callback: () -> Unit){
         if (imageViewModel.rotationAngle.mod(360f) != 0f && !slideshowActive) {
-            CustomAlertDialogBuilder(this, theme)
-                .keepFullScreen()
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save_img_rotated)
                 .setNegativeButton(R.string.no) { _, _ -> callback() }
@@ -255,16 +252,14 @@ class ImageViewer: FileViewerActivity(true) {
                                 Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
                                 callback()
                             } else {
-                                CustomAlertDialogBuilder(this, theme)
-                                    .keepFullScreen()
+                                MaterialAlertDialogBuilder(this)
                                     .setTitle(R.string.error)
                                     .setMessage(R.string.file_write_failed)
                                     .setPositiveButton(R.string.ok, null)
                                     .show()
                             }
                         } else {
-                            CustomAlertDialogBuilder(this, theme)
-                                .keepFullScreen()
+                            MaterialAlertDialogBuilder(this)
                                 .setTitle(R.string.error)
                                 .setMessage(R.string.bitmap_compress_failed)
                                 .setPositiveButton(R.string.ok, null)

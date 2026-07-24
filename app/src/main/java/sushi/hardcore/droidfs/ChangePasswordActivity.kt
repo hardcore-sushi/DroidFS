@@ -10,6 +10,7 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.databinding.ActivityChangePasswordBinding
 import sushi.hardcore.droidfs.filesystems.CryfsVolume
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
@@ -17,7 +18,6 @@ import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.IntentUtils
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.UIUtils
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.util.*
 
 class ChangePasswordActivity: BaseActivity() {
@@ -43,7 +43,7 @@ class ChangePasswordActivity: BaseActivity() {
         volumeDatabase = VolumeDatabase(this)
         usfFingerprint = sharedPrefs.getBoolean("usf_fingerprint", false)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fingerprintProtector = FingerprintProtector.new(this, theme, volumeDatabase)
+            fingerprintProtector = FingerprintProtector.new(this, volumeDatabase)
             if (fingerprintProtector != null && volume.encryptedHash != null) {
                 binding.fingerprintSwitchContainer.visibility = View.VISIBLE
             }
@@ -140,7 +140,7 @@ class ChangePasswordActivity: BaseActivity() {
         } else {
             null
         }
-        object : LoadingTask<Boolean>(this, theme, R.string.loading_msg_change_password) {
+        object : LoadingTask<Boolean>(this, R.string.loading_msg_change_password) {
             override suspend fun doTask(): Boolean {
                 val success = if (volume.type == EncryptedVolume.GOCRYPTFS_VOLUME_TYPE) {
                     GocryptfsVolume.changePassword(
@@ -200,7 +200,7 @@ class ChangePasswordActivity: BaseActivity() {
                     finish()
                 }
             } else {
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.change_password_failed)
                     .setPositiveButton(R.string.ok, null)

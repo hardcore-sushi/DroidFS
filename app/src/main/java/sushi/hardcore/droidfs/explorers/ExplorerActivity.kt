@@ -9,6 +9,7 @@ import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.CameraActivity
@@ -20,7 +21,6 @@ import sushi.hardcore.droidfs.adapters.IconTextDialogAdapter
 import sushi.hardcore.droidfs.file_operations.OperationFile
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
 class ExplorerActivity : BaseExplorerActivity() {
@@ -45,7 +45,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     val paths = resultIntent.getStringArrayListExtra("paths")
                     val types = resultIntent.getIntegerArrayListExtra("types")
                     if (types != null && paths != null){
-                        object : LoadingTask<List<OperationFile>>(this, theme, R.string.discovering_files) {
+                        object : LoadingTask<List<OperationFile>>(this, R.string.discovering_files) {
                             override suspend fun doTask(): List<OperationFile> {
                                 val operationFiles = ArrayList<OperationFile>()
                                 for (i in paths.indices) {
@@ -134,7 +134,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun onImportComplete(urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
-        CustomAlertDialogBuilder(this, theme)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.success_import)
             .setMessage("""
                             ${getString(R.string.success_import_msg)}
@@ -184,7 +184,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     listOf("createFolder", R.string.mkdir, R.drawable.icon_create_new_folder),
                     listOf("camera", R.string.camera, R.drawable.icon_photo)
                 )
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setSingleChoiceItems(adapter, -1){ thisDialog, which ->
                         when (adapter.getItem(which)){
                             "importFromOtherVolumes" -> {
@@ -294,7 +294,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.validate -> {
                 if (currentItemAction == ItemsActions.COPY){
-                    object : LoadingTask<List<OperationFile>>(this, theme, R.string.discovering_files) {
+                    object : LoadingTask<List<OperationFile>>(this, R.string.discovering_files) {
                         override suspend fun doTask(): List<OperationFile> {
                             val items = itemsToProcess.toMutableList()
                             itemsToProcess.filter { it.isDirectory }.forEach { dir ->
@@ -348,13 +348,13 @@ class ExplorerActivity : BaseExplorerActivity() {
             }
             R.id.delete -> {
                 val size = explorerAdapter.selectedItems.size
-                val dialog = CustomAlertDialogBuilder(this, theme)
+                val dialog = MaterialAlertDialogBuilder(this)
                 dialog.setTitle(R.string.warning)
                 dialog.setPositiveButton(R.string.ok) { _, _ ->
                     val items = explorerAdapter.selectedItems.map { i -> explorerElements[i] }
                     activityScope.launch {
                         fileOperationService.removeElements(volumeId, items)?.let { failedItem ->
-                            CustomAlertDialogBuilder(this@ExplorerActivity, theme)
+                            MaterialAlertDialogBuilder(this@ExplorerActivity)
                                 .setTitle(R.string.error)
                                 .setMessage(getString(R.string.remove_failed, failedItem))
                                 .setPositiveButton(R.string.ok, null)
@@ -383,7 +383,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                     }
                 }
                 app.isExporting = true
-                object : LoadingTask<Pair<Intent?, Int?>>(this, theme, R.string.loading_msg_export) {
+                object : LoadingTask<Pair<Intent?, Int?>>(this, R.string.loading_msg_export) {
                     override suspend fun doTask(): Pair<Intent?, Int?> {
                         return fileShare.share(files, volumeId)
                     }
@@ -422,7 +422,7 @@ class ExplorerActivity : BaseExplorerActivity() {
     private fun checkMoveOverwrite(items: List<OperationFile>, callback: (List<OperationFile>?) -> Unit) {
         for (item in items) {
             if (encryptedVolume.pathExists(item.dstPath!!) && !item.overwriteConfirmed) {
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
                     .setMessage(
                         getString(

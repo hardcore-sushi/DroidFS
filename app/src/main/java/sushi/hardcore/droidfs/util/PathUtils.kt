@@ -11,9 +11,8 @@ import android.provider.OpenableColumns
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.core.content.ContextCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.Theme
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.text.DecimalFormat
 import kotlin.math.log10
@@ -250,11 +249,11 @@ object PathUtils {
         return rootDirectory.delete()
     }
 
-     fun safePickDirectory(directoryPicker: ActivityResultLauncher<Uri?>, context: Context, theme: Theme) {
+     fun safePickDirectory(directoryPicker: ActivityResultLauncher<Uri?>, context: Context) {
         try {
             directoryPicker.launch(null)
-        } catch (e: ActivityNotFoundException) {
-            CustomAlertDialogBuilder(context, theme)
+        } catch (_: ActivityNotFoundException) {
+            MaterialAlertDialogBuilder(context)
                 .setTitle(R.string.error)
                 .setMessage(R.string.open_tree_failed)
                 .setPositiveButton(R.string.ok, null)

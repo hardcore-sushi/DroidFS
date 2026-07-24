@@ -1,19 +1,17 @@
 package sushi.hardcore.droidfs.widgets
 
+import android.app.Activity
 import android.view.WindowManager
 import android.widget.EditText
 import androidx.appcompat.app.AlertDialog
-import sushi.hardcore.droidfs.BaseActivity
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
 
 class EditTextDialog(
-    activity: BaseActivity,
+    activity: Activity,
     private val titleId: Int,
     viewId: Int = R.layout.dialog_edit_text,
-) : CustomAlertDialogBuilder(
-    activity,
-    activity.theme
-) {
+) : MaterialAlertDialogBuilder(activity) {
     val root = activity.layoutInflater.inflate(viewId, null)
     val dialogEditText = root.findViewById<EditText>(R.id.dialog_edit_text)
     private lateinit var callback: (String) -> Unit

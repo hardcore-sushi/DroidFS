@@ -12,11 +12,11 @@ import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import androidx.preference.PreferenceManager
 import androidx.preference.SwitchPreferenceCompat
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.content_providers.VolumeProvider
 import sushi.hardcore.droidfs.databinding.ActivitySettingsBinding
 import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Compat
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 class SettingsActivity : BaseActivity() {
     private val notificationPermissionHelper = AndroidUtils.NotificationPermissionHelper(this)
@@ -108,7 +108,7 @@ class SettingsActivity : BaseActivity() {
                     if (errorMsg == null) {
                         true
                     } else {
-                        CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                        MaterialAlertDialogBuilder(requireContext())
                             .setTitle(R.string.error)
                             .setMessage(errorMsg)
                             .setPositiveButton(R.string.ok, null)
@@ -171,7 +171,7 @@ class SettingsActivity : BaseActivity() {
             }
             findPreference<ListPreference>("export_method")!!.setOnPreferenceChangeListener { _, newValue ->
                 if (newValue as String == "memory" && !Compat.isMemFileSupported()) {
-                    CustomAlertDialogBuilder(requireContext(), (requireActivity() as BaseActivity).theme)
+                    MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.error)
                         .setMessage(getString(R.string.memfd_create_unsupported, Compat.MEMFD_CREATE_MINIMUM_KERNEL_VERSION))
                         .setPositiveButton(R.string.ok, null)

@@ -5,10 +5,10 @@ import android.net.Uri
 import android.os.Build
 import android.view.Menu
 import android.view.MenuItem
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.util.IntentUtils
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.nio.CharBuffer
 import java.nio.charset.StandardCharsets
 
@@ -77,7 +77,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     false
                 }
                 if (!success) {
-                    CustomAlertDialogBuilder(this, theme)
+                    MaterialAlertDialogBuilder(this)
                             .setTitle(R.string.error)
                             .setMessage(R.string.share_intent_parsing_failed)
                             .setPositiveButton(R.string.ok, null)
@@ -91,7 +91,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
 
     private fun onImported() {
         setCurrentPath(currentDirectoryPath)
-        CustomAlertDialogBuilder(this, theme)
+        MaterialAlertDialogBuilder(this)
             .setTitle(R.string.success_import)
             .setMessage(R.string.success_import_msg)
             .setCancelable(false)

@@ -1,9 +1,9 @@
 package sushi.hardcore.droidfs.file_operations
 
 import android.content.Context
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.Theme
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 class TaskResult<T> private constructor(val state: State, val failedItem: T?, val errorMessage: String?) {
     enum class State {
@@ -19,8 +19,8 @@ class TaskResult<T> private constructor(val state: State, val failedItem: T?, va
         CANCELLED,
     }
 
-    fun showErrorAlertDialog(context: Context, theme: Theme) {
-        CustomAlertDialogBuilder(context, theme)
+    fun showErrorAlertDialog(context: Context) {
+        MaterialAlertDialogBuilder(context)
             .setTitle(R.string.error)
             .setMessage(context.getString(R.string.task_failed, errorMessage))
             .setPositiveButton(R.string.ok, null)

@@ -14,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.BuildConfig
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.FingerprintProtector
@@ -31,7 +32,6 @@ import sushi.hardcore.droidfs.filesystems.GocryptfsVolume
 import sushi.hardcore.droidfs.util.Compat
 import sushi.hardcore.droidfs.util.ObjRef
 import sushi.hardcore.droidfs.util.UIUtils
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 import java.util.Arrays
 
@@ -109,7 +109,7 @@ class CreateVolumeFragment: Fragment() {
         }
         volumeDatabase = VolumeDatabase(requireContext())
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fingerprintProtector = FingerprintProtector.new(requireActivity(), theme, volumeDatabase)
+            fingerprintProtector = FingerprintProtector.new(requireActivity(), volumeDatabase)
         }
         if (!rememberVolume || !usfFingerprint || fingerprintProtector == null) {
             binding.checkboxSavePassword.visibility = View.GONE
@@ -195,7 +195,7 @@ class CreateVolumeFragment: Fragment() {
                 null
             }
             val encryptedVolume = ObjRef<EncryptedVolume?>(null)
-            object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, theme, R.string.loading_msg_create) {
+            object: LoadingTask<Byte>(requireActivity() as AppCompatActivity, R.string.loading_msg_create) {
                 private fun generateResult(success: Boolean, volumeType: Byte): Byte {
                     return if (success) {
                         volumeType
@@ -239,7 +239,7 @@ class CreateVolumeFragment: Fragment() {
                 }
             }.startTask(lifecycleScope) { result ->
                 if (result.compareTo(-1) == 0) {
-                    CustomAlertDialogBuilder(requireContext(), theme)
+                    MaterialAlertDialogBuilder(requireContext())
                         .setTitle(R.string.error)
                         .setMessage(R.string.create_volume_failed)
                         .setPositiveButton(R.string.ok, null)

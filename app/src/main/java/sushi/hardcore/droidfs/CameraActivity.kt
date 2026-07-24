@@ -42,6 +42,7 @@ import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -52,7 +53,6 @@ import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.video_recording.AsynchronousSeekableWriter
 import sushi.hardcore.droidfs.video_recording.FFmpegMuxer
 import sushi.hardcore.droidfs.video_recording.SeekableWriter
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -162,7 +162,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             else -> throw IllegalArgumentException("Invalid quality: $it")
                         }
                     }.toTypedArray()
-                    CustomAlertDialogBuilder(this, theme)
+                    MaterialAlertDialogBuilder(this)
                         .setTitle("Choose quality:")
                         .setSingleChoiceItems(qualityNames, currentQualityIndex) { dialog, which ->
                             currentQualityIndex = which
@@ -173,7 +173,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                         .show()
                 }
             } else {
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.camera_optimization)
                     .setSingleChoiceItems(
                         arrayOf(getString(R.string.maximize_quality), getString(R.string.minimize_latency)),
@@ -197,7 +197,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         }
         binding.imageRatio.setOnClickListener {
             if (isInVideoMode) {
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle("Aspect ratio:")
                     .setSingleChoiceItems(arrayOf("16:9", "4:3"), currentAspectRatioIndex) { dialog, which ->
                         currentAspectRatioIndex = which
@@ -208,7 +208,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     .show()
             } else {
                 resolutions?.let {
-                    CustomAlertDialogBuilder(this, theme)
+                    MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.choose_resolution)
                         .setSingleChoiceItems(it.map { size -> size.toString() }.toTypedArray(), currentResolutionIndex) { dialog, which ->
                             currentResolution = resolutions!![which]
@@ -350,7 +350,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     permissionsGranted = true
                     setupCamera()
                 } else {
-                    CustomAlertDialogBuilder(this, theme)
+                    MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.error)
                         .setMessage(R.string.camera_perm_needed)
                         .setCancelable(false)
@@ -496,7 +496,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                                 binding.takePhotoButton.onPhotoTaken()
                             }
                         } else {
-                            CustomAlertDialogBuilder(this@CameraActivity, theme)
+                            MaterialAlertDialogBuilder(this@CameraActivity)
                                 .setTitle(R.string.error)
                                 .setMessage(R.string.picture_save_failed)
                                 .setPositiveButton(R.string.ok, null)
@@ -532,7 +532,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             val path = getOutputPath(true)
             val fileHandle = encryptedVolume.openFileWriteMode(path)
             if (fileHandle == -1L) {
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.file_creation_failed)
                     .setPositiveButton(R.string.ok, null)

@@ -8,8 +8,8 @@ import android.view.MenuItem
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.addCallback
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 import java.io.File
 
 class TextEditor: FileViewerActivity() {
@@ -33,7 +33,7 @@ class TextEditor: FileViewerActivity() {
                     checkSaveAndExit()
                 }
             } catch (e: OutOfMemoryError){
-                CustomAlertDialogBuilder(this, theme)
+                MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.error)
                     .setMessage(R.string.outofmemoryerror_msg)
                     .setCancelable(false)
@@ -87,7 +87,7 @@ class TextEditor: FileViewerActivity() {
 
     private fun checkSaveAndExit(){
         if (changedSinceLastSave){
-            CustomAlertDialogBuilder(this, theme)
+            MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save)
                 .setPositiveButton(R.string.save) { _, _ ->

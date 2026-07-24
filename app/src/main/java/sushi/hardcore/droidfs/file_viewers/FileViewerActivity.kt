@@ -2,7 +2,6 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.os.Build
 import android.os.Bundle
-import android.view.View
 import android.view.WindowManager
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -11,6 +10,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -25,7 +25,6 @@ import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.finishOnClose
-import sushi.hardcore.droidfs.widgets.CustomAlertDialogBuilder
 
 abstract class FileViewerActivity(private val fullscreen: Boolean = false): BaseActivity() {
 
@@ -86,7 +85,7 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
                     if (result.second == 0) {
                         callback(result.first!!)
                     } else {
-                        val dialog = CustomAlertDialogBuilder(this@FileViewerActivity, theme)
+                        val dialog = MaterialAlertDialogBuilder(this@FileViewerActivity)
                             .setTitle(R.string.error)
                             .setCancelable(false)
                             .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
