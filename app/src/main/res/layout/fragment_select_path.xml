@@ -83,15 +83,15 @@
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
         android:visibility="gone"/>
 
-    <android.widget.Button
+    <Button
         android:id="@+id/button_pick_directory"
         android:layout_width="wrap_content"
-        style="@style/RoundButton"
-        android:drawableStart="@drawable/icon_folder_search"
-        android:text="@string/pick_directory"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="10dp"
-        android:layout_marginBottom="10dp"/>
+        style="@style/Button"
+        app:icon="@drawable/icon_folder_search"
+        android:text="@string/pick_directory"
+        android:layout_marginVertical="10dp"/>
 
     <TextView
         android:id="@+id/text_or"
@@ -101,13 +101,14 @@
         android:text="@string/or"
         android:layout_marginBottom="10dp"/>
 
-    <android.widget.Button
+    <Button
         android:id="@+id/button_enter_path"
         android:layout_width="wrap_content"
-        style="@style/RoundButton"
-        android:drawableStart="@drawable/icon_edit"
-        android:text="@string/enter_volume_path"
-        android:layout_gravity="center_horizontal"/>
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        style="@style/Button"
+        app:icon="@drawable/icon_edit"
+        android:text="@string/enter_volume_path"/>
 
     <com.google.android.material.materialswitch.MaterialSwitch
         android:id="@+id/switch_remember"
@@ -121,12 +122,7 @@
 
     <Button
         android:id="@+id/button_action"
-        style="@style/Button"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/volume_operation_button_height"
-        android:layout_gravity="center"
-        android:layout_marginHorizontal="@dimen/volume_operation_button_horizontal_margin"
-        android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        style="@style/ActionButton"
         android:visibility="gone"
         android:text="@string/create_volume" />
 

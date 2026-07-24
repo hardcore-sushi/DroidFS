@@ -99,12 +99,7 @@
 
     <Button
         android:id="@+id/button_create"
-        style="@style/Button"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/volume_operation_button_height"
-        android:layout_gravity="center"
-        android:layout_marginHorizontal="70dp"
-        android:layout_marginTop="@dimen/volume_operation_vertical_gap"
+        style="@style/ActionButton"
         android:text="@string/create" />
 
 </LinearLayout>

@@ -5,8 +5,6 @@
     <dimen name="image_button_size">40dp</dimen>
     <dimen name="volume_operation_horizontal_gap">20dp</dimen>
     <dimen name="volume_operation_vertical_gap">20dp</dimen>
-    <dimen name="volume_operation_button_height">40dp</dimen>
-    <dimen name="volume_operation_button_horizontal_margin">90dp</dimen>
     <dimen name="details_text_size">10sp</dimen>
     <dimen name="dialog_horizontal_padding">30dp</dimen>
     <dimen name="dialog_padding_top">10dp</dimen>

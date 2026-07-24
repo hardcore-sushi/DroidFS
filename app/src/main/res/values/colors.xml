@@ -4,7 +4,7 @@
     <color name="black">#000000</color>
     <color name="green">#6CC341</color>
     <color name="white">#FFFFFF</color>
-    <color name="red">#ff0000</color>
+    <color name="red">#F62828</color>
     <color name="blue">#00B8D4</color>
     <color name="yellow">#FFD600</color>
     <color name="orange">#FF6D00</color>
@@ -16,6 +16,7 @@
     <color name="fullScreenBackgroundColor">@color/black</color>
     <color name="textColorSecondary">#AAAAAA</color>
     <color name="itemSelected">#66666666</color>
+    <color name="buttonForeground">#101010</color>
     <color name="playerDoubleTapTouch">#18FFFFFF</color>
     <color name="playerDoubleTapBackground">#20EEEEEE</color>
     <color name="exo_black_opacity_60" tools:override="true">#38000000</color>
