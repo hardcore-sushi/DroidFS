@@ -3,7 +3,7 @@
 
     <PreferenceCategory android:title="@string/theme">
 
-        <ListPreference
+        <sushi.hardcore.droidfs.widgets.MaterialListPreference
             android:defaultValue="green"
             android:entries="@array/color_names"
             android:entryValues="@array/color_values"
@@ -23,7 +23,7 @@
 
     <PreferenceCategory android:title="@string/explorer">
 
-        <ListPreference
+        <sushi.hardcore.droidfs.widgets.MaterialListPreference
             app:defaultValue="name"
             app:entries="@array/sort_orders_entries"
             app:entryValues="@array/sort_orders_values"

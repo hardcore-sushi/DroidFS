@@ -11,73 +11,87 @@
         <item name="android:statusBarColor">@color/toolbar</item>
         <item name="android:navigationBarColor">@color/backgroundColor</item>
         <item name="infoBarBackgroundColor">#181818</item>
+        <item name="materialAlertDialogTheme">@style/DarkGreenDialog</item>
     </style>
 
     <style name="DarkRed" parent="BaseTheme">
         <item name="colorPrimary">@color/red</item>
         <item name="colorPrimaryContainer">@color/red</item>
         <item name="colorSecondary">@color/red</item>
+        <item name="materialAlertDialogTheme">@style/DarkRedDialog</item>
     </style>
     <style name="DarkBlue" parent="BaseTheme">
         <item name="colorPrimary">@color/blue</item>
         <item name="colorPrimaryContainer">@color/blue</item>
         <item name="colorSecondary">@color/blue</item>
+        <item name="materialAlertDialogTheme">@style/DarkBlueDialog</item>
     </style>
     <style name="DarkYellow" parent="BaseTheme">
         <item name="colorPrimary">@color/yellow</item>
         <item name="colorPrimaryContainer">@color/yellow</item>
         <item name="colorSecondary">@color/yellow</item>
+        <item name="materialAlertDialogTheme">@style/DarkYellowDialog</item>
     </style>
     <style name="DarkOrange" parent="BaseTheme">
         <item name="colorPrimary">@color/orange</item>
         <item name="colorPrimaryContainer">@color/orange</item>
         <item name="colorSecondary">@color/orange</item>
+        <item name="materialAlertDialogTheme">@style/DarkOrangeDialog</item>
     </style>
     <style name="DarkPurple" parent="BaseTheme">
         <item name="colorPrimary">@color/purple</item>
         <item name="colorPrimaryContainer">@color/purple</item>
         <item name="colorSecondary">@color/purple</item>
+        <item name="materialAlertDialogTheme">@style/DarkPurpleDialog</item>
     </style>
     <style name="DarkPink" parent="BaseTheme">
         <item name="colorPrimary">@color/pink</item>
         <item name="colorPrimaryContainer">@color/pink</item>
         <item name="colorSecondary">@color/pink</item>
+        <item name="materialAlertDialogTheme">@style/DarkPinkDialog</item>
     </style>
 
     <style name="BlackGreen" parent="BaseTheme">
         <item name="android:windowBackground">@color/black</item>
         <item name="android:navigationBarColor">@color/black</item>
         <item name="infoBarBackgroundColor">@color/black</item>
+        <item name="materialAlertDialogTheme">@style/BlackGreenDialog</item>
     </style>
     <style name="BlackRed" parent="BlackGreen">
         <item name="colorPrimary">@color/red</item>
         <item name="colorPrimaryContainer">@color/red</item>
         <item name="colorSecondary">@color/red</item>
+        <item name="materialAlertDialogTheme">@style/BlackRedDialog</item>
     </style>
     <style name="BlackBlue" parent="BlackGreen">
         <item name="colorPrimary">@color/blue</item>
         <item name="colorPrimaryContainer">@color/blue</item>
         <item name="colorSecondary">@color/blue</item>
+        <item name="materialAlertDialogTheme">@style/BlackBlueDialog</item>
     </style>
     <style name="BlackYellow" parent="BlackGreen">
         <item name="colorPrimary">@color/yellow</item>
         <item name="colorPrimaryContainer">@color/yellow</item>
         <item name="colorSecondary">@color/yellow</item>
+        <item name="materialAlertDialogTheme">@style/BlackYellowDialog</item>
     </style>
     <style name="BlackOrange" parent="BlackGreen">
         <item name="colorPrimary">@color/orange</item>
         <item name="colorPrimaryContainer">@color/orange</item>
         <item name="colorSecondary">@color/orange</item>
+        <item name="materialAlertDialogTheme">@style/BlackOrangeDialog</item>
     </style>
     <style name="BlackPurple" parent="BlackGreen">
         <item name="colorPrimary">@color/purple</item>
         <item name="colorPrimaryContainer">@color/purple</item>
         <item name="colorSecondary">@color/purple</item>
+        <item name="materialAlertDialogTheme">@style/BlackPurpleDialog</item>
     </style>
     <style name="BlackPink" parent="BlackGreen">
         <item name="colorPrimary">@color/pink</item>
         <item name="colorPrimaryContainer">@color/pink</item>
         <item name="colorSecondary">@color/pink</item>
+        <item name="materialAlertDialogTheme">@style/BlackPinkDialog</item>
     </style>
 
     <style name="Widget.App.Toolbar" parent="Widget.Material3.Toolbar">

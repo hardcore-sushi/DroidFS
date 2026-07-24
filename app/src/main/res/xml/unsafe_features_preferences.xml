@@ -96,7 +96,7 @@
             android:summary="@string/usf_saf_write_summary"
             app:widgetLayout="@layout/preference_widget_material_switch" />
 
-        <ListPreference
+        <sushi.hardcore.droidfs.widgets.MaterialListPreference
             android:key="export_method"
             android:entries="@array/export_methods"
             android:entryValues="@array/export_methods_values"
