@@ -1,6 +1,6 @@
 <resources>
     <style name="BaseTheme" parent="Theme.Material3.Dark.NoActionBar">
-        <item name="android:windowBackground">@color/backgroundColor</item>
+        <item name="android:windowBackground">@drawable/window_background</item>
         <item name="android:textColorHighlight">@color/text_color_highlight</item>
         <item name="colorPrimary">@color/green</item>
         <item name="colorOnPrimary">#a0000000</item>
