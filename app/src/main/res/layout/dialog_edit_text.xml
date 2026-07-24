@@ -5,13 +5,20 @@
     android:layout_height="match_parent"
     android:paddingHorizontal="@dimen/dialog_horizontal_padding">
 
-    <EditText
-        android:id="@+id/dialog_edit_text"
+    <com.google.android.material.textfield.TextInputLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:inputType="text"
-        android:imeOptions="actionDone">
-        <requestFocus/>
-    </EditText>
+        android:layout_height="wrap_content"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
+
+        <EditText
+            android:id="@+id/dialog_edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:imeOptions="actionDone">
+            <requestFocus/>
+        </EditText>
+
+    </com.google.android.material.textfield.TextInputLayout>
 
 </LinearLayout>

@@ -197,7 +197,7 @@ class SelectPathFragment: Fragment() {
         }
 
         val hidden = binding.switchHiddenVolume.isChecked
-        binding.editVolumeName.isVisible = hidden || inputViewModel.showEditText
+        binding.inputLayoutVolumeName.isVisible = hidden || inputViewModel.showEditText
         binding.buttonPickDirectory.isVisible = !hidden
         binding.textOr.isVisible = !hidden && !inputViewModel.showEditText
         binding.buttonEnterPath.isVisible = !hidden && !inputViewModel.showEditText

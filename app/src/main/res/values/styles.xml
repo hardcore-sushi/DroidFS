@@ -106,7 +106,7 @@
         <item name="android:paddingEnd">60dp</item>
     </style>
 
-    <style name="PasswordInput">
+    <style name="PasswordInput" parent="Widget.Material3.TextInputLayout.OutlinedBox">
         <item name="android:layout_marginTop">@dimen/password_input_margin_top</item>
     </style>
 

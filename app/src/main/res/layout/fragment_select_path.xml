@@ -64,16 +64,23 @@
         android:text="@string/volume_path_label"
         android:layout_marginBottom="10dp"/>
 
-    <EditText
-        android:id="@+id/edit_volume_name"
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/input_layout_volume_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="@dimen/volume_operation_horizontal_gap"
-        android:hint="@string/volume_path_hint"
-        android:importantForAutofill="no"
-        android:inputType="textNoSuggestions"
-        android:maxLines="1"
-        android:visibility="gone" />
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+        android:visibility="gone">
+
+        <EditText
+            android:id="@+id/edit_volume_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:maxLines="1" />
+
+    </com.google.android.material.textfield.TextInputLayout>
 
     <TextView
         android:id="@+id/text_warning"
