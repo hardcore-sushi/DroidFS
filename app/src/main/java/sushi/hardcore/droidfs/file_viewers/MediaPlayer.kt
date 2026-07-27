@@ -19,7 +19,7 @@ import sushi.hardcore.droidfs.R
 import java.io.File
 
 @OptIn(UnstableApi::class)
-abstract class MediaPlayer(fullscreen: Boolean): FileViewerActivity(fullscreen) {
+abstract class MediaPlayer: FileViewerActivity() {
     private lateinit var player: ExoPlayer
 
     override fun viewFile() {

@@ -47,8 +47,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".SettingsActivity" android:label="@string/title_activity_settings"/>
-        <activity android:name=".add_volume.AddVolumeActivity" android:windowSoftInputMode="adjustResize"/>
-        <activity android:name=".ChangePasswordActivity"  android:windowSoftInputMode="adjustResize"/>
+        <activity android:name=".add_volume.AddVolumeActivity"/>
+        <activity android:name=".ChangePasswordActivity"/>
         <activity android:name=".explorers.ExplorerActivity"/>
         <activity android:name=".explorers.ExplorerActivityPick"/>
         <activity android:name=".explorers.ExplorerActivityDrop"/>
@@ -56,7 +56,7 @@
         <activity android:name=".file_viewers.VideoPlayer" android:configChanges="screenSize|orientation" />
         <activity android:name=".file_viewers.PdfViewer" android:configChanges="screenSize|orientation" android:theme="@style/AppTheme" />
         <activity android:name=".file_viewers.AudioPlayer" android:configChanges="screenSize|orientation" />
-        <activity android:name=".file_viewers.TextEditor" android:configChanges="screenSize|orientation" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".file_viewers.TextEditor" android:configChanges="screenSize|orientation"/>
         <activity android:name=".CameraActivity" android:screenOrientation="nosensor" />
         <activity android:name=".LogcatActivity"/>
 

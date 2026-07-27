@@ -19,6 +19,8 @@ import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.Compat
 
 class SettingsActivity : BaseActivity() {
+    override val contentAreaId = R.id.settings
+
     private val notificationPermissionHelper = AndroidUtils.NotificationPermissionHelper(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {

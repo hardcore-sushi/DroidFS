@@ -155,6 +155,9 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             refresher.isRefreshing = false
         }
         bindFileOperationService()
+        findViewById<View>(R.id.info_bar)?.let {
+            applyHorizonalDisplayCutoutInsets(it)
+        }
     }
 
     class ExplorerViewModel: ViewModel() {

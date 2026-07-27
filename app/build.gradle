@@ -36,7 +36,7 @@ android {
     defaultConfig {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 35
         versionCode 37
         versionName "2.2.0"
 

@@ -31,7 +31,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.abs
 
-class ImageViewer: FileViewerActivity(true) {
+class ImageViewer: FileViewerActivity() {
     companion object {
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150

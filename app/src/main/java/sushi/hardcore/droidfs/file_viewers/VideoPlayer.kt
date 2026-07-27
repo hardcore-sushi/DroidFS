@@ -14,7 +14,7 @@ import androidx.media3.ui.PlayerView
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
-class VideoPlayer: MediaPlayer(true) {
+class VideoPlayer: MediaPlayer() {
     private var firstPlay = true
     private val autoFit by lazy {
         sharedPrefs.getBoolean("autoFit", false)

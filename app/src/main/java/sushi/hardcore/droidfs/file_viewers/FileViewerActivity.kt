@@ -1,11 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
-import android.os.Build
 import android.os.Bundle
-import android.view.WindowManager
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
@@ -26,7 +22,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.finishOnClose
 
-abstract class FileViewerActivity(private val fullscreen: Boolean = false): BaseActivity() {
+abstract class FileViewerActivity: BaseActivity() {
 
     class FileViewerViewModel : ViewModel() {
         val playlist = mutableListOf<ExplorerElement>()
@@ -41,15 +37,9 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
     protected val fileViewerViewModel: FileViewerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
-        if (fullscreen) {
-            edgeToEdge()
-            windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                window.attributes.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
-            }
-        }
         super.onCreate(savedInstanceState)
+        windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
+        windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
         if (fileViewerViewModel.filePath == null) {
             fileViewerViewModel.filePath = intent.getStringExtra("path")!!
         }
@@ -67,11 +57,6 @@ abstract class FileViewerActivity(private val fullscreen: Boolean = false): Base
 
     open fun hideSystemUi() {
         windowInsetsController.hide(WindowInsetsCompat.Type.systemBars())
-    }
-
-    protected fun edgeToEdge() {
-        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        enableEdgeToEdge()
     }
 
     abstract fun getFileType(): String

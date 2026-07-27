@@ -5,9 +5,11 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
+import android.view.ViewGroup
 import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.addCallback
+import androidx.core.view.ViewCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import sushi.hardcore.droidfs.R
 import java.io.File
@@ -25,7 +27,6 @@ class TextEditor: FileViewerActivity() {
     override fun viewFile() {
         fileName = File(fileViewerViewModel.filePath!!).name
         title = fileName
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         loadWholeFile(fileViewerViewModel.filePath!!) {
             try {
                 loadLayout(String(it))
@@ -48,7 +49,10 @@ class TextEditor: FileViewerActivity() {
         } else {
             setContentView(R.layout.activity_text_editor)
         }
+        applyInsets()
+        ViewCompat.requestApplyInsets((findViewById<ViewGroup>(android.R.id.content)))
         setSupportActionBar(findViewById(R.id.toolbar))
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
         editor = findViewById(R.id.text_editor)
         editor.setText(fileContent)
         editor.addTextChangedListener(object: TextWatcher {

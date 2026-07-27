@@ -6,10 +6,10 @@
     android:orientation="vertical"
     tools:context="sushi.hardcore.droidfs.MainActivity">
 
-    <include layout="@layout/toolbar"
-        android:id="@+id/toolbar" />
+    <include layout="@layout/toolbar" />
 
     <RelativeLayout
+        android:id="@+id/content_area"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 

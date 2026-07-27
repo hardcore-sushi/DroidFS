@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.Surface
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.Animation
 import android.view.animation.LinearInterpolator
 import android.view.animation.RotateAnimation
@@ -41,6 +42,9 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.Job
@@ -120,6 +124,24 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         super.onCreate(savedInstanceState)
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val originalTopMargin = (binding.topControls.layoutParams as ViewGroup.MarginLayoutParams).topMargin
+        ViewCompat.setOnApplyWindowInsetsListener(binding.topControls) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                topMargin = originalTopMargin + insets.top
+            }
+            windowInsets
+        }
+        val originalBottomMargin = (binding.bottomControls.layoutParams as ViewGroup.MarginLayoutParams).bottomMargin
+        ViewCompat.setOnApplyWindowInsetsListener(binding.bottomControls) { view, windowInsets ->
+            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.updateLayoutParams<ViewGroup.MarginLayoutParams> {
+                bottomMargin = originalBottomMargin + insets.bottom
+            }
+            windowInsets
+        }
+
         encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
             intent.getIntExtra("volumeId", -1)
         )!!
