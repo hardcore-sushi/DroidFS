@@ -293,6 +293,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             })
         }
         binding.imageModeSwitch.setOnClickListener {
+            cancelTimer()
             isInVideoMode = !isInVideoMode
             rebindUseCases()
             binding.imageFlash.setImageResource(if (isInVideoMode) {
@@ -318,6 +319,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             })
         }
         binding.imageCameraSwitch.setOnClickListener {
+            cancelTimer()
             isBackCamera = if (isBackCamera) {
                 binding.imageCameraSwitch.setImageResource(R.drawable.icon_camera_back)
                 false
@@ -485,6 +487,14 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         return outputPath
     }
 
+    private fun cancelTimer() {
+        if (timerJob?.isActive == true) {
+            timerJob?.cancel()
+        }
+        binding.textTimer.visibility = View.GONE
+        binding.takePhotoButton.onPhotoTaken()
+    }
+
     private fun startTimerThen(action: () -> Unit) {
         if (timerDuration > 0){
             binding.textTimer.visibility = View.VISIBLE
@@ -536,11 +546,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     }
 
     private fun onClickTakePhoto() {
-        val job = timerJob
-        if (job != null && job.isActive) {
-            job.cancel()
-            binding.textTimer.visibility = View.GONE
-            binding.takePhotoButton.onPhotoTaken()
+        if (timerJob?.isActive == true) {
+            cancelTimer()
         } else {
             startTimerThen(::takePhoto)
         }
