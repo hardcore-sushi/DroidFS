@@ -558,40 +558,40 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         if (isRecording) {
             videoRecording?.stop()
         } else if (!(timerJob?.isActive ?: false)) {
-            val path = getOutputPath(true)
-            val fileHandle = encryptedVolume.openFileWriteMode(path)
-            if (fileHandle == -1L) {
-                MaterialAlertDialogBuilder(this)
-                    .setTitle(R.string.error)
-                    .setMessage(R.string.file_creation_failed)
-                    .setPositiveButton(R.string.ok, null)
-                    .show()
-                return
-            }
-            val writer = AsynchronousSeekableWriter(object : SeekableWriter {
-                private var offset = 0L
-
-                override fun close() {
-                    encryptedVolume.closeFile(fileHandle)
-                }
-
-                override fun seek(offset: Long) {
-                    this.offset = offset
-                }
-
-                override fun write(buffer: ByteArray, size: Int) {
-                    offset += encryptedVolume.write(fileHandle, offset, buffer, 0, size.toLong())
-                }
-            })
-            val pendingRecording = videoRecorder!!.prepareRecording(
-                this,
-                MuxerOutputOptions(FFmpegMuxer(writer))
-            ).also {
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
-                    it.withAudioEnabled()
-                }
-            }
             startTimerThen {
+                val path = getOutputPath(true)
+                val fileHandle = encryptedVolume.openFileWriteMode(path)
+                if (fileHandle == -1L) {
+                    MaterialAlertDialogBuilder(this)
+                        .setTitle(R.string.error)
+                        .setMessage(R.string.file_creation_failed)
+                        .setPositiveButton(R.string.ok, null)
+                        .show()
+                    return@startTimerThen
+                }
+                val writer = AsynchronousSeekableWriter(object : SeekableWriter {
+                    private var offset = 0L
+
+                    override fun close() {
+                        encryptedVolume.closeFile(fileHandle)
+                    }
+
+                    override fun seek(offset: Long) {
+                        this.offset = offset
+                    }
+
+                    override fun write(buffer: ByteArray, size: Int) {
+                        offset += encryptedVolume.write(fileHandle, offset, buffer, 0, size.toLong())
+                    }
+                })
+                val pendingRecording = videoRecorder!!.prepareRecording(
+                    this,
+                    MuxerOutputOptions(FFmpegMuxer(writer))
+                ).also {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M || ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) {
+                        it.withAudioEnabled()
+                    }
+                }
                 writer.start()
                 videoRecording = pendingRecording.start(executor) {
                     val buttons = arrayOf(binding.imageCaptureMode, binding.imageRatio, binding.imageTimer, binding.imageModeSwitch, binding.imageCameraSwitch)
