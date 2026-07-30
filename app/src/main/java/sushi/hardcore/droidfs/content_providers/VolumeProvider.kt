@@ -1,17 +1,26 @@
 package sushi.hardcore.droidfs.content_providers
 
 import android.content.Context
+import android.content.res.AssetFileDescriptor
 import android.database.Cursor
 import android.database.MatrixCursor
+import android.graphics.Bitmap
+import android.graphics.Point
 import android.os.CancellationSignal
 import android.os.ParcelFileDescriptor
 import android.provider.DocumentsContract
 import android.provider.DocumentsProvider
 import android.util.Log
 import android.webkit.MimeTypeMap
-import androidx.preference.PreferenceManager
+import coil3.BitmapImage
+import coil3.request.ImageRequest
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import sushi.hardcore.droidfs.BuildConfig
 import sushi.hardcore.droidfs.EncryptedFileProvider
+import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.VolumeManager
@@ -20,6 +29,7 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.ThumbnailLoaderConfig
 import java.io.File
 
 class VolumeProvider: DocumentsProvider() {
@@ -122,6 +132,9 @@ class VolumeProvider: DocumentsProvider() {
     private fun addDocumentRow(cursor: MatrixCursor, volumeData: VolumeData, documentId: String, name: String, stat: Stat) {
         val isDirectory = stat.type == Stat.S_IFDIR
         var flags = 0
+        if (!isDirectory && (FileTypes.isImage(name) || FileTypes.isVideo(name))) {
+            flags = flags or DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
+        }
         if (usfSafWrite && volumeData.canWrite(context!!.filesDir.path)) {
             flags = flags or DocumentsContract.Document.FLAG_SUPPORTS_DELETE or DocumentsContract.Document.FLAG_SUPPORTS_RENAME
             if (isDirectory) {
@@ -228,6 +241,34 @@ class VolumeProvider: DocumentsProvider() {
             else -> result.second.log()
         }
         return null
+    }
+
+    override fun openDocumentThumbnail(
+        documentId: String,
+        sizeHint: Point,
+        signal: CancellationSignal?
+    ): AssetFileDescriptor? {
+        if (!usfExpose) { return null }
+        val document = parseDocumentId(documentId) ?: return null
+
+        val imageLoader = ThumbnailLoaderConfig.imageLoader(context!!, document.encryptedVolume)
+        val image = runBlocking {
+            imageLoader.execute(
+                ThumbnailLoaderConfig.applyVideoConfig(
+                    ImageRequest.Builder(context!!).data(document.path).size(sizeHint.x, sizeHint.y)
+                ).build()
+            )
+        }.image
+        val bitmap = (image as? BitmapImage)?.bitmap ?: return null
+
+        val pipe = ParcelFileDescriptor.createPipe()
+        @OptIn(DelicateCoroutinesApi::class)
+        GlobalScope.launch {
+            ParcelFileDescriptor.AutoCloseOutputStream(pipe[1]).use { out ->
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
+            }
+        }
+        return AssetFileDescriptor(pipe[0], 0, AssetFileDescriptor.UNKNOWN_LENGTH)
     }
 
     override fun createDocument(

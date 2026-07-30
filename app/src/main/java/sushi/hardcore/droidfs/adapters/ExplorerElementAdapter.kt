@@ -13,16 +13,13 @@ import coil3.imageLoader
 import coil3.load
 import coil3.request.Disposable
 import coil3.request.ImageRequest
-import coil3.video.VideoFrameDecoder
-import coil3.video.preferVideoFrameEmbeddedThumbnailKey
-import coil3.video.videoFramePercent
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
+import sushi.hardcore.droidfs.util.ThumbnailLoaderConfig
 import java.text.DateFormat
 import java.util.Locale
 
@@ -48,9 +45,7 @@ class ExplorerElementAdapter(
         if (encryptedVolume != null) {
             activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_image).target { result -> iconImage = result}.build())
             activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_video).target { result -> iconVideo = result}.build())
-            thumbnailsLoader = ImageLoader.Builder(activity).diskCache(null).fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).components {
-                add(VideoFrameDecoder.Factory())
-            }.build()
+            thumbnailsLoader = ThumbnailLoaderConfig.imageLoader(activity, encryptedVolume)
         }
     }
 
@@ -127,8 +122,7 @@ class ExplorerElementAdapter(
             val adapter = (bindingAdapter as ExplorerElementAdapter?)!!
             return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
                 icon.load(fullPath, adapter.thumbnailsLoader!!) {
-                    videoFramePercent(0.1)
-                    preferVideoFrameEmbeddedThumbnailKey(true)
+                    ThumbnailLoaderConfig.applyVideoConfig(this)
                     placeholder(placeholder)
                 }
             } else {
