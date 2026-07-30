@@ -337,7 +337,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             setupCamera()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
-        binding.recordVideoButton.setOnClickListener { onClickRecordVideo() }
+        binding.recordVideoButton.onClick = ::onClickRecordVideo
         orientedIcons = listOf(binding.imageRatio, binding.imageTimer, binding.imageCaptureMode, binding.imageFlash, binding.imageModeSwitch, binding.imageCameraSwitch)
         sensorOrientationListener = SensorOrientationListener(this)
 
@@ -492,7 +492,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             timerJob?.cancel()
         }
         binding.textTimer.visibility = View.GONE
-        binding.takePhotoButton.onPhotoTaken()
+        binding.takePhotoButton.release()
+        binding.recordVideoButton.release()
     }
 
     private fun startTimerThen(action: () -> Unit) {
@@ -525,7 +526,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             if (repeat) {
                                 startTimerThen(::takePhoto)
                             } else {
-                                binding.takePhotoButton.onPhotoTaken()
+                                binding.takePhotoButton.release()
                             }
                         } else {
                             MaterialAlertDialogBuilder(this@CameraActivity)
@@ -533,12 +534,12 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                                 .setMessage(R.string.picture_save_failed)
                                 .setPositiveButton(R.string.ok, null)
                                 .show()
-                            binding.takePhotoButton.onPhotoTaken()
+                            binding.takePhotoButton.release()
                         }
                     }
 
                     override fun onError(exception: ImageCaptureException) {
-                        binding.takePhotoButton.onPhotoTaken()
+                        binding.takePhotoButton.release()
                         Toast.makeText(applicationContext, exception.message, Toast.LENGTH_SHORT).show()
                     }
                 })
@@ -557,7 +558,9 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private fun onClickRecordVideo() {
         if (isRecording) {
             videoRecording?.stop()
-        } else if (!(timerJob?.isActive ?: false)) {
+        } else if (timerJob?.isActive == true) {
+            cancelTimer()
+        } else {
             startTimerThen {
                 val path = getOutputPath(true)
                 val fileHandle = encryptedVolume.openFileWriteMode(path)
@@ -597,6 +600,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                     val buttons = arrayOf(binding.imageCaptureMode, binding.imageRatio, binding.imageTimer, binding.imageModeSwitch, binding.imageCameraSwitch)
                     when (it) {
                         is VideoRecordEvent.Start -> {
+                            binding.recordVideoButton.release()
                             binding.recordVideoButton.setImageResource(R.drawable.stop_recording_video_button)
                             for (i in buttons) {
                                 i.isEnabled = false
@@ -613,6 +617,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             } else {
                                 Toast.makeText(applicationContext, getString(R.string.video_save_success, path), Toast.LENGTH_SHORT).show()
                             }
+                            binding.recordVideoButton.release()
                             binding.recordVideoButton.setImageResource(R.drawable.record_video_button)
                             for (i in buttons) {
                                 i.isEnabled = true

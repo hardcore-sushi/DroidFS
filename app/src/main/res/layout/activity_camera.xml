@@ -101,14 +101,14 @@
             android:layout_height="wrap_content"
             android:layout_centerInParent="true">
 
-            <ImageView
+            <sushi.hardcore.droidfs.widgets.HoldableButton
                 android:id="@+id/record_video_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/record_video_button"
                 android:visibility="gone"/>
 
-            <sushi.hardcore.droidfs.widgets.TakePhotoButton
+            <sushi.hardcore.droidfs.widgets.HoldableButton
                 android:id="@+id/take_photo_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

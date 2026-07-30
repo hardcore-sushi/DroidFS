@@ -5,7 +5,7 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.appcompat.widget.AppCompatImageView
 
-class TakePhotoButton: AppCompatImageView {
+class HoldableButton: AppCompatImageView {
     constructor(context: Context) : super(context) { init() }
     constructor(context: Context, attrs: AttributeSet): super(context, attrs) { init() }
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int): super(context, attrs, defStyleAttr) { init() }
@@ -22,7 +22,7 @@ class TakePhotoButton: AppCompatImageView {
         }
     }
 
-    fun onPhotoTaken(){
+    fun release() {
         isPressed = false
     }
 }
