@@ -442,34 +442,30 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     protected fun checkPathOverwrite(items: List<OperationFile>, dstDirectoryPath: String, callback: (List<OperationFile>?) -> Unit) {
         val srcDirectoryPath = items[0].parentPath
-        var ready = true
+        val dstPaths = HashSet<String>()
         for (i in items.indices) {
-            val testDstPath: String
-            if (items[i].dstPath == null){
-                testDstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].srcPath))
-                if (encryptedVolume.pathExists(testDstPath)) {
-                    ready = false
-                } else {
-                    items[i].dstPath = testDstPath
-                }
-            } else {
-                testDstPath = items[i].dstPath!!
-                if (encryptedVolume.pathExists(testDstPath) && !items[i].overwriteConfirmed) {
-                    ready = false
-                }
+            if (items[i].dstPath == null) {
+                items[i].dstPath = PathUtils.pathJoin(dstDirectoryPath, PathUtils.getRelativePath(srcDirectoryPath, items[i].srcPath))
             }
-            if (!ready){
+            val collision = items[i].dstPath in dstPaths
+            if (items[i].overwriteConfirmed || !(collision || encryptedVolume.pathExists(items[i].dstPath!!))) {
+                dstPaths.add(items[i].dstPath!!)
+            } else {
                 MaterialAlertDialogBuilder(this)
                     .setTitle(R.string.warning)
                     .setMessage(getString(
-                        if (items[i].isDirectory) {
-                            R.string.dir_overwrite_question
+                        if (collision) {
+                            // No collision should happen on directories since we can't select multiple directories
+                            R.string.file_collision_question
                         } else {
-                            R.string.file_overwrite_question
-                        }, testDstPath
+                            if (items[i].isDirectory) {
+                                R.string.dir_overwrite_question
+                            } else {
+                                R.string.file_overwrite_question
+                            }
+                        }, items[i].dstPath
                     ))
                     .setPositiveButton(R.string.yes) {_, _ ->
-                        items[i].dstPath = testDstPath
                         items[i].overwriteConfirmed = true
                         checkPathOverwrite(items, dstDirectoryPath, callback)
                     }
@@ -495,12 +491,10 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         callback(null)
                     }
                     .show()
-                break
+                return
             }
         }
-        if (ready){
-            callback(items)
-        }
+        callback(items)
     }
 
     protected fun onTaskResult(
