@@ -22,7 +22,6 @@ import android.annotation.SuppressLint;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.camera.core.impl.utils.CloseGuardHelper;
 import androidx.core.util.Consumer;
@@ -48,8 +47,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * when the object is garbage collected, and no new recordings can be started from the same
  * {@link Recorder} that generated the object until that occurs.
  */
-@RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
-@SuppressLint("RestrictedApi")
 public final class SucklessRecording implements AutoCloseable {
 
     // Indicates the recording has been explicitly stopped by users.
