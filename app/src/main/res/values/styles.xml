@@ -1,13 +1,17 @@
 <resources>
     <style name="BaseTheme" parent="Theme.Material3.Dark.NoActionBar">
         <item name="android:windowBackground">@drawable/window_background</item>
+        <item name="windowBackgroundColor">@color/backgroundColor</item>
         <item name="android:textColorHighlight">@color/text_color_highlight</item>
         <item name="colorPrimary">@color/green</item>
         <item name="colorOnPrimary">#a0000000</item>
+        <item name="colorButtonForeground">@color/buttonForeground</item>
+        <item name="menuIconColor">@color/white</item>
         <item name="colorPrimaryContainer">@color/green</item>
         <item name="colorOnPrimaryContainer">@color/black</item>
         <item name="colorSecondary">@color/green</item>
-        <item name="colorSurfaceContainer">@color/toolbar</item>
+        <item name="colorSurfaceContainer">@color/darkGrey</item>
+        <item name="textColorSecondary">@color/textColorSecondary</item>
         <item name="infoBarBackgroundColor">#181818</item>
         <item name="materialAlertDialogTheme">@style/DarkGreenDialog</item>
     </style>
@@ -50,7 +54,7 @@
     </style>
 
     <style name="BlackGreen" parent="BaseTheme">
-        <item name="android:windowBackground">@color/black</item>
+        <item name="windowBackgroundColor">@color/black</item>
         <item name="infoBarBackgroundColor">@color/black</item>
         <item name="materialAlertDialogTheme">@style/BlackGreenDialog</item>
     </style>
@@ -91,9 +95,21 @@
         <item name="materialAlertDialogTheme">@style/BlackPinkDialog</item>
     </style>
 
+    <style name="DynamicColor" parent="Theme.Material3.DynamicColors.DayNight.NoActionBar">
+        <item name="android:windowBackground">@drawable/window_background</item>
+        <item name="windowBackgroundColor">?attr/colorSurface</item>
+        <item name="android:textColorHighlight">@color/text_color_highlight</item>
+        <item name="colorSecondary">?attr/colorPrimary</item>
+        <item name="colorButtonForeground">?attr/colorOnPrimary</item>
+        <item name="textColorSecondary">?attr/colorOnSurfaceVariant</item>
+        <item name="menuIconColor">?attr/colorOnSurfaceVariant</item>
+        <item name="infoBarBackgroundColor">?attr/colorSurfaceContainerHigh</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+    </style>
+
     <style name="Button" parent="Widget.Material3.Button">
-        <item name="android:textColor">@color/buttonForeground</item>
-        <item name="iconTint">@color/buttonForeground</item>
+        <item name="android:textColor">?attr/colorButtonForeground</item>
+        <item name="iconTint">?attr/colorButtonForeground</item>
         <item name="android:paddingStart">15dp</item>
         <item name="android:paddingEnd">15dp</item>
         <item name="android:drawablePadding">5dp</item>

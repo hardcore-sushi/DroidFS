@@ -9,6 +9,7 @@
     </string-array>
 
     <string-array name="color_names">
+        <item>Dynamic</item>
         <item>Зелёный</item>
         <item>Красный</item>
         <item>Синий</item>

@@ -40,6 +40,7 @@
             android:singleLine="true"
             android:ellipsize="end"
             android:textSize="@dimen/title_file_name_text_size"
+            android:textColor="@color/white"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@id/rotate_button"
             android:layout_centerVertical="true"/>

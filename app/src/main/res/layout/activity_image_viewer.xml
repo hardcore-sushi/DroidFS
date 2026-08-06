@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/fullScreenBackgroundColor">
@@ -32,6 +33,7 @@
                 android:layout_toStartOf="@id/image_delete"
                 android:ellipsize="end"
                 android:singleLine="true"
+                android:textColor="@color/white"
                 android:textSize="@dimen/title_file_name_text_size" />
 
             <ImageButton
@@ -44,6 +46,7 @@
                 android:layout_toStartOf="@id/image_button_slideshow"
                 android:background="#00000000"
                 android:scaleType="fitCenter"
+                app:tint="@color/neutralIconTint"
                 android:src="@drawable/icon_delete" />
 
             <ImageButton

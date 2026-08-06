@@ -42,6 +42,7 @@ class ImageViewer: FileViewerActivity() {
         var imageLoader: ImageLoader? = null
     }
 
+    override val blackBackground: Boolean = true
     private lateinit var fileName: String
     private lateinit var handler: Handler
     private val imageViewModel: ImageViewModel by viewModels()

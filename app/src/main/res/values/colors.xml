@@ -10,7 +10,7 @@
     <color name="orange">#FF6D00</color>
     <color name="purple">#AA00FF</color>
     <color name="pink">#FF76D8</color>
-    <color name="toolbar">#262626</color>
+    <color name="darkGrey">#262626</color>
     <color name="dialogBackground">#333333</color>
     <color name="neutralIconTint">@color/white</color>
     <color name="fullScreenBackgroundColor">@color/black</color>

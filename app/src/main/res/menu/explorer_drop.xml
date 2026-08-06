@@ -17,18 +17,21 @@
         android:id="@+id/sort"
         app:showAsAction="ifRoom"
         android:title="@string/sort_by"
-        android:icon="@drawable/icon_sort"/>
+        android:icon="@drawable/icon_sort"
+        app:iconTint="?attr/menuIconColor"/>
 
     <item
         android:id="@+id/lock"
         app:showAsAction="ifRoom"
         android:title="@string/lock_volume"
-        android:icon="@drawable/icon_lock"/>
+        android:icon="@drawable/icon_lock"
+        app:iconTint="?attr/menuIconColor"/>
 
     <item
         android:id="@+id/close"
         app:showAsAction="ifRoom"
         android:title="@string/close_volume"
-        android:icon="@drawable/icon_close"/>
+        android:icon="@drawable/icon_close"
+        app:iconTint="?attr/menuIconColor"/>
 
 </menu>

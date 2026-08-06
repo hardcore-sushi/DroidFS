@@ -12,6 +12,9 @@ class Theme(var color: String, var black: Boolean) : Parcelable {
     )
 
     fun toResourceId(): Int {
+        if (color == "dynamic") {
+            return R.style.DynamicColor
+        }
         return if (black) {
             when (color) {
                 "red" -> R.style.BlackRed

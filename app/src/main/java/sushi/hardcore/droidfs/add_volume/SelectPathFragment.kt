@@ -147,10 +147,7 @@ class SelectPathFragment: Fragment() {
             inputViewModel.showEditText = true
             updateUi()
             binding.editVolumeName.requestFocus()
-            (app.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(
-                binding.editVolumeName,
-                InputMethodManager.SHOW_IMPLICIT
-            )
+            (app.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).showSoftInput(binding.editVolumeName, 0)
         }
         binding.editVolumeName.addTextChangedListener(object: TextWatcher {
             override fun afterTextChanged(s: Editable?) {}

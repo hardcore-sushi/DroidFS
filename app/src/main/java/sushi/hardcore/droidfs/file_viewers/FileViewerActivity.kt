@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.viewModels
 import androidx.core.view.WindowInsetsCompat
@@ -30,6 +31,7 @@ abstract class FileViewerActivity: BaseActivity() {
         var filePath: String? = null
     }
 
+    protected open val blackBackground: Boolean = false
     protected lateinit var encryptedVolume: EncryptedVolume
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
@@ -40,6 +42,11 @@ abstract class FileViewerActivity: BaseActivity() {
         super.onCreate(savedInstanceState)
         windowInsetsController = WindowInsetsControllerCompat(window, window.decorView)
         windowInsetsController.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_DEFAULT
+        if (blackBackground) {
+            window.decorView.setBackgroundColor(Color.BLACK)
+            windowInsetsController.isAppearanceLightStatusBars = false
+            windowInsetsController.isAppearanceLightNavigationBars = false
+        }
         if (fileViewerViewModel.filePath == null) {
             fileViewerViewModel.filePath = intent.getStringExtra("path")!!
         }

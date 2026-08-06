@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:fitsSystemWindows="true"
-    android:background="@color/toolbar">
+    android:background="?attr/colorSurfaceContainer">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"

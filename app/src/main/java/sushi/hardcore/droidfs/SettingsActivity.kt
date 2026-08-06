@@ -71,7 +71,14 @@ class SettingsActivity : BaseActivity() {
         override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
             setPreferencesFromResource(R.xml.root_preferences, rootKey)
             sharedPrefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            findPreference<ListPreference>("color")?.setOnPreferenceChangeListener { _, _ ->
+            val colorPreference = findPreference<ListPreference>("color")
+            val blackThemePreference = findPreference<SwitchPreferenceCompat>("black_theme")
+            fun updateBlackThemeVisibility() {
+                blackThemePreference?.isVisible = colorPreference?.value != "dynamic"
+            }
+            updateBlackThemeVisibility()
+            colorPreference?.setOnPreferenceChangeListener { _, _ ->
+                updateBlackThemeVisibility()
                 refreshTheme()
                 true
             }

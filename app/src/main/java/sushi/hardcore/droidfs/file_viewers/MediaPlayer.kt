@@ -20,6 +20,7 @@ import java.io.File
 
 @OptIn(UnstableApi::class)
 abstract class MediaPlayer: FileViewerActivity() {
+    override val blackBackground: Boolean = true
     private lateinit var player: ExoPlayer
 
     override fun viewFile() {

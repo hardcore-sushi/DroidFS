@@ -49,7 +49,6 @@ import sushi.hardcore.droidfs.file_viewers.VideoPlayer
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.UIUtils
 import sushi.hardcore.droidfs.util.finishOnClose
 import sushi.hardcore.droidfs.widgets.EditTextDialog
 
@@ -577,10 +576,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             menu.findItem(R.id.external_open)?.isVisible = false
         }
         val noItemSelected = explorerAdapter.selectedItems.isEmpty()
-        with(UIUtils.getMenuIconNeutralTint(this, menu)) {
-            applyTo(R.id.sort, R.drawable.icon_sort)
-            applyTo(R.id.share, R.drawable.icon_share)
-        }
         menu.findItem(R.id.sort).isVisible = noItemSelected
         menu.findItem(R.id.lock).isVisible = noItemSelected
         menu.findItem(R.id.close).isVisible = noItemSelected

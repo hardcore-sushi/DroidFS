@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <attr name="windowBackgroundColor" format="color"/>
+    <attr name="textColorSecondary" format="color"/>
+    <attr name="colorButtonForeground" format="color"/>
+    <attr name="menuIconColor" format="color"/>
     <attr name="infoBarBackgroundColor" format="color"/>
     <declare-styleable name="RingBufferTextView">
         <attr name="updateMaxLines" format="integer"/>

@@ -9,6 +9,7 @@
     </string-array>
 
     <string-array name="color_names">
+        <item>Dynamic</item>
         <item>ירוק</item>
         <item>אדום</item>
         <item>כחול</item>
@@ -35,6 +36,7 @@
     </string-array>
 
     <string-array name="color_values">
+        <item>dynamic</item>
         <item>green</item>
         <item>red</item>
         <item>blue</item>

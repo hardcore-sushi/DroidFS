@@ -1,10 +1,12 @@
 package sushi.hardcore.droidfs
 
 import android.content.SharedPreferences
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -30,7 +32,11 @@ open class BaseActivity: AppCompatActivity() {
         if (applyCustomTheme) {
             setTheme(theme.toResourceId())
         }
-        enableEdgeToEdge()
+        if (applyCustomTheme && theme.color == "dynamic") {
+            enableEdgeToEdge()
+        } else {
+            enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT))
+        }
         if (!sharedPrefs.getBoolean("usf_screenshot", false)) {
             window.setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE)
         }
