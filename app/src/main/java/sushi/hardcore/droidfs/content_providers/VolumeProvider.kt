@@ -29,7 +29,6 @@ import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.AndroidUtils
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.ThumbnailLoaderConfig
 import java.io.File
 
 class VolumeProvider: DocumentsProvider() {
@@ -251,12 +250,10 @@ class VolumeProvider: DocumentsProvider() {
         if (!usfExpose) { return null }
         val document = parseDocumentId(documentId) ?: return null
 
-        val imageLoader = ThumbnailLoaderConfig.imageLoader(context!!, document.encryptedVolume)
+        val imageLoader = volumeManager.getImageLoader(document.volumeId) ?: return null
         val image = runBlocking {
             imageLoader.execute(
-                ThumbnailLoaderConfig.applyVideoConfig(
-                    ImageRequest.Builder(context!!).data(document.path).size(sizeHint.x, sizeHint.y)
-                ).build()
+                ImageRequest.Builder(context!!).data(document.path).size(sizeHint.x, sizeHint.y).build()
             )
         }.image
         val bitmap = (image as? BitmapImage)?.bitmap ?: return null

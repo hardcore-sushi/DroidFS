@@ -16,16 +16,14 @@ import coil3.request.Disposable
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
-import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.filesystems.Stat
 import sushi.hardcore.droidfs.util.PathUtils
-import sushi.hardcore.droidfs.util.ThumbnailLoaderConfig
 import java.text.DateFormat
 import java.util.Locale
 
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
-    val encryptedVolume: EncryptedVolume?,
+    val thumbnailsLoader: ImageLoader?,
     private val listener: Listener,
 ) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
@@ -36,16 +34,14 @@ class ExplorerElementAdapter(
         notifyDataSetChanged()
     }
     var isUsingListLayout = true
-    private var thumbnailsLoader: ImageLoader? = null
     var loadThumbnails = true
     private var iconImage: Image? = null
     private var iconVideo: Image? = null
 
     init {
-        if (encryptedVolume != null) {
+        if (thumbnailsLoader != null) {
             iconImage = AppCompatResources.getDrawable(activity, R.drawable.icon_file_image)?.asImage()
             iconVideo = AppCompatResources.getDrawable(activity, R.drawable.icon_file_video)?.asImage()
-            thumbnailsLoader = ThumbnailLoaderConfig.imageLoader(activity, encryptedVolume)
         }
     }
 
@@ -121,8 +117,7 @@ class ExplorerElementAdapter(
         private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int, placeholder: Image?): Disposable? {
             val adapter = (bindingAdapter as ExplorerElementAdapter?)!!
             return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
-                icon.load(fullPath, adapter.thumbnailsLoader!!) {
-                    ThumbnailLoaderConfig.applyVideoConfig(this)
+                icon.load(fullPath, adapter.thumbnailsLoader) {
                     placeholder(placeholder)
                 }
             } else {

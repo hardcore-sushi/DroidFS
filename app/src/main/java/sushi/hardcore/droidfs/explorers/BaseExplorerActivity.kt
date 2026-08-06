@@ -114,7 +114,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         explorerAdapter = ExplorerElementAdapter(
             this,
             if (sharedPrefs.getBoolean("thumbnails", true)) {
-                encryptedVolume
+                app.volumeManager.getImageLoader(volumeId)
             } else {
                 null
             },

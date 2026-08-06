@@ -33,6 +33,7 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected open val blackBackground: Boolean = false
     protected lateinit var encryptedVolume: EncryptedVolume
+    protected val volumeId: Int by lazy { intent.getIntExtra("volumeId", -1) }
     private lateinit var originalParentPath: String
     private lateinit var windowInsetsController: WindowInsetsControllerCompat
     private val playlistMutex = Mutex()
@@ -52,7 +53,7 @@ abstract class FileViewerActivity: BaseActivity() {
         }
         originalParentPath = PathUtils.getParentPath(fileViewerViewModel.filePath!!)
         encryptedVolume = (application as VolumeManagerApp).volumeManager.getVolume(
-            intent.getIntExtra("volumeId", -1)
+            volumeId
         )!!
         finishOnClose(encryptedVolume)
         viewFile()

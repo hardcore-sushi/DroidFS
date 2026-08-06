@@ -23,8 +23,8 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import kotlinx.coroutines.launch
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
+import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
-import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -39,13 +39,15 @@ class ImageViewer: FileViewerActivity() {
 
     class ImageViewModel : ViewModel() {
         var rotationAngle: Float = 0f
-        var imageLoader: ImageLoader? = null
     }
 
     override val blackBackground: Boolean = true
     private lateinit var fileName: String
     private lateinit var handler: Handler
     private val imageViewModel: ImageViewModel by viewModels()
+    private val imageLoader: ImageLoader? by lazy {
+        (application as VolumeManagerApp).volumeManager.getImageLoader(volumeId)
+    }
     private var imageRequestBuilder: ImageRequest.Builder? = null
     private var x1 = 0F
     private var x2 = 0F
@@ -71,10 +73,6 @@ class ImageViewer: FileViewerActivity() {
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.overlay.fitsSystemWindows = true
-        if (imageViewModel.imageLoader == null) {
-            imageViewModel.imageLoader = ImageLoader.Builder(this).diskCache(null)
-                .fileSystem(EncryptedFileReaderFileSystem(encryptedVolume)).build()
-        }
         handler = Handler(mainLooper)
         binding.imageViewer.setOnInteractionListener(object : ZoomableImageView.OnInteractionListener {
             override fun onSingleTap(event: MotionEvent?) {
@@ -178,7 +176,7 @@ class ImageViewer: FileViewerActivity() {
         if (imageViewModel.rotationAngle.mod(360f) != 0f) {
             rotateImage()
         } else {
-            imageViewModel.imageLoader!!.enqueue(imageRequestBuilder!!.build())
+            imageLoader!!.enqueue(imageRequestBuilder!!.build())
         }
     }
 
@@ -229,7 +227,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun rotateImage() {
         orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle).also {
-            imageViewModel.imageLoader!!.enqueue(imageRequestBuilder!!.transformations(it).build())
+            imageLoader!!.enqueue(imageRequestBuilder!!.transformations(it).build())
         }
     }
 
