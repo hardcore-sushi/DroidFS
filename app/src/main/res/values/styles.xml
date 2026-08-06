@@ -14,6 +14,7 @@
         <item name="textColorSecondary">@color/textColorSecondary</item>
         <item name="infoBarBackgroundColor">#181818</item>
         <item name="materialAlertDialogTheme">@style/DarkGreenDialog</item>
+        <item name="preferenceTheme">@style/MultilinePreference</item>
     </style>
 
     <style name="DarkRed" parent="BaseTheme">
@@ -105,6 +106,11 @@
         <item name="menuIconColor">?attr/colorOnSurfaceVariant</item>
         <item name="infoBarBackgroundColor">?attr/colorSurfaceContainerHigh</item>
         <item name="materialAlertDialogTheme">@style/ThemeOverlay.Material3.MaterialAlertDialog</item>
+        <item name="preferenceTheme">@style/MultilinePreference</item>
+    </style>
+
+    <style name="MultilinePreference" parent="PreferenceThemeOverlay">
+        <item name="singleLineTitle">false</item>
     </style>
 
     <style name="Button" parent="Widget.Material3.Button">
