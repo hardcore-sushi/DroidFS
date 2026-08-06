@@ -16,12 +16,10 @@
 
 package androidx.camera.video;
 
-import static androidx.camera.core.impl.SessionConfig.SESSION_TYPE_HIGH_SPEED;
 import static androidx.camera.video.AudioStats.AUDIO_AMPLITUDE_NONE;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_DURATION_LIMIT_REACHED;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_ENCODING_FAILED;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_FILE_SIZE_LIMIT_REACHED;
-import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_INSUFFICIENT_STORAGE;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_INVALID_OUTPUT_OPTIONS;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_NONE;
 import static androidx.camera.video.VideoRecordEvent.Finalize.ERROR_NO_VALID_DATA;
@@ -33,23 +31,11 @@ import static androidx.camera.video.internal.DebugUtils.readableUs;
 import static androidx.camera.video.internal.config.AudioConfigUtil.resolveAudioEncoderConfig;
 import static androidx.camera.video.internal.config.AudioConfigUtil.resolveAudioMimeInfo;
 import static androidx.camera.video.internal.config.AudioConfigUtil.resolveAudioSettings;
-import static androidx.camera.video.internal.config.VideoConfigUtil.resolveVideoEncoderConfig;
-import static androidx.camera.video.internal.config.VideoConfigUtil.resolveVideoMimeInfo;
-import static androidx.camera.video.internal.config.VideoConfigUtil.workaroundDataSpaceIfRequired;
-import static androidx.camera.video.internal.utils.StorageUtil.formatSize;
-import static androidx.camera.video.internal.utils.StorageUtil.isStorageFullException;
-import static androidx.core.util.Preconditions.checkArgument;
-import static androidx.core.util.Preconditions.checkNotNull;
-
-import static java.lang.annotation.RetentionPolicy.SOURCE;
-import static java.util.Arrays.asList;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
-import android.location.Location;
-import android.media.CamcorderProfile;
 import android.media.MediaRecorder;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
@@ -57,13 +43,13 @@ import android.os.Build;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.util.Range;
-import android.util.Rational;
 import android.util.Size;
 import android.view.Surface;
 
 import androidx.annotation.GuardedBy;
-import androidx.annotation.IntDef;
 import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
 import androidx.annotation.RestrictTo;
@@ -73,7 +59,6 @@ import androidx.camera.core.CameraInfo;
 import androidx.camera.core.DynamicRange;
 import androidx.camera.core.Logger;
 import androidx.camera.core.SurfaceRequest;
-import androidx.camera.core.impl.CameraInfoInternal;
 import androidx.camera.core.impl.MutableStateObservable;
 import androidx.camera.core.impl.Observable;
 import androidx.camera.core.impl.StateObservable;
@@ -86,14 +71,15 @@ import androidx.camera.core.impl.utils.futures.Futures;
 import androidx.camera.core.internal.utils.ArrayRingBuffer;
 import androidx.camera.core.internal.utils.RingBuffer;
 import androidx.camera.video.StreamInfo.StreamState;
-import androidx.camera.video.internal.OutputStorage;
-import androidx.camera.video.internal.OutputStorageImpl;
 import androidx.camera.video.internal.VideoValidatedEncoderProfilesProxy;
 import androidx.camera.video.internal.audio.AudioSettings;
 import androidx.camera.video.internal.audio.AudioSource;
 import androidx.camera.video.internal.audio.AudioSourceAccessException;
+import androidx.camera.video.internal.compat.Api26Impl;
+import androidx.camera.video.internal.compat.quirk.DeactivateEncoderSurfaceBeforeStopEncoderQuirk;
+import androidx.camera.video.internal.compat.quirk.DeviceQuirks;
+import androidx.camera.video.internal.compat.quirk.EncoderNotUsePersistentInputSurfaceQuirk;
 import androidx.camera.video.internal.config.AudioMimeInfo;
-import androidx.camera.video.internal.config.VideoMimeInfo;
 import androidx.camera.video.internal.encoder.AudioEncoderConfig;
 import androidx.camera.video.internal.encoder.BufferCopiedEncodedData;
 import androidx.camera.video.internal.encoder.EncodeException;
@@ -101,15 +87,10 @@ import androidx.camera.video.internal.encoder.EncodedData;
 import androidx.camera.video.internal.encoder.Encoder;
 import androidx.camera.video.internal.encoder.EncoderCallback;
 import androidx.camera.video.internal.encoder.EncoderFactory;
-import androidx.camera.video.internal.encoder.EncoderImpl;
+import androidx.camera.video.internal.encoder.SucklessEncoderImpl;
 import androidx.camera.video.internal.encoder.InvalidConfigException;
 import androidx.camera.video.internal.encoder.OutputConfig;
-import androidx.camera.video.internal.encoder.VideoEncoderConfig;
 import androidx.camera.video.internal.encoder.VideoEncoderInfo;
-import androidx.camera.video.internal.encoder.VideoEncoderInfoImpl;
-import androidx.camera.video.internal.muxer.Muxer;
-import androidx.camera.video.internal.muxer.MuxerException;
-import androidx.camera.video.internal.muxer.MuxerFactory;
 import androidx.camera.video.internal.utils.OutputUtil;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 import androidx.core.util.Consumer;
@@ -118,13 +99,10 @@ import androidx.core.util.Preconditions;
 import com.google.auto.value.AutoValue;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.jspecify.annotations.NonNull;
-import org.jspecify.annotations.Nullable;
-
 import java.io.File;
 import java.io.IOException;
-import java.lang.annotation.Retention;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -162,9 +140,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>Once the recorder is attached to a video source as a {@link VideoOutput}, e.g. using it to
  * create a {@link VideoCapture} by calling {@link VideoCapture#withOutput(VideoOutput)}, a new
  * recording can be generated with one of the prepareRecording methods, such as
- * {@link #prepareRecording(Context, MediaStoreOutputOptions)}. The {@link PendingRecording} class
+ * {@link #prepareRecording(Context, MediaStoreOutputOptions)}. The {@link SucklessPendingRecording} class
  * then can be used to adjust per-recording settings and to start the recording. It also requires
- * passing a listener to {@link PendingRecording#start(Executor, Consumer)} to
+ * passing a listener to {@link SucklessPendingRecording#start(Executor, Consumer)} to
  * listen for {@link VideoRecordEvent}s such as {@link VideoRecordEvent.Start},
  * {@link VideoRecordEvent.Pause}, {@link VideoRecordEvent.Resume}, and
  * {@link VideoRecordEvent.Finalize}. This listener will also receive regular recording status
@@ -174,60 +152,16 @@ import java.util.concurrent.atomic.AtomicReference;
  * unexpected behaviors and is not recommended.
  *
  * <p>A recorder can also capture and save audio alongside video. The audio must be explicitly
- * enabled with {@link PendingRecording#withAudioEnabled()} before starting the recording.
+ * enabled with {@link SucklessPendingRecording#withAudioEnabled()} before starting the recording.
  *
  * @see VideoCapture#withOutput(VideoOutput)
- * @see PendingRecording
+ * @see SucklessPendingRecording
  */
+@RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
+@SuppressLint("RestrictedApi")
 public final class SucklessRecorder implements VideoOutput {
 
-    private static final String TAG = "SucklessRecorder";
-
-    /**
-     * Video capabilities are derived from {@link CamcorderProfile}.
-     *
-     * <p>The {@link Quality} supported by the video capabilities of this source are determined by
-     * the device's {@link CamcorderProfile}. This means that the quality of recorded videos is
-     * guaranteed by the device manufacturer. This is the recommended type for recording
-     * high-quality video.
-     *
-     * @see Builder#setVideoCapabilitiesSource(int)
-     */
-    public static final int VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE = 0;
-
-    /**
-     * Video capabilities are derived from codec capabilities.
-     *
-     * <p>The {@link Quality} supported by the video capabilities of this source are determined by
-     * the codec capabilities. However, the recorded videos is not guaranteed. For example, there
-     * may be frame drops due to thermal throttling or memory pressure.
-     * Therefore, it is recommended to use {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE}
-     * unless there is a specific reason. A common use case is when the application strives to
-     * record UHD video whenever feasible, but the device's {@link CamcorderProfile} does not
-     * include a UHD quality setting, even though the codec is capable of recording UHD video.
-     *
-     * @see Builder#setVideoCapabilitiesSource(int)
-     */
-    public static final int VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES = 1;
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    @Retention(SOURCE)
-    @IntDef({VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE,
-            VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES})
-    @interface VideoCapabilitiesSource {
-    }
-
-    /** Regular type video recording. */
-    static final int VIDEO_RECORDING_TYPE_REGULAR = 1;
-
-    /** High-speed type video recording. */
-    static final int VIDEO_RECORDING_TYPE_HIGH_SPEED = 2;
-
-    @Retention(SOURCE)
-    @IntDef({VIDEO_RECORDING_TYPE_REGULAR,
-            VIDEO_RECORDING_TYPE_HIGH_SPEED})
-    @interface VideoRecordingType {
-    }
+    private static final String TAG = "Recorder";
 
     enum State {
         /**
@@ -339,10 +273,8 @@ public final class SucklessRecorder implements VideoOutput {
      * @see QualitySelector
      */
     public static final QualitySelector DEFAULT_QUALITY_SELECTOR =
-            QualitySelector.fromOrderedList(
-                    asList(Quality.FHD, Quality.HD, Quality.SD),
-                    FallbackStrategy.higherQualityOrLowerThan(Quality.FHD)
-            );
+            QualitySelector.fromOrderedList(Arrays.asList(Quality.FHD, Quality.HD, Quality.SD),
+                    FallbackStrategy.higherQualityOrLowerThan(Quality.FHD));
 
     private static final VideoSpec VIDEO_SPEC_DEFAULT =
             VideoSpec.builder()
@@ -351,10 +283,10 @@ public final class SucklessRecorder implements VideoOutput {
                     .build();
     private static final MediaSpec MEDIA_SPEC_DEFAULT =
             MediaSpec.builder()
-                    .setOutputFormat(MediaSpec.OUTPUT_FORMAT_UNSPECIFIED)
+                    .setOutputFormat(MediaSpec.OUTPUT_FORMAT_AUTO)
                     .setVideoSpec(VIDEO_SPEC_DEFAULT)
                     .build();
-    @SuppressWarnings({"deprecation", "RedundantSuppression"})
+    @SuppressWarnings("deprecation")
     private static final String MEDIA_COLUMN = MediaStore.Video.Media.DATA;
     private static final Exception PENDING_RECORDING_ERROR_CAUSE_SOURCE_INACTIVE =
             new RuntimeException("The video frame producer became inactive before any "
@@ -365,50 +297,12 @@ public final class SucklessRecorder implements VideoOutput {
     // The audio data is expected to be less than 1 kB, the value of the cache size is used to limit
     // the memory used within an acceptable range.
     private static final int AUDIO_CACHE_SIZE = 60;
-    private static final int RETRY_SETUP_VIDEO_MAX_COUNT = 3;
-    private static final long RETRY_SETUP_VIDEO_DELAY_MS = 1000L;
     @VisibleForTesting
-    static final EncoderFactory DEFAULT_ENCODER_FACTORY = EncoderImpl::new;
-    private static final VideoEncoderInfo.Finder DEFAULT_VIDEO_ENCODER_INFO_FINDER =
-            VideoEncoderInfoImpl.FINDER;
-    private static final MuxerFactory DEFAULT_MUXER_FACTORY = outputFormat -> {
-        throw new IllegalStateException("SucklessRecorder does not use MuxerFactory. "
-                + "Use MuxerOutputOptions to provide a custom Muxer.");
-    };
-    private static final OutputStorage.Factory OUTPUT_STORAGE_FACTORY_DEFAULT = outputOptions -> {
-        if (outputOptions instanceof MuxerOutputOptions) {
-            return new OutputStorage() {
-                @Override
-                public OutputOptions getOutputOptions() {
-                    return outputOptions;
-                }
-
-                @Override
-                public long getAvailableBytes() {
-                    return Long.MAX_VALUE;
-                }
-            };
-        }
-        return new OutputStorageImpl(outputOptions);
-    };
+    static final EncoderFactory DEFAULT_ENCODER_FACTORY = SucklessEncoderImpl::new;
     private static final Executor AUDIO_EXECUTOR =
             CameraXExecutors.newSequentialExecutor(CameraXExecutors.ioExecutor());
-    private static final long REQUIRED_FREE_STORAGE_UNSET = -1L;
-    private static final long REQUIRED_FREE_STORAGE_DEFAULT_BYTES =
-            50L * 1024L * 1024L; // 50MB
-    private static final String INSUFFICIENT_STORAGE_ERROR_MSG =
-            "Insufficient storage space. The available storage (%d bytes) is below the required "
-                    + "threshold of %d bytes.";
-
-    @VisibleForTesting
-    static int sRetrySetupVideoMaxCount = RETRY_SETUP_VIDEO_MAX_COUNT;
-    @VisibleForTesting
-    static long sRetrySetupVideoDelayMs = RETRY_SETUP_VIDEO_DELAY_MS;
 
     private final MutableStateObservable<StreamInfo> mStreamInfo;
-
-    private final MutableStateObservable<Boolean> mIsRecording;
-
     // Used only by getExecutor()
     private final Executor mUserProvidedExecutor;
     // May be equivalent to mUserProvidedExecutor or an internal executor if the user did not
@@ -418,13 +312,9 @@ public final class SucklessRecorder implements VideoOutput {
     final Executor mSequentialExecutor;
     private final EncoderFactory mVideoEncoderFactory;
     private final EncoderFactory mAudioEncoderFactory;
-    private final MuxerFactory mMuxerFactory;
-    private final OutputStorage.Factory mOutputStorageFactory;
     private final Object mLock = new Object();
-    private final @VideoCapabilitiesSource int mVideoCapabilitiesSource;
-    private final long mRequiredFreeStorageBytes;
-    private final MutableStateObservable<Range<Integer>> mVideoEncoderBitrateRange =
-            MutableStateObservable.withInitialState(null);
+    private final boolean mEncoderNotUsePersistentInputSurface = DeviceQuirks.get(
+            EncoderNotUsePersistentInputSurfaceQuirk.class) != null;
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //                          Members only accessed when holding mLock                          //
@@ -457,8 +347,10 @@ public final class SucklessRecorder implements VideoOutput {
     RecordingRecord mInProgressRecording = null;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     boolean mInProgressRecordingStopping = false;
-    private SurfaceRequest.@Nullable TransformationInfo mInProgressTransformationInfo = null;
-    private SurfaceRequest.@Nullable TransformationInfo mSourceTransformationInfo = null;
+    @Nullable
+    private SurfaceRequest.TransformationInfo mInProgressTransformationInfo = null;
+    @Nullable
+    private SurfaceRequest.TransformationInfo mSourceTransformationInfo = null;
     private VideoValidatedEncoderProfilesProxy mResolvedEncoderProfiles = null;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     final List<ListenableFuture<Void>> mEncodingFutures = new ArrayList<>();
@@ -475,7 +367,7 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     Surface mActiveSurface = null;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    Muxer mMuxer = null;
+    MediaMuxer mMediaMuxer = null;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     final MutableStateObservable<MediaSpec> mMediaSpec;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
@@ -491,18 +383,21 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     AudioState mAudioState = AudioState.INITIALIZING;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    @NonNull Uri mOutputUri = Uri.EMPTY;
+    @NonNull
+    Uri mOutputUri = Uri.EMPTY;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     long mRecordingBytes = 0L;
-    long mRecordingAudioBytes = 0L;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    long mRecordingDurationUs = 0L;
+    long mRecordingDurationNs = 0L;
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     long mFirstRecordingVideoDataTimeUs = Long.MAX_VALUE;
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     int mFirstRecordingVideoBitrate = 0;
+    @VisibleForTesting
+    @SuppressWarnings("WeakerAccess") /* synthetic accessor */
+    Range<Integer> mVideoEncoderBitrateRange = null;
     @VisibleForTesting
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     long mFirstRecordingAudioDataTimeUs = Long.MAX_VALUE;
@@ -513,7 +408,7 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     long mFileSizeLimitInBytes = OutputOptions.FILE_SIZE_UNLIMITED;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    long mDurationLimitUs = OutputOptions.DURATION_UNLIMITED;
+    long mDurationLimitNs = OutputOptions.DURATION_UNLIMITED;
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     @VideoRecordError
     int mRecordingStopError = ERROR_UNKNOWN;
@@ -524,7 +419,8 @@ public final class SucklessRecorder implements VideoOutput {
     // A cache that hold audio data created before the muxer starts to prevent A/V out of sync in
     // the beginning of the recording.
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    final @NonNull RingBuffer<EncodedData> mPendingAudioRingBuffer = new ArrayRingBuffer<>(
+    @NonNull
+    final RingBuffer<EncodedData> mPendingAudioRingBuffer = new ArrayRingBuffer<>(
             AUDIO_CACHE_SIZE);
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     Throwable mAudioErrorCause = null;
@@ -536,56 +432,40 @@ public final class SucklessRecorder implements VideoOutput {
     ScheduledFuture<?> mSourceNonStreamingTimeout = null;
     // The Recorder has to be reset first before being configured again.
     private boolean mNeedsResetBeforeNextStart = false;
+    @NonNull
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    @NonNull VideoEncoderSession mVideoEncoderSession;
-    private @Nullable VideoEncoderConfig mVideoEncoderConfig = null;
+    VideoEncoderSession mVideoEncoderSession;
+    @Nullable
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    @Nullable VideoEncoderSession mVideoEncoderSessionToRelease = null;
+    VideoEncoderSession mVideoEncoderSessionToRelease = null;
     double mAudioAmplitude = 0;
     private boolean mShouldSendResumeEvent = false;
-    private @Nullable SetupVideoTask mSetupVideoTask = null;
-    private @Nullable OutputStorage mOutputStorage = null;
-    private long mAvailableBytesAboveRequired = Long.MAX_VALUE;
-    private boolean mHasGlProcessing = false;
     //--------------------------------------------------------------------------------------------//
 
     SucklessRecorder(@Nullable Executor executor, @NonNull MediaSpec mediaSpec,
-            @VideoCapabilitiesSource int videoCapabilitiesSource,
             @NonNull EncoderFactory videoEncoderFactory,
-            @NonNull EncoderFactory audioEncoderFactory,
-            @NonNull MuxerFactory muxerFactory,
-            OutputStorage.@NonNull Factory outputStorageFactory,
-            long requiredFreeStorageBytes) {
+            @NonNull EncoderFactory audioEncoderFactory) {
         mUserProvidedExecutor = executor;
         mExecutor = executor != null ? executor : CameraXExecutors.ioExecutor();
         mSequentialExecutor = CameraXExecutors.newSequentialExecutor(mExecutor);
 
         mMediaSpec = MutableStateObservable.withInitialState(composeRecorderMediaSpec(mediaSpec));
-        mVideoCapabilitiesSource = videoCapabilitiesSource;
         mStreamInfo = MutableStateObservable.withInitialState(
                 StreamInfo.of(mStreamId, internalStateToStreamState(mState)));
-        mIsRecording = MutableStateObservable.withInitialState(false);
         mVideoEncoderFactory = videoEncoderFactory;
         mAudioEncoderFactory = audioEncoderFactory;
-        mMuxerFactory = muxerFactory;
-        mOutputStorageFactory = outputStorageFactory;
         mVideoEncoderSession =
                 new VideoEncoderSession(mVideoEncoderFactory, mSequentialExecutor, mExecutor);
-        mRequiredFreeStorageBytes =
-                requiredFreeStorageBytes != REQUIRED_FREE_STORAGE_UNSET
-                        ? requiredFreeStorageBytes : REQUIRED_FREE_STORAGE_DEFAULT_BYTES;
-        Logger.d(TAG, "mRequiredFreeStorageBytes = " + formatSize(mRequiredFreeStorageBytes));
     }
 
     @Override
     public void onSurfaceRequested(@NonNull SurfaceRequest request) {
-        onSurfaceRequested(request, Timebase.UPTIME, false);
+        onSurfaceRequested(request, Timebase.UPTIME);
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Override
-    public void onSurfaceRequested(@NonNull SurfaceRequest request, @NonNull Timebase timebase,
-            boolean hasGlProcessing) {
+    public void onSurfaceRequested(@NonNull SurfaceRequest request, @NonNull Timebase timebase) {
         synchronized (mLock) {
             Logger.d(TAG, "Surface is requested in state: " + mState + ", Current surface: "
                     + mStreamId);
@@ -593,26 +473,21 @@ public final class SucklessRecorder implements VideoOutput {
                 setState(State.CONFIGURING);
             }
         }
-        mSequentialExecutor.execute(
-                () -> onSurfaceRequestedInternal(request, timebase, hasGlProcessing));
+        mSequentialExecutor.execute(() -> onSurfaceRequestedInternal(request, timebase));
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Override
-    public @NonNull Observable<MediaSpec> getMediaSpec() {
+    @NonNull
+    public Observable<MediaSpec> getMediaSpec() {
         return mMediaSpec;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Override
-    public @NonNull Observable<StreamInfo> getStreamInfo() {
+    @NonNull
+    public Observable<StreamInfo> getStreamInfo() {
         return mStreamInfo;
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    @Override
-    public @NonNull Observable<Boolean> isSourceStreamRequired() {
-        return mIsRecording;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -623,104 +498,9 @@ public final class SucklessRecorder implements VideoOutput {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     @Override
-    public @NonNull VideoCapabilities getMediaCapabilities(@NonNull CameraInfo cameraInfo,
-            int sessionType) {
-        int videoCaptureType = sessionType == SESSION_TYPE_HIGH_SPEED
-                ? VIDEO_RECORDING_TYPE_HIGH_SPEED : VIDEO_RECORDING_TYPE_REGULAR;
-        String videoMimeType = getObservableData(mMediaSpec).getVideoSpec().getMimeType();
-
-        return getVideoCapabilitiesInternal(videoCaptureType, cameraInfo, mVideoCapabilitiesSource,
-                videoMimeType);
-    }
-
-    /**
-     * Prepares a recording that will be saved to a {@link File}.
-     *
-     * <p>The provided {@link FileOutputOptions} specifies the file to use.
-     *
-     * <p>Calling this method multiple times will generate multiple {@link PendingRecording}s,
-     * each of the recordings can be used to adjust per-recording settings individually. The
-     * recording will not begin until {@link PendingRecording#start(Executor, Consumer)} is called.
-     * Only a single pending recording can be started per {@link Recorder} instance.
-     *
-     * @param context the context used to enforce runtime permissions, interface with the media
-     *                scanner service, and attribute access to permission protected data, such as
-     *                audio. If using this context to <a href="{@docRoot}guide
-     *                /topics/data/audit-access#audit-by-attribution-tagaudit">audit audio
-     *                access</a> on API level 31+, a context created with
-     *                {@link Context#createAttributionContext(String)} should be used.
-     * @param fileOutputOptions the options that configures how the output will be handled.
-     * @return a {@link PendingRecording} that is associated with this Recorder.
-     * @see FileOutputOptions
-     */
-    public @NonNull SucklessPendingRecording prepareRecording(@NonNull Context context,
-            @NonNull FileOutputOptions fileOutputOptions) {
-        return prepareRecordingInternal(context, fileOutputOptions);
-    }
-
-    /**
-     * Prepares a recording that will be saved to a {@link ParcelFileDescriptor}.
-     *
-     * <p>The provided {@link FileDescriptorOutputOptions} specifies the
-     * {@link ParcelFileDescriptor} to use.
-     *
-     * <p>Currently, file descriptors as output destinations are not supported on pre-Android O
-     * (API 26) devices.
-     *
-     * <p>Calling this method multiple times will generate multiple {@link PendingRecording}s,
-     * each of the recordings can be used to adjust per-recording settings individually. The
-     * recording will not begin until {@link PendingRecording#start(Executor, Consumer)} is called.
-     * Only a single pending recording can be started per {@link Recorder} instance.
-     *
-     * @param context the context used to enforce runtime permissions, interface with the media
-     *                scanner service, and attribute access to permission protected data, such as
-     *                audio. If using this context to <a href="{@docRoot}guide
-     *                /topics/data/audit-access#audit-by-attribution-tagaudit">audit audio
-     *                access</a> on API level 31+, a context created with
-     *                {@link Context#createAttributionContext(String)} should be used.
-     * @param fileDescriptorOutputOptions the options that configures how the output will be
-     *                                    handled.
-     * @return a {@link PendingRecording} that is associated with this Recorder.
-     * @throws UnsupportedOperationException if this method is called on per-Android O (API 26)
-     * devices.
-     * @see FileDescriptorOutputOptions
-     */
-    @SuppressLint("ObsoleteSdkInt")
-    @RequiresApi(26)
-    public @NonNull SucklessPendingRecording prepareRecording(@NonNull Context context,
-            @NonNull FileDescriptorOutputOptions fileDescriptorOutputOptions) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            throw new UnsupportedOperationException(
-                    "File descriptors as output destinations are not supported on pre-Android O "
-                            + "(API 26) devices.");
-        }
-        return prepareRecordingInternal(context, fileDescriptorOutputOptions);
-    }
-
-    /**
-     * Prepares a recording that will be saved to a {@link MediaStore}.
-     *
-     * <p>The provided {@link MediaStoreOutputOptions} specifies the options which will be used
-     * to save the recording to a {@link MediaStore}.
-     *
-     * <p>Calling this method multiple times will generate multiple {@link PendingRecording}s,
-     * each of the recordings can be used to adjust per-recording settings individually. The
-     * recording will not begin until {@link PendingRecording#start(Executor, Consumer)} is called.
-     * Only a single pending recording can be started per {@link Recorder} instance.
-     *
-     * @param context the context used to enforce runtime permissions, interface with the media
-     *                scanner service, and attribute access to permission protected data, such as
-     *                audio. If using this context to <a href="{@docRoot}guide
-     *                /topics/data/audit-access#audit-by-attribution-tagaudit">audit audio
-     *                access</a> on API level 31+, a context created with
-     *                {@link Context#createAttributionContext(String)} should be used.
-     * @param mediaStoreOutputOptions the options that configures how the output will be handled.
-     * @return a {@link PendingRecording} that is associated with this Recorder.
-     * @see MediaStoreOutputOptions
-     */
-    public @NonNull SucklessPendingRecording prepareRecording(@NonNull Context context,
-            @NonNull MediaStoreOutputOptions mediaStoreOutputOptions) {
-        return prepareRecordingInternal(context, mediaStoreOutputOptions);
+    @NonNull
+    public VideoCapabilities getMediaCapabilities(@NonNull CameraInfo cameraInfo) {
+        return getVideoCapabilities(cameraInfo);
     }
 
     @NonNull
@@ -728,8 +508,9 @@ public final class SucklessRecorder implements VideoOutput {
         return prepareRecordingInternal(context, outputOptions);
     }
 
-    private @NonNull SucklessPendingRecording prepareRecordingInternal(@NonNull Context context,
-            @NonNull OutputOptions options) {
+    @NonNull
+    private SucklessPendingRecording prepareRecordingInternal(@NonNull Context context,
+                                                              @NonNull OutputOptions options) {
         Preconditions.checkNotNull(options, "The OutputOptions cannot be null.");
         return new SucklessPendingRecording(context, this, options);
     }
@@ -742,38 +523,20 @@ public final class SucklessRecorder implements VideoOutput {
      * recorder, or the default value of {@link Recorder#DEFAULT_QUALITY_SELECTOR} if no quality
      * selector was provided.
      */
-    public @NonNull QualitySelector getQualitySelector() {
+    @NonNull
+    public QualitySelector getQualitySelector() {
         return getObservableData(mMediaSpec).getVideoSpec().getQualitySelector();
-    }
-
-    @Override
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public boolean isQualitySelectorDefault() {
-        return getQualitySelector() == DEFAULT_QUALITY_SELECTOR;
-    }
-
-    /**
-     * Gets the video capabilities source of this Recorder.
-     *
-     * @return the value provided to {@link Builder#setVideoCapabilitiesSource(int)} on the builder
-     * used to create this recorder, or the default value
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE} if not set.
-     */
-    @VideoCapabilitiesSource
-    public int getVideoCapabilitiesSource() {
-        return mVideoCapabilitiesSource;
     }
 
     /**
      * Gets the audio source of this Recorder.
      *
      * @return the value provided to {@link Builder#setAudioSource(int)} on the builder used to
-     * create this recorder, or the default value of {@link AudioSpec#SOURCE_UNSPECIFIED} if no
-     * source was set.
+     * create this recorder, or the default value of {@link AudioSpec#SOURCE_AUTO} if no source was
+     * set.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
     @AudioSpec.Source
-    public int getAudioSource() {
+    int getAudioSource() {
         return getObservableData(mMediaSpec).getAudioSpec().getSource();
     }
 
@@ -783,7 +546,8 @@ public final class SucklessRecorder implements VideoOutput {
      * @return the {@link Executor} provided to {@link Builder#setExecutor(Executor)} on the
      * builder used to create this recorder. If no executor was provided, returns {code null}.
      */
-    public @Nullable Executor getExecutor() {
+    @Nullable
+    public Executor getExecutor() {
         return mUserProvidedExecutor;
     }
 
@@ -795,54 +559,7 @@ public final class SucklessRecorder implements VideoOutput {
      * {@link Builder#setTargetVideoEncodingBitRate(int)} is not called.
      */
     public int getTargetVideoEncodingBitRate() {
-        return getObservableData(mMediaSpec).getVideoSpec().getBitrate();
-    }
-
-    /** Gets an {@link Observable} of the video encoder's supported bitrate range. */
-    @VisibleForTesting
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public @NonNull Observable<Range<Integer>> getVideoEncoderBitrateRange() {
-        return mVideoEncoderBitrateRange;
-    }
-
-    /**
-     * Gets the video encoding frame rate of the Recorder.
-     *
-     * @return the value provided to {@link Builder#setVideoEncodingFrameRate(int)} on the builder
-     * used to create this recorder. Returns 0, if {@link Builder#setVideoEncodingFrameRate(int)}
-     * is not called.
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public int getVideoEncodingFrameRate() {
-        return getObservableData(mMediaSpec).getVideoSpec().getEncodeFrameRate();
-    }
-
-    /**
-     * Sets the intended video encoding frame rate for recording, enabling video speed
-     * adjustment.
-     *
-     * <p>This method is primarily intended for creating slow-motion video effects. It allows
-     * you to specify a different frame rate for the encoded video than the actual capture
-     * frame rate. Timestamps of the captured frames will be adjusted to achieve the desired
-     * encoding frame rate, resulting in a speed adjustment.
-     *
-     * <p>For example, to create a 1/4 slow-motion effect, you could configure the capture
-     * frame rate to 120fps and set the encoding frame rate to 30fps using this method.
-     *
-     * <p>If you only need to configure the capture frame rate without any speed adjustment,
-     * use {@link VideoCapture.Builder#setTargetFrameRate(Range)} instead.
-     *
-     * <p>By default, if this method is not called, the incoming frame rate from the camera
-     * will be used for encoding, resulting in no speed adjustment.
-     *
-     * @param frameRate the video encoding frame rate in frames per second.
-     * @throws IllegalArgumentException if frame rate is 0 or less.
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void setVideoEncodingFrameRate(@IntRange(from = 1) int frameRate) {
-        checkArgument(frameRate >= 1, "frameRate must be greater than 0.");
-        mMediaSpec.setState(getObservableData(mMediaSpec).toBuilder().configureVideo(
-                builder -> builder.setEncodeFrameRate(frameRate)).build());
+        return getObservableData(mMediaSpec).getVideoSpec().getBitrate().getLower();
     }
 
     /**
@@ -863,7 +580,7 @@ public final class SucklessRecorder implements VideoOutput {
      * be thrown when calling this method.
      *
      * <p>If the video encoder hasn't been setup with {@link #onSurfaceRequested(SurfaceRequest)}
-     * , the {@link PendingRecording} specified will be started once the video encoder setup
+     * , the {@link SucklessPendingRecording} specified will be started once the video encoder setup
      * completes. The recording will be considered active, so before it's finalized, an
      * {@link IllegalStateException} will be thrown if this method is called for a second time.
      *
@@ -873,12 +590,13 @@ public final class SucklessRecorder implements VideoOutput {
      * with is detached from the camera.
      *
      * @throws IllegalStateException if there's an active recording, or the audio is
-     *                               {@link PendingRecording#withAudioEnabled() enabled} for the
+     *                               {@link SucklessPendingRecording#withAudioEnabled() enabled} for the
      *                               recording but
      *                               {@link android.Manifest.permission#RECORD_AUDIO} is not
      *                               granted.
      */
-    @NonNull SucklessRecording start(@NonNull SucklessPendingRecording pendingRecording) {
+    @NonNull
+    SucklessRecording start(@NonNull SucklessPendingRecording pendingRecording) {
         Preconditions.checkNotNull(pendingRecording, "The given PendingRecording cannot be null.");
         RecordingRecord alreadyInProgressRecording = null;
         @VideoRecordError int error = ERROR_NONE;
@@ -919,7 +637,7 @@ public final class SucklessRecorder implements VideoOutput {
                         RecordingRecord recordingRecord = RecordingRecord.from(pendingRecording,
                                 recordingId);
                         recordingRecord.initializeRecording(
-                                pendingRecording.getApplicationContext(), mMuxerFactory);
+                                pendingRecording.getApplicationContext());
                         mPendingRecordingRecord = recordingRecord;
                         if (mState == State.IDLING) {
                             setState(State.PENDING_RECORDING);
@@ -933,8 +651,7 @@ public final class SucklessRecorder implements VideoOutput {
                                             "surface request is required to retry "
                                                     + "initialization.");
                                 }
-                                configureInternal(mLatestSurfaceRequest, mVideoSourceTimebase,
-                                        false);
+                                configureInternal(mLatestSurfaceRequest, mVideoSourceTimebase);
                             });
                         } else {
                             setState(State.PENDING_RECORDING);
@@ -1148,7 +865,7 @@ public final class SucklessRecorder implements VideoOutput {
                         RecordingStats.of(/*duration=*/0L,
                                 /*bytes=*/0L,
                                 AudioStats.of(AudioStats.AUDIO_STATE_DISABLED, mAudioErrorCause,
-                                        AUDIO_AMPLITUDE_NONE, /*audioBytes=*/0L)),
+                                        AUDIO_AMPLITUDE_NONE)),
                         OutputResults.of(Uri.EMPTY),
                         error,
                         cause));
@@ -1156,12 +873,11 @@ public final class SucklessRecorder implements VideoOutput {
 
     @ExecutedBy("mSequentialExecutor")
     private void onSurfaceRequestedInternal(@NonNull SurfaceRequest request,
-            @NonNull Timebase timebase, boolean hasGlProcessing) {
+            @NonNull Timebase timebase) {
         if (mLatestSurfaceRequest != null && !mLatestSurfaceRequest.isServiced()) {
             mLatestSurfaceRequest.willNotProvideSurface();
         }
-        mHasGlProcessing = hasGlProcessing;
-        configureInternal(mLatestSurfaceRequest = request, mVideoSourceTimebase = timebase, true);
+        configureInternal(mLatestSurfaceRequest = request, mVideoSourceTimebase = timebase);
     }
 
     @ExecutedBy("mSequentialExecutor")
@@ -1177,10 +893,6 @@ public final class SucklessRecorder implements VideoOutput {
 
         if (newState == SourceState.INACTIVE) {
             if (mActiveSurface == null) {
-                if (mSetupVideoTask != null) {
-                    mSetupVideoTask.cancelFailedRetry();
-                    mSetupVideoTask = null;
-                }
                 // If we're inactive and have no active surface, we'll reset the encoder directly.
                 // Otherwise, we'll wait for the active surface's surface request listener to
                 // reset the encoder.
@@ -1215,7 +927,6 @@ public final class SucklessRecorder implements VideoOutput {
      * <p>The Recorder is expected to be reset when there's no active surface. Otherwise, wait for
      * the surface request complete callback first.
      */
-    @SuppressWarnings("SameParameterValue")
     @ExecutedBy("mSequentialExecutor")
     void requestReset(@VideoRecordError int errorCode, @Nullable Throwable errorCause,
             boolean videoOnly) {
@@ -1282,7 +993,7 @@ public final class SucklessRecorder implements VideoOutput {
 
     @ExecutedBy("mSequentialExecutor")
     private void configureInternal(@NonNull SurfaceRequest surfaceRequest,
-            @NonNull Timebase videoSourceTimebase, boolean enableRetrySetupVideo) {
+            @NonNull Timebase videoSourceTimebase) {
         if (surfaceRequest.isServiced()) {
             Logger.w(TAG, "Ignore the SurfaceRequest since it is already served.");
             return;
@@ -1292,126 +1003,64 @@ public final class SucklessRecorder implements VideoOutput {
         Size surfaceSize = surfaceRequest.getResolution();
         // Fetch and cache nearest encoder profiles, if one exists.
         DynamicRange dynamicRange = surfaceRequest.getDynamicRange();
-        EncoderProfilesResolver profilesResolver = getEncoderProfilesResolver(
-                surfaceRequest.getCamera().getCameraInfo(),
-                surfaceRequest.getSessionType());
-        mResolvedEncoderProfiles = profilesResolver.findNearestHigherSupportedEncoderProfilesFor(
-                surfaceSize, dynamicRange);
-        Logger.d(TAG, "mResolvedEncoderProfiles = " + mResolvedEncoderProfiles);
-
-        if (mSetupVideoTask != null) {
-            mSetupVideoTask.cancelFailedRetry();
+        VideoCapabilities capabilities = getVideoCapabilities(
+                surfaceRequest.getCamera().getCameraInfo());
+        Quality highestSupportedQuality = capabilities.findHighestSupportedQualityFor(surfaceSize,
+                dynamicRange);
+        Logger.d(TAG, "Using supported quality of " + highestSupportedQuality
+                + " for surface size " + surfaceSize);
+        if (highestSupportedQuality != Quality.NONE) {
+            mResolvedEncoderProfiles = capabilities.getProfiles(highestSupportedQuality,
+                    dynamicRange);
+            if (mResolvedEncoderProfiles == null) {
+                throw new AssertionError("Camera advertised available quality but did not "
+                        + "produce EncoderProfiles  for advertised quality.");
+            }
         }
-        mSetupVideoTask = new SetupVideoTask(surfaceRequest, videoSourceTimebase, mHasGlProcessing,
-                enableRetrySetupVideo ? sRetrySetupVideoMaxCount : 0);
-        mSetupVideoTask.start();
+        setupVideo(surfaceRequest, videoSourceTimebase);
     }
 
-    /** A class for setting up video encoder with a retry mechanism. */
-    private class SetupVideoTask {
-        private final SurfaceRequest mSurfaceRequest;
-        private final Timebase mTimebase;
-        private final int mMaxRetryCount;
-
-        private boolean mIsFailedRetryCanceled = false;
-        private int mRetryCount = 0;
-        private @Nullable ScheduledFuture<?> mRetryFuture = null;
-
-        SetupVideoTask(@NonNull SurfaceRequest surfaceRequest, @NonNull Timebase timebase,
-                boolean hasGlProcessing, int maxRetryCount) {
-            mSurfaceRequest = surfaceRequest;
-            mTimebase = timebase;
-            mHasGlProcessing = hasGlProcessing;
-            mMaxRetryCount = maxRetryCount;
-        }
-
-        @ExecutedBy("mSequentialExecutor")
-        void start() {
-            setupVideo(mSurfaceRequest, mTimebase);
-        }
-
-        @ExecutedBy("mSequentialExecutor")
-        void cancelFailedRetry() {
-            if (mIsFailedRetryCanceled) {
+    @SuppressWarnings("ObjectToString")
+    @ExecutedBy("mSequentialExecutor")
+    private void setupVideo(@NonNull SurfaceRequest request, @NonNull Timebase timebase) {
+        safeToCloseVideoEncoder().addListener(() -> {
+            if (request.isServiced()
+                    || (mVideoEncoderSession.isConfiguredSurfaceRequest(request)
+                    && !isPersistentRecordingInProgress())) {
+                // Ignore the surface request if it's already serviced. Or the video encoder
+                // session is already configured, unless there's a persistent recording is running.
+                Logger.w(TAG, "Ignore the SurfaceRequest " + request + " isServiced: "
+                        + request.isServiced() + " VideoEncoderSession: " + mVideoEncoderSession
+                        + " has been configured with a persistent in-progress recording.");
                 return;
             }
-            mIsFailedRetryCanceled = true;
-            if (mRetryFuture != null) {
-                mRetryFuture.cancel(false);
-                mRetryFuture = null;
-            }
-        }
-
-        @SuppressWarnings("ObjectToString")
-        @ExecutedBy("mSequentialExecutor")
-        private void setupVideo(@NonNull SurfaceRequest request, @NonNull Timebase timebase) {
-            safeToCloseVideoEncoder().addListener(() -> {
-                if (request.isServiced()
-                        || (mVideoEncoderSession.isConfiguredSurfaceRequest(request)
-                        && !isPersistentRecordingInProgress())) {
-                    // Ignore the surface request if it's already serviced. Or the video encoder
-                    // session is already configured, unless there's a persistent recording is
-                    // running. Or the task has been completed.
-                    Logger.w(TAG, "Ignore the SurfaceRequest " + request + " isServiced: "
-                            + request.isServiced() + " VideoEncoderSession: " + mVideoEncoderSession
-                            + " has been configured with a persistent in-progress recording.");
-                    return;
+            VideoEncoderSession videoEncoderSession =
+                    new VideoEncoderSession(mVideoEncoderFactory, mSequentialExecutor, mExecutor);
+            MediaSpec mediaSpec = getObservableData(mMediaSpec);
+            ListenableFuture<Encoder> configureFuture =
+                    videoEncoderSession.configure(request, timebase, mediaSpec,
+                            mResolvedEncoderProfiles);
+            mVideoEncoderSession = videoEncoderSession;
+            Futures.addCallback(configureFuture, new FutureCallback<Encoder>() {
+                @Override
+                public void onSuccess(@Nullable Encoder result) {
+                    Logger.d(TAG, "VideoEncoder is created. " + result);
+                    if (result == null) {
+                        return;
+                    }
+                    Preconditions.checkState(mVideoEncoderSession == videoEncoderSession);
+                    Preconditions.checkState(mVideoEncoder == null);
+                    onVideoEncoderReady(videoEncoderSession);
+                    onConfigured();
                 }
-                VideoEncoderSession videoEncoderSession =
-                        new VideoEncoderSession(mVideoEncoderFactory, mSequentialExecutor,
-                                mExecutor);
-                MediaSpec mediaSpec = getObservableData(mMediaSpec);
-                DynamicRange dynamicRange = request.getDynamicRange();
-                VideoMimeInfo videoMimeInfo = resolveVideoMimeInfo(mediaSpec, dynamicRange,
-                        mResolvedEncoderProfiles);
-                // The VideoSpec from mediaSpec only contains settings requested by the recorder,
-                // but the actual settings may need to differ depending on the FPS chosen by the
-                // camera. The expected frame rate from the camera is passed on here from the
-                // SurfaceRequest.
-                VideoEncoderConfig config = resolveVideoEncoderConfig(
-                        videoMimeInfo,
-                        timebase,
-                        mediaSpec.getVideoSpec(),
-                        request.getResolution(),
-                        dynamicRange,
-                        request.getExpectedFrameRate());
-                config = workaroundDataSpaceIfRequired(config, mHasGlProcessing);
-                mVideoEncoderConfig = config;
 
-                ListenableFuture<Encoder> configureFuture = videoEncoderSession.configure(request,
-                        config);
-                mVideoEncoderSession = videoEncoderSession;
-                Futures.addCallback(configureFuture, new FutureCallback<Encoder>() {
-                    @Override
-                    public void onSuccess(@Nullable Encoder result) {
-                        Logger.d(TAG, "VideoEncoder is created. " + result);
-                        if (result == null) {
-                            return;
-                        }
-                        Preconditions.checkState(mVideoEncoderSession == videoEncoderSession);
-                        Preconditions.checkState(mVideoEncoder == null);
-                        onVideoEncoderReady(videoEncoderSession);
-                        onConfigured();
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Throwable t) {
-                        Logger.w(TAG, "VideoEncoder Setup error: " + t, t);
-                        if (mRetryCount < mMaxRetryCount) {
-                            mRetryCount++;
-                            mRetryFuture = scheduleTask(() -> {
-                                if (!mIsFailedRetryCanceled) {
-                                    Logger.d(TAG, "Retry setupVideo #" + mRetryCount);
-                                    setupVideo(mSurfaceRequest, mTimebase);
-                                }
-                            }, mSequentialExecutor, sRetrySetupVideoDelayMs, TimeUnit.MILLISECONDS);
-                        } else {
-                            onEncoderSetupError(t);
-                        }
-                    }
-                }, mSequentialExecutor);
+                @Override
+                public void onFailure(@NonNull Throwable t) {
+                    Logger.d(TAG, "VideoEncoder Setup error: " + t);
+                    onEncoderSetupError(t);
+                }
             }, mSequentialExecutor);
-        }
+        }, mSequentialExecutor);
     }
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
@@ -1420,8 +1069,9 @@ public final class SucklessRecorder implements VideoOutput {
         return mInProgressRecording != null && mInProgressRecording.isPersistent();
     }
 
+    @NonNull
     @ExecutedBy("mSequentialExecutor")
-    private @NonNull ListenableFuture<Void> safeToCloseVideoEncoder() {
+    private ListenableFuture<Void> safeToCloseVideoEncoder() {
         Logger.d(TAG, "Try to safely release video encoder: " + mVideoEncoder);
         return mVideoEncoderSession.signalTermination();
     }
@@ -1429,12 +1079,14 @@ public final class SucklessRecorder implements VideoOutput {
     @ExecutedBy("mSequentialExecutor")
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     void onVideoEncoderReady(@NonNull VideoEncoderSession videoEncoderSession) {
-        mVideoEncoder = checkNotNull(videoEncoderSession.getVideoEncoder());
-        mVideoEncoderBitrateRange.setState(
-                ((VideoEncoderInfo) mVideoEncoder.getEncoderInfo()).getSupportedBitrateRange());
+        mVideoEncoder = videoEncoderSession.getVideoEncoder();
+        mVideoEncoderBitrateRange =
+                ((VideoEncoderInfo) mVideoEncoder.getEncoderInfo()).getSupportedBitrateRange();
         mFirstRecordingVideoBitrate = mVideoEncoder.getConfiguredBitrate();
         mActiveSurface = videoEncoderSession.getActiveSurface();
         setLatestSurface(mActiveSurface);
+
+        videoEncoderSession.setOnSurfaceUpdateListener(mSequentialExecutor, this::setLatestSurface);
 
         Futures.addCallback(videoEncoderSession.getReadyToReleaseFuture(),
                 new FutureCallback<Encoder>() {
@@ -1481,8 +1133,11 @@ public final class SucklessRecorder implements VideoOutput {
                     throw new AssertionError(
                             "Incorrectly invoke onConfigured() in state " + mState);
                 case STOPPING:
-                    throw new AssertionError("Unexpectedly invoke onConfigured() in a "
-                            + "STOPPING state when it's not waiting for a new surface.");
+                    if (!mEncoderNotUsePersistentInputSurface) {
+                        throw new AssertionError("Unexpectedly invoke onConfigured() in a "
+                                + "STOPPING state when it's not waiting for a new surface.");
+                    }
+                    break;
                 case PAUSED:
                     recordingPaused = true;
                     // Fall-through
@@ -1541,7 +1196,8 @@ public final class SucklessRecorder implements VideoOutput {
         }
     }
 
-    private @NonNull MediaSpec composeRecorderMediaSpec(@NonNull MediaSpec mediaSpec) {
+    @NonNull
+    private MediaSpec composeRecorderMediaSpec(@NonNull MediaSpec mediaSpec) {
         MediaSpec.Builder mediaSpecBuilder = mediaSpec.toBuilder();
 
         // Append default video configurations
@@ -1578,20 +1234,9 @@ public final class SucklessRecorder implements VideoOutput {
         AudioMimeInfo audioMimeInfo = resolveAudioMimeInfo(mediaSpec, mResolvedEncoderProfiles);
         Timebase audioSourceTimebase = Timebase.UPTIME;
 
-        // Gets the expected sample rate ratio for slow-motion effect.
-        VideoEncoderConfig videoEncoderConfig = checkNotNull(mVideoEncoderConfig);
-        Rational expectedSampleRateRatio;
-        if (videoEncoderConfig.isSlowMotion()) {
-            expectedSampleRateRatio = new Rational(videoEncoderConfig.getCaptureFrameRate(),
-                    videoEncoderConfig.getEncodeFrameRate());
-        } else {
-            expectedSampleRateRatio = null;
-        }
-
         // Select and create the audio source
         AudioSettings audioSettings =
-                resolveAudioSettings(audioMimeInfo, mediaSpec.getAudioSpec(),
-                expectedSampleRateRatio);
+                resolveAudioSettings(audioMimeInfo, mediaSpec.getAudioSpec());
         if (mAudioSource != null) {
             releaseCurrentAudioSource();
         }
@@ -1603,8 +1248,7 @@ public final class SucklessRecorder implements VideoOutput {
         // Select and create the audio encoder
         AudioEncoderConfig audioEncoderConfig = resolveAudioEncoderConfig(audioMimeInfo,
                 audioSourceTimebase, audioSettings, mediaSpec.getAudioSpec());
-        mAudioEncoder = mAudioEncoderFactory.createEncoder(mExecutor, audioEncoderConfig,
-                checkNotNull(mLatestSurfaceRequest).getSessionType());
+        mAudioEncoder = mAudioEncoderFactory.createEncoder(mExecutor, audioEncoderConfig);
 
         // Connect the audio source to the audio encoder
         Encoder.EncoderInput bufferProvider = mAudioEncoder.getInput();
@@ -1615,10 +1259,11 @@ public final class SucklessRecorder implements VideoOutput {
     }
 
     @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-    private @NonNull AudioSource setupAudioSource(@NonNull RecordingRecord recordingToStart,
+    @NonNull
+    private AudioSource setupAudioSource(@NonNull RecordingRecord recordingToStart,
             @NonNull AudioSettings audioSettings)
             throws AudioSourceAccessException {
-        return recordingToStart.performOneTimeAudioSourceCreation(audioSettings);
+        return recordingToStart.performOneTimeAudioSourceCreation(audioSettings, AUDIO_EXECUTOR);
     }
 
     private void releaseCurrentAudioSource() {
@@ -1684,18 +1329,19 @@ public final class SucklessRecorder implements VideoOutput {
 
     @ExecutedBy("mSequentialExecutor")
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
-    void setupAndStartMuxer(@NonNull RecordingRecord recordingToStart) {
-        if (mMuxer != null) {
-            throw new AssertionError("Unable to set up muxer when one already exists.");
+    void setupAndStartMediaMuxer(@NonNull RecordingRecord recordingToStart) {
+        if (mMediaMuxer != null) {
+            throw new AssertionError("Unable to set up media muxer when one already exists.");
         }
 
         if (isAudioEnabled() && mPendingAudioRingBuffer.isEmpty()) {
             throw new AssertionError("Audio is enabled but no audio sample is ready. Cannot start"
-                    + " muxer.");
+                    + " media muxer.");
         }
 
         if (mPendingFirstVideoData == null) {
-            throw new AssertionError("Muxer cannot be started without an encoded video frame.");
+            throw new AssertionError("Media muxer cannot be started without an encoded video "
+                    + "frame.");
         }
 
         try (EncodedData videoDataToWrite = mPendingFirstVideoData) {
@@ -1719,82 +1365,37 @@ public final class SucklessRecorder implements VideoOutput {
                 return;
             }
 
-            Muxer muxer;
+            MediaMuxer mediaMuxer;
             try {
                 MediaSpec mediaSpec = getObservableData(mMediaSpec);
                 int muxerOutputFormat =
-                        mediaSpec.getOutputFormat() == MediaSpec.OUTPUT_FORMAT_UNSPECIFIED
+                        mediaSpec.getOutputFormat() == MediaSpec.OUTPUT_FORMAT_AUTO
                                 ? supportedMuxerFormatOrDefaultFrom(mResolvedEncoderProfiles,
                                 MediaSpec.outputFormatToMuxerFormat(
                                         MEDIA_SPEC_DEFAULT.getOutputFormat()))
                                 : MediaSpec.outputFormatToMuxerFormat(mediaSpec.getOutputFormat());
-                muxer = recordingToStart.performOneTimeMuxerCreation(muxerOutputFormat,
+                mediaMuxer = recordingToStart.performOneTimeMediaMuxerCreation(muxerOutputFormat,
                         uri -> mOutputUri = uri);
             } catch (IOException e) {
-                int error = hasInsufficientStorageOrException(e) ? ERROR_INSUFFICIENT_STORAGE
-                        : ERROR_INVALID_OUTPUT_OPTIONS;
-                onInProgressRecordingInternalError(recordingToStart, error, e);
+                onInProgressRecordingInternalError(recordingToStart, ERROR_INVALID_OUTPUT_OPTIONS,
+                        e);
                 return;
             }
 
             SurfaceRequest.TransformationInfo transformationInfo = mSourceTransformationInfo;
             if (transformationInfo != null) {
                 setInProgressTransformationInfo(transformationInfo);
-                try {
-                    muxer.setOrientationDegrees(transformationInfo.getRotationDegrees());
-                } catch (IllegalArgumentException e) {
-                    muxer.release();
-                    onInProgressRecordingInternalError(recordingToStart,
-                            ERROR_INVALID_OUTPUT_OPTIONS, e);
-                    return;
-                }
-            }
-            Location location = recordingToStart.getOutputOptions().getLocation();
-            if (location != null) {
-                try {
-                    muxer.setLocation(location.getLatitude(), location.getLongitude());
-                } catch (IllegalArgumentException e) {
-                    muxer.release();
-                    onInProgressRecordingInternalError(recordingToStart,
-                            ERROR_INVALID_OUTPUT_OPTIONS, e);
-                    return;
-                }
-            }
-            VideoEncoderConfig videoEncoderConfig = checkNotNull(mVideoEncoderConfig);
-            if (videoEncoderConfig.isSlowMotion()) {
-                try {
-                    muxer.setCaptureFps(videoEncoderConfig.getCaptureFrameRate());
-                } catch (IllegalArgumentException e) {
-                    muxer.release();
-                    onInProgressRecordingInternalError(recordingToStart,
-                            ERROR_INVALID_OUTPUT_OPTIONS, e);
-                    return;
-                }
+                mediaMuxer.setOrientationHint(transformationInfo.getRotationDegrees());
             }
 
-            try {
-                Logger.d(TAG, "Muxer.addTrack() for video " + mVideoOutputConfig.getMediaFormat());
-                mVideoTrackIndex = muxer.addTrack(
-                        checkNotNull(mVideoOutputConfig.getMediaFormat()));
-                if (isAudioEnabled()) {
-                    Logger.d(TAG,
-                            "Muxer.addTrack() for audio " + mAudioOutputConfig.getMediaFormat());
-                    mAudioTrackIndex = muxer.addTrack(
-                            checkNotNull(mAudioOutputConfig.getMediaFormat()));
-                }
-                Logger.d(TAG, "Muxer.start()");
-                muxer.start();
-            } catch (MuxerException e) {
-                Logger.w(TAG, "Failed to setup and start muxer", e);
-                muxer.release();
-                int error = hasInsufficientStorageOrException(e) ? ERROR_INSUFFICIENT_STORAGE
-                        : ERROR_UNKNOWN;
-                onInProgressRecordingInternalError(recordingToStart, error, e);
-                return;
+            mVideoTrackIndex = mediaMuxer.addTrack(mVideoOutputConfig.getMediaFormat());
+            if (isAudioEnabled()) {
+                mAudioTrackIndex = mediaMuxer.addTrack(mAudioOutputConfig.getMediaFormat());
             }
+            mediaMuxer.start();
 
-            // Muxer is successfully initialized, transfer the ownership to Recorder.
-            mMuxer = muxer;
+            // MediaMuxer is successfully initialized, transfer the ownership to Recorder.
+            mMediaMuxer = mediaMuxer;
 
             // Write first data to ensure tracks are not empty
             writeVideoData(videoDataToWrite, recordingToStart);
@@ -1805,7 +1406,8 @@ public final class SucklessRecorder implements VideoOutput {
     }
 
     @ExecutedBy("mSequentialExecutor")
-    private @NonNull List<EncodedData> getAudioDataToWriteAndClearCache(long firstVideoDataTimeUs) {
+    @NonNull
+    private List<EncodedData> getAudioDataToWriteAndClearCache(long firstVideoDataTimeUs) {
         List<EncodedData> res = new ArrayList<>();
 
         while (!mPendingAudioRingBuffer.isEmpty()) {
@@ -1828,18 +1430,6 @@ public final class SucklessRecorder implements VideoOutput {
             throw new AssertionError("Attempted to start a new recording while another was in "
                     + "progress.");
         }
-        mInProgressRecording = recordingToStart;
-
-        mOutputStorage = mOutputStorageFactory.create(recordingToStart.getOutputOptions());
-        long availableBytes = mOutputStorage.getAvailableBytes();
-        Logger.d(TAG, "availableBytes = " + formatSize(availableBytes));
-        if (hasInsufficientStorage(availableBytes)) {
-            finalizeInProgressRecording(ERROR_INSUFFICIENT_STORAGE,
-                    new IOException(String.format(INSUFFICIENT_STORAGE_ERROR_MSG, availableBytes,
-                            mRequiredFreeStorageBytes)));
-            return;
-        }
-        mAvailableBytesAboveRequired = availableBytes - mRequiredFreeStorageBytes;
 
         if (recordingToStart.getOutputOptions().getFileSizeLimit() > 0) {
             // Use %95 of the given file size limit as the criteria, which refers to the
@@ -1852,12 +1442,14 @@ public final class SucklessRecorder implements VideoOutput {
         }
 
         if (recordingToStart.getOutputOptions().getDurationLimitMillis() > 0) {
-            mDurationLimitUs = TimeUnit.MILLISECONDS.toMicros(
+            mDurationLimitNs = TimeUnit.MILLISECONDS.toNanos(
                     recordingToStart.getOutputOptions().getDurationLimitMillis());
-            Logger.d(TAG, "Duration limit in microseconds: " + mDurationLimitUs);
+            Logger.d(TAG, "Duration limit in nanoseconds: " + mDurationLimitNs);
         } else {
-            mDurationLimitUs = OutputOptions.DURATION_UNLIMITED;
+            mDurationLimitNs = OutputOptions.DURATION_UNLIMITED;
         }
+
+        mInProgressRecording = recordingToStart;
 
         // Configure audio based on the current audio state.
         switch (mAudioState) {
@@ -1948,9 +1540,9 @@ public final class SucklessRecorder implements VideoOutput {
                         @ExecutedBy("mSequentialExecutor")
                         @Override
                         public void onEncodedData(@NonNull EncodedData encodedData) {
-                            // If the muxer doesn't yet exist, we may need to create and
+                            // If the media muxer doesn't yet exist, we may need to create and
                             // start it. Otherwise we can write the data.
-                            if (mMuxer == null) {
+                            if (mMediaMuxer == null) {
                                 if (!mInProgressRecordingStopping) {
                                     // Clear any previously pending video data since we now
                                     // have newer data.
@@ -1961,7 +1553,7 @@ public final class SucklessRecorder implements VideoOutput {
                                         mPendingFirstVideoData = null;
                                     }
 
-                                    if (encodedData.isKeyFrame()) {
+                                    if (true) { // Let custom Muxers receive all frames
                                         // We have a keyframe. Cache it in case we need to wait
                                         // for audio data.
                                         mPendingFirstVideoData = encodedData;
@@ -1971,7 +1563,7 @@ public final class SucklessRecorder implements VideoOutput {
                                                 || !mPendingAudioRingBuffer.isEmpty()) {
                                             Logger.d(TAG, "Received video keyframe. Starting "
                                                     + "muxer...");
-                                            setupAndStartMuxer(recordingToStart);
+                                            setupAndStartMediaMuxer(recordingToStart);
                                         } else {
                                             if (cachedDataDropped) {
                                                 Logger.d(TAG, "Replaced cached video keyframe "
@@ -1983,8 +1575,10 @@ public final class SucklessRecorder implements VideoOutput {
                                             }
                                         }
                                     } else {
-                                        // The first video frame must be key frame, otherwise
-                                        // drop it.
+                                        // If the video data is not a key frame,
+                                        // MediaMuxer#writeSampleData will drop it. It will
+                                        // cause incorrect estimated record bytes and should
+                                        // be dropped.
                                         if (cachedDataDropped) {
                                             Logger.d(TAG, "Dropped cached keyframe since we have "
                                                     + "new video data and have not yet received "
@@ -2001,7 +1595,7 @@ public final class SucklessRecorder implements VideoOutput {
                                     encodedData.close();
                                 }
                             } else {
-                                // Muxer is already started, write the data.
+                                // MediaMuxer is already started, write the data.
                                 try (EncodedData videoDataToWrite = encodedData) {
                                     writeVideoData(videoDataToWrite, recordingToStart);
                                 }
@@ -2031,7 +1625,7 @@ public final class SucklessRecorder implements VideoOutput {
                                     setAudioState(AudioState.ERROR_SOURCE);
                                 }
                                 mAudioErrorCause = throwable;
-                                updateInProgressStatusEvent(/*printLog=*/true);
+                                updateInProgressStatusEvent();
                                 completer.set(null);
                             }
                         };
@@ -2042,7 +1636,7 @@ public final class SucklessRecorder implements VideoOutput {
                                     public void onSilenceStateChanged(boolean silenced) {
                                         if (mIsAudioSourceSilenced != silenced) {
                                             mIsAudioSourceSilenced = silenced;
-                                            updateInProgressStatusEvent(/*printLog=*/true);
+                                            updateInProgressStatusEvent();
                                         } else {
                                             Logger.w(TAG, "Audio source silenced transitions"
                                                     + " to the same state " + silenced);
@@ -2094,9 +1688,9 @@ public final class SucklessRecorder implements VideoOutput {
                                             + "encoded data is being produced.");
                                 }
 
-                                // If the muxer doesn't yet exist, we may need to create and
+                                // If the media muxer doesn't yet exist, we may need to create and
                                 // start it. Otherwise we can write the data.
-                                if (mMuxer == null) {
+                                if (mMediaMuxer == null) {
                                     if (!mInProgressRecordingStopping) {
                                         // BufferCopiedEncodedData is used to copy the content of
                                         // the encoded data, preventing byte buffers of the media
@@ -2110,7 +1704,7 @@ public final class SucklessRecorder implements VideoOutput {
                                         if (mPendingFirstVideoData != null) {
                                             // Both audio and data are ready. Start the muxer.
                                             Logger.d(TAG, "Received audio data. Starting muxer...");
-                                            setupAndStartMuxer(recordingToStart);
+                                            setupAndStartMediaMuxer(recordingToStart);
                                         } else {
                                             Logger.d(TAG, "Cached audio data while we wait"
                                                     + " for video keyframe before starting muxer.");
@@ -2155,7 +1749,7 @@ public final class SucklessRecorder implements VideoOutput {
                         // in-progress recording.
                         if (!mInProgressRecording.isPersistent()) {
                             Logger.d(TAG, "Encodings end with error: " + t);
-                            finalizeInProgressRecording(mMuxer == null ? ERROR_NO_VALID_DATA
+                            finalizeInProgressRecording(mMediaMuxer == null ? ERROR_NO_VALID_DATA
                                     : ERROR_ENCODING_FAILED, t);
                         }
                     }
@@ -2169,17 +1763,10 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     void writeVideoData(@NonNull EncodedData encodedData,
             @NonNull RecordingRecord recording) {
-        // If the video encoder has been released, we should stop writing data to the muxer.
-        // This prevents MuxerExceptions and prevents triggering stopInternal() which would
-        // incorrectly stop a persistent recording. See b/480772922.
-        if (mVideoEncoder == null) {
-            Logger.d(TAG, "Ignore the video data since the video encoder has been released.");
-            return;
-        }
-
         if (mVideoTrackIndex == null) {
             // Throw an exception if the data comes before the track is added.
-            throw new AssertionError("Video data comes before the track is added to Muxer.");
+            throw new AssertionError(
+                    "Video data comes before the track is added to MediaMuxer.");
         }
 
         long newRecordingBytes = mRecordingBytes + encodedData.size();
@@ -2192,88 +1779,49 @@ public final class SucklessRecorder implements VideoOutput {
             return;
         }
 
-        long newRecordingDurationUs = 0L;
+        long newRecordingDurationNs = 0L;
         long currentPresentationTimeUs = encodedData.getPresentationTimeUs();
+
         if (mFirstRecordingVideoDataTimeUs == Long.MAX_VALUE) {
             mFirstRecordingVideoDataTimeUs = currentPresentationTimeUs;
             Logger.d(TAG, String.format("First video time: %d (%s)", mFirstRecordingVideoDataTimeUs,
                     readableUs(mFirstRecordingVideoDataTimeUs)));
         } else {
-            newRecordingDurationUs = currentPresentationTimeUs - mFirstRecordingVideoDataTimeUs;
-
-            if (mDurationLimitUs != OutputOptions.DURATION_UNLIMITED) {
-                Preconditions.checkState(mPreviousRecordingVideoDataTimeUs != Long.MAX_VALUE,
-                        "There should be a previous data for adjusting the duration.");
-                // We currently don't send an additional empty buffer (bufferInfo.size = 0) with
-                // MediaCodec.BUFFER_FLAG_END_OF_STREAM to let the muxer know the duration of the
-                // last data, so it will be assumed to have the same duration as the data before
-                // add the estimated value to the duration to ensure the final duration will not
-                // exceed the limit.
-                long estimatedVideoDataDurationUs =
-                        currentPresentationTimeUs - mPreviousRecordingVideoDataTimeUs;
-                long estimatedRecordingDurationUs =
-                        newRecordingDurationUs + estimatedVideoDataDurationUs;
-                if (estimatedRecordingDurationUs > mDurationLimitUs) {
-                    Logger.d(TAG, String.format("Video data reaches duration limit %d > %d",
-                            estimatedRecordingDurationUs, mDurationLimitUs));
-                    onInProgressRecordingInternalError(recording, ERROR_DURATION_LIMIT_REACHED,
-                            null);
-                    return;
-                }
-            }
-        }
-
-        encodedData.getBufferInfo().presentationTimeUs = newRecordingDurationUs;
-        try {
-            mMuxer.writeSampleData(mVideoTrackIndex, encodedData.getByteBuffer(),
-                    encodedData.getBufferInfo());
-        } catch (MuxerException e) {
-            Logger.w(TAG, "writeVideoData failed", e);
-            int error = hasInsufficientStorageOrException(e) ? ERROR_INSUFFICIENT_STORAGE
-                    : ERROR_UNKNOWN;
-            onInProgressRecordingInternalError(recording, error, e);
-            return;
-        }
-
-        mRecordingBytes = newRecordingBytes;
-        mRecordingDurationUs = newRecordingDurationUs;
-        mPreviousRecordingVideoDataTimeUs = currentPresentationTimeUs;
-
-        updateInProgressStatusEvent(encodedData.isKeyFrame());
-
-        if (newRecordingBytes > mAvailableBytesAboveRequired) {
-            long availableBytes = checkNotNull(mOutputStorage).getAvailableBytes();
-            Logger.d(TAG, "availableBytes = " + formatSize(availableBytes));
-            if (hasInsufficientStorage(availableBytes)) {
-                onInProgressRecordingInternalError(recording, ERROR_INSUFFICIENT_STORAGE,
-                        new IOException(
-                                String.format(INSUFFICIENT_STORAGE_ERROR_MSG, availableBytes,
-                                        mRequiredFreeStorageBytes)));
+            newRecordingDurationNs = TimeUnit.MICROSECONDS.toNanos(
+                    currentPresentationTimeUs - Math.min(mFirstRecordingVideoDataTimeUs,
+                            mFirstRecordingAudioDataTimeUs));
+            Preconditions.checkState(mPreviousRecordingVideoDataTimeUs != Long.MAX_VALUE, "There "
+                    + "should be a previous data for adjusting the duration.");
+            // We currently don't send an additional empty buffer (bufferInfo.size = 0) with
+            // MediaCodec.BUFFER_FLAG_END_OF_STREAM to let the muxer know the duration of the
+            // last data, so it will be assumed to have the same duration as the data before it. So
+            // add the estimated value to the duration to ensure the final duration will not
+            // exceed the limit.
+            long adjustedDurationNs = newRecordingDurationNs + TimeUnit.MICROSECONDS.toNanos(
+                    currentPresentationTimeUs - mPreviousRecordingVideoDataTimeUs);
+            if (mDurationLimitNs != OutputOptions.DURATION_UNLIMITED
+                    && adjustedDurationNs > mDurationLimitNs) {
+                Logger.d(TAG, String.format("Video data reaches duration limit %d > %d",
+                        adjustedDurationNs, mDurationLimitNs));
+                onInProgressRecordingInternalError(recording, ERROR_DURATION_LIMIT_REACHED, null);
                 return;
             }
-            mAvailableBytesAboveRequired = availableBytes - mRequiredFreeStorageBytes;
         }
+
+        mMediaMuxer.writeSampleData(mVideoTrackIndex, encodedData.getByteBuffer(),
+                encodedData.getBufferInfo());
+
+        mRecordingBytes = newRecordingBytes;
+        mRecordingDurationNs = newRecordingDurationNs;
+        mPreviousRecordingVideoDataTimeUs = currentPresentationTimeUs;
+
+        updateInProgressStatusEvent();
     }
 
     @ExecutedBy("mSequentialExecutor")
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     void writeAudioData(@NonNull EncodedData encodedData,
             @NonNull RecordingRecord recording) {
-        // If the audio encoder has been released, we should stop writing data to the muxer.
-        // This prevents MuxerExceptions and prevents triggering stopInternal() which would
-        // incorrectly stop a persistent recording. See b/480772922.
-        if (mAudioEncoder == null) {
-            Logger.d(TAG, "Ignore the audio data since the audio encoder has been released.");
-            return;
-        }
-
-        // Ensure audio starts after the first video frame. This aligns with the logic in
-        // #getAudioDataToWriteAndClearCache() and prevents negative duration values when writing
-        // to the muxer.
-        if (encodedData.getPresentationTimeUs() < mFirstRecordingVideoDataTimeUs) {
-            Logger.d(TAG, "Skipping audio data: timestamp precedes first video frame.");
-            return;
-        }
 
         long newRecordingBytes = mRecordingBytes + encodedData.size();
         if (mFileSizeLimitInBytes != OutputOptions.FILE_SIZE_UNLIMITED
@@ -2286,50 +1834,39 @@ public final class SucklessRecorder implements VideoOutput {
             return;
         }
 
+        long newRecordingDurationNs = 0L;
         long currentPresentationTimeUs = encodedData.getPresentationTimeUs();
-        long newRecordingDurationUs = currentPresentationTimeUs - mFirstRecordingVideoDataTimeUs;
         if (mFirstRecordingAudioDataTimeUs == Long.MAX_VALUE) {
             mFirstRecordingAudioDataTimeUs = currentPresentationTimeUs;
             Logger.d(TAG, String.format("First audio time: %d (%s)", mFirstRecordingAudioDataTimeUs,
                     readableUs(mFirstRecordingAudioDataTimeUs)));
         } else {
-            if (mDurationLimitUs != OutputOptions.DURATION_UNLIMITED) {
-                Preconditions.checkState(mPreviousRecordingAudioDataTimeUs != Long.MAX_VALUE,
-                        "There should be a previous data for adjusting the duration.");
-                // We currently don't send an additional empty buffer (bufferInfo.size = 0) with
-                // MediaCodec.BUFFER_FLAG_END_OF_STREAM to let the muxer know the duration of the
-                // last data, so it will be assumed to have the same duration as the data before
-                // it. So add the estimated value to the duration to ensure the final duration
-                // will not exceed the limit.
-                long estimatedAudioDataDurationUs =
-                        currentPresentationTimeUs - mPreviousRecordingAudioDataTimeUs;
-                long estimatedRecordingDurationUs =
-                        newRecordingDurationUs + estimatedAudioDataDurationUs;
-                if (estimatedRecordingDurationUs > mDurationLimitUs) {
-                    Logger.d(TAG, String.format("Audio data reaches duration limit %d > %d",
-                            estimatedRecordingDurationUs, mDurationLimitUs));
-                    onInProgressRecordingInternalError(recording, ERROR_DURATION_LIMIT_REACHED,
-                            null);
-                    return;
-                }
+            newRecordingDurationNs = TimeUnit.MICROSECONDS.toNanos(
+                    currentPresentationTimeUs - Math.min(mFirstRecordingVideoDataTimeUs,
+                            mFirstRecordingAudioDataTimeUs));
+            Preconditions.checkState(mPreviousRecordingAudioDataTimeUs != Long.MAX_VALUE, "There "
+                    + "should be a previous data for adjusting the duration.");
+            // We currently don't send an additional empty buffer (bufferInfo.size = 0) with
+            // MediaCodec.BUFFER_FLAG_END_OF_STREAM to let the muxer know the duration of the
+            // last data, so it will be assumed to have the same duration as the data before it. So
+            // add the estimated value to the duration to ensure the final duration will not
+            // exceed the limit.
+            long adjustedDurationNs = newRecordingDurationNs + TimeUnit.MICROSECONDS.toNanos(
+                    currentPresentationTimeUs - mPreviousRecordingAudioDataTimeUs);
+            if (mDurationLimitNs != OutputOptions.DURATION_UNLIMITED
+                    && adjustedDurationNs > mDurationLimitNs) {
+                Logger.d(TAG, String.format("Audio data reaches duration limit %d > %d",
+                        adjustedDurationNs, mDurationLimitNs));
+                onInProgressRecordingInternalError(recording, ERROR_DURATION_LIMIT_REACHED, null);
+                return;
             }
         }
 
-        encodedData.getBufferInfo().presentationTimeUs = newRecordingDurationUs;
-        try {
-            mMuxer.writeSampleData(mAudioTrackIndex,
-                    encodedData.getByteBuffer(),
-                    encodedData.getBufferInfo());
-        } catch (MuxerException e) {
-            Logger.w(TAG, "writeAudioData failed", e);
-            int error = hasInsufficientStorageOrException(e) ? ERROR_INSUFFICIENT_STORAGE
-                    : ERROR_UNKNOWN;
-            onInProgressRecordingInternalError(recording, error, e);
-            return;
-        }
+        mMediaMuxer.writeSampleData(mAudioTrackIndex,
+                encodedData.getByteBuffer(),
+                encodedData.getBufferInfo());
 
         mRecordingBytes = newRecordingBytes;
-        mRecordingAudioBytes += encodedData.size();
         mPreviousRecordingAudioDataTimeUs = currentPresentationTimeUs;
     }
 
@@ -2399,12 +1936,21 @@ public final class SucklessRecorder implements VideoOutput {
                 // In both cases, we set a timeout to ensure the source is always signalled on
                 // devices that require it and to act as a flag that we need to signal the source
                 // stopped.
-                mSourceNonStreamingTimeout = scheduleTask(() ->
-                    Logger.d(TAG, "The source didn't become non-streaming "
-                            + "before timeout. Waited " + SOURCE_NON_STREAMING_TIMEOUT_MS
-                            + "ms"),
-                        mSequentialExecutor, SOURCE_NON_STREAMING_TIMEOUT_MS,
-                        TimeUnit.MILLISECONDS);
+                Encoder finalVideoEncoder = mVideoEncoder;
+                mSourceNonStreamingTimeout = CameraXExecutors.mainThreadExecutor().schedule(
+                        () -> mSequentialExecutor.execute(() -> {
+                            Logger.d(TAG, "The source didn't become non-streaming "
+                                    + "before timeout. Waited " + SOURCE_NON_STREAMING_TIMEOUT_MS
+                                    + "ms");
+                            if (DeviceQuirks.get(
+                                    DeactivateEncoderSurfaceBeforeStopEncoderQuirk.class)
+                                    != null) {
+                                // Even in the case of timeout, we tell the encoder the source has
+                                // stopped because devices with this quirk require that the codec
+                                // produce a new surface.
+                                notifyEncoderSourceStopped(finalVideoEncoder);
+                            }
+                        }), SOURCE_NON_STREAMING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
             } else {
                 // Source is already non-streaming. Signal source is stopped right away.
                 notifyEncoderSourceStopped(mVideoEncoder);
@@ -2433,15 +1979,15 @@ public final class SucklessRecorder implements VideoOutput {
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     static void notifyEncoderSourceStopped(@NonNull Encoder encoder) {
-        if (encoder instanceof EncoderImpl) {
-            ((EncoderImpl) encoder).signalSourceStopped();
+        if (encoder instanceof SucklessEncoderImpl) {
+            ((SucklessEncoderImpl) encoder).signalSourceStopped();
         }
     }
 
     @ExecutedBy("mSequentialExecutor")
     private void clearPendingAudioRingBuffer() {
         while (!mPendingAudioRingBuffer.isEmpty()) {
-            mPendingAudioRingBuffer.dequeue().close();
+            mPendingAudioRingBuffer.dequeue();
         }
     }
 
@@ -2517,7 +2063,7 @@ public final class SucklessRecorder implements VideoOutput {
         // If the latest surface request hasn't been serviced, use it to re-configure the Recorder.
         if (shouldConfigure && mLatestSurfaceRequest != null
                 && !mLatestSurfaceRequest.isServiced()) {
-            configureInternal(mLatestSurfaceRequest, mVideoSourceTimebase, false);
+            configureInternal(mLatestSurfaceRequest, mVideoSourceTimebase);
         }
     }
 
@@ -2535,11 +2081,6 @@ public final class SucklessRecorder implements VideoOutput {
         switch (audioState) {
             case DISABLED:
                 // Fall-through
-            case IDLING:
-                // Audio state will be transitioning to IDLING after the recording is stopped. If
-                // the next recording is stopped immediately such as encounter insufficient storage,
-                // consider the audio is disabled.
-                // Fall-through
             case INITIALIZING:
                 // Audio will not be initialized until the first recording with audio enabled is
                 // started. So if the audio state is INITIALIZING, consider the audio is disabled.
@@ -2556,13 +2097,20 @@ public final class SucklessRecorder implements VideoOutput {
                 return AudioStats.AUDIO_STATE_ENCODER_ERROR;
             case ERROR_SOURCE:
                 return AudioStats.AUDIO_STATE_SOURCE_ERROR;
+            case IDLING:
+                // AudioStats should not be produced when audio is in IDLING state.
+                break;
         }
         // Should not reach.
         throw new AssertionError("Invalid internal audio state: " + audioState);
     }
 
-    private @NonNull StreamState internalStateToStreamState(@NonNull State state) {
-        return state == State.RECORDING || state == State.STOPPING
+    @NonNull
+    private StreamState internalStateToStreamState(@NonNull State state) {
+        // Stopping state should be treated as inactive on certain chipsets. See b/196039619.
+        DeactivateEncoderSurfaceBeforeStopEncoderQuirk quirk =
+                DeviceQuirks.get(DeactivateEncoderSurfaceBeforeStopEncoderQuirk.class);
+        return state == State.RECORDING || (state == State.STOPPING && quirk == null)
                 ? StreamState.ACTIVE : StreamState.INACTIVE;
     }
 
@@ -2570,24 +2118,6 @@ public final class SucklessRecorder implements VideoOutput {
     @ExecutedBy("mSequentialExecutor")
     boolean isAudioEnabled() {
         return mAudioState == AudioState.ENABLED;
-    }
-
-    @ExecutedBy("mSequentialExecutor")
-    private boolean hasInsufficientStorage(long availableStorageBytes) {
-        return availableStorageBytes < mRequiredFreeStorageBytes;
-    }
-
-    @ExecutedBy("mSequentialExecutor")
-    private boolean hasInsufficientStorageOrException(@Nullable Throwable throwable) {
-        if (isStorageFullException(throwable)) {
-            return true;
-        }
-        return hasInsufficientStorage(checkNotNull(mOutputStorage).getAvailableBytes());
-    }
-
-    @ExecutedBy("mSequentialExecutor")
-    private boolean hasInvalidRecordData() {
-        return mRecordingBytes <= 0 || (isAudioEnabled() && mRecordingAudioBytes <= 0);
     }
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
@@ -2599,28 +2129,17 @@ public final class SucklessRecorder implements VideoOutput {
         }
 
         @VideoRecordError int errorToSend = error;
-        Throwable throwableToSend = throwable;
-        if (mMuxer != null) {
+        if (mMediaMuxer != null) {
             try {
-                Logger.d(TAG, "Muxer.stop()");
-                mMuxer.stop();
-            } catch (MuxerException e) {
-                Logger.w(TAG, "Muxer failed to stop with error: " + e, e);
+                mMediaMuxer.stop();
+                mMediaMuxer.release();
+            } catch (IllegalStateException e) {
+                Logger.e(TAG, "MediaMuxer failed to stop or release with error: " + e.getMessage());
                 if (errorToSend == ERROR_NONE) {
-                    if (hasInsufficientStorageOrException(e)) {
-                        errorToSend = ERROR_INSUFFICIENT_STORAGE;
-                    } else if (hasInvalidRecordData()) {
-                        errorToSend = ERROR_NO_VALID_DATA;
-                    } else {
-                        errorToSend = ERROR_UNKNOWN;
-                    }
-                    throwableToSend = e;
+                    errorToSend = ERROR_UNKNOWN;
                 }
-            } finally {
-                Logger.d(TAG, "Muxer.release()");
-                mMuxer.release();
-                mMuxer = null;
             }
+            mMediaMuxer = null;
         } else if (errorToSend == ERROR_NONE) {
             // Muxer was never started, so recording has no data.
             errorToSend = ERROR_NO_VALID_DATA;
@@ -2641,7 +2160,7 @@ public final class SucklessRecorder implements VideoOutput {
                         stats,
                         outputResults,
                         errorToSend,
-                        throwableToSend));
+                        throwable));
 
         RecordingRecord finalizedRecording = mInProgressRecording;
         mInProgressRecording = null;
@@ -2651,8 +2170,7 @@ public final class SucklessRecorder implements VideoOutput {
         mEncodingFutures.clear();
         mOutputUri = Uri.EMPTY;
         mRecordingBytes = 0L;
-        mRecordingAudioBytes = 0L;
-        mRecordingDurationUs = 0L;
+        mRecordingDurationNs = 0L;
         mFirstRecordingVideoDataTimeUs = Long.MAX_VALUE;
         mFirstRecordingAudioDataTimeUs = Long.MAX_VALUE;
         mPreviousRecordingVideoDataTimeUs = Long.MAX_VALUE;
@@ -2661,15 +2179,13 @@ public final class SucklessRecorder implements VideoOutput {
         mRecordingStopErrorCause = null;
         mAudioErrorCause = null;
         mAudioAmplitude = AUDIO_AMPLITUDE_NONE;
-        mOutputStorage = null;
-        mAvailableBytesAboveRequired = Long.MAX_VALUE;
         clearPendingAudioRingBuffer();
         setInProgressTransformationInfo(null);
 
         switch (mAudioState) {
             case IDLING:
-                // No-op, the audio is not started, Keep it in IDLING state.
-                break;
+                throw new AssertionError(
+                        "Incorrectly finalize recording when audio state is IDLING");
             case INITIALIZING:
                 // No-op, the audio hasn't been initialized. Keep it in INITIALIZING state.
                 break;
@@ -2695,6 +2211,7 @@ public final class SucklessRecorder implements VideoOutput {
     private void onRecordingFinalized(@NonNull RecordingRecord finalizedRecording) {
         boolean needsReset = false;
         boolean startRecordingPaused = false;
+        boolean needsConfigure = false;
         RecordingRecord recordingToStart = null;
         RecordingRecord pendingRecordingToFinalize = null;
         @VideoRecordError int error = ERROR_NONE;
@@ -2705,7 +2222,6 @@ public final class SucklessRecorder implements VideoOutput {
                         + "finalize.");
             }
 
-            mActiveRecordingRecord.getRecordingState().removeObservers();
             mActiveRecordingRecord = null;
             switch (mState) {
                 case RESETTING:
@@ -2718,7 +2234,19 @@ public final class SucklessRecorder implements VideoOutput {
                     // likely finalized due to an error.
                     // Fall-through
                 case STOPPING:
-                    setState(State.IDLING);
+                    if (mEncoderNotUsePersistentInputSurface) {
+                        // If the encoder doesn't use persistent input surface, the active
+                        // surface will become invalid after a recording is finalized. If there's
+                        // an unserviced surface request, configure with it directly, otherwise
+                        // wait for a new surface update.
+                        mActiveSurface = null;
+                        if (mLatestSurfaceRequest != null && !mLatestSurfaceRequest.isServiced()) {
+                            needsConfigure = true;
+                        }
+                        setState(State.CONFIGURING);
+                    } else {
+                        setState(State.IDLING);
+                    }
                     break;
                 case PENDING_PAUSED:
                     startRecordingPaused = true;
@@ -2730,6 +2258,16 @@ public final class SucklessRecorder implements VideoOutput {
                         setState(State.CONFIGURING);
                         error = ERROR_SOURCE_INACTIVE;
                         errorCause = PENDING_RECORDING_ERROR_CAUSE_SOURCE_INACTIVE;
+                    } else if (mEncoderNotUsePersistentInputSurface) {
+                        // If the encoder doesn't use persistent input surface, the active
+                        // surface will become invalid after a recording is finalized. If there's
+                        // an unserviced surface request, configure with it directly, otherwise
+                        // wait for a new surface update.
+                        mActiveSurface = null;
+                        if (mLatestSurfaceRequest != null && !mLatestSurfaceRequest.isServiced()) {
+                            needsConfigure = true;
+                        }
+                        updateNonPendingState(State.CONFIGURING);
                     } else if (mVideoEncoder != null) {
                         // If there's no VideoEncoder, it may need to wait for the new
                         // VideoEncoder to be configured.
@@ -2750,9 +2288,17 @@ public final class SucklessRecorder implements VideoOutput {
         }
 
         // Perform required actions from state changes inline on sequential executor but unlocked.
-        if (needsReset) {
+        if (needsConfigure) {
+            configureInternal(mLatestSurfaceRequest, mVideoSourceTimebase);
+        } else if (needsReset) {
             reset();
         } else if (recordingToStart != null) {
+            // A pending recording will only be started if we're not waiting for a new surface.
+            // Otherwise the recording will be started after receiving a new surface request.
+            if (mEncoderNotUsePersistentInputSurface) {
+                throw new AssertionError("Attempt to start a pending recording while the Recorder"
+                        + " is waiting for a new surface request.");
+            }
             startRecording(recordingToStart, startRecordingPaused);
         } else if (pendingRecordingToFinalize != null) {
             finalizePendingRecording(pendingRecordingToFinalize, error, errorCause);
@@ -2812,25 +2358,23 @@ public final class SucklessRecorder implements VideoOutput {
         @VideoRecordError int error = ERROR_NONE;
         Throwable errorCause = null;
         synchronized (mLock) {
-            Logger.d(TAG, "tryServicePendingRecording on state: " + mState);
             switch (mState) {
                 case PENDING_PAUSED:
                     startRecordingPaused = true;
                     // Fall-through
                 case PENDING_RECORDING:
+                    if (mActiveRecordingRecord != null || mNeedsResetBeforeNextStart) {
+                        // Active recording is still finalizing or the Recorder is expected to be
+                        // reset. Pending recording will be serviced in onRecordingFinalized() or
+                        // in onReset().
+                        break;
+                    }
                     if (mSourceState == SourceState.INACTIVE) {
                         pendingRecordingToFinalize = mPendingRecordingRecord;
                         mPendingRecordingRecord = null;
                         restoreNonPendingState(); // Equivalent to setState(mNonPendingState)
                         error = ERROR_SOURCE_INACTIVE;
                         errorCause = PENDING_RECORDING_ERROR_CAUSE_SOURCE_INACTIVE;
-                    } else if (mActiveRecordingRecord != null || mNeedsResetBeforeNextStart) {
-                        Logger.w(TAG, "PendingRecording is not handled"
-                                + ", active recording = " + mActiveRecordingRecord
-                                + ", need reset flag = " + mNeedsResetBeforeNextStart);
-                        // Active recording is still finalizing or the Recorder is expected to be
-                        // reset. Pending recording will be serviced in onRecordingFinalized() or
-                        // in onReset().
                     } else if (mVideoEncoder != null) {
                         // If there's no VideoEncoder, it may need to wait for the new
                         // VideoEncoder to be configured.
@@ -2871,7 +2415,8 @@ public final class SucklessRecorder implements VideoOutput {
      * longer under lock.
      */
     @GuardedBy("mLock")
-    private @NonNull RecordingRecord makePendingRecordingActiveLocked(@NonNull State state) {
+    @NonNull
+    private RecordingRecord makePendingRecordingActiveLocked(@NonNull State state) {
         boolean startRecordingPaused = false;
         if (state == State.PENDING_PAUSED) {
             startRecordingPaused = true;
@@ -2889,18 +2434,6 @@ public final class SucklessRecorder implements VideoOutput {
         }
         // Swap the pending recording to the active recording and start it
         RecordingRecord recordingToStart = mActiveRecordingRecord = mPendingRecordingRecord;
-        mActiveRecordingRecord.getRecordingState().addObserver(CameraXExecutors.directExecutor(),
-                new Observable.Observer<Boolean>() {
-                    @Override
-                    public void onNewData(@Nullable Boolean value) {
-                        mIsRecording.setState(value);
-                    }
-
-                    @Override
-                    public void onError(@NonNull Throwable t) {
-                        mIsRecording.setError(t);
-                    }
-                });
         mPendingRecordingRecord = null;
         // Start recording if start() has been called before video encoder is setup.
         if (startRecordingPaused) {
@@ -2931,23 +2464,22 @@ public final class SucklessRecorder implements VideoOutput {
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     @ExecutedBy("mSequentialExecutor")
-    void updateInProgressStatusEvent(boolean printLog) {
+    void updateInProgressStatusEvent() {
         if (mInProgressRecording != null) {
             mInProgressRecording.updateVideoRecordEvent(
                     VideoRecordEvent.status(
                             mInProgressRecording.getOutputOptions(),
-                            getInProgressRecordingStats()),
-                    printLog);
+                            getInProgressRecordingStats()));
         }
     }
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     @ExecutedBy("mSequentialExecutor")
-    @NonNull RecordingStats getInProgressRecordingStats() {
-        return RecordingStats.of(TimeUnit.MICROSECONDS.toNanos(mRecordingDurationUs),
-                mRecordingBytes,
+    @NonNull
+    RecordingStats getInProgressRecordingStats() {
+        return RecordingStats.of(mRecordingDurationNs, mRecordingBytes,
                 AudioStats.of(internalAudioStateToAudioStatsState(mAudioState), mAudioErrorCause,
-                        mAudioAmplitude, mRecordingAudioBytes));
+                        mAudioAmplitude));
     }
 
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
@@ -3030,7 +2562,7 @@ public final class SucklessRecorder implements VideoOutput {
     @SuppressWarnings("WeakerAccess") /* synthetic accessor */
     @ExecutedBy("mSequentialExecutor")
     void setInProgressTransformationInfo(
-            SurfaceRequest.@Nullable TransformationInfo transformationInfo) {
+            @Nullable SurfaceRequest.TransformationInfo transformationInfo) {
         Logger.d(TAG, "Update stream transformation info: " + transformationInfo);
         mInProgressTransformationInfo = transformationInfo;
         synchronized (mLock) {
@@ -3086,23 +2618,21 @@ public final class SucklessRecorder implements VideoOutput {
         mAudioState = audioState;
     }
 
-    private static @NonNull ScheduledFuture<?> scheduleTask(@NonNull Runnable task,
-            @NonNull Executor executor, long delay,
-            @SuppressWarnings("SameParameterValue") TimeUnit timeUnit) {
-        return CameraXExecutors.mainThreadExecutor().schedule(() -> executor.execute(task), delay,
-                timeUnit);
-    }
-
     private static int supportedMuxerFormatOrDefaultFrom(
             @Nullable VideoValidatedEncoderProfilesProxy profilesProxy, int defaultMuxerFormat) {
         if (profilesProxy != null) {
             switch (profilesProxy.getRecommendedFileFormat()) {
                 case MediaRecorder.OutputFormat.MPEG_4:
-                    return Muxer.MUXER_FORMAT_MPEG_4;
+                    return android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4;
                 case MediaRecorder.OutputFormat.WEBM:
-                    return Muxer.MUXER_FORMAT_WEBM;
+                    return android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_WEBM;
                 case MediaRecorder.OutputFormat.THREE_GPP:
-                    return Muxer.MUXER_FORMAT_3GPP;
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        // MediaMuxer does not support 3GPP on pre-Android O(API 26) devices.
+                        return android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4;
+                    } else {
+                        return android.media.MediaMuxer.OutputFormat.MUXER_OUTPUT_3GPP;
+                    }
                 default:
                     break;
             }
@@ -3117,135 +2647,15 @@ public final class SucklessRecorder implements VideoOutput {
      * qualities. This information can be used for things like checking if HDR is supported for
      * configuring VideoCapture to record HDR video.
      *
-     * <p>The source of the returned {@link VideoCapabilities} is
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE}. To get a {@link VideoCapabilities}
-     * from a different source, use {@link Recorder#getVideoCapabilities(CameraInfo, int)}.
-     *
      * @param cameraInfo info about the camera.
      * @return VideoCapabilities with respect to the input camera info.
      */
-    public static @NonNull VideoCapabilities getVideoCapabilities(@NonNull CameraInfo cameraInfo) {
-        return getVideoCapabilitiesInternal(VIDEO_RECORDING_TYPE_REGULAR, cameraInfo,
-                VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE, VideoSpec.MIME_TYPE_UNSPECIFIED);
+    @NonNull
+    public static VideoCapabilities getVideoCapabilities(@NonNull CameraInfo cameraInfo) {
+        return RecorderVideoCapabilities.from(cameraInfo);
     }
 
-    /**
-     * Returns the {@link VideoCapabilities} of Recorder with respect to input camera information
-     * and video mime type.
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public static @NonNull VideoCapabilities getVideoCapabilities(@NonNull CameraInfo cameraInfo,
-            @NonNull String mimeType) {
-        return getVideoCapabilitiesInternal(VIDEO_RECORDING_TYPE_REGULAR, cameraInfo,
-                VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE, mimeType);
-    }
-
-    /**
-     * Returns the {@link VideoCapabilities} of Recorder with respect to input camera information
-     * and video capabilities source.
-     *
-     * <p>{@link VideoCapabilities} provides methods to query supported dynamic ranges and
-     * qualities. This information can be used for things like checking if HDR is supported for
-     * configuring VideoCapture to record HDR video.
-     *
-     * <p>The possible video capabilities sources include
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE} and
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES}.
-     *
-     * @param cameraInfo              info about the camera.
-     * @param videoCapabilitiesSource the video capabilities source.
-     * @return VideoCapabilities with respect to the input camera info and video capabilities
-     * source.
-     */
-    public static @NonNull VideoCapabilities getVideoCapabilities(@NonNull CameraInfo cameraInfo,
-            @VideoCapabilitiesSource int videoCapabilitiesSource) {
-        return getVideoCapabilitiesInternal(VIDEO_RECORDING_TYPE_REGULAR, cameraInfo,
-                videoCapabilitiesSource, VideoSpec.MIME_TYPE_UNSPECIFIED);
-    }
-
-    /**
-     * Returns the high-speed {@link VideoCapabilities} of Recorder with respect to input camera
-     * information.
-     *
-     * <p>The returned {@link VideoCapabilities} provides methods to query supported dynamic
-     * ranges, qualities for high-speed video. For recording high-speed and slow-motion
-     * videos, refer to {@link HighSpeedVideoSessionConfig}.
-     *
-     * @param cameraInfo info about the camera.
-     * @return high-speed VideoCapabilities with respect to the input camera info, or null if
-     * high-speed video is not supported.
-     * @see HighSpeedVideoSessionConfig
-     */
-    public static @Nullable VideoCapabilities getHighSpeedVideoCapabilities(
-            @NonNull CameraInfo cameraInfo) {
-        return getHighSpeedVideoCapabilities(cameraInfo,
-                VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE);
-    }
-
-    /**
-     * Returns the high-speed {@link VideoCapabilities} of Recorder with respect to input camera
-     * information and video capabilities source.
-     *
-     * <p>The returned {@link VideoCapabilities} provides methods to query supported dynamic
-     * ranges, qualities for high-speed video. For recording high-speed and slow-motion
-     * videos, refer to {@link HighSpeedVideoSessionConfig}.
-     *
-     * <p>The possible video capabilities sources include
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE} and
-     * {@link #VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES}.
-     *
-     * @param cameraInfo              info about the camera.
-     * @param videoCapabilitiesSource the video capabilities source.
-     * @return high-speed VideoCapabilities with respect to the input camera info and video
-     * capabilities source, or null if high-speed video is not supported.
-     * @see HighSpeedVideoSessionConfig
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY) // Don't expose this API for the initial version.
-    public static @Nullable VideoCapabilities getHighSpeedVideoCapabilities(
-            @NonNull CameraInfo cameraInfo,
-            @VideoCapabilitiesSource int videoCapabilitiesSource) {
-        VideoCapabilities videoCapabilities = getVideoCapabilitiesInternal(
-                VIDEO_RECORDING_TYPE_HIGH_SPEED, cameraInfo, videoCapabilitiesSource,
-                VideoSpec.MIME_TYPE_UNSPECIFIED);
-        return videoCapabilities.getSupportedDynamicRanges().isEmpty() ? null : videoCapabilities;
-    }
-
-    private static @NonNull VideoCapabilities getVideoCapabilitiesInternal(
-            @VideoRecordingType int videoRecordingType,
-            @NonNull CameraInfo cameraInfo,
-            @VideoCapabilitiesSource int videoCapabilitiesSource,
-            @NonNull String mimeType) {
-        CameraInfoInternal cameraInfoInternal = (CameraInfoInternal) cameraInfo;
-        if (VideoSpec.MIME_TYPE_UNSPECIFIED.equals(mimeType)) {
-            EncoderProfilesResolver profilesResolver = getEncoderProfilesResolverInternal(
-                    videoRecordingType, cameraInfo, videoCapabilitiesSource);
-            return new RecorderVideoCapabilities(profilesResolver, cameraInfoInternal);
-        } else {
-            return new MimeMatchedVideoCapabilities(mimeType, cameraInfoInternal,
-                    DEFAULT_VIDEO_ENCODER_INFO_FINDER);
-        }
-    }
-
-    /** Gets the {@link EncoderProfilesResolver} for the given camera info. */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    @Override
-    public @NonNull EncoderProfilesResolver getEncoderProfilesResolver(
-            @NonNull CameraInfo cameraInfo, int sessionType) {
-        int videoCaptureType = sessionType == SESSION_TYPE_HIGH_SPEED
-                ? VIDEO_RECORDING_TYPE_HIGH_SPEED : VIDEO_RECORDING_TYPE_REGULAR;
-
-        return getEncoderProfilesResolverInternal(videoCaptureType, cameraInfo,
-                mVideoCapabilitiesSource);
-    }
-
-    private static @NonNull EncoderProfilesResolver getEncoderProfilesResolverInternal(
-            @VideoRecordingType int videoRecordingType,
-            @NonNull CameraInfo cameraInfo,
-            @VideoCapabilitiesSource int videoCapabilitiesSource) {
-        return EncoderProfilesResolverFactory.getResolver(cameraInfo, videoRecordingType,
-                videoCapabilitiesSource, DEFAULT_VIDEO_ENCODER_INFO_FINDER);
-    }
-
+    @RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
     @AutoValue
     abstract static class RecordingRecord implements AutoCloseable {
 
@@ -3253,7 +2663,8 @@ public final class SucklessRecorder implements VideoOutput {
 
         private final AtomicBoolean mInitialized = new AtomicBoolean(false);
 
-        private final AtomicReference<MuxerSupplier> mMuxerSupplier = new AtomicReference<>(null);
+        private final AtomicReference<MediaMuxerSupplier> mMediaMuxerSupplier =
+                new AtomicReference<>(null);
 
         private final AtomicReference<AudioSourceSupplier> mAudioSourceSupplier =
                 new AtomicReference<>(null);
@@ -3265,12 +2676,9 @@ public final class SucklessRecorder implements VideoOutput {
 
         private final AtomicBoolean mMuted = new AtomicBoolean(false);
 
-        private final @NonNull MutableStateObservable<Boolean> mRecordingState =
-                MutableStateObservable.withInitialState(false);
-
-        static @NonNull RecordingRecord from(@NonNull SucklessPendingRecording pendingRecording,
-                long recordingId) {
-            RecordingRecord recordingRecord = new AutoValue_SucklessRecorder_RecordingRecord(
+        @NonNull
+        static RecordingRecord from(@NonNull SucklessPendingRecording pendingRecording, long recordingId) {
+            return new AutoValue_SucklessRecorder_RecordingRecord(
                     pendingRecording.getOutputOptions(),
                     pendingRecording.getListenerExecutor(),
                     pendingRecording.getEventListener(),
@@ -3278,15 +2686,16 @@ public final class SucklessRecorder implements VideoOutput {
                     pendingRecording.isPersistent(),
                     recordingId
             );
-            recordingRecord.mute(pendingRecording.isAudioInitialMuted());
-            return recordingRecord;
         }
 
-        abstract @NonNull OutputOptions getOutputOptions();
+        @NonNull
+        abstract OutputOptions getOutputOptions();
 
-        abstract @Nullable Executor getCallbackExecutor();
+        @Nullable
+        abstract Executor getCallbackExecutor();
 
-        abstract @Nullable Consumer<VideoRecordEvent> getEventListener();
+        @Nullable
+        abstract Consumer<VideoRecordEvent> getEventListener();
 
         abstract boolean hasAudioEnabled();
 
@@ -3301,8 +2710,7 @@ public final class SucklessRecorder implements VideoOutput {
          * @throws IOException if it fails to duplicate the file descriptor when the
          * {@link #getOutputOptions() OutputOptions} is {@link FileDescriptorOutputOptions}.
          */
-        void initializeRecording(@NonNull Context context, @NonNull MuxerFactory muxerFactory)
-                throws IOException {
+        void initializeRecording(@NonNull Context context) throws IOException {
             if (mInitialized.getAndSet(true)) {
                 throw new AssertionError("Recording " + this + " has already been initialized");
             }
@@ -3312,7 +2720,6 @@ public final class SucklessRecorder implements VideoOutput {
             if (outputOptions instanceof FileDescriptorOutputOptions) {
                 // Duplicate ParcelFileDescriptor to make input descriptor can be safely closed,
                 // or throw an IOException if it fails.
-                //noinspection resource
                 dupedParcelFileDescriptor =
                         ((FileDescriptorOutputOptions) outputOptions)
                                 .getParcelFileDescriptor().dup();
@@ -3322,25 +2729,58 @@ public final class SucklessRecorder implements VideoOutput {
 
             mCloseGuard.open("finalizeRecording");
 
-            MuxerSupplier muxerSupplier =
+            MediaMuxerSupplier mediaMuxerSupplier =
                     (muxerOutputFormat, outputUriCreatedCallback) -> {
-                        Muxer muxer;
+                        MediaMuxer mediaMuxer;
                         Uri outputUri = Uri.EMPTY;
                         if (outputOptions instanceof MuxerOutputOptions) {
-                            muxer = ((MuxerOutputOptions) outputOptions).getMuxer();
+                            mediaMuxer = ((MuxerOutputOptions) outputOptions).getMediaMuxer();
                         } else {
                             throw new AssertionError(
                                     "Invalid output options type: "
                                             + outputOptions.getClass().getSimpleName());
                         }
                         outputUriCreatedCallback.accept(outputUri);
-                        return muxer;
+                        return mediaMuxer;
                     };
-            mMuxerSupplier.set(muxerSupplier);
+            mMediaMuxerSupplier.set(mediaMuxerSupplier);
 
             Consumer<Uri> recordingFinalizer = null;
             if (hasAudioEnabled()) {
-                mAudioSourceSupplier.set(getAudioSourceSupplier(context));
+                if (Build.VERSION.SDK_INT >= 31) {
+                    // Use anonymous inner class instead of lambda since we need to propagate
+                    // permission requirements
+                    @SuppressWarnings("Convert2Lambda")
+                    AudioSourceSupplier audioSourceSupplier = new AudioSourceSupplier() {
+                        @NonNull
+                        @Override
+                        @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+                        public AudioSource get(@NonNull AudioSettings settings,
+                                @NonNull Executor executor)
+                                throws AudioSourceAccessException {
+                            // Context will only be held in local scope of the supplier so it will
+                            // not be retained after performOneTimeAudioSourceCreation() is called.
+                            return new AudioSource(settings, executor, context);
+                        }
+                    };
+                    mAudioSourceSupplier.set(audioSourceSupplier);
+                } else {
+                    // Use anonymous inner class instead of lambda since we need to propagate
+                    // permission requirements
+                    @SuppressWarnings("Convert2Lambda")
+                    AudioSourceSupplier audioSourceSupplier = new AudioSourceSupplier() {
+                        @NonNull
+                        @Override
+                        @RequiresPermission(Manifest.permission.RECORD_AUDIO)
+                        public AudioSource get(@NonNull AudioSettings settings,
+                                @NonNull Executor executor)
+                                throws AudioSourceAccessException {
+                            // Do not set (or retain) context on other API levels
+                            return new AudioSource(settings, executor, null);
+                        }
+                    };
+                    mAudioSourceSupplier.set(audioSourceSupplier);
+                }
             }
 
             if (outputOptions instanceof MediaStoreOutputOptions) {
@@ -3353,8 +2793,6 @@ public final class SucklessRecorder implements VideoOutput {
                         if (outputUri.equals(Uri.EMPTY)) {
                             return;
                         }
-                        // Workaround: Explicitly update to NOT_PENDING even if it wasn't set.
-                        // This helps display the video duration on the Google Photos thumbnails.
                         ContentValues contentValues = new ContentValues();
                         contentValues.put(MediaStore.Video.Media.IS_PENDING, NOT_PENDING);
                         mediaStoreOutputOptions.getContentResolver().update(outputUri,
@@ -3391,6 +2829,17 @@ public final class SucklessRecorder implements VideoOutput {
                         }
                     };
                 }
+            } else if (outputOptions instanceof FileDescriptorOutputOptions) {
+                recordingFinalizer = ignored -> {
+                    try {
+                        // dupedParcelFileDescriptor should be non-null.
+                        dupedParcelFileDescriptor.close();
+                    } catch (IOException e) {
+                        // IOException is not expected to be thrown while closing
+                        // ParcelFileDescriptor.
+                        Logger.e(TAG, "Failed to close dup'd ParcelFileDescriptor", e);
+                    }
+                };
             }
 
             if (recordingFinalizer != null) {
@@ -3398,75 +2847,25 @@ public final class SucklessRecorder implements VideoOutput {
             }
         }
 
-        @NonNull
-        private ContentValues resolveContentValues(
-                @NonNull MediaStoreOutputOptions mediaStoreOutputOptions, @NonNull Muxer muxer) {
-            ContentValues contentValues =
-                    new ContentValues(mediaStoreOutputOptions.getContentValues());
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-                    && !muxer.isInterruptionResilient()) {
-                // Toggle on pending status for the video file. The saved file
-                // will be hidden until the pending flag is changed to NOT_PENDING.
-                contentValues.put(MediaStore.Video.Media.IS_PENDING, PENDING);
-            }
-            return contentValues;
-        }
-
-        @NonNull
-        private static AudioSourceSupplier getAudioSourceSupplier(@NonNull Context context) {
-            Context attributionContext;
-            if (Build.VERSION.SDK_INT >= 31) {
-                // Context will only be held in local scope of the supplier so it will
-                // not be retained after performOneTimeAudioSourceCreation() is called.
-                attributionContext = context;
-            } else {
-                // Do not set (or retain) context on other API levels
-                attributionContext = null;
-            }
-
-            // Use anonymous inner class instead of lambda since we need to propagate
-            // permission requirements
-            @SuppressWarnings("Convert2Lambda")
-            AudioSourceSupplier audioSourceSupplier = new AudioSourceSupplier() {
-                @Override
-                @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-                public @NonNull AudioSource get(@NonNull AudioSettings settings,
-                        @NonNull Executor executor)
-                        throws AudioSourceAccessException {
-                    return new AudioSource(settings, executor, attributionContext);
-                }
-            };
-
-            return audioSourceSupplier;
-        }
-
-        /** Updates the recording status and callback to users. */
-        void updateVideoRecordEvent(@NonNull VideoRecordEvent event) {
-            updateVideoRecordEvent(event, /*printLog=*/true);
-        }
-
         /**
          * Updates the recording status and callback to users.
          */
-        void updateVideoRecordEvent(@NonNull VideoRecordEvent event, boolean printLog) {
+        void updateVideoRecordEvent(@NonNull VideoRecordEvent event) {
             if (!Objects.equals(event.getOutputOptions(), getOutputOptions())) {
                 throw new AssertionError("Attempted to update event listener with event from "
                     + "incorrect recording [Recording: " + event.getOutputOptions()
                         + ", Expected: " + getOutputOptions() + "]");
             }
-            if (printLog) {
-                String message = "Sending VideoRecordEvent " + event.getClass().getSimpleName();
-                if (event instanceof VideoRecordEvent.Finalize) {
-                    VideoRecordEvent.Finalize finalizeEvent = (VideoRecordEvent.Finalize) event;
-                    if (finalizeEvent.hasError()) {
-                        message += String.format(" [error: %s]",
-                                VideoRecordEvent.Finalize.errorToString(
-                                        finalizeEvent.getError()));
-                    }
+            String message = "Sending VideoRecordEvent " + event.getClass().getSimpleName();
+            if (event instanceof VideoRecordEvent.Finalize) {
+                VideoRecordEvent.Finalize finalizeEvent = (VideoRecordEvent.Finalize) event;
+                if (finalizeEvent.hasError()) {
+                    message += String.format(" [error: %s]",
+                            VideoRecordEvent.Finalize.errorToString(
+                                    finalizeEvent.getError()));
                 }
-                Logger.d(TAG, message);
             }
-            updateRecordingState(event);
+            Logger.d(TAG, message);
             if (getCallbackExecutor() != null && getEventListener() != null) {
                 try {
                     getCallbackExecutor().execute(() -> getEventListener().accept(event));
@@ -3474,22 +2873,6 @@ public final class SucklessRecorder implements VideoOutput {
                     Logger.e(TAG, "The callback executor is invalid.", e);
                 }
             }
-        }
-
-        private void updateRecordingState(@NonNull VideoRecordEvent event) {
-            if (event instanceof VideoRecordEvent.Start
-                    || event instanceof VideoRecordEvent.Resume) {
-                mRecordingState.setState(true);
-            } else if (event instanceof VideoRecordEvent.Pause
-                    || event instanceof VideoRecordEvent.Finalize) {
-                mRecordingState.setState(false);
-            }
-        }
-
-        // Provides only true/false i.e. whether recording or not right now. More states can be
-        // added later if ever required.
-        @NonNull StateObservable<Boolean> getRecordingState() {
-            return mRecordingState;
         }
 
         /**
@@ -3501,8 +2884,10 @@ public final class SucklessRecorder implements VideoOutput {
          * <p>Calling this method when audio is not enabled for this recording will also throw an
          * {@link AssertionError}.
          */
+        @NonNull
         @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-        @NonNull AudioSource performOneTimeAudioSourceCreation(@NonNull AudioSettings settings)
+        AudioSource performOneTimeAudioSourceCreation(
+                @NonNull AudioSettings settings, @NonNull Executor audioSourceExecutor)
                 throws AudioSourceAccessException {
             if (!hasAudioEnabled()) {
                 throw new AssertionError("Recording does not have audio enabled. Unable to create"
@@ -3515,41 +2900,42 @@ public final class SucklessRecorder implements VideoOutput {
                         + " recording " + this);
             }
 
-            return audioSourceSupplier.get(settings, AUDIO_EXECUTOR);
+            return audioSourceSupplier.get(settings, audioSourceExecutor);
         }
 
         /**
-         * Creates a {@link Muxer} for this recording.
+         * Creates a {@link MediaMuxer} for this recording.
          *
-         * <p>A muxer can only be created once per recording, so subsequent calls to this method
-         * will throw an {@link AssertionError}.
+         * <p>A media muxer can only be created once per recording, so subsequent calls to this
+         * method will throw an {@link AssertionError}.
          *
          * @param muxerOutputFormat the output file format.
-         * @param outputUriCreatedCallback A callback that will send the returned muxer's
+         * @param outputUriCreatedCallback A callback that will send the returned media muxer's
          *                                 output {@link Uri}. It will be {@link Uri#EMPTY} if the
          *                                 {@link #getOutputOptions() OutputOptions} is
          *                                 {@link FileDescriptorOutputOptions}.
          *                                 Note: This callback will be called inline.
-         * @return the muxer.
-         * @throws IOException if the creation of the muxer fails.
+         * @return the media muxer.
+         * @throws IOException if the creation of the media mixer fails.
          * @throws AssertionError if the recording is not initialized or subsequent calls to this
          * method.
          */
-        @NonNull Muxer performOneTimeMuxerCreation(int muxerOutputFormat,
+        @NonNull
+        MediaMuxer performOneTimeMediaMuxerCreation(int muxerOutputFormat,
                 @NonNull Consumer<Uri> outputUriCreatedCallback) throws IOException {
             if (!mInitialized.get()) {
                 throw new AssertionError("Recording " + this + " has not been initialized");
             }
-            MuxerSupplier muxerSupplier = mMuxerSupplier.getAndSet(null);
-            if (muxerSupplier == null) {
-                throw new AssertionError("One-time muxer creation has already occurred for"
+            MediaMuxerSupplier mediaMuxerSupplier = mMediaMuxerSupplier.getAndSet(null);
+            if (mediaMuxerSupplier == null) {
+                throw new AssertionError("One-time media muxer creation has already occurred for"
                         + " recording " + this);
             }
 
             try {
-                return muxerSupplier.get(muxerOutputFormat, outputUriCreatedCallback);
+                return mediaMuxerSupplier.get(muxerOutputFormat, outputUriCreatedCallback);
             } catch (RuntimeException e) {
-                throw new IOException("Failed to create Muxer by " + e, e);
+                throw new IOException("Failed to create MediaMuxer by " + e, e);
             }
         }
 
@@ -3619,14 +3005,16 @@ public final class SucklessRecorder implements VideoOutput {
             finalizer.accept(uri);
         }
 
-        private interface MuxerSupplier {
-            @NonNull Muxer get(int muxerOutputFormat,
-                    @NonNull Consumer<Uri> outputUriCreatedCallback) throws IOException;
+        private interface MediaMuxerSupplier {
+            @NonNull
+            MediaMuxer get(int muxerOutputFormat, @NonNull Consumer<Uri> outputUriCreatedCallback)
+                    throws IOException;
         }
 
         private interface AudioSourceSupplier {
             @RequiresPermission(Manifest.permission.RECORD_AUDIO)
-            @NonNull AudioSource get(@NonNull AudioSettings settings,
+            @NonNull
+            AudioSource get(@NonNull AudioSettings settings,
                     @NonNull Executor audioSourceExecutor) throws AudioSourceAccessException;
         }
     }
@@ -3634,17 +3022,13 @@ public final class SucklessRecorder implements VideoOutput {
     /**
      * Builder class for {@link Recorder} objects.
      */
+    @RequiresApi(21) // TODO(b/200306659): Remove and replace with annotation on package-info.java
     public static final class Builder {
 
         private final MediaSpec.Builder mMediaSpecBuilder;
-        private @VideoCapabilitiesSource int mVideoCapabilitiesSource =
-                VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE;
         private Executor mExecutor = null;
         private EncoderFactory mVideoEncoderFactory = DEFAULT_ENCODER_FACTORY;
         private EncoderFactory mAudioEncoderFactory = DEFAULT_ENCODER_FACTORY;
-        private MuxerFactory mMuxerFactory = DEFAULT_MUXER_FACTORY;
-        private OutputStorage.Factory mOutputStorageFactory = OUTPUT_STORAGE_FACTORY_DEFAULT;
-        private long mRequiredFreeStorageBytes = REQUIRED_FREE_STORAGE_UNSET;
 
         /**
          * Constructor for {@code Recorder.Builder}.
@@ -3653,7 +3037,7 @@ public final class SucklessRecorder implements VideoOutput {
          * options.
          */
         public Builder() {
-            mMediaSpecBuilder = MEDIA_SPEC_DEFAULT.toBuilder();
+            mMediaSpecBuilder = MediaSpec.builder();
         }
 
         /**
@@ -3666,7 +3050,8 @@ public final class SucklessRecorder implements VideoOutput {
          *
          * <p>If not set, the Recorder will be run on the IO executor internally managed by CameraX.
          */
-        public @NonNull Builder setExecutor(@NonNull Executor executor) {
+        @NonNull
+        public Builder setExecutor(@NonNull Executor executor) {
             Preconditions.checkNotNull(executor, "The specified executor can't be null.");
             mExecutor = executor;
             return this;
@@ -3690,43 +3075,12 @@ public final class SucklessRecorder implements VideoOutput {
          * @see QualitySelector
          * @see #setAspectRatio(int)
          */
-        public @NonNull Builder setQualitySelector(@NonNull QualitySelector qualitySelector) {
+        @NonNull
+        public Builder setQualitySelector(@NonNull QualitySelector qualitySelector) {
             Preconditions.checkNotNull(qualitySelector,
                     "The specified quality selector can't be null.");
             mMediaSpecBuilder.configureVideo(
                     builder -> builder.setQualitySelector(qualitySelector));
-            return this;
-        }
-
-        /** Sets the {@link MuxerFactory} of this Recorder. */
-        @RestrictTo(RestrictTo.Scope.LIBRARY)
-        public @NonNull Builder setMuxerFactory(@NonNull MuxerFactory muxerFactory) {
-            mMuxerFactory = muxerFactory;
-            return this;
-        }
-
-        /**
-         * Sets the video capabilities source.
-         *
-         * <p>Possible values include {@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE} and
-         * {@link #VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES}. The final selected quality
-         * from the {@link QualitySelector} will be affected by the source. See the document of
-         * the constants for more detail.
-         *
-         * <p>{@link #VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE} will be the default if not set.
-         *
-         * @param videoCapabilitiesSource the video capabilities source.
-         * @return the builder instance.
-         * @throws IllegalArgumentException if videoCapabilitiesSource is not one of the possible
-         * values.
-         */
-        public @NonNull Builder setVideoCapabilitiesSource(
-                @VideoCapabilitiesSource int videoCapabilitiesSource) {
-            checkArgument(videoCapabilitiesSource == VIDEO_CAPABILITIES_SOURCE_CAMCORDER_PROFILE
-                            || videoCapabilitiesSource
-                            == VIDEO_CAPABILITIES_SOURCE_CODEC_CAPABILITIES,
-                    "Not a supported video capabilities source: " + videoCapabilitiesSource);
-            mVideoCapabilitiesSource = videoCapabilitiesSource;
             return this;
         }
 
@@ -3735,7 +3089,8 @@ public final class SucklessRecorder implements VideoOutput {
          *
          * <p>The target video encoding bitrate attempts to keep the actual video encoding
          * bitrate close to the requested {@code bitrate}. Bitrate may vary during a recording
-         * depending on the scene being recorded.
+         * depending on the scene
+         * being recorded.
          *
          * <p>Additional checks will be performed on the requested {@code bitrate} to make sure the
          * specified bitrate is applicable, and sometimes the passed bitrate will be changed
@@ -3751,13 +3106,15 @@ public final class SucklessRecorder implements VideoOutput {
          * @param bitrate the target video encoding bitrate in bits per second.
          * @throws IllegalArgumentException if bitrate is 0 or less.
          */
-        public @NonNull Builder setTargetVideoEncodingBitRate(@IntRange(from = 1) int bitrate) {
+        @NonNull
+        public Builder setTargetVideoEncodingBitRate(@IntRange(from = 1) int bitrate) {
             if (bitrate <= 0) {
                 throw new IllegalArgumentException("The requested target bitrate " + bitrate
                         + " is not supported. Target bitrate must be greater than 0.");
             }
 
-            mMediaSpecBuilder.configureVideo(builder -> builder.setBitrate(bitrate));
+            mMediaSpecBuilder.configureVideo(
+                    builder -> builder.setBitrate(new Range<>(bitrate, bitrate)));
             return this;
         }
 
@@ -3784,32 +3141,9 @@ public final class SucklessRecorder implements VideoOutput {
          *
          * @see #setQualitySelector(QualitySelector)
          */
-        public @NonNull Builder setAspectRatio(@AspectRatio.Ratio int aspectRatio) {
+        @NonNull
+        public Builder setAspectRatio(@AspectRatio.Ratio int aspectRatio) {
             mMediaSpecBuilder.configureVideo(builder -> builder.setAspectRatio(aspectRatio));
-            return this;
-        }
-
-        /**
-         * Sets the required free storage space, in bytes, needed for recording.
-         *
-         * <p>The recording will be finalized automatically with
-         * {@link VideoRecordEvent.Finalize#ERROR_INSUFFICIENT_STORAGE} if the available storage
-         * space drops below this value. Any data already recorded will still be saved to
-         * the output file.
-         *
-         * <p>Note: This check is not performed when using {@link FileDescriptorOutputOptions} as
-         * the output.
-         *
-         * <p>The default value is 50 MB.
-         *
-         * @param bytes The required free storage space in bytes. Must be positive.
-         * @return The builder instance for chaining calls.
-         * @throws IllegalArgumentException If {@code bytes} is not positive.
-         */
-        @RestrictTo(RestrictTo.Scope.LIBRARY)
-        public @NonNull Builder setRequiredFreeStorageBytes(@IntRange(from = 1L) long bytes) {
-            Preconditions.checkArgument(bytes > 0L);
-            mRequiredFreeStorageBytes = bytes;
             return this;
         }
 
@@ -3817,34 +3151,30 @@ public final class SucklessRecorder implements VideoOutput {
          * Sets the audio source for recordings with audio enabled.
          *
          * <p>This will only set the source of audio for recordings, but audio must still be
-         * enabled on a per-recording basis with {@link PendingRecording#withAudioEnabled()}
+         * enabled on a per-recording basis with {@link SucklessPendingRecording#withAudioEnabled()}
          * before starting the recording.
          *
-         * @param source The audio source to use. One of {@link AudioSpec#SOURCE_UNSPECIFIED} or
+         * @param source The audio source to use. One of {@link AudioSpec#SOURCE_AUTO} or
          *               {@link AudioSpec#SOURCE_CAMCORDER}. Default is
-         *               {@link AudioSpec#SOURCE_UNSPECIFIED}.
+         *               {@link AudioSpec#SOURCE_AUTO}.
          */
-        @RestrictTo(RestrictTo.Scope.LIBRARY)
-        public @NonNull Builder setAudioSource(@AudioSpec.Source int source) {
+        @NonNull
+        Builder setAudioSource(@AudioSpec.Source int source) {
             mMediaSpecBuilder.configureAudio(builder -> builder.setSource(source));
             return this;
         }
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
-        @NonNull Builder setVideoEncoderFactory(@NonNull EncoderFactory videoEncoderFactory) {
+        @NonNull
+        Builder setVideoEncoderFactory(@NonNull EncoderFactory videoEncoderFactory) {
             mVideoEncoderFactory = videoEncoderFactory;
             return this;
         }
 
         @RestrictTo(RestrictTo.Scope.LIBRARY)
-        @NonNull Builder setAudioEncoderFactory(@NonNull EncoderFactory audioEncoderFactory) {
+        @NonNull
+        Builder setAudioEncoderFactory(@NonNull EncoderFactory audioEncoderFactory) {
             mAudioEncoderFactory = audioEncoderFactory;
-            return this;
-        }
-
-        @NonNull Builder setOutputStorageFactory(
-                OutputStorage.@NonNull Factory outputStorageFactory) {
-            mOutputStorageFactory = outputStorageFactory;
             return this;
         }
 
@@ -3855,11 +3185,10 @@ public final class SucklessRecorder implements VideoOutput {
          * {@link Recorder} instance each time. The returned instance is configured with the
          * options set on this builder.
          */
-        public @NonNull SucklessRecorder build() {
-            return new SucklessRecorder(mExecutor, mMediaSpecBuilder.build(), mVideoCapabilitiesSource,
-                    mVideoEncoderFactory, mAudioEncoderFactory, mMuxerFactory,
-                    mOutputStorageFactory, mRequiredFreeStorageBytes);
+        @NonNull
+        public SucklessRecorder build() {
+            return new SucklessRecorder(mExecutor, mMediaSpecBuilder.build(), mVideoEncoderFactory,
+                    mAudioEncoderFactory);
         }
     }
 }
-

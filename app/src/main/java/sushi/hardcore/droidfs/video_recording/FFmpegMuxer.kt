@@ -2,12 +2,10 @@ package sushi.hardcore.droidfs.video_recording
 
 import android.media.MediaCodec
 import android.media.MediaFormat
-import android.os.ParcelFileDescriptor
-import androidx.camera.video.internal.muxer.Muxer
-import androidx.camera.video.internal.muxer.MuxerException
+import androidx.camera.video.MediaMuxer
 import java.nio.ByteBuffer
 
-class FFmpegMuxer(val writer: SeekableWriter): Muxer {
+class FFmpegMuxer(val writer: SeekableWriter): MediaMuxer {
     external fun allocContext(): Long
     external fun addVideoTrack(formatContext: Long, bitrate: Int, frameRate: Int, width: Int, height: Int, orientationHint: Int): Int
     external fun addAudioTrack(formatContext: Long, bitrate: Int, sampleRate: Int, channelCount: Int): Int
@@ -28,9 +26,9 @@ class FFmpegMuxer(val writer: SeekableWriter): Muxer {
         formatContext = allocContext()
     }
 
-    override fun writeSampleData(trackIndex: Int, byteBuffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) {
+    override fun writeSampleData(trackIndex: Int, buffer: ByteBuffer, bufferInfo: MediaCodec.BufferInfo) {
         val byteArray = ByteArray(bufferInfo.size)
-        byteBuffer.get(byteArray)
+        buffer.get(byteArray)
         if (firstPts == null) {
             firstPts = bufferInfo.presentationTimeUs
         }
@@ -40,15 +38,15 @@ class FFmpegMuxer(val writer: SeekableWriter): Muxer {
         )
     }
 
-    override fun addTrack(format: MediaFormat): Int {
-        val mime = format.getString("mime")!!.split('/')
-        val bitrate = format.getInteger("bitrate")
+    override fun addTrack(mediaFormat: MediaFormat): Int {
+        val mime = mediaFormat.getString("mime")!!.split('/')
+        val bitrate = mediaFormat.getInteger("bitrate")
         return if (mime[0] == "audio") {
             addAudioTrack(
                 formatContext!!,
                 bitrate,
-                format.getInteger("sample-rate"),
-                format.getInteger("channel-count")
+                mediaFormat.getInteger("sample-rate"),
+                mediaFormat.getInteger("channel-count")
             ).also {
                 audioTrackIndex = it
             }
@@ -56,9 +54,9 @@ class FFmpegMuxer(val writer: SeekableWriter): Muxer {
             addVideoTrack(
                 formatContext!!,
                 bitrate,
-                format.getInteger("frame-rate"),
-                format.getInteger("width"),
-                format.getInteger("height"),
+                mediaFormat.getInteger("frame-rate"),
+                mediaFormat.getInteger("width"),
+                mediaFormat.getInteger("height"),
                 orientation
             ).also {
                videoTrackIndex = it
@@ -73,16 +71,9 @@ class FFmpegMuxer(val writer: SeekableWriter): Muxer {
         writeTrailer(formatContext!!)
     }
 
-    override fun setOrientationDegrees(degrees: Int) {
-        orientation = degrees
+    override fun setOrientationHint(degree: Int) {
+        orientation = degree
     }
-
-    override fun setLocation(latitude: Double, longitude: Double) {}
-    override fun setCaptureFps(captureFps: Int) {}
-    override fun setOutput(path: String, format: Int) {}
-    override fun setOutput(parcelFileDescriptor: ParcelFileDescriptor, format: Int) {}
-
-    override fun isInterruptionResilient(): Boolean = false
 
     override fun release() {
         writer.close()
