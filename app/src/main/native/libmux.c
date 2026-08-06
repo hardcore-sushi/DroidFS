@@ -82,10 +82,10 @@ Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_addAudioTrack(JNIEnv *e
     AVCodecContext* codec_context = avcodec_alloc_context3(encoder);
     av_channel_layout_default(&codec_context->ch_layout, channel_count);
     codec_context->sample_rate = sample_rate;
-    codec_context->sample_fmt = encoder->sample_fmts[0];
+    codec_context->sample_fmt = AV_SAMPLE_FMT_FLTP;
     codec_context->bit_rate = bitrate;
     codec_context->time_base = (AVRational) {1, sample_rate};
-    avcodec_open2(codec_context, encoder, NULL);
+    log_err(avcodec_open2(codec_context, encoder, NULL), "avcodec_open2");
     AVStream* stream = avformat_new_stream((AVFormatContext *) format_context, NULL);
     avcodec_parameters_from_context(stream->codecpar, codec_context);
     avcodec_free_context(&codec_context);
@@ -106,7 +106,8 @@ Java_sushi_hardcore_droidfs_video_1recording_FFmpegMuxer_addVideoTrack(JNIEnv *e
     stream->codecpar->bit_rate = bitrate;
     stream->codecpar->width = width;
     stream->codecpar->height = height;
-    stream->codecpar->format = AV_PIX_FMT_YUVJ420P;
+    stream->codecpar->format = AV_PIX_FMT_YUV420P;
+    stream->codecpar->color_range = AVCOL_RANGE_JPEG;
     stream->time_base = (AVRational) {1, frame_rate};
     AVPacketSideData *side_data_packet = av_packet_side_data_new(&stream->codecpar->coded_side_data, &stream->codecpar->nb_coded_side_data, AV_PKT_DATA_DISPLAYMATRIX, sizeof(int32_t) * 9, 0);
     av_display_rotation_set((int32_t *) side_data_packet->data, orientation_hint);

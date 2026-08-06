@@ -53,27 +53,11 @@ else
 			--disable-avdevice \
 			--disable-swresample \
 			--disable-swscale \
-			--disable-postproc \
 			--disable-avfilter \
 			--disable-network \
+			--disable-protocols \
+			--disable-autodetect \
 			--disable-doc \
-			--disable-htmlpages \
-			--disable-manpages \
-			--disable-podpages \
-			--disable-txtpages \
-			--disable-sndio \
-			--disable-schannel \
-			--disable-securetransport \
-			--disable-vulkan \
-			--disable-xlib \
-			--disable-zlib \
-			--disable-cuvid \
-			--disable-nvenc \
-			--disable-vdpau \
-			--disable-videotoolbox \
-			--disable-audiotoolbox \
-			--disable-appkit \
-			--disable-alsa \
 			--disable-debug
 		make -j "$(nproc --all)" >/dev/null)
 		mkdir -p "build/$1/libavformat" "build/$1/libavcodec" "build/$1/libavutil"
