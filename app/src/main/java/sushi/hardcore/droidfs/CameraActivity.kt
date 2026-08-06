@@ -334,6 +334,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
             resolutions = null
             qualities = null
+            currentQualityIndex = -1
             setupCamera()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
