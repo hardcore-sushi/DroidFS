@@ -6,13 +6,13 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
+import coil3.asImage
 import coil3.Image
 import coil3.ImageLoader
-import coil3.imageLoader
 import coil3.load
 import coil3.request.Disposable
-import coil3.request.ImageRequest
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -43,8 +43,8 @@ class ExplorerElementAdapter(
 
     init {
         if (encryptedVolume != null) {
-            activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_image).target { result -> iconImage = result}.build())
-            activity.imageLoader.enqueue(ImageRequest.Builder(activity).data(R.drawable.icon_file_video).target { result -> iconVideo = result}.build())
+            iconImage = AppCompatResources.getDrawable(activity, R.drawable.icon_file_image)?.asImage()
+            iconVideo = AppCompatResources.getDrawable(activity, R.drawable.icon_file_video)?.asImage()
             thumbnailsLoader = ThumbnailLoaderConfig.imageLoader(activity, encryptedVolume)
         }
     }
@@ -118,7 +118,7 @@ class ExplorerElementAdapter(
             thumbnailLoadingTask?.dispose()
         }
 
-        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int, placeholder: Image?): Disposable {
+        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int, placeholder: Image?): Disposable? {
             val adapter = (bindingAdapter as ExplorerElementAdapter?)!!
             return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
                 icon.load(fullPath, adapter.thumbnailsLoader!!) {
@@ -126,7 +126,8 @@ class ExplorerElementAdapter(
                     placeholder(placeholder)
                 }
             } else {
-                icon.load(defaultIconId)
+                icon.setImageResource(defaultIconId)
+                null
             }
         }
 
@@ -140,14 +141,17 @@ class ExplorerElementAdapter(
                 FileTypes.isVideo(explorerElement.name) -> {
                     setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video, adapter.iconVideo)
                 }
-                else -> icon.load(
-                    when {
-                        FileTypes.isText(explorerElement.name) -> R.drawable.icon_file_text
-                        FileTypes.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
-                        FileTypes.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
-                        else -> R.drawable.icon_file_unknown
-                    }
-                )
+                else -> {
+                    icon.setImageResource(
+                        when {
+                            FileTypes.isText(explorerElement.name) -> R.drawable.icon_file_text
+                            FileTypes.isPDF(explorerElement.name) -> R.drawable.icon_file_pdf
+                            FileTypes.isAudio(explorerElement.name) -> R.drawable.icon_file_audio
+                            else -> R.drawable.icon_file_unknown
+                        }
+                    )
+                    null
+                }
             }
         }
     }
