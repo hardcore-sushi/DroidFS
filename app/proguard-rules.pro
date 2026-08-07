@@ -3,6 +3,9 @@
 -dontwarn android.hardware.fingerprint.FingerprintManager
 -dontwarn android.hardware.fingerprint.FingerprintManager$AuthenticationCallback
 -dontwarn android.hardware.fingerprint.FingerprintManager$CryptoObject
+# Suppress warnings for CameraX extension classes that are only implemented by
+# device vendors at runtime (not shipped in the library)
+-dontwarn androidx.camera.extensions.impl.**
 -keepattributes SourceFile,LineNumberTable
 
 -keep class sushi.hardcore.droidfs.SettingsActivity$**
@@ -14,6 +17,7 @@
     void writePacket(byte[]);
     void seek(long);
 }
+-keep class app.grapheneos.pdfviewer.PdfViewer$Channel { *; }
 # Keep all JNI native methods and their classes
 -keepclasseswithmembernames class * {
     native <methods>;
