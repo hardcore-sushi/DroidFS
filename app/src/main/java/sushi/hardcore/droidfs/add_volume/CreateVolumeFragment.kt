@@ -8,10 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
-import android.widget.RadioButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.children
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -128,27 +126,26 @@ class CreateVolumeFragment: Fragment() {
             setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         }
         for ((i, fs) in fileSystemInfos.iterator().withIndex()) {
-            with(FileSystemRadioBinding.inflate(layoutInflater)) {
+            with(FileSystemRadioBinding.inflate(layoutInflater, binding.radioGroupFilesystems, false)) {
                 title.text = getString(fs.nameResource)
                 details.text = getString(fs.detailsResource)
-                radio.isChecked = i == 0
+                radio.id = fs.nameResource // changing ID to a unique one to avoid conflicts
                 root.setOnClickListener {
                     radio.performClick()
                 }
                 radio.setOnCheckedChangeListener { _, isChecked ->
                     if (isChecked) {
+                        binding.radioGroupFilesystems.check(radio.id)
                         with(encryptionCipherAdapter) {
                             clear()
                             addAll(resources.getStringArray(fs.ciphersResource).asList())
                         }
-                        binding.radioGroupFilesystems.children.forEach {
-                            if (it != root) {
-                                it.findViewById<RadioButton>(R.id.radio).isChecked = false
-                            }
-                        }
                     }
                 }
                 binding.radioGroupFilesystems.addView(root)
+                if (i == 0) {
+                    radio.isChecked = true
+                }
             }
         }
         binding.spinnerCipher.adapter = encryptionCipherAdapter
@@ -171,13 +168,9 @@ class CreateVolumeFragment: Fragment() {
         (activity as AddVolumeActivity).onFragmentLoaded(false)
     }
 
-    private fun getSelectedFileSystemIndex(): Int {
-        for ((i, child) in binding.radioGroupFilesystems.children.iterator().withIndex()) {
-            if (child.findViewById<RadioButton>(R.id.radio).isChecked) {
-                return i
-            }
-        }
-        return -1
+    private fun getSelectedFileSystemInfo(): FileSystemInfo {
+        val checkedId = binding.radioGroupFilesystems.checkedRadioButtonId
+        return fileSystemInfos.first { it.nameResource == checkedId }
     }
 
     private fun createVolume() {
@@ -208,7 +201,7 @@ class CreateVolumeFragment: Fragment() {
                     val volumeFile = File(volumePath)
                     if (!volumeFile.exists())
                         volumeFile.mkdirs()
-                    val result = if (fileSystemInfos[getSelectedFileSystemIndex()] == GOCRYPTFS_INFO) {
+                    val result = if (getSelectedFileSystemInfo() == GOCRYPTFS_INFO) {
                         val xchacha = when (binding.spinnerCipher.selectedItemPosition) {
                             0 -> -1   // auto
                             1 -> 0    // AES-GCM
