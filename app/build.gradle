@@ -36,7 +36,7 @@ android {
     defaultConfig {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
-        targetSdkVersion 35
+        targetSdkVersion 36
         versionCode 37
         versionName "2.2.0"
 
@@ -129,23 +129,22 @@ androidComponents {
 
 dependencies {
     implementation project(":libpdfviewer:app")
-    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.core:core-ktx:1.17.0'
     implementation "androidx.appcompat:appcompat:1.7.1"
-    implementation "androidx.constraintlayout:constraintlayout:2.2.1"
     implementation "androidx.recyclerview:recyclerview:1.4.0"
+    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
+    implementation "androidx.constraintlayout:constraintlayout:2.2.2"
+    implementation "androidx.preference:preference-ktx:1.2.1"
+    implementation "androidx.biometric:biometric-ktx:1.2.0-alpha05"
+    implementation "androidx.documentfile:documentfile:1.1.0"
+    implementation 'com.google.android.material:material:1.13.0'
 
-    def lifecycle_version = "2.8.3"
+    def lifecycle_version = "2.9.4"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"
 
-    implementation "androidx.preference:preference-ktx:1.2.1"
-    implementation "androidx.swiperefreshlayout:swiperefreshlayout:1.2.0"
-    implementation 'com.google.android.material:material:1.12.0'
-
     implementation "io.coil-kt.coil3:coil:3.4.0"
     implementation "io.coil-kt.coil3:coil-video:3.4.0"
-
-    implementation "androidx.biometric:biometric-ktx:1.2.0-alpha05"
 
     def media3_version = "1.8.1"
     implementation "androidx.media3:media3-exoplayer:$media3_version"
