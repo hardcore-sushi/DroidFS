@@ -89,7 +89,7 @@ class FileOperationService : Service() {
          */
         fun bind(activity: BaseActivity, onBound: (FileOperationService) -> Unit) {
             val helper = AndroidUtils.NotificationPermissionHelper(activity)
-            lateinit var service: FileOperationService
+            var service: FileOperationService? = null
             val serviceConnection = object : ServiceConnection {
                 override fun onServiceConnected(className: ComponentName, binder: IBinder) {
                     onBound((binder as FileOperationService.LocalBinder).getService().also {
@@ -104,7 +104,7 @@ class FileOperationService : Service() {
                     activity.unbindService(serviceConnection)
                     // Could have been more efficient with a LinkedHashMap but the JDK implementation doesn't allow
                     // to access the latest element in O(1) unless using reflection
-                    service.notificationPermissionHelpers.removeAll { it.activity == activity }
+                    service?.notificationPermissionHelpers?.removeAll { it.activity == activity }
                 }
             })
             activity.bindService(
