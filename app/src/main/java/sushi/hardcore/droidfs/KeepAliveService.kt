@@ -71,6 +71,13 @@ class KeepAliveService: Service() {
          */
         const val ACTION_FOREGROUND = "foreground"
         const val NOTIFICATION_CHANNEL_ID = "KeepAlive"
+
+        /**
+         * Notification ID used by this service.
+         *
+         * Must not collide with FileOperationService's task notification IDs (which start at 2).
+         */
+        const val NOTIFICATION_ID = 1
     }
 
     private val notificationManager by lazy {
@@ -110,7 +117,7 @@ class KeepAliveService: Service() {
                 ))
                 .build()
         }
-        ServiceCompat.startForeground(this, startId, notification!!, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification!!, if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC // is there a better use case flag?
         } else {
             0

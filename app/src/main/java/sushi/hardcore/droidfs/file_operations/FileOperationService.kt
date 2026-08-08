@@ -127,7 +127,8 @@ class FileOperationService : Service() {
     private val notifications = HashMap<Int, NotificationCompat.Builder>()
     private var foregroundNotificationId = -1
     private val tasks = HashMap<Int, Job>()
-    private var newTaskId = 1
+    // notification ID 1 is reserved for KeepAliveService
+    private var newTaskId = 2
     private var pendingTask: PendingTask<*>? = null
 
     override fun onCreate() {
