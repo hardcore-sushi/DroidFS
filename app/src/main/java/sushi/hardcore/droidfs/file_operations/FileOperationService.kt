@@ -13,7 +13,6 @@ import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Binder
 import android.os.Build
-import android.os.Bundle
 import android.os.IBinder
 import android.provider.Settings
 import android.util.Log
@@ -37,7 +36,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.Constants
-import sushi.hardcore.droidfs.NotificationBroadcastReceiver
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManager
 import sushi.hardcore.droidfs.VolumeManagerApp
@@ -138,11 +136,15 @@ class FileOperationService : Service() {
     override fun onBind(p0: Intent?): IBinder = binder
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startPendingTask { id, notification ->
-            // on service start, the pending task is the foreground task
-            setForeground(id, notification)
+        if (intent?.action == ACTION_CANCEL) {
+            cancelOperation(intent.getIntExtra("taskId", -1))
+        } else {
+            startPendingTask { id, notification ->
+                // on service start, the pending task is the foreground task
+                setForeground(id, notification)
+            }
+            isStarted = true
         }
-        isStarted = true
         return START_NOT_STICKY
     }
 
@@ -198,14 +200,11 @@ class FileOperationService : Service() {
             .addAction(NotificationCompat.Action(
                 R.drawable.icon_close,
                 getString(R.string.cancel),
-                PendingIntent.getBroadcast(
+                PendingIntent.getService(
                     this,
                     newTaskId,
-                    Intent(this, NotificationBroadcastReceiver::class.java).apply {
-                        putExtra("bundle", Bundle().apply {
-                            putBinder("binder", LocalBinder())
-                            putInt("taskId", newTaskId)
-                        })
+                    Intent(this, FileOperationService::class.java).apply {
+                        putExtra("taskId", newTaskId)
                         action = ACTION_CANCEL
                     },
                     PendingIntent.FLAG_IMMUTABLE
