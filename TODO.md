@@ -20,7 +20,6 @@ Here's a list of features that it would be nice to have in DroidFS. As this is a
 
 ## Health
 - Remove all android:configChanges from AndroidManifest.xml
-- More efficient thumbnails cache
 - Guide for translators
 - Usage & code documentation
 - Automated tests

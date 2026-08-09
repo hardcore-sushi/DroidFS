@@ -60,13 +60,15 @@ class VolumeProvider: DocumentsProvider() {
     private val usfExpose by usfExposeDelegate
     private val usfSafWriteDelegate = AndroidUtils.LiveBooleanPreference("usf_saf_write", false)
     private val usfSafWrite by usfSafWriteDelegate
+    private val thumbnailsDelegate = AndroidUtils.LiveBooleanPreference("thumbnails", true)
+    private val thumbnailsEnabled by thumbnailsDelegate
     private lateinit var volumeManager: VolumeManager
     private val volumes = HashMap<String, Pair<Int, VolumeData>>()
     private lateinit var encryptedFileProvider: EncryptedFileProvider
 
     override fun onCreate(): Boolean {
         val context = (context ?: return false)
-        AndroidUtils.LiveBooleanPreference.init(context, usfExposeDelegate, usfSafWriteDelegate)
+        AndroidUtils.LiveBooleanPreference.init(context, usfExposeDelegate, usfSafWriteDelegate, thumbnailsDelegate)
         volumeManager = (context.applicationContext as VolumeManagerApp).volumeManager
         encryptedFileProvider = EncryptedFileProvider(context)
         return true
@@ -131,7 +133,7 @@ class VolumeProvider: DocumentsProvider() {
     private fun addDocumentRow(cursor: MatrixCursor, volumeData: VolumeData, documentId: String, name: String, stat: Stat) {
         val isDirectory = stat.type == Stat.S_IFDIR
         var flags = 0
-        if (!isDirectory && (FileTypes.isImage(name) || FileTypes.isVideo(name))) {
+        if (thumbnailsEnabled && !isDirectory && (FileTypes.isImage(name) || FileTypes.isVideo(name))) {
             flags = flags or DocumentsContract.Document.FLAG_SUPPORTS_THUMBNAIL
         }
         if (usfSafWrite && volumeData.canWrite(context!!.filesDir.path)) {
@@ -247,7 +249,7 @@ class VolumeProvider: DocumentsProvider() {
         sizeHint: Point,
         signal: CancellationSignal?
     ): AssetFileDescriptor? {
-        if (!usfExpose) { return null }
+        if (!usfExpose || !thumbnailsEnabled) { return null }
         val document = parseDocumentId(documentId) ?: return null
 
         val imageLoader = volumeManager.getImageLoader(document.volumeId) ?: return null
