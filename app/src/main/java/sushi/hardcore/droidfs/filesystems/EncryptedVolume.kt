@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.filesystems
 import android.content.Context
 import android.net.Uri
 import sushi.hardcore.droidfs.Constants
+import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeData
 import sushi.hardcore.droidfs.explorers.ExplorerElement
 import sushi.hardcore.droidfs.util.ObjRef
@@ -80,6 +81,19 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
 
         private fun invalidVolumeType(): java.lang.RuntimeException {
             return RuntimeException("Invalid volume type")
+        }
+
+        /**
+         * Convert error code returned by [loadWholeFile] to a user-friendly string.
+         *
+         * Must not be called for success error code = 0.
+         */
+        fun loadWholeFileErrorToString(context: Context, errorCode: Int) = when (errorCode) {
+            1 -> context.getString(R.string.get_size_failed)
+            2 -> context.getString(R.string.outofmemoryerror_msg)
+            3 -> context.getString(R.string.read_file_failed)
+            4 -> context.getString(R.string.io_error)
+            else -> context.getString(R.string.unknown_error_code, errorCode)
         }
     }
 
@@ -174,6 +188,17 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
         return false
     }
 
+    fun openOutputStream(dstPath: String): EncryptedFileOutputStream? {
+        return when (val fileHandle = openFileWriteMode(dstPath)) {
+            -1L -> null
+            else -> EncryptedFileOutputStream(this, fileHandle, dstPath)
+        }
+    }
+
+    /***
+     * Return a null [ByteArray] on error or if the file size is greater than the specified [maxSize].
+     * On error, return a strictly positive error code that can be converted with [loadWholeFileErrorToString].
+     */
     fun loadWholeFile(fullPath: String, size: Long? = null, maxSize: Long? = null): Pair<ByteArray?, Int> {
         val fileSize = size ?: getAttr(fullPath)?.size ?: -1
         return if (fileSize >= 0) {

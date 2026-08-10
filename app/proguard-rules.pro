@@ -22,6 +22,12 @@
 -keepclasseswithmembernames class * {
     native <methods>;
 }
+# ExifInterface serializers are invoked via reflection to circumvent on disk plain-text write
+-keepclassmembers class androidx.exifinterface.media.ExifInterface {
+    private void saveJpegAttributes(java.io.InputStream, java.io.OutputStream);
+    private void savePngAttributes(java.io.InputStream, java.io.OutputStream);
+    private void saveWebpAttributes(java.io.InputStream, java.io.OutputStream);
+}
 # Required for Parcelable CREATOR fields to not be removed by R8
 -keepclassmembers class * implements android.os.Parcelable {
     static ** CREATOR;

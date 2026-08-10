@@ -2,9 +2,9 @@ package sushi.hardcore.droidfs.file_viewers
 
 import android.app.ActivityManager
 import android.content.res.Configuration
-import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.os.Handler
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
@@ -12,6 +12,7 @@ import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.viewModels
 import androidx.core.view.isGone
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import coil3.ImageLoader
@@ -22,22 +23,52 @@ import coil3.size.Precision
 import coil3.size.Size
 import coil3.transform.Transformation
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
+import sushi.hardcore.droidfs.filesystems.EncryptedFileOutputStream
+import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.lang.reflect.Method
 import kotlin.math.abs
 import kotlin.math.sqrt
 
 class ImageViewer: FileViewerActivity() {
     companion object {
+        private const val TAG = "ImageViewer"
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150
+
+        private val EXIF_IMAGE_TYPE_JPEG by lazy { getExifIntField("IMAGE_TYPE_JPEG") }
+        private val EXIF_IMAGE_TYPE_PNG by lazy { getExifIntField("IMAGE_TYPE_PNG") }
+        private val EXIF_IMAGE_TYPE_WEBP by lazy { getExifIntField("IMAGE_TYPE_WEBP") }
+
+        private fun getExifIntField(name: String, instance: Any? = null): Int {
+            return ExifInterface::class.java
+                .getDeclaredField(name)
+                .apply { isAccessible = true }
+                .getInt(instance)
+        }
+
+        private fun ExifInterface.getSaveAttributesMethod(): Method {
+            val mimeType = getExifIntField("mMimeType", this)
+            val methodName = when (mimeType) {
+                EXIF_IMAGE_TYPE_JPEG -> "saveJpegAttributes"
+                EXIF_IMAGE_TYPE_PNG -> "savePngAttributes"
+                EXIF_IMAGE_TYPE_WEBP -> "saveWebpAttributes"
+                else -> throw IllegalArgumentException("Unsupported mime type: $mimeType")
+            }
+            return ExifInterface::class.java
+                .getDeclaredMethod(methodName, InputStream::class.java, OutputStream::class.java)
+        }
     }
 
     class ImageViewModel : ViewModel() {
@@ -60,7 +91,6 @@ class ImageViewer: FileViewerActivity() {
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
-    private var orientationTransformation: OrientationTransformation? = null
     private val hideUI = Runnable {
         binding.overlay.visibility = View.GONE
         hideSystemUi()
@@ -222,23 +252,19 @@ class ImageViewer: FileViewerActivity() {
     }
 
     class OrientationTransformation(private val orientation: Float): Transformation() {
-        lateinit var bitmap: coil3.Bitmap
-
         override val cacheKey = "rot$orientation"
 
         override suspend fun transform(input: coil3.Bitmap, size: Size): coil3.Bitmap {
             return coil3.Bitmap.createBitmap(input, 0, 0, input.width, input.height, Matrix().apply {
                 postRotate(orientation)
-            }, true).also {
-                bitmap = it
-            }
+            }, true)
         }
     }
 
     private fun rotateImage() {
-        orientationTransformation = OrientationTransformation(imageViewModel.rotationAngle).also {
-            imageLoader!!.enqueue(imageRequestBuilder!!.transformations(it).build())
-        }
+        imageLoader!!.enqueue(
+            imageRequestBuilder!!.transformations(OrientationTransformation(imageViewModel.rotationAngle)).build()
+        )
     }
 
     private fun askSaveRotation(callback: () -> Unit){
@@ -249,35 +275,52 @@ class ImageViewer: FileViewerActivity() {
                 .setNegativeButton(R.string.no) { _, _ -> callback() }
                 .setNeutralButton(R.string.cancel, null)
                 .setPositiveButton(R.string.yes) { _, _ ->
-                        val outputStream = ByteArrayOutputStream()
-                        if (orientationTransformation?.bitmap?.compress(
-                                if (fileName.endsWith("png", true)){
-                                    Bitmap.CompressFormat.PNG
-                                } else {
-                                    Bitmap.CompressFormat.JPEG
-                                }, 90, outputStream) == true
-                        ){
-                            if (encryptedVolume.importFile(ByteArrayInputStream(outputStream.toByteArray()), fileViewerViewModel.filePath!!)) {
-                                Toast.makeText(this, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
-                                callback()
-                            } else {
-                                MaterialAlertDialogBuilder(this)
-                                    .setTitle(R.string.error)
-                                    .setMessage(R.string.file_write_failed)
-                                    .setPositiveButton(R.string.ok, null)
-                                    .show()
-                            }
+                    lifecycleScope.launch {
+                        val errorString = saveRotationMetadata()
+                        if (errorString == null) {
+                            Toast.makeText(this@ImageViewer, R.string.image_saved_successfully, Toast.LENGTH_SHORT).show()
+                            callback()
                         } else {
-                            MaterialAlertDialogBuilder(this)
+                            MaterialAlertDialogBuilder(this@ImageViewer)
                                 .setTitle(R.string.error)
-                                .setMessage(R.string.bitmap_compress_failed)
+                                .setMessage(errorString)
                                 .setPositiveButton(R.string.ok, null)
                                 .show()
                         }
+                    }
                 }
                 .show()
         } else {
             callback()
+        }
+    }
+
+    private suspend fun saveRotationMetadata(): String? = withContext(Dispatchers.IO) {
+        val path = fileViewerViewModel.filePath!!
+        val (fileBytes, errorCode) = encryptedVolume.loadWholeFile(path)
+        if (errorCode != 0) {
+            return@withContext EncryptedVolume.loadWholeFileErrorToString(this@ImageViewer, errorCode)
+        }
+        try {
+            val exif = ByteArrayInputStream(fileBytes).use { ExifInterface(it) }
+            val currentOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            if (currentOrientation == ExifInterface.ORIENTATION_UNDEFINED) {
+                exif.setAttribute(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL.toString())
+            }
+            exif.rotate(imageViewModel.rotationAngle.toInt())
+            val saveMethod = exif.getSaveAttributesMethod()
+            saveMethod.isAccessible = true
+            val out = encryptedVolume.openOutputStream(path)
+                ?: return@withContext getString(R.string.file_write_failed)
+            out.use { out ->
+                ByteArrayInputStream(fileBytes).use { input ->
+                    saveMethod.invoke(exif, input, out)
+                }
+            }
+            null
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to save rotation metadata", e)
+            e.localizedMessage
         }
     }
 

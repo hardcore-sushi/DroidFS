@@ -72,23 +72,18 @@ abstract class FileViewerActivity: BaseActivity() {
 
     protected fun loadWholeFile(path: String, fileSize: Long? = null, callback: (ByteArray) -> Unit) {
         lifecycleScope.launch(Dispatchers.IO) {
-            val result = encryptedVolume.loadWholeFile(path, size = fileSize)
+            val (fileBytes, errorCode) = encryptedVolume.loadWholeFile(path, size = fileSize)
             if (isActive) {
                 withContext(Dispatchers.Main) {
-                    if (result.second == 0) {
-                        callback(result.first!!)
+                    if (errorCode == 0) {
+                        callback(fileBytes!!)
                     } else {
-                        val dialog = MaterialAlertDialogBuilder(this@FileViewerActivity)
+                        MaterialAlertDialogBuilder(this@FileViewerActivity)
                             .setTitle(R.string.error)
                             .setCancelable(false)
                             .setPositiveButton(R.string.ok) { _, _ -> goBackToExplorer() }
-                        when (result.second) {
-                            1 -> dialog.setMessage(R.string.get_size_failed)
-                            2 -> dialog.setMessage(R.string.outofmemoryerror_msg)
-                            3 -> dialog.setMessage(R.string.read_file_failed)
-                            4 -> dialog.setMessage(R.string.io_error)
-                        }
-                        dialog.show()
+                            .setMessage(EncryptedVolume.loadWholeFileErrorToString(this@FileViewerActivity, errorCode))
+                            .show()
                     }
                 }
             }
