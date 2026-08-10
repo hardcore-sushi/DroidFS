@@ -16,6 +16,7 @@ import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.lifecycleScope
 import coil3.ImageLoader
+import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
@@ -72,7 +73,7 @@ class ImageViewer: FileViewerActivity() {
     }
 
     class ImageViewModel : ViewModel() {
-        var rotationAngle: Float = 0f
+        var rotationAngle: Int = 0
     }
 
     override val blackBackground: Boolean = true
@@ -87,7 +88,6 @@ class ImageViewer: FileViewerActivity() {
         val budget = am.memoryClass * 1024L * 1024L / 16L
         sqrt(budget / 4.0).toInt()
     }
-    private var imageRequestBuilder: ImageRequest.Builder? = null
     private var x1 = 0F
     private var x2 = 0F
     private var slideshowActive = false
@@ -188,8 +188,8 @@ class ImageViewer: FileViewerActivity() {
                 swipeImage(-1F)
             }
         }
-        binding.imageRotateRight.setOnClickListener { onClickRotate(90f) }
-        binding.imageRotateLeft.setOnClickListener { onClickRotate(-90f) }
+        binding.imageRotateRight.setOnClickListener { onClickRotate(90) }
+        binding.imageRotateLeft.setOnClickListener { onClickRotate(-90) }
         onBackPressedDispatcher.addCallback(this) {
             if (slideshowActive) {
                 stopSlideshow()
@@ -208,17 +208,15 @@ class ImageViewer: FileViewerActivity() {
         fileName = File(fileViewerViewModel.filePath!!).name
         binding.textFilename.text = fileName
         if (newImage) {
-            imageViewModel.rotationAngle = 0f
+            imageViewModel.rotationAngle = 0
         }
-        imageRequestBuilder = ImageRequest.Builder(this).data(fileViewerViewModel.filePath).target(binding.imageViewer)
-            .size(maxDimension, maxDimension)
-            .precision(Precision.INEXACT)
-        if (imageViewModel.rotationAngle.mod(360f) != 0f) {
-            rotateImage()
-        } else {
-            imageLoader!!.enqueue(imageRequestBuilder!!.build())
-        }
+        displayImage()
     }
+
+    private fun imageRequestBuilder() = ImageRequest.Builder(this).data(fileViewerViewModel.filePath)
+        .target(binding.imageViewer)
+        .size(maxDimension, maxDimension)
+        .precision(Precision.INEXACT)
 
     override fun onUserInteraction() {
         super.onUserInteraction()
@@ -226,10 +224,10 @@ class ImageViewer: FileViewerActivity() {
         handler.postDelayed(hideUI, hideDelay)
     }
 
-    private fun onClickRotate(angle: Float) {
-        imageViewModel.rotationAngle += angle
+    private fun onClickRotate(angle: Int) {
+        imageViewModel.rotationAngle = (imageViewModel.rotationAngle + angle).mod(360)
         binding.imageViewer.restoreZoomNormal()
-        rotateImage()
+        displayImage()
     }
 
     private fun swipeImage(deltaX: Float, slideshowSwipe: Boolean = false) {
@@ -261,14 +259,19 @@ class ImageViewer: FileViewerActivity() {
         }
     }
 
-    private fun rotateImage() {
+    private fun displayImage() {
+        val rotation = imageViewModel.rotationAngle
         imageLoader!!.enqueue(
-            imageRequestBuilder!!.transformations(OrientationTransformation(imageViewModel.rotationAngle)).build()
+            if (rotation == 0) {
+                imageRequestBuilder().build()
+            } else {
+                imageRequestBuilder().transformations(OrientationTransformation(rotation.toFloat())).build()
+            }
         )
     }
 
     private fun askSaveRotation(callback: () -> Unit){
-        if (imageViewModel.rotationAngle.mod(360f) != 0f && !slideshowActive) {
+        if (imageViewModel.rotationAngle != 0 && !slideshowActive) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save_img_rotated)
@@ -317,6 +320,7 @@ class ImageViewer: FileViewerActivity() {
                     saveMethod.invoke(exif, input, out)
                 }
             }
+            imageLoader?.memoryCache?.remove(MemoryCache.Key(path))
             null
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save rotation metadata", e)
