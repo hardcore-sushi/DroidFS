@@ -42,6 +42,7 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updateLayoutParams
@@ -250,6 +251,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 dialog.setSelectedText(timerDuration.toString())
             }
             val switch = dialog.root.findViewById<MaterialSwitch>(R.id.switch_repeat)
+            switch.isVisible = !isInVideoMode
             switch.isChecked = repeat
             dialog.onSubmit { it ->
                 try {
