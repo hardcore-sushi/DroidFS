@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.file_viewers
 
+import android.app.ActivityManager
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Matrix
@@ -17,6 +18,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.target
 import coil3.request.transformations
+import coil3.size.Precision
 import coil3.size.Size
 import coil3.transform.Transformation
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -30,6 +32,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import kotlin.math.abs
+import kotlin.math.sqrt
 
 class ImageViewer: FileViewerActivity() {
     companion object {
@@ -47,6 +50,11 @@ class ImageViewer: FileViewerActivity() {
     private val imageViewModel: ImageViewModel by viewModels()
     private val imageLoader: ImageLoader? by lazy {
         (application as VolumeManagerApp).volumeManager.getImageLoader(volumeId)
+    }
+    private val maxDimension by lazy {
+        val am = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        val budget = am.memoryClass * 1024L * 1024L / 16L
+        sqrt(budget / 4.0).toInt()
     }
     private var imageRequestBuilder: ImageRequest.Builder? = null
     private var x1 = 0F
@@ -173,6 +181,8 @@ class ImageViewer: FileViewerActivity() {
             imageViewModel.rotationAngle = 0f
         }
         imageRequestBuilder = ImageRequest.Builder(this).data(fileViewerViewModel.filePath).target(binding.imageViewer)
+            .size(maxDimension, maxDimension)
+            .precision(Precision.INEXACT)
         if (imageViewModel.rotationAngle.mod(360f) != 0f) {
             rotateImage()
         } else {
