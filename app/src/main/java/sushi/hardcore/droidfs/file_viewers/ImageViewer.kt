@@ -49,6 +49,9 @@ class ImageViewer: FileViewerActivity() {
         private const val hideDelay: Long = 3000
         private const val MIN_SWIPE_DISTANCE = 150
 
+        private const val COIL_SIZE_EXTRA = "coil#size"
+        private const val COIL_TRANSFORMATIONS_EXTRA = "coil#transformations"
+
         private val EXIF_IMAGE_TYPE_JPEG by lazy { getExifIntField("IMAGE_TYPE_JPEG") }
         private val EXIF_IMAGE_TYPE_PNG by lazy { getExifIntField("IMAGE_TYPE_PNG") }
         private val EXIF_IMAGE_TYPE_WEBP by lazy { getExifIntField("IMAGE_TYPE_WEBP") }
@@ -312,7 +315,7 @@ class ImageViewer: FileViewerActivity() {
             if (currentOrientation == ExifInterface.ORIENTATION_UNDEFINED) {
                 exif.setAttribute(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL.toString())
             }
-            exif.rotate(imageViewModel.rotationAngle.toInt())
+            exif.rotate(imageViewModel.rotationAngle)
             val saveMethod = exif.getSaveAttributesMethod()
             saveMethod.isAccessible = true
             val parentPath = PathUtils.getParentPath(path)
@@ -330,12 +333,42 @@ class ImageViewer: FileViewerActivity() {
             if (!encryptedVolume.rename(tmpPath, path) ) {
                 return@withContext getString(R.string.rename_failed, tmpPath)
             }
-            imageLoader?.memoryCache?.remove(MemoryCache.Key(path))
+            rotateCacheKeys(path, imageViewModel.rotationAngle)
             null
         } catch (e: Exception) {
             Log.e(TAG, "Failed to save rotation metadata", e)
             e.localizedMessage
         }
+    }
+
+    private fun rotateCacheKeys(path: String, rotationDelta: Int) {
+        val cache = imageLoader?.memoryCache ?: return
+        val matchedKeys = cache.keys.filter { it.key == path }
+        val sizeExtra = matchedKeys.firstNotNullOfOrNull { key -> key.extras[COIL_SIZE_EXTRA] }
+        val newKeys = mutableMapOf<MemoryCache.Key, MemoryCache.Value>()
+        for (key in matchedKeys) {
+            val value = cache[key] ?: continue
+            cache.remove(key)
+            val rotation = key.extras[COIL_TRANSFORMATIONS_EXTRA]
+                ?.takeIf { it.startsWith("0:rot") }
+                ?.substringAfter("rot")
+                ?.toFloatOrNull()
+                ?.toInt()
+                ?: 0
+            val newRotation = (rotation - rotationDelta).mod(360)
+            val newExtras = if (newRotation == 0) {
+                emptyMap()
+            } else {
+                val size = key.extras[COIL_SIZE_EXTRA] ?: sizeExtra ?: continue
+                mapOf(
+                    COIL_TRANSFORMATIONS_EXTRA to "0:rot${newRotation.toFloat()}",
+                    COIL_SIZE_EXTRA to size,
+                )
+            }
+            val newKey = key.copy(extras = newExtras)
+            newKeys[newKey] = value
+        }
+        newKeys.forEach { (newKey, value) -> cache[newKey] = value }
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
