@@ -31,14 +31,15 @@ import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.VolumeManagerApp
 import sushi.hardcore.droidfs.databinding.ActivityImageViewerBinding
-import sushi.hardcore.droidfs.filesystems.EncryptedFileOutputStream
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
+import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.widgets.ZoomableImageView
 import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.Method
+import java.util.Random
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -102,6 +103,7 @@ class ImageViewer: FileViewerActivity() {
         }
     }
     private lateinit var binding: ActivityImageViewerBinding
+    private val random = Random()
 
     override fun getFileType(): String {
         return "image"
@@ -313,12 +315,20 @@ class ImageViewer: FileViewerActivity() {
             exif.rotate(imageViewModel.rotationAngle.toInt())
             val saveMethod = exif.getSaveAttributesMethod()
             saveMethod.isAccessible = true
-            val out = encryptedVolume.openOutputStream(path)
+            val parentPath = PathUtils.getParentPath(path)
+            var tmpPath: String
+            do {
+                tmpPath = PathUtils.pathJoin(parentPath, ".tmp."+random.nextInt())
+            } while (encryptedVolume.pathExists(tmpPath))
+            val out = encryptedVolume.openOutputStream(tmpPath)
                 ?: return@withContext getString(R.string.file_write_failed)
             out.use { out ->
                 ByteArrayInputStream(fileBytes).use { input ->
                     saveMethod.invoke(exif, input, out)
                 }
+            }
+            if (!encryptedVolume.rename(tmpPath, path) ) {
+                return@withContext getString(R.string.rename_failed, tmpPath)
             }
             imageLoader?.memoryCache?.remove(MemoryCache.Key(path))
             null
