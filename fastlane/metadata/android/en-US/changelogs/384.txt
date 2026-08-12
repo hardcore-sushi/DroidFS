@@ -1,0 +1,13 @@
+- New Material 3 UI style
+- New dynamic color theme
+- Edge-to-edge screens
+- More efficient thumbnail generation
+- Support embedded video thumbnails
+- Support for thumbnails in exposed volumes
+- Shared cache for thumbnails and image viewer
+- Option to take photos repeatedly
+- Saving rotated images only modify Exif metadata
+- Many bug fixes
+- UX & performances improvements
+- Dependencies updates
+- Updated Russian and Spanish translations

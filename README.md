@@ -122,5 +122,5 @@ Thanks to these open source projects that DroidFS uses:
 ### Borrowed code:
 - [MaterialFiles](https://github.com/zhanghai/MaterialFiles) for Kotlin natural sorting implementation
 ### Libraries:
-- [Glide](https://github.com/bumptech/glide) to display pictures
+- [Coil](https://coil-kt.github.io/coil) to display pictures
 - [ExoPlayer](https://github.com/google/ExoPlayer) to play media files

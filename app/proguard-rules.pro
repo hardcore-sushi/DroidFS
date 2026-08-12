@@ -6,7 +6,6 @@
 # Suppress warnings for CameraX extension classes that are only implemented by
 # device vendors at runtime (not shipped in the library)
 -dontwarn androidx.camera.extensions.impl.**
--keepattributes SourceFile,LineNumberTable
 
 -keep class sushi.hardcore.droidfs.SettingsActivity$**
 -keep class sushi.hardcore.droidfs.explorers.ExplorerElement
@@ -24,6 +23,10 @@
 }
 # ExifInterface serializers are invoked via reflection to circumvent on disk plain-text write
 -keepclassmembers class androidx.exifinterface.media.ExifInterface {
+    int IMAGE_TYPE_JPEG;
+    int IMAGE_TYPE_PNG;
+    int IMAGE_TYPE_WEBP;
+    int mMimeType;
     private void saveJpegAttributes(java.io.InputStream, java.io.OutputStream);
     private void savePngAttributes(java.io.InputStream, java.io.OutputStream);
     private void saveWebpAttributes(java.io.InputStream, java.io.OutputStream);
