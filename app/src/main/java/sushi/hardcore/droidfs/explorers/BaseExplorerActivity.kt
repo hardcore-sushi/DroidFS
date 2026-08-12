@@ -150,6 +150,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             }
         }
         refresher.setOnRefreshListener {
+            val prefix = if (currentDirectoryPath == "/") "/" else "$currentDirectoryPath/"
+            app.volumeManager.evictImageCache(volumeId) { it.startsWith(prefix) }
             setCurrentPath(currentDirectoryPath)
             refresher.isRefreshing = false
         }

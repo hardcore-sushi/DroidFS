@@ -418,6 +418,7 @@ class FileOperationService : Service() {
         val srcEncryptedVolume = getEncryptedVolume(srcVolumeId)
         return volumeTask(R.string.file_op_copy_msg, items.size, volumeId) { taskId, encryptedVolume ->
             var failedItem: String? = null
+            val toEvict = HashSet<String>()
             for (i in items.indices) {
                 yield()
                 if (items[i].isDirectory) {
@@ -426,14 +427,20 @@ class FileOperationService : Service() {
                             failedItem = items[i].srcPath
                         }
                     }
-                } else if (!copyFile(encryptedVolume, items[i].srcPath, items[i].dstPath!!, srcEncryptedVolume)) {
-                    failedItem = items[i].srcPath
+                } else {
+                    if (!copyFile(encryptedVolume, items[i].srcPath, items[i].dstPath!!, srcEncryptedVolume)) {
+                        failedItem = items[i].srcPath
+                    }
+                    toEvict.add(items[i].dstPath!!)
                 }
                 if (failedItem == null) {
                     updateNotificationProgress(taskId, i+1, items.size)
                 } else {
                     break
                 }
+            }
+            if (toEvict.isNotEmpty()) {
+                volumeManger.evictImageCache(volumeId) { it in toEvict }
             }
             failedItem
         }
@@ -443,11 +450,15 @@ class FileOperationService : Service() {
         return volumeTask(R.string.file_op_move_msg, toMove.size, volumeId) { taskId, encryptedVolume ->
             val total = toMove.size+toClean.size
             var failedItem: String? = null
+            val toEvict = HashSet<String>()
             for ((i, item) in toMove.withIndex()) {
                 if (!encryptedVolume.rename(item.srcPath, item.dstPath!!)) {
                     failedItem = item.srcPath
                     break
                 } else {
+                    if (!item.isDirectory) {
+                        toEvict.add(item.dstPath!!)
+                    }
                     updateNotificationProgress(taskId, i+1, total)
                 }
             }
@@ -461,12 +472,16 @@ class FileOperationService : Service() {
                     }
                 }
             }
+            if (toEvict.isNotEmpty()) {
+                volumeManger.evictImageCache(volumeId) { it in toEvict }
+            }
             failedItem
         }
     }
 
     private suspend fun importFilesFromUris(
         encryptedVolume: EncryptedVolume,
+        volumeId: Int,
         dstPaths: List<String>,
         uris: List<Uri>,
         taskId: Int,
@@ -484,15 +499,19 @@ class FileOperationService : Service() {
             if (failedIndex == -1) {
                 updateNotificationProgress(taskId, i+1, dstPaths.size)
             } else {
+                val importedSet = dstPaths.subList(0, i + 1).toHashSet()
+                volumeManger.evictImageCache(volumeId) { it in importedSet }
                 return uris[failedIndex].toString()
             }
         }
+        val dstSet = dstPaths.toHashSet()
+        volumeManger.evictImageCache(volumeId) { it in dstSet }
         return null
     }
 
     suspend fun importFilesFromUris(volumeId: Int, dstPaths: List<String>, uris: List<Uri>): TaskResult<out String?> {
         return volumeTask(R.string.file_op_import_msg, dstPaths.size, volumeId) { taskId, encryptedVolume ->
-            importFilesFromUris(encryptedVolume, dstPaths, uris, taskId)
+            importFilesFromUris(encryptedVolume, volumeId, dstPaths, uris, taskId)
         }
     }
 
@@ -545,7 +564,7 @@ class FileOperationService : Service() {
                 }
             }
             if (failedItem == null) {
-                failedItem = importFilesFromUris(encryptedVolume, dstFiles, srcUris, taskId)
+                failedItem = importFilesFromUris(encryptedVolume, volumeId, dstFiles, srcUris, taskId)
             }
             failedItem
         }, srcUris)

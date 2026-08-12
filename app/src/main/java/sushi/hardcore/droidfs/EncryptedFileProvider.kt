@@ -8,7 +8,6 @@ import android.os.ParcelFileDescriptor
 import android.system.Os
 import android.util.Log
 import androidx.preference.PreferenceManager
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -197,8 +196,7 @@ class EncryptedFileProvider(context: Context) {
     fun openFile(
         file: ExportedFile,
         mode: String,
-        encryptedVolume: EncryptedVolume,
-        volumeScope: CoroutineScope,
+        volumeResources: VolumeResources,
         furtive: Boolean,
         allowWrites: Boolean,
     ): Pair<ParcelFileDescriptor?, Error> {
@@ -212,7 +210,7 @@ class EncryptedFileProvider(context: Context) {
             }
 
             fun import(input: InputStream): Boolean {
-                return if (encryptedVolume.importFile(input, file.path)) {
+                return if (volumeResources.volume.importFile(input, file.path)) {
                     true
                 } else {
                     Log.e(TAG, "Failed to import file")
@@ -229,10 +227,11 @@ class EncryptedFileProvider(context: Context) {
                 }
                 val pipe = ParcelFileDescriptor.createReliablePipe()
                 val input = FileInputStream(pipe[0].fileDescriptor)
-                volumeScope.launch {
+                volumeResources.scope.launch {
                     if (import(input)) {
                         file.invalidate()
                     }
+                    volumeResources.evictImageCache { it == file.path }
                 }
                 Pair(pipe[1], Error.SUCCESS)
             } else { // read-write
@@ -245,6 +244,7 @@ class EncryptedFileProvider(context: Context) {
                             if (furtive) {
                                 file.free()
                             }
+                            volumeResources.evictImageCache { it == file.path }
                         }
                     }, Error.SUCCESS)
                 } else {

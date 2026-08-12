@@ -1,18 +1,9 @@
 package sushi.hardcore.droidfs
 
 import android.content.Context
-import coil3.Extras
 import coil3.ImageLoader
-import coil3.ImageLoader.Builder
-import coil3.video.VideoFrameDecoder
-import coil3.video.preferVideoFrameEmbeddedThumbnail
-import coil3.video.videoFramePercent
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import sushi.hardcore.droidfs.content_providers.VolumeProvider
-import sushi.hardcore.droidfs.filesystems.EncryptedFileReaderFileSystem
 import sushi.hardcore.droidfs.filesystems.EncryptedVolume
 import sushi.hardcore.droidfs.util.Observable
 
@@ -20,26 +11,6 @@ class VolumeManager(private val context: Context): Observable<VolumeManager.Obse
     interface Observer {
         fun onVolumeStateChanged(volume: VolumeData) {}
         fun onAllVolumesClosed() {}
-    }
-
-    private class VolumeResources(val volume: EncryptedVolume, context: Context) {
-        private val scopeDelegate = lazy { CoroutineScope(SupervisorJob() + Dispatchers.IO) }
-        private val imageLoaderDelegate = lazy {
-            Builder(context).diskCache(null)
-                .fileSystem(EncryptedFileReaderFileSystem(volume)).components {
-                    add(VideoFrameDecoder.Factory())
-                }.also {
-                    it.extras[Extras.Key.videoFramePercent] = 0.1
-                    it.extras[Extras.Key.preferVideoFrameEmbeddedThumbnail] = true
-                }.build()
-        }
-        val scope by scopeDelegate
-        val imageLoader by imageLoaderDelegate
-
-        fun destroy() {
-            if (scopeDelegate.isInitialized()) scope.cancel()
-            if (imageLoaderDelegate.isInitialized()) imageLoader.shutdown()
-        }
     }
 
     private var id = 0
@@ -66,12 +37,20 @@ class VolumeManager(private val context: Context): Observable<VolumeManager.Obse
         return volumes[id]?.volume
     }
 
-    fun getCoroutineScope(volumeId: Int): CoroutineScope {
-        return volumes[volumeId]!!.scope
+    fun getVolumeResources(volumeId: Int): VolumeResources? {
+        return volumes[volumeId]
     }
 
-    fun getImageLoader(volumeId: Int): ImageLoader? {
-        return volumes[volumeId]?.imageLoader
+    fun getCoroutineScope(volumeId: Int): CoroutineScope {
+        return getVolumeResources(volumeId)!!.scope
+    }
+
+    fun getImageLoader(volumeId: Int): ImageLoader {
+        return getVolumeResources(volumeId)!!.imageLoader
+    }
+
+    fun evictImageCache(volumeId: Int, shouldEvict: (String) -> Boolean) {
+        getVolumeResources(volumeId)!!.evictImageCache(shouldEvict)
     }
 
     fun listVolumes(): List<Pair<Int, VolumeData>> {

@@ -231,8 +231,7 @@ class VolumeProvider: DocumentsProvider() {
         val result = encryptedFileProvider.openFile(
             lazyExportedFile,
             mode,
-            document.encryptedVolume,
-            volumeManager.getCoroutineScope(document.volumeId),
+            volumeManager.getVolumeResources(document.volumeId)!!,
             true,
             usfSafWrite,
         )
@@ -252,9 +251,8 @@ class VolumeProvider: DocumentsProvider() {
         if (!usfExpose || !thumbnailsEnabled) { return null }
         val document = parseDocumentId(documentId) ?: return null
 
-        val imageLoader = volumeManager.getImageLoader(document.volumeId) ?: return null
         val image = runBlocking {
-            imageLoader.execute(
+            volumeManager.getImageLoader(document.volumeId).execute(
                 ImageRequest.Builder(context!!).data(document.path).size(sizeHint.x, sizeHint.y).build()
             )
         }.image

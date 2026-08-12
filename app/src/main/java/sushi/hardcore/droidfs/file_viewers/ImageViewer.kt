@@ -84,7 +84,7 @@ class ImageViewer: FileViewerActivity() {
     private lateinit var fileName: String
     private lateinit var handler: Handler
     private val imageViewModel: ImageViewModel by viewModels()
-    private val imageLoader: ImageLoader? by lazy {
+    private val imageLoader: ImageLoader by lazy {
         (application as VolumeManagerApp).volumeManager.getImageLoader(volumeId)
     }
     private val maxDimension by lazy {
@@ -266,7 +266,7 @@ class ImageViewer: FileViewerActivity() {
 
     private fun displayImage() {
         val rotation = imageViewModel.rotationAngle
-        imageLoader!!.enqueue(
+        imageLoader.enqueue(
             if (rotation == 0) {
                 imageRequestBuilder().build()
             } else {
@@ -342,7 +342,7 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun rotateCacheKeys(path: String, rotationDelta: Int) {
-        val cache = imageLoader?.memoryCache ?: return
+        val cache = imageLoader.memoryCache ?: return
         val matchedKeys = cache.keys.filter { it.key == path }
         val sizeExtra = matchedKeys.firstNotNullOfOrNull { key -> key.extras[COIL_SIZE_EXTRA] }
         val newKeys = mutableMapOf<MemoryCache.Key, MemoryCache.Value>()
