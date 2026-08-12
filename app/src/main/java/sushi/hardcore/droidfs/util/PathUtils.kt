@@ -70,6 +70,19 @@ object PathUtils {
         return parentPath.endsWith(SEPARATOR) || childPath[parentPath.length] == SEPARATOR
     }
 
+    fun normalizePath(path: String): String {
+        val absolute = path.startsWith(SEPARATOR)
+        val stack = mutableListOf<String>()
+        for (component in path.splitToSequence(SEPARATOR)) {
+            when (component) {
+                "", "." -> {}
+                ".." -> if (stack.isNotEmpty()) stack.removeAt(stack.lastIndex)
+                else -> stack.add(component)
+            }
+        }
+        return stack.joinToString(SEPARATOR.toString(), if (absolute) SEPARATOR.toString() else "")
+    }
+
     fun getFilenameFromURI(context: Context, uri: Uri): String? {
         var result: String? = null
         if (uri.scheme == "content") {

@@ -553,20 +553,71 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun rename(old_name: String, new_name: String){
-        if (new_name.isEmpty()) {
-            Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
-        } else {
-            if (!encryptedVolume.rename(PathUtils.pathJoin(currentDirectoryPath, old_name), PathUtils.pathJoin(currentDirectoryPath, new_name))) {
-                MaterialAlertDialogBuilder(this)
-                        .setTitle(R.string.error)
-                        .setMessage(getString(R.string.rename_failed, old_name))
-                        .setPositiveButton(R.string.ok, null)
-                        .show()
-            } else {
-                setCurrentPath(currentDirectoryPath) {
-                    invalidateOptionsMenu()
+    private fun showRenameDialog(element: ExplorerElement, preselectedText: String) {
+        EditTextDialog(this, R.string.rename_title)
+            .setSelectedText(preselectedText)
+            .onSubmit { newName ->
+                if (newName.isEmpty()) {
+                    Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
+                    showRenameDialog(element, element.name)
+                    return@onSubmit
                 }
+                val dstPath = if (newName.startsWith("/")) {
+                    newName
+                } else {
+                    PathUtils.pathJoin(currentDirectoryPath, newName)
+                }
+                val lastComponent = newName.substringAfterLast('/')
+                // if a directory is explicitly requested, rename into it with the original file name
+                if (lastComponent.isEmpty() || lastComponent == "." || lastComponent == "..") {
+                    checkRenameOverwrite(element, newName, PathUtils.pathJoin(dstPath, element.name))
+                } else {
+                    checkRenameOverwrite(element, newName, dstPath)
+                }
+            }
+            .show()
+    }
+
+    private fun askRenameOverwrite(messageResId: Int, dstPath: String, element: ExplorerElement, newName: String, onConfirm: () -> Unit) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.warning)
+            .setMessage(getString(messageResId, dstPath, element.name))
+            .setPositiveButton(R.string.yes) { _, _ -> onConfirm() }
+            .setNegativeButton(R.string.no) { _, _ -> showRenameDialog(element, newName) }
+            .show()
+    }
+
+    private fun checkRenameOverwrite(element: ExplorerElement, newName: String, dstPath: String) {
+        val attr = encryptedVolume.getAttr(dstPath)
+        when {
+            attr == null -> rename(element, dstPath)
+            attr.type == Stat.S_IFDIR ->
+                askRenameOverwrite(R.string.rename_into_dir_question, dstPath, element, newName) {
+                    checkRenameOverwrite(element, newName, PathUtils.pathJoin(dstPath, element.name))
+                }
+            element.isDirectory -> {
+                Toast.makeText(this, R.string.error_is_file, Toast.LENGTH_SHORT).show()
+                showRenameDialog(element, newName)
+            }
+            else ->
+                askRenameOverwrite(R.string.file_overwrite_question, dstPath, element, newName) {
+                    rename(element, dstPath)
+                }
+        }
+    }
+
+    private fun rename(element: ExplorerElement, dstPath: String) {
+        if (!encryptedVolume.rename(element.fullPath, dstPath)) {
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.error)
+                .setMessage(getString(R.string.rename_failed, element.name))
+                .setPositiveButton(R.string.ok, null)
+                .show()
+        } else {
+            val normalizedPath = PathUtils.normalizePath(dstPath)
+            app.volumeManager.evictImageCache(volumeId) { it == normalizedPath }
+            setCurrentPath(currentDirectoryPath) {
+                invalidateOptionsMenu()
             }
         }
     }
@@ -621,12 +672,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                 true
             }
             R.id.rename -> {
-                val oldName = explorerElements[explorerAdapter.selectedItems.first()].name
-                EditTextDialog(this, R.string.rename_title)
-                    .setSelectedText(oldName)
-                    .onSubmit {
-                        rename(oldName, it)
-                    }.show()
+                val explorerElement = explorerElements[explorerAdapter.selectedItems.first()]
+                showRenameDialog(explorerElement, explorerElement.name)
                 true
             }
             R.id.open_as -> {

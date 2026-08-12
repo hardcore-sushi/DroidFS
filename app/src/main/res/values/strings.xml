@@ -118,6 +118,7 @@
     <string name="file_collision_question">Another selected file will also be imported as %s. Do you want to overwrite it ?</string>
     <string name="file_overwrite_question">%s already exists, do you want to overwrite it ?</string>
     <string name="dir_overwrite_question">%s already exists, do you want to merge its content ?</string>
+    <string name="rename_into_dir_question">%1$s is an existing directory, do you want to move %2$s inside ?</string>
     <string name="enter_new_name">Enter new name</string>
     <string name="copy_menu_title">Copy</string>
     <string name="move_failed">Move of %s failed.</string>
