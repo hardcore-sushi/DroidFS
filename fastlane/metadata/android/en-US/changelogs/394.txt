@@ -1,0 +1,4 @@
+- Option to choose whether to lock volumes when the screen is locked
+- Persistent camera settings
+- Option to disable file wiping prompt after import
+- Image reading bug fix
