@@ -60,7 +60,8 @@ class EncryptedFileReaderFileSystem(private val encryptedVolume: EncryptedVolume
         override fun read(sink: Buffer, byteCount: Long): Long {
             val buffer = ByteArray(byteCount.toInt())
             val read = encryptedVolume.read(fileHandle, fileOffset.toLong(), buffer, 0, byteCount)
-            sink.write(buffer)
+            if (read <= 0) return -1L
+            sink.write(buffer, 0, read)
             fileOffset += read
             return read.toLong()
         }
