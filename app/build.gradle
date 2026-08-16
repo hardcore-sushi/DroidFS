@@ -72,12 +72,6 @@ android {
         resValues true
     }
 
-    lint {
-        // LintVital crashes in AGP 9.3.0 due to internal JavaDocParser incompatibility
-        // (see https://github.com/objectbox/objectbox-java/issues/1241). Remove when fixed upstream.
-        checkReleaseBuilds false
-    }
-
     buildTypes {
         release {
             minifyEnabled true
