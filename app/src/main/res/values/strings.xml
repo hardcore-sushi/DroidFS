@@ -295,4 +295,6 @@
     <string name="enter_volume_path">Enter volume path</string>
     <string name="more_options">More options</string>
     <string name="take_photos_repeatedly">Take photos repeatedly</string>
+    <string name="choose_quality">Choose quality:</string>
+    <string name="aspect_ratio">Aspect ratio:</string>
 </resources>

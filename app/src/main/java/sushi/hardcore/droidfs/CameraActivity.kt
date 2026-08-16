@@ -68,6 +68,7 @@ import java.util.Random
 import java.util.concurrent.Executor
 import kotlin.math.pow
 import kotlin.math.sqrt
+import androidx.core.content.edit
 
 @SuppressLint("RestrictedApi")
 class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
@@ -76,6 +77,16 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         private const val AUDIO_PERMISSION_REQUEST_CODE = 1
         private const val fileNameRandomMin = 100000
         private const val fileNameRandomMax = 999999
+        private const val PREFS_TIMER_DURATION = "camera_timer_duration"
+        private const val PREFS_REPEAT = "camera_repeat"
+        private const val PREFS_CAPTURE_MODE = "camera_capture_mode"
+        private const val PREFS_BACK_CAMERA = "camera_back_camera"
+        private const val PREFS_VIDEO_MODE = "camera_video_mode"
+        private const val PREFS_ASPECT_RATIO = "camera_aspect_ratio"
+        private const val PREFS_QUALITY = "camera_quality"
+        private const val PREFS_RESOLUTION_WIDTH = "camera_resolution_width"
+        private const val PREFS_RESOLUTION_HEIGHT = "camera_resolution_height"
+        private const val PREFS_FLASH_MODE = "camera_flash_mode"
         private val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US)
         private val random = Random()
     }
@@ -114,7 +125,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private val aspectRatios = arrayOf(AspectRatio.RATIO_16_9, AspectRatio.RATIO_4_3)
     private var currentAspectRatioIndex = 0
     private var qualities: List<Quality>? = null
-    private var currentQualityIndex = -1
+    private var preferredQuality: Quality? = null
+    private var photoFlashMode = ImageCapture.FLASH_MODE_AUTO
     private var captureMode = ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY
     private var isBackCamera = true
     private var isInVideoMode = false
@@ -149,6 +161,9 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         finishOnClose(encryptedVolume)
         outputDirectory = intent.getStringExtra("path")!!
 
+        loadSettings()
+        applySettingsUI()
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED){
                 permissionsGranted = true
@@ -176,20 +191,13 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding.imageCaptureMode.setOnClickListener {
             if (isInVideoMode) {
                 qualities?.let { qualities ->
-                    val qualityNames = qualities.map {
-                        when (it) {
-                            Quality.UHD -> "UHD"
-                            Quality.FHD -> "FHD"
-                            Quality.HD -> "HD"
-                            Quality.SD -> "SD"
-                            else -> throw IllegalArgumentException("Invalid quality: $it")
-                        }
-                    }.toTypedArray()
+                    val qualityNames = qualities.map { qualityName(it) }.toTypedArray()
                     MaterialAlertDialogBuilder(this)
-                        .setTitle("Choose quality:")
-                        .setSingleChoiceItems(qualityNames, currentQualityIndex) { dialog, which ->
-                            currentQualityIndex = which
+                        .setTitle(R.string.choose_quality)
+                        .setSingleChoiceItems(qualityNames, qualities.indexOf(preferredQuality)) { dialog, which ->
+                            preferredQuality = qualities[which]
                             rebindUseCases()
+                            saveSettings()
                             dialog.dismiss()
                         }
                         .setNegativeButton(R.string.cancel, null)
@@ -211,6 +219,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             captureMode = newCaptureMode
                             setCaptureModeIcon()
                             rebindUseCases()
+                            saveSettings()
                         }
                         dialog.dismiss()
                     }
@@ -221,10 +230,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         binding.imageRatio.setOnClickListener {
             if (isInVideoMode) {
                 MaterialAlertDialogBuilder(this)
-                    .setTitle("Aspect ratio:")
+                    .setTitle(R.string.aspect_ratio)
                     .setSingleChoiceItems(arrayOf("16:9", "4:3"), currentAspectRatioIndex) { dialog, which ->
                         currentAspectRatioIndex = which
                         rebindUseCases()
+                        saveSettings()
                         dialog.dismiss()
                     }
                     .setNegativeButton(R.string.cancel, null)
@@ -237,6 +247,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                             currentResolution = resolutions!![which]
                             currentResolutionIndex = which
                             rebindUseCases()
+                            saveSettings()
                             dialog.dismiss()
                         }
                         .setNegativeButton(R.string.cancel, null)
@@ -253,10 +264,11 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             val switch = dialog.root.findViewById<MaterialSwitch>(R.id.switch_repeat)
             switch.isVisible = !isInVideoMode
             switch.isChecked = repeat
-            dialog.onSubmit { it ->
+            dialog.onSubmit {
                 try {
                     timerDuration = it.toInt()
                     repeat = switch.isChecked
+                    saveSettings()
                 } catch (_: NumberFormatException) {
                     Toast.makeText(this, R.string.invalid_number, Toast.LENGTH_SHORT).show()
                 }
@@ -280,45 +292,40 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             } else {
                 when (imageCapture?.flashMode) {
                     ImageCapture.FLASH_MODE_AUTO -> {
+                        photoFlashMode = ImageCapture.FLASH_MODE_ON
                         imageCapture?.flashMode = ImageCapture.FLASH_MODE_ON
                         R.drawable.icon_flash_on
                     }
                     ImageCapture.FLASH_MODE_ON -> {
+                        photoFlashMode = ImageCapture.FLASH_MODE_OFF
                         imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
                         R.drawable.icon_flash_off
                     }
                     else -> {
+                        photoFlashMode = ImageCapture.FLASH_MODE_AUTO
                         imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
                         R.drawable.icon_flash_auto
                     }
                 }
             })
+            saveSettings()
         }
         binding.imageModeSwitch.setOnClickListener {
             cancelTimer()
             isInVideoMode = !isInVideoMode
-            rebindUseCases()
-            binding.imageFlash.setImageResource(if (isInVideoMode) {
-                binding.recordVideoButton.visibility = View.VISIBLE
-                binding.takePhotoButton.visibility = View.GONE
+            if (isInVideoMode) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
                         requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), AUDIO_PERMISSION_REQUEST_CODE)
                     }
                 }
-                binding.imageModeSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.icon_photo)?.mutate()?.also {
-                    it.setTint(ContextCompat.getColor(this, R.color.neutralIconTint))
-                })
-                setCaptureModeIcon()
                 imageCapture?.flashMode = ImageCapture.FLASH_MODE_OFF
-                R.drawable.icon_flash_off
             } else {
-                binding.recordVideoButton.visibility = View.GONE
-                binding.takePhotoButton.visibility = View.VISIBLE
-                binding.imageModeSwitch.setImageResource(R.drawable.icon_video)
                 imageCapture?.flashMode = ImageCapture.FLASH_MODE_AUTO
-                R.drawable.icon_flash_auto
-            })
+            }
+            applySettingsUI()
+            rebindUseCases()
+            saveSettings()
         }
         binding.imageCameraSwitch.setOnClickListener {
             cancelTimer()
@@ -336,8 +343,8 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
             }
             resolutions = null
             qualities = null
-            currentQualityIndex = -1
             setupCamera()
+            saveSettings()
         }
         binding.takePhotoButton.onClick = ::onClickTakePhoto
         binding.recordVideoButton.onClick = ::onClickRecordVideo
@@ -405,6 +412,79 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         })
     }
 
+    private fun applySettingsUI() {
+        if (isInVideoMode) {
+            binding.takePhotoButton.visibility = View.GONE
+            binding.recordVideoButton.visibility = View.VISIBLE
+            binding.imageModeSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.icon_photo)?.mutate()?.also {
+                it.setTint(ContextCompat.getColor(this, R.color.neutralIconTint))
+            })
+            binding.imageFlash.setImageResource(R.drawable.icon_flash_off)
+        } else {
+            binding.takePhotoButton.visibility = View.VISIBLE
+            binding.recordVideoButton.visibility = View.GONE
+            binding.imageModeSwitch.setImageResource(R.drawable.icon_video)
+            binding.imageFlash.setImageResource(when (photoFlashMode) {
+                ImageCapture.FLASH_MODE_AUTO -> R.drawable.icon_flash_auto
+                ImageCapture.FLASH_MODE_ON -> R.drawable.icon_flash_on
+                else -> R.drawable.icon_flash_off
+            })
+        }
+        binding.imageCameraSwitch.setImageResource(if (isBackCamera) R.drawable.icon_camera_front else R.drawable.icon_camera_back)
+        setCaptureModeIcon()
+    }
+
+    private fun loadSettings() {
+        timerDuration = sharedPrefs.getInt(PREFS_TIMER_DURATION, 0)
+        repeat = sharedPrefs.getBoolean(PREFS_REPEAT, false)
+        captureMode = sharedPrefs.getInt(PREFS_CAPTURE_MODE, ImageCapture.CAPTURE_MODE_MAXIMIZE_QUALITY)
+        isBackCamera = sharedPrefs.getBoolean(PREFS_BACK_CAMERA, true)
+        isInVideoMode = sharedPrefs.getBoolean(PREFS_VIDEO_MODE, false)
+        currentAspectRatioIndex = sharedPrefs.getInt(PREFS_ASPECT_RATIO, 0)
+        preferredQuality = sharedPrefs.getString(PREFS_QUALITY, null)?.let { qualityFromName(it) }
+        val width = sharedPrefs.getInt(PREFS_RESOLUTION_WIDTH, 0)
+        val height = sharedPrefs.getInt(PREFS_RESOLUTION_HEIGHT, 0)
+        if (width > 0 && height > 0) {
+            currentResolution = Size(width, height)
+        }
+        photoFlashMode = sharedPrefs.getInt(PREFS_FLASH_MODE, ImageCapture.FLASH_MODE_AUTO)
+    }
+
+    private fun saveSettings() {
+        sharedPrefs.edit {
+            putInt(PREFS_TIMER_DURATION, timerDuration)
+                .putBoolean(PREFS_REPEAT, repeat)
+                .putInt(PREFS_CAPTURE_MODE, captureMode)
+                .putBoolean(PREFS_BACK_CAMERA, isBackCamera)
+                .putBoolean(PREFS_VIDEO_MODE, isInVideoMode)
+                .putInt(PREFS_ASPECT_RATIO, currentAspectRatioIndex)
+                .putString(PREFS_QUALITY, preferredQuality?.let { qualityName(it) })
+                .putInt(PREFS_RESOLUTION_WIDTH, currentResolution?.width ?: 0)
+                .putInt(PREFS_RESOLUTION_HEIGHT, currentResolution?.height ?: 0)
+                .putInt(PREFS_FLASH_MODE, photoFlashMode)
+        }
+    }
+
+    private fun qualityName(quality: Quality): String {
+        return when (quality) {
+            Quality.UHD -> "UHD"
+            Quality.FHD -> "FHD"
+            Quality.HD -> "HD"
+            Quality.SD -> "SD"
+            else -> throw IllegalArgumentException("Invalid quality: $quality")
+        }
+    }
+
+    private fun qualityFromName(name: String): Quality? {
+        return when (name) {
+            "UHD" -> Quality.UHD
+            "FHD" -> Quality.FHD
+            "HD" -> Quality.HD
+            "SD" -> Quality.SD
+            else -> null
+        }
+    }
+
     private fun adaptPreviewSize(resolution: Size) {
         val screenWidth = resources.displayMetrics.widthPixels
         val screenHeight = resources.displayMetrics.heightPixels
@@ -423,7 +503,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
     private fun refreshImageCapture() {
         imageCapture = ImageCapture.Builder()
             .setCaptureMode(captureMode)
-            .setFlashMode(imageCapture?.flashMode ?: ImageCapture.FLASH_MODE_AUTO)
+            .setFlashMode(photoFlashMode)
             .setResolutionSelector(ResolutionSelector.Builder().setResolutionFilter { supportedSizes, _ ->
                 resolutions = supportedSizes.sortedBy {
                     -it.width*it.height
@@ -431,7 +511,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
                 currentResolution?.let { targetResolution ->
                     return@setResolutionFilter supportedSizes.sortedBy {
                         sqrt((it.width - targetResolution.width).toDouble().pow(2) + (it.height - targetResolution.height).toDouble().pow(2))
-                    }
+                    }.also { currentResolutionIndex = resolutions!!.indexOf(it[0]) }
                 }
                 supportedSizes
             }.build())
@@ -443,9 +523,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         val recorderBuilder = SucklessRecorder.Builder()
             .setExecutor(executor)
             .setAspectRatio(aspectRatios[currentAspectRatioIndex])
-        if (currentQualityIndex != -1) {
-            recorderBuilder.setQualitySelector(QualitySelector.from(qualities!![currentQualityIndex]))
-        }
+        preferredQuality?.let { recorderBuilder.setQualitySelector(QualitySelector.from(it)) }
         videoRecorder = recorderBuilder.build()
         videoCapture = VideoCapture.withOutput(videoRecorder!!).apply {
             targetRotation = currentRotation
