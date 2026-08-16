@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
@@ -30,6 +31,7 @@ class ExplorerActivity : BaseExplorerActivity() {
 
     private var usf_decrypt = false
     private var usf_share = false
+    private val proposeWipe by lazy { sharedPrefs.getBoolean("propose_wipe_imported_files", true) }
     private var currentItemAction = ItemsActions.NONE
     private val itemsToProcess = ArrayList<OperationFile>()
     private val unsafeFeaturesLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { _ ->
@@ -134,6 +136,10 @@ class ExplorerActivity : BaseExplorerActivity() {
     }
 
     private fun onImportComplete(urisToWipe: List<Uri>, rootFile: DocumentFile? = null) {
+        if (!proposeWipe) {
+            Toast.makeText(this, R.string.success_import, Toast.LENGTH_SHORT).show()
+            return
+        }
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.success_import)
             .setMessage("""

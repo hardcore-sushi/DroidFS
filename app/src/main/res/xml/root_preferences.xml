@@ -60,6 +60,14 @@
     <PreferenceCategory android:title="@string/ux">
 
         <SwitchPreferenceCompat
+            android:title="@string/propose_wipe_imported_files"
+            android:summary="@string/propose_wipe_imported_files_summary"
+            android:key="propose_wipe_imported_files"
+            android:defaultValue="true"
+            android:icon="@drawable/icon_wipe"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
+
+        <SwitchPreferenceCompat
             android:title="@string/auto_fit_title"
             android:summary="@string/auto_fit_summary"
             android:key="autoFit"

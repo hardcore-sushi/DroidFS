@@ -297,4 +297,6 @@
     <string name="take_photos_repeatedly">Take photos repeatedly</string>
     <string name="choose_quality">Choose quality:</string>
     <string name="aspect_ratio">Aspect ratio:</string>
+    <string name="propose_wipe_imported_files">Propose to wipe imported files</string>
+    <string name="propose_wipe_imported_files_summary">After importing files, ask whether to wipe them from the source</string>
 </resources>
