@@ -148,10 +148,11 @@ object PathUtils {
             Log.d(PATH_RESOLVER_TAG, "Volume Id: $volumeId")
             val volumePath = getVolumePath(volumeId ?: return null, context)
             Log.d(PATH_RESOLVER_TAG, "Volume Path: $volumePath")
+            if (volumePath == null) return null
             val documentPath = if (split.size >= 2 && split[1] != null) split[1]!! else File.separator
             Log.d(PATH_RESOLVER_TAG, "Document Path: $documentPath")
             return if (documentPath.isNotEmpty()) {
-                pathJoin(volumePath!!, documentPath)
+                pathJoin(volumePath, documentPath)
             } else volumePath
         } else if ("file".equals(treeUri.scheme, ignoreCase = true)) {
             return treeUri.path
