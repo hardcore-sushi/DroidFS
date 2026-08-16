@@ -130,6 +130,7 @@ class SettingsActivity : BaseActivity() {
             }
             val switchBackground = findPreference<SwitchPreferenceCompat>("usf_background")!!
             val switchKeepOpen = findPreference<SwitchPreferenceCompat>("usf_keep_open")!!
+            val switchLockOnScreenLock = findPreference<SwitchPreferenceCompat>("lock_on_screen_lock")!!
             val switchExternalOpen = findPreference<SwitchPreferenceCompat>("usf_open")!!
             val switchExpose = findPreference<SwitchPreferenceCompat>("usf_expose")!!
             val switchSafWrite = findPreference<SwitchPreferenceCompat>("usf_saf_write")!!
@@ -142,6 +143,12 @@ class SettingsActivity : BaseActivity() {
                 }
                 updateSwitchPreferenceCompat(switchKeepOpen)
                 updateSwitchPreferenceCompat(switchExpose)
+                with(switchLockOnScreenLock) {
+                    isEnabled = usfBackground
+                    if (!usfBackground) {
+                        isChecked = true
+                    }
+                }
             }
             onUsfBackgroundChanged(switchBackground.isChecked)
 

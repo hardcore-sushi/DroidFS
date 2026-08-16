@@ -10,6 +10,7 @@
         <item name="colorPrimaryContainer">@color/green</item>
         <item name="colorOnPrimaryContainer">@color/black</item>
         <item name="colorSecondary">@color/green</item>
+        <item name="colorSurface">@color/darkGrey</item>
         <item name="colorSurfaceContainer">@color/darkGrey</item>
         <item name="textColorSecondary">@color/textColorSecondary</item>
         <item name="infoBarBackgroundColor">#181818</item>

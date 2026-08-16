@@ -62,6 +62,12 @@
             app:widgetLayout="@layout/preference_widget_material_switch" />
 
         <SwitchPreferenceCompat
+            android:icon="@drawable/icon_lock_screen"
+            android:key="lock_on_screen_lock"
+            android:title="@string/lock_on_screen_lock"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
+
+        <SwitchPreferenceCompat
             android:defaultValue="false"
             android:icon="@drawable/icon_lock_open"
             android:key="usf_keep_open"

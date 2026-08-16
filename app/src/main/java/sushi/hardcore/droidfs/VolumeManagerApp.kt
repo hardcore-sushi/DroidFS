@@ -44,11 +44,13 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
         updateServicesStates()
     }
     private val usfKeepOpen by usfKeepOpenDelegate
+    private val lockOnScreenLockDelegate = AndroidUtils.LiveBooleanPreference("lock_on_screen_lock", true)
+    private val lockOnScreenLock by lockOnScreenLockDelegate
     var isExporting = false
     var isStartingExternalApp = false
     private val screenLockReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.action == Intent.ACTION_SCREEN_OFF && !usfBackground) {
+            if (intent.action == Intent.ACTION_SCREEN_OFF && (lockOnScreenLock || !usfBackground)) {
                 volumeManager.closeAll()
                 TemporaryFileProvider.instance.wipe()
             }
@@ -70,7 +72,7 @@ class VolumeManagerApp : Application(), DefaultLifecycleObserver {
     override fun onCreate() {
         super<Application>.onCreate()
         ProcessLifecycleOwner.get().lifecycle.addObserver(this)
-        AndroidUtils.LiveBooleanPreference.init(this, usfBackgroundDelegate, usfKeepOpenDelegate)
+        AndroidUtils.LiveBooleanPreference.init(this, usfBackgroundDelegate, usfKeepOpenDelegate, lockOnScreenLockDelegate)
         ContextCompat.registerReceiver(
             this,
             screenLockReceiver,
