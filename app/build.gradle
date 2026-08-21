@@ -138,8 +138,10 @@ dependencies {
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-process:$lifecycle_version"
 
-    implementation "io.coil-kt.coil3:coil:3.4.0"
-    implementation "io.coil-kt.coil3:coil-video:3.4.0"
+    def coil_version = "3.4.0"
+    implementation "io.coil-kt.coil3:coil:$coil_version"
+    implementation "io.coil-kt.coil3:coil-video:$coil_version"
+    implementation "io.coil-kt.coil3:coil-gif:$coil_version"
 
     def media3_version = "1.8.1"
     implementation "androidx.media3:media3-exoplayer:$media3_version"
