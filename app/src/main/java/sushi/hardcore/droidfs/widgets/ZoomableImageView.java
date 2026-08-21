@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.widgets;
 import android.content.Context;
 import android.graphics.Matrix;
 import android.graphics.PointF;
+import android.graphics.RectF;
 import android.graphics.drawable.Drawable;
 import android.util.AttributeSet;
 import android.view.GestureDetector;
@@ -25,13 +26,13 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
     PointF start = new PointF();
     static final float minScale = 1f;
     static final float maxScale = 3f;
-    float[] m;
 
     int viewWidth, viewHeight;
     static final int CLICK = 3;
     float saveScale = 1f;
     protected float origWidth, origHeight;
-    int oldMeasuredWidth, oldMeasuredHeight;
+    private int rotationAngle = 0;
+    private final RectF contentBounds = new RectF();
 
     ScaleGestureDetector mScaleDetector;
 
@@ -41,8 +42,6 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
     }
 
     OnInteractionListener onInteractionListener = null;
-
-    Context context;
 
     public ZoomableImageView(Context context) {
         super(context);
@@ -58,13 +57,11 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
 
     private void sharedConstructing(Context context) {
         super.setClickable(true);
-        this.context = context;
         mGestureDetector = new GestureDetector(context, this);
         mGestureDetector.setOnDoubleTapListener(this);
 
         mScaleDetector = new ScaleGestureDetector(context, new ScaleListener());
         matrix = new Matrix();
-        m = new float[9];
         setImageMatrix(matrix);
         setScaleType(ScaleType.MATRIX);
 
@@ -123,16 +120,19 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
         return saveScale > minScale;
     }
 
-    public void resetZoomFactor(){
+    private void resetZoomFactor() {
         saveScale = minScale;
     }
 
     public void restoreZoomNormal(){
-        float origScale = saveScale;
         resetZoomFactor();
-        float mScaleFactor = minScale / origScale;
-        matrix.postScale(mScaleFactor, mScaleFactor, viewWidth/2, viewHeight/2);
-        fixTrans();
+        fitContentToView();
+    }
+
+    public void setRotationAngle(int angle) {
+        rotationAngle = angle;
+        resetZoomFactor();
+        fitContentToView();
     }
 
     public void setOnInteractionListener(OnInteractionListener listener){
@@ -237,13 +237,15 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
     }
 
     void fixTrans() {
-        matrix.getValues(m);
-        float transX = m[Matrix.MTRANS_X];
-        float transY = m[Matrix.MTRANS_Y];
+        Drawable drawable = getDrawable();
+        if (drawable == null) {
+            return;
+        }
+        contentBounds.set(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
+        matrix.mapRect(contentBounds);
 
-        float fixTransX = getFixTrans(transX, viewWidth, origWidth * saveScale);
-        float fixTransY = getFixTrans(transY, viewHeight, origHeight
-                * saveScale);
+        float fixTransX = getFixTrans(contentBounds.left, viewWidth, contentBounds.width());
+        float fixTransY = getFixTrans(contentBounds.top, viewHeight, contentBounds.height());
 
         if (fixTransX != 0 || fixTransY != 0)
             matrix.postTranslate(fixTransX, fixTransY);
@@ -274,50 +276,43 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
         return delta;
     }
 
+    private void fitContentToView() {
+        Drawable drawable = getDrawable();
+        if (drawable == null || drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0 || viewWidth == 0 || viewHeight == 0) {
+            return;
+        }
+
+        // Fit to screen.
+        int bmWidth = drawable.getIntrinsicWidth();
+        int bmHeight = drawable.getIntrinsicHeight();
+
+        // Quarter turns swap the on-screen content dimensions.
+        boolean swapped = (rotationAngle % 180) != 0;
+        float effWidth = swapped ? bmHeight : bmWidth;
+        float effHeight = swapped ? bmWidth : bmHeight;
+
+        float scale = Math.min((float) viewWidth / effWidth, (float) viewHeight / effHeight);
+        matrix.setScale(scale, scale);
+
+        // Rotate the scaled content about its own center, then center it on the view
+        matrix.postRotate(rotationAngle, (bmWidth * scale) / 2, (bmHeight * scale) / 2);
+        matrix.postTranslate(viewWidth / 2f - (bmWidth * scale) / 2, viewHeight / 2f - (bmHeight * scale) / 2);
+
+        origWidth = effWidth * scale;
+        origHeight = effHeight * scale;
+        setImageMatrix(matrix);
+    }
+
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
         viewWidth = MeasureSpec.getSize(widthMeasureSpec);
         viewHeight = MeasureSpec.getSize(heightMeasureSpec);
-
-        //
-        // Rescales image on rotation
-        //
-        if (oldMeasuredHeight == viewWidth && oldMeasuredHeight == viewHeight
-                || viewWidth == 0 || viewHeight == 0)
+        if (viewWidth == 0 || viewHeight == 0) {
             return;
-        oldMeasuredHeight = viewHeight;
-        oldMeasuredWidth = viewWidth;
-
+        }
         if (saveScale == 1) {
-            // Fit to screen.
-            float scale;
-
-            Drawable drawable = getDrawable();
-            if (drawable == null || drawable.getIntrinsicWidth() == 0
-                    || drawable.getIntrinsicHeight() == 0)
-                return;
-            int bmWidth = drawable.getIntrinsicWidth();
-            int bmHeight = drawable.getIntrinsicHeight();
-
-            float scaleX = (float) viewWidth / (float) bmWidth;
-            float scaleY = (float) viewHeight / (float) bmHeight;
-            scale = Math.min(scaleX, scaleY);
-            matrix.setScale(scale, scale);
-
-            // Center the image
-            float redundantYSpace = (float) viewHeight
-                    - (scale * (float) bmHeight);
-            float redundantXSpace = (float) viewWidth
-                    - (scale * (float) bmWidth);
-            redundantYSpace /= (float) 2;
-            redundantXSpace /= (float) 2;
-
-            matrix.postTranslate(redundantXSpace, redundantYSpace);
-
-            origWidth = viewWidth - 2 * redundantXSpace;
-            origHeight = viewHeight - 2 * redundantYSpace;
-            setImageMatrix(matrix);
+            fitContentToView();
         }
         fixTrans();
     }
