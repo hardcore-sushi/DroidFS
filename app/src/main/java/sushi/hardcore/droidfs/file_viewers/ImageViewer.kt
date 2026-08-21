@@ -35,14 +35,12 @@ import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.Method
 import java.util.Random
-import kotlin.math.abs
 import kotlin.math.sqrt
 
 class ImageViewer: FileViewerActivity() {
     companion object {
         private const val TAG = "ImageViewer"
         private const val hideDelay: Long = 3000
-        private const val MIN_SWIPE_DISTANCE = 150
 
         private val EXIF_IMAGE_TYPE_JPEG by lazy { getExifIntField("IMAGE_TYPE_JPEG") }
         private val EXIF_IMAGE_TYPE_PNG by lazy { getExifIntField("IMAGE_TYPE_PNG") }
@@ -84,8 +82,6 @@ class ImageViewer: FileViewerActivity() {
         val budget = am.memoryClass * 1024L * 1024L / 16L
         sqrt(budget / 4.0).toInt()
     }
-    private var x1 = 0F
-    private var x2 = 0F
     private var slideshowActive = false
     private val hideUI = Runnable {
         binding.overlay.visibility = View.GONE
@@ -120,21 +116,8 @@ class ImageViewer: FileViewerActivity() {
                 }
             }
 
-            override fun onTouch(event: MotionEvent?) {
-                if (!binding.imageViewer.isZoomed) {
-                    when (event?.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            x1 = event.rawX
-                        }
-                        MotionEvent.ACTION_UP -> {
-                            x2 = event.rawX
-                            val deltaX = x2 - x1
-                            if (abs(deltaX) > MIN_SWIPE_DISTANCE) {
-                                askSaveRotation { swipeImage(deltaX) }
-                            }
-                        }
-                    }
-                }
+            override fun onSwipe(deltaX: Float) {
+                askSaveRotation { swipeImage(deltaX) }
             }
         })
         binding.imageDelete.setOnClickListener {

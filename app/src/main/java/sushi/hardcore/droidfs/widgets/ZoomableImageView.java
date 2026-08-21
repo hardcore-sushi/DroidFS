@@ -29,16 +29,18 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
 
     int viewWidth, viewHeight;
     static final int CLICK = 3;
+    static final int SWIPE_MIN_DISTANCE = 150;
     float saveScale = 1f;
     protected float origWidth, origHeight;
     private int rotationAngle = 0;
+    private boolean multiTouch = false;
     private final RectF contentBounds = new RectF();
 
     ScaleGestureDetector mScaleDetector;
 
     public interface OnInteractionListener {
-        void onTouch(MotionEvent event);
         void onSingleTap(MotionEvent event);
+        void onSwipe(float deltaX);
     }
 
     OnInteractionListener onInteractionListener = null;
@@ -79,6 +81,11 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
                         last.set(curr);
                         start.set(last);
                         mode = DRAG;
+                        multiTouch = false;
+                        break;
+
+                    case MotionEvent.ACTION_POINTER_DOWN:
+                        multiTouch = true;
                         break;
 
                     case MotionEvent.ACTION_MOVE:
@@ -101,6 +108,10 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
                         int yDiff = (int) Math.abs(curr.y - start.y);
                         if (xDiff < CLICK && yDiff < CLICK)
                             performClick();
+                        else if (!multiTouch && saveScale <= minScale
+                                && yDiff < xDiff && xDiff > SWIPE_MIN_DISTANCE
+                                && onInteractionListener != null)
+                            onInteractionListener.onSwipe(curr.x - start.x);
                         break;
 
                     case MotionEvent.ACTION_POINTER_UP:
@@ -114,10 +125,6 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
             }
 
         });
-    }
-
-    public boolean isZoomed(){
-        return saveScale > minScale;
     }
 
     private void resetZoomFactor() {
@@ -145,14 +152,6 @@ public class ZoomableImageView extends androidx.appcompat.widget.AppCompatImageV
             onInteractionListener.onSingleTap(e);
         }
         return false;
-    }
-
-    @Override
-    public boolean dispatchTouchEvent(MotionEvent event) {
-        if (onInteractionListener != null){
-            onInteractionListener.onTouch(event);
-        }
-        return super.dispatchTouchEvent(event);
     }
 
     @Override
