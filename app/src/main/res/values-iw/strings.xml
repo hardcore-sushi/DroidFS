@@ -105,8 +105,6 @@
     <string name="about">אודות</string>
     <string name="github">GitHub</string>
     <string name="github_summary">מאגר DroidFS ב- GitHub. קוד מקור, תיעוד, מעקב אחר באגים…</string>
-    <string name="gitea">Gitea</string>
-    <string name="gitea_summary">מאגר DroidFS בChapril Gitea. שלא כמו GitHub, Gitea היא תוכנה חינמית לחלוטין ומתארחת בעצמה. קוד מקור, תיעוד, מעקב אחר באגים…</string>
     <string name="share">שתף</string>
     <string name="decrypt_files">ייצא/פענח</string>
     <string name="copy_failed">העתקת %s נכשלה.</string>

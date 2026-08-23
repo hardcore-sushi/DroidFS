@@ -104,8 +104,6 @@
     <string name="about">Hakkında</string>
     <string name="github">GitHub</string>
     <string name="github_summary">DroidFS Github deposu. Kaynak kodu, dokümantasyon, hata izleyici…</string>
-    <string name="gitea">Gitea</string>
-    <string name="gitea_summary">Chapril Gitea bulut sunucusundaki DroidFS deposu GitHub\'tan farklı olarak Gitea tamamen ücretsiz bir yazılımdır ve kendi kendine barındırılır. Kaynak kodu, belgeler, hata izleyici…</string>
     <string name="share">Paylaş</string>
     <string name="decrypt_files">Dışa aktar/Şifre çöz</string>
     <string name="copy_failed">Kopyalanamadı: %s</string>

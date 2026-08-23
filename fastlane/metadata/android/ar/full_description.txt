@@ -21,7 +21,7 @@ DroidFS هي طريقة بديلة لاستخدام أنظمة ملفات الت
 
 DroidFS مجاني ومفتوح المصدر، يمكنك العثور على مستودع المشروع:
 - على GitHub: https://github.com/hardcore-sushi/DroidFS
-- على مثيل Gitea من مشروع Chapril: https://forge.chapril.org/hardcoresushi/DroidFS
+- على Tangled: https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS
 
 <b>Warning !</b>
 الحماية نسبية. DroidFS لا يأتي مع أي ضمان ولا ينبغي اعتباره وسيلة آمنة مطلقة لتخزين الملفات.

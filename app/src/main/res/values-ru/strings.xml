@@ -100,7 +100,6 @@
     <string name="query_cursor_null_error_msg">Невозможно получить доступ к этому файлу.</string>
     <string name="about">О приложении</string>
     <string name="github_summary">Репозиторий DroidFS на GitHub. Исходный код, документация, трекер ошибок…</string>
-    <string name="gitea_summary">Репозиторий DroidFS на Chapril Gitea. В отличие от GitHub, Gitea является полностью свободным программным обеспечением и автономным хостингом. Исходный код, документация, трекер ошибок…</string>
     <string name="share">Поделиться</string>
     <string name="decrypt_files">Экспорт/расшифровка</string>
     <string name="copy_failed">Ошибка при копировании %s.</string>

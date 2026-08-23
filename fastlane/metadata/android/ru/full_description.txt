@@ -20,7 +20,7 @@ DroidFS — это альтернативный способ использов�
 
 DroidFS бесплатный, с открытым исходным кодом, репозиторий проекта находится на:
 - GitHub: https://github.com/hardcore-sushi/DroidFS
-- Gitea проекта Chapril: https://forge.chapril.org/hardcoresushi/DroidFS
+- Tangled: https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS
 
 <b>Предупреждение!</b>
 Безопасность не бывает ни абсолютной, ни окончательной. DroidFS не даёт никаких гарантий и не может рассматриваться как абсолютно безопасный способ хранения файлов.

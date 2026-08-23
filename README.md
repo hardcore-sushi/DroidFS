@@ -5,13 +5,13 @@ It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [Cry
 For mortals: Encrypted storage compatible with already existing softwares.
 
 <p align="center">
-<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" height="500">
-<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" height="500">
-<img src="https://forge.chapril.org/hardcoresushi/DroidFS/raw/branch/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" height="500">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" style="max-height: 500px;">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" style="max-height: 500px;">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" style="max-height: 500px;">
 </p>
 
 # Support
-The creator of DroidFS works as a freelance developer and privacy consultant. I am currently looking for new clients! If you are interested, take a look at the [website](https://arkensys.dedyn.io). Alternatively, you can directly support DroidFS by making a [donation](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/DONATE.txt).
+The creator of DroidFS works as a freelance developer and privacy consultant. I am currently looking for new clients! If you are interested, take a look at the [website](https://arkensys.dedyn.io). Alternatively, you can directly support DroidFS by making a [donation](DONATE.txt).
 
 Thank you so much ❤️.
 
@@ -28,7 +28,7 @@ Do not use this app with volumes containing sensitive data unless you know exact
 - Unlocking volumes using fingerprint authentication
 - Volume auto-locking when the app goes in background
 
-For planned features, see [TODO.md](https://forge.chapril.org/hardcoresushi/DroidFS/src/branch/master/TODO.md).
+For planned features, see [TODO.md](TODO.md).
 
 # Unsafe features
 Some available features are considered risky and are therefore disabled by default. It is strongly recommended that you read the following documentation if you wish to activate one of these options.
@@ -72,7 +72,7 @@ Some available features are considered risky and are therefore disabled by defau
 
 # Download
 <a href="https://f-droid.org/packages/sushi.hardcore.droidfs">
-	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="75">
+	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" style="max-height: 90px; border: none;">
 </a>
 
 You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs) or from the "Releases" section in this repository.
@@ -127,7 +127,7 @@ DroidFS needs some permissions for certain features. However, you are free to de
 - **Notifications**: Used to report file operations progress and notify about volumes kept open.
 
 # Limitations
-DroidFS works as a wrapper around modified versions of the original encrypted container implementations ([libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) and [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs)). These programs were designed to run on standard x86 Linux systems: they access the underlying file system with file paths and syscalls. However, on Android, you can't access files from other applications using file paths. Instead, one has to use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. Obviously, neither Gocryptfs nor CryFS support this API. As a result, DroidFS cannot open volumes provided by other applications (such as cloud storage clients). If you want to synchronize your volumes on a cloud, the cloud application must synchronize the encrypted directory from disk.
+DroidFS works as a wrapper around modified versions of the original encrypted container implementations ([libgocryptfs](https://tangled.org/cipherd.arkensys.dedyn.io/libgocryptfs) and [libcryfs](https://tangled.org/cipherd.arkensys.dedyn.io/libcryfs)). These programs were designed to run on standard x86 Linux systems: they access the underlying file system with file paths and syscalls. However, on Android, you can't access files from other applications using file paths. Instead, one has to use the [ContentProvider](https://developer.android.com/guide/topics/providers/content-providers) API. Obviously, neither Gocryptfs nor CryFS support this API. As a result, DroidFS cannot open volumes provided by other applications (such as cloud storage clients). If you want to synchronize your volumes on a cloud, the cloud application must synchronize the encrypted directory from disk.
 
 Due to Android's storage restrictions, encrypted volumes located on SD cards must be placed under `/Android/data/sushi.hardcore.droidfs/` if you want DroidFS to be able to modify them.
 
@@ -139,9 +139,9 @@ Thanks to these open source projects that DroidFS uses:
 
 ### Modified code:
 - Encrypted filesystems (to protect your data):
-    - [libgocryptfs](https://forge.chapril.org/hardcoresushi/libgocryptfs) (forked from [gocryptfs](https://github.com/rfjakob/gocryptfs))
-    - [libcryfs](https://forge.chapril.org/hardcoresushi/libcryfs) (forked from [CryFS](https://github.com/cryfs/cryfs))
-- [libpdfviewer](https://forge.chapril.org/hardcoresushi/libpdfviewer) (forked from [PdfViewer](https://github.com/GrapheneOS/PdfViewer)) to open PDF files
+    - [libgocryptfs](https://tangled.org/cipherd.arkensys.dedyn.io/libgocryptfs) (forked from [gocryptfs](https://github.com/rfjakob/gocryptfs))
+    - [libcryfs](https://tangled.org/cipherd.arkensys.dedyn.io/libcryfs) (forked from [CryFS](https://github.com/cryfs/cryfs))
+- [libpdfviewer](https://tangled.org/cipherd.arkensys.dedyn.io/libpdfviewer) (forked from [PdfViewer](https://github.com/GrapheneOS/PdfViewer)) to open PDF files
 - [DoubleTapPlayerView](https://github.com/vkay94/DoubleTapPlayerView) to add double-click controls to the video player
 ### Borrowed code:
 - [MaterialFiles](https://github.com/zhanghai/MaterialFiles) for Kotlin natural sorting implementation

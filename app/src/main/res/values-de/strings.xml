@@ -104,8 +104,6 @@
     <string name="about">Über uns</string>
     <string name="github">GitHub</string>
     <string name="github_summary">Das DroidFS-Repository auf GitHub. Quellcode, Dokumentation, Bugtracker…</string>
-    <string name="gitea">Gitea</string>
-    <string name="gitea_summary">Das DroidFS-Repository auf der Chapril Gitea-Instanz. Im Gegensatz zu GitHub ist Gitea vollständig freie Software und wird selbst gehostet. Quellcode, Dokumentation, Bugtracker…</string>
     <string name="share">Share</string>
     <string name="decrypt_files">Exportieren/Entschlüsseln</string>
     <string name="copy_failed">Kopie von %s fehlgeschlagen.</string>

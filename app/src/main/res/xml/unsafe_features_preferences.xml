@@ -10,7 +10,7 @@
             android:title="@string/usf_doc">
             <intent
                 android:action="android.intent.action.VIEW"
-                android:data="https://forge.chapril.org/hardcoresushi/DroidFS#unsafe-features" />
+                android:data="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS#unsafe-features" />
         </Preference>
 
     </PreferenceCategory>

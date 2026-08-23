@@ -103,8 +103,6 @@
     <string name="about">حول</string>
     <string name="github">GitHub</string>
     <string name="github_summary">مستودع DroidFS على GitHub. شفرة المصدر ، الوثائق ، تعقب الأخطاء…</string>
-    <string name="gitea">Gitea</string>
-    <string name="gitea_summary">مستودع DroidFS على مثيل Chapril Gitea. على عكس GitHub ، فإن Gitea عبارة عن برنامج مجاني تمامًا ومستضاف ذاتيًا. كود المصدر ، الوثائق ، تعقب الأخطاء …</string>
     <string name="share">مشاركة</string>
     <string name="decrypt_files">تصدير / فك تشفير</string>
     <string name="copy_failed">نسخة من %s فشلت.</string>

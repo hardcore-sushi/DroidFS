@@ -1,12 +1,12 @@
 [submodule "app/libgocryptfs"]
 	path = app/libgocryptfs
-	url = https://forge.chapril.org/hardcoresushi/libgocryptfs.git
+	url = https://tangled.org/cipherd.arkensys.dedyn.io/libgocryptfs
 [submodule "libpdfviewer"]
 	path = libpdfviewer
-	url = https://forge.chapril.org/hardcoresushi/libpdfviewer.git
+	url = https://tangled.org/cipherd.arkensys.dedyn.io/libpdfviewer
 [submodule "app/libcryfs"]
 	path = app/libcryfs
-	url = https://forge.chapril.org/hardcoresushi/libcryfs.git
+	url = https://tangled.org/cipherd.arkensys.dedyn.io/libcryfs
 [submodule "app/ffmpeg/ffmpeg"]
 	path = app/ffmpeg/ffmpeg
 	url = https://git.ffmpeg.org/ffmpeg.git

@@ -123,10 +123,10 @@
         </Preference>
 
         <Preference
-            android:title="@string/gitea"
-            android:summary="@string/gitea_summary"
-            android:icon="@drawable/icon_gitea">
-            <intent android:action="android.intent.action.VIEW" android:data="https://forge.chapril.org/hardcoresushi/DroidFS"/>
+            android:title="@string/tangled"
+            android:summary="@string/tangled_summary"
+            android:icon="@drawable/icon_tangled">
+            <intent android:action="android.intent.action.VIEW" android:data="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS"/>
         </Preference>
 
         <Preference

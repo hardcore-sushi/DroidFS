@@ -22,7 +22,7 @@ All of these permissions can be denied if you don't want to use the correspondin
 
 DroidFS is free, open-source, and you can find the project's repository:
 - on GitHub: https://github.com/hardcore-sushi/DroidFS
-- on the Gitea instance of the Chapril project: https://forge.chapril.org/hardcoresushi/DroidFS
+- on Tangled: https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS
 
 <b>Warning !</b>
 Security is neither absolute nor definitive. DroidFS does not come with any warranty and should not be considered as an absolute safe way to store files.

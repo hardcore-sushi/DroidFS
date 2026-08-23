@@ -59,7 +59,7 @@ Email: `Hardcore Sushi <hardcore.sushi@disroot.org>`
 # Download sources
 Download DroidFS source code:
 ```
-$ git clone --depth=1 https://forge.chapril.org/hardcoresushi/DroidFS.git
+$ git clone --depth=1 https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS
 ```
 Verify sources:
 ```

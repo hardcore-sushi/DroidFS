@@ -105,8 +105,6 @@
     <string name="about">关于</string>
     <string name="github">Github</string>
     <string name="github_summary">DroidFS在Github上的仓库。存有源码，文档以及BUG追踪等</string>
-    <string name="gitea">Gitea</string>
-    <string name="gitea_summary">DroidFS在Chapril Gitea站上的仓库。与Github不同, Gitea是完全的自主搭建的自由软件.存有源码，文档以及BUG追踪等</string>
     <string name="share">分享</string>
     <string name="decrypt_files">导出</string>
     <string name="copy_failed">复制%s失败</string>
