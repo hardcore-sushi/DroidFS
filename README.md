@@ -75,15 +75,18 @@ Some available features are considered risky and are therefore disabled by defau
 	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="90" style="max-height: 90px; border: none;">
 </a>
 
-You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs) or from the "Releases" section in this repository.
+You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs), from GitHub [releases](https://github.com/hardcore-sushi/DroidFS/releases), or from IPFS: [local](http://bafybeicsiaczru5liyecezl5gijqwrtdbkrpe7ointykq6m4ffa3tq4yw4.ipfs.localhost:8080), [gateway](https://bafybeicsiaczru5liyecezl5gijqwrtdbkrpe7ointykq6m4ffa3tq4yw4.ipfs.dweb.link).
 
-APKs available here are signed with my PGP key available on keyservers:
+APKs are signed with my PGP key available on keyservers:
 
-`gpg --keyserver hkps://keyserver.ubuntu.com --recv-keys AFE384344A45E13A` \
+```
+gpg --recv-keys AFE384344A45E13A
+```
+
 Fingerprint: `B64E FE86 CEE1 D054 F082  1711 AFE3 8434 4A45 E13A` \
-Email: `Hardcore Sushi <hardcore.sushi@disroot.org>`
+Email: `Cipherd <cipherd@arkensys.dedyn.io>`
 
-To verify APKs, save the PGP-signed message to a file and run `gpg --verify <the file>`.  __Don't install any APK if the verification fails !__
+To check the authenticity of the release, save the PGP-signed message in a file named `hashes.txt` and run `gpg --verify hashes.txt`.  __Don't install any APK if the verification fails !__
 
 If the signature is valid, you can compare the SHA256 checksums with:
 ```
