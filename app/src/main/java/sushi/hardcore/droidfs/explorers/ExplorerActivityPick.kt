@@ -26,10 +26,10 @@ class ExplorerActivityPick : BaseExplorerActivity() {
             val fullPath = PathUtils.pathJoin(currentDirectoryPath, explorerElements[position].name)
             when {
                 explorerElements[position].isDirectory -> {
-                    setCurrentPath(fullPath)
+                    changeCurrentDirectory(fullPath)
                 }
                 explorerElements[position].isParentFolder -> {
-                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                    changeCurrentDirectory(PathUtils.getParentPath(currentDirectoryPath))
                 }
                 else -> {
                     resultIntent.putExtra("path", fullPath)

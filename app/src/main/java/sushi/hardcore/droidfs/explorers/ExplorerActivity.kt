@@ -107,7 +107,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         onTaskResult(result.taskResult, R.string.import_failed) {
                             onImportComplete(result.uris, tree)
                         }
-                        setCurrentPath(currentDirectoryPath)
+                        refreshCurrentDirectory()
                     }
                 }
             }
@@ -128,7 +128,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                         ), R.string.import_failed, R.string.success_import
                     )
                     explorerAdapter.loadThumbnails = true
-                    setCurrentPath(currentDirectoryPath)
+                    refreshCurrentDirectory()
                 }
             }
         }
@@ -209,7 +209,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                             "createFile" -> {
                                 createNewFile {
                                     encryptedVolume.closeFile(it)
-                                    setCurrentPath(currentDirectoryPath)
+                                    refreshCurrentDirectory()
                                     invalidateOptionsMenu()
                                 }
                             }
@@ -319,7 +319,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                         R.string.copy_failed,
                                         R.string.copy_success,
                                     )
-                                    setCurrentPath(currentDirectoryPath)
+                                    refreshCurrentDirectory()
                                 }
                             }
                             cancelItemAction()
@@ -344,7 +344,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 R.string.move_failed,
                                 R.string.move_success,
                             )
-                            setCurrentPath(currentDirectoryPath)
+                            refreshCurrentDirectory()
                         }
                         cancelItemAction()
                         invalidateOptionsMenu()
@@ -366,7 +366,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 .setPositiveButton(R.string.ok, null)
                                 .show()
                         }
-                        setCurrentPath(currentDirectoryPath) //refresh
+                        refreshCurrentDirectory()
                     }
                     unselectAll()
                 }

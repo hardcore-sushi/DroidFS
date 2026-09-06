@@ -134,7 +134,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                     isEnabled = false
                     onBackPressedDispatcher.onBackPressed()
                 } else {
-                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                    changeCurrentDirectory(PathUtils.getParentPath(currentDirectoryPath))
                 }
             } else {
                 unselectAll()
@@ -152,7 +152,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         refresher.setOnRefreshListener {
             val prefix = if (currentDirectoryPath == "/") "/" else "$currentDirectoryPath/"
             app.volumeManager.evictImageCache(volumeId) { it.startsWith(prefix) }
-            setCurrentPath(currentDirectoryPath)
+            refreshCurrentDirectory()
             refresher.isRefreshing = false
         }
         bindFileOperationService()
@@ -298,10 +298,10 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             val fullPath = explorerElements[position].fullPath
             when {
                 explorerElements[position].isDirectory -> {
-                    setCurrentPath(fullPath)
+                    changeCurrentDirectory(fullPath)
                 }
                 explorerElements[position].isParentFolder -> {
-                    setCurrentPath(PathUtils.getParentPath(currentDirectoryPath))
+                    changeCurrentDirectory(PathUtils.getParentPath(currentDirectoryPath))
                 }
                 FileTypes.isImage(fullPath) -> {
                     startFileViewer(ImageViewer::class.java, fullPath)
@@ -366,20 +366,26 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun setCurrentPath(path: String, onDisplayed: (() -> Unit)? = null) = lifecycleScope.launch {
+    protected fun changeCurrentDirectory(path: String) {
+        currentDirectoryPath = path
+        currentPathText.text = getString(R.string.location, currentDirectoryPath)
+        refreshCurrentDirectory {
+            recycler_view_explorer.scrollToPosition(0)
+        }
+    }
+
+    protected fun refreshCurrentDirectory(onDisplayed: (() -> Unit)? = null) = lifecycleScope.launch {
         directoryLoadingTask?.cancelAndJoin()
         recycler_view_explorer.isVisible = false
         loader.isVisible = true
-        explorerElements = encryptedVolume.readDir(path) ?: return@launch
-        if (path != "/") {
+        explorerElements = encryptedVolume.readDir(currentDirectoryPath) ?: return@launch
+        if (currentDirectoryPath != "/") {
             explorerElements.add(
                 0,
                 ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
             )
         }
         textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
-        currentDirectoryPath = path
-        currentPathText.text = getString(R.string.location, currentDirectoryPath)
         displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
         displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
         if (mapFolders) {
@@ -429,7 +435,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         .setPositiveButton(R.string.ok, null)
                         .show()
             } else {
-                setCurrentPath(currentDirectoryPath)
+                refreshCurrentDirectory()
                 invalidateOptionsMenu()
             }
         }
@@ -546,7 +552,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                     activityScope.launch {
                         val result = fileOperationService.importFilesFromUris(volumeId, checkedItems.map { it.dstPath!! }, uris)
                         onTaskResult(result, R.string.import_failed, onSuccess = callback)
-                        setCurrentPath(currentDirectoryPath)
+                        refreshCurrentDirectory()
                     }
                 }
             }
@@ -616,7 +622,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         } else {
             val normalizedPath = PathUtils.normalizePath(dstPath)
             app.volumeManager.evictImageCache(volumeId) { it == normalizedPath }
-            setCurrentPath(currentDirectoryPath) {
+            refreshCurrentDirectory() {
                 invalidateOptionsMenu()
             }
         }
@@ -712,6 +718,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         if (app.isStartingExternalApp) {
             TemporaryFileProvider.instance.wipe()
         }
-        setCurrentPath(currentDirectoryPath)
+        refreshCurrentDirectory()
     }
 }

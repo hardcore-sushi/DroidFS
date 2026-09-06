@@ -90,7 +90,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
     }
 
     private fun onImported() {
-        setCurrentPath(currentDirectoryPath)
+        refreshCurrentDirectory()
         MaterialAlertDialogBuilder(this)
             .setTitle(R.string.success_import)
             .setMessage(R.string.success_import_msg)
