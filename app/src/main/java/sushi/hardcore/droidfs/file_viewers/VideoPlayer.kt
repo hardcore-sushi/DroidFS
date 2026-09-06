@@ -15,7 +15,6 @@ import sushi.hardcore.droidfs.R
 import sushi.hardcore.droidfs.databinding.ActivityVideoPlayerBinding
 
 class VideoPlayer: MediaPlayer() {
-    private var firstPlay = true
     private val autoFit by lazy {
         sharedPrefs.getBoolean("autoFit", false)
     }
@@ -79,12 +78,11 @@ class VideoPlayer: MediaPlayer() {
     }
 
     override fun onVideoSizeChanged(width: Int, height: Int) {
-        if (firstPlay && autoFit) {
+        if (autoFit) {
             requestedOrientation = if (width < height)
                 ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT
             else
                 ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE
-            firstPlay = false
         }
     }
 }

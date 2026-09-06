@@ -54,7 +54,9 @@ abstract class MediaPlayer: FileViewerActivity() {
         player.playWhenReady = true
         player.addListener(object : Player.Listener{
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-                onVideoSizeChanged(videoSize.width, videoSize.height)
+                if (videoSize.width > 0 && videoSize.height > 0) {
+                    onVideoSizeChanged(videoSize.width, videoSize.height)
+                }
             }
             override fun onPlayerError(error: PlaybackException) {
                 MaterialAlertDialogBuilder(this@MediaPlayer)
