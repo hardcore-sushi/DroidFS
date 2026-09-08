@@ -66,6 +66,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         set(value) {
             field = value
             explorerViewModel.currentDirectoryPath = value
+            currentPathText.text = getString(R.string.location, value)
         }
     protected lateinit var fileOperationService: FileOperationService
     protected val activityScope = MainScope()
@@ -368,7 +369,6 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
 
     protected fun changeCurrentDirectory(path: String) {
         currentDirectoryPath = path
-        currentPathText.text = getString(R.string.location, currentDirectoryPath)
         refreshCurrentDirectory {
             recycler_view_explorer.scrollToPosition(0)
         }
