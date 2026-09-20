@@ -43,6 +43,7 @@ class TemporaryFileProvider : ContentProvider() {
     private lateinit var volumeManager: VolumeManager
     lateinit var encryptedFileProvider: EncryptedFileProvider
     private val files = HashMap<Uri, ProvidedFile>()
+    private val appPreferences = mutableMapOf<String, String>()
 
     override fun onCreate(): Boolean {
         return context?.let {
@@ -71,6 +72,14 @@ class TemporaryFileProvider : ContentProvider() {
         return Uri.withAppendedPath(BASE_URI, UUID.randomUUID().toString()).also {
             files[it] = ProvidedFile(exportedFile, size, volumeId)
         }
+    }
+
+    fun storeAppPreference(fileType: String, appName: String) {
+        appPreferences[fileType] = appName
+    }
+
+    fun getAppPreference(fileType: String): String? {
+        return appPreferences[fileType]
     }
 
     override fun query(
