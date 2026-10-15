@@ -64,7 +64,7 @@
         android:id="@+id/validate"
         app:showAsAction="ifRoom"
         android:visible="false"
-        android:icon="@drawable/icon_check"/>
+        android:icon="@drawable/icon_paste"/>
 
     <item
         android:id="@+id/sort"
