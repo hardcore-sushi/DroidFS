@@ -26,6 +26,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import sushi.hardcore.droidfs.BaseActivity
 import sushi.hardcore.droidfs.Constants
@@ -70,7 +71,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     protected lateinit var fileOperationService: FileOperationService
     protected val activityScope = MainScope()
-    private var directoryLoadingTask: Job? = null
+    private var directoryRefreshJob: Job? = null
     protected lateinit var explorerElements: MutableList<ExplorerElement>
     protected lateinit var explorerAdapter: ExplorerElementAdapter
     protected lateinit var app: VolumeManagerApp
@@ -375,40 +376,37 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
         }
     }
 
-    protected fun refreshCurrentDirectory(onDisplayed: (() -> Unit)? = null) = lifecycleScope.launch {
-        directoryLoadingTask?.cancelAndJoin()
-        recycler_view_explorer.isVisible = false
-        loader.isVisible = true
-        explorerElements = encryptedVolume.readDir(currentDirectoryPath) ?: return@launch
-        if (currentDirectoryPath != "/") {
-            explorerElements.add(
-                0,
-                ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
-            )
-        }
-        textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
-        displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
-        displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
-        if (mapFolders) {
-            var totalSize: Long = 0
-            directoryLoadingTask = launch(Dispatchers.IO) {
-                for (element in explorerElements) {
-                    if (element.isDirectory) {
-                        recursiveSetSize(element)
-                    }
-                    totalSize += element.stat.size
-                }
+    protected fun refreshCurrentDirectory(onDisplayed: (() -> Unit)? = null) {
+        val previousJob = directoryRefreshJob
+        directoryRefreshJob = lifecycleScope.launch {
+            previousJob?.cancelAndJoin()
+            recycler_view_explorer.isVisible = false
+            loader.isVisible = true
+            explorerElements = encryptedVolume.readDir(currentDirectoryPath) ?: return@launch
+            if (currentDirectoryPath != "/") {
+                explorerElements.add(
+                    0,
+                    ExplorerElement("..", Stat.parentFolderStat(), parentPath = currentDirectoryPath)
+                )
             }
-            directoryLoadingTask!!.join()
+            textDirEmpty.visibility = if (explorerElements.size == 0) View.VISIBLE else View.GONE
+            displayNumberOfElements(numberOfFilesText, R.string.one_file, R.string.multiple_files, explorerElements.count { it.isRegularFile })
+            displayNumberOfElements(numberOfFoldersText, R.string.one_folder, R.string.multiple_folders, explorerElements.count { it.isDirectory })
+            var totalSize: Long = 0
+            if (mapFolders) {
+                withContext(Dispatchers.IO) {
+                    for (element in explorerElements) {
+                        if (element.isDirectory) {
+                            recursiveSetSize(element)
+                        }
+                        totalSize += element.stat.size
+                    }
+                }
+            } else {
+                totalSize = explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size }
+            }
             displayExplorerElements()
             totalSizeText.text = getString(R.string.total_size, PathUtils.formatSize(totalSize))
-            onDisplayed?.invoke()
-        } else {
-            displayExplorerElements()
-            totalSizeText.text = getString(
-                R.string.total_size,
-                PathUtils.formatSize(explorerElements.filter { !it.isParentFolder }.sumOf { it.stat.size })
-            )
             onDisplayed?.invoke()
         }
     }
@@ -665,8 +663,8 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
                         .setTitle(R.string.sort_order)
                         .setSingleChoiceItems(sortOrderEntries, currentSortOrderIndex) { dialog, which ->
                             currentSortOrderIndex = which
-                            // displayExplorerElements must not be called if directoryLoadingTask is active
-                            if (directoryLoadingTask?.isActive != true) {
+                            // displayExplorerElements must not be called while a refresh is running
+                            if (directoryRefreshJob?.isActive != true) {
                                 displayExplorerElements()
                             }
                             val sharedPrefsEditor = sharedPrefs.edit()
