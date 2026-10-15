@@ -86,6 +86,13 @@ class SettingsActivity : BaseActivity() {
                 refreshTheme()
                 true
             }
+            val thumbnailsPreference = findPreference<SwitchPreferenceCompat>("thumbnails")!!
+            val animateThumbnailsPreference = findPreference<SwitchPreferenceCompat>("animate_thumbnails")
+            animateThumbnailsPreference?.isEnabled = thumbnailsPreference.isChecked
+            thumbnailsPreference.setOnPreferenceChangeListener { _, checked ->
+                animateThumbnailsPreference?.isEnabled = checked as Boolean
+                true
+            }
             findPreference<Preference>("logcat")?.setOnPreferenceClickListener { _ ->
                 startActivity(Intent(requireContext(), LogcatActivity::class.java))
                 true

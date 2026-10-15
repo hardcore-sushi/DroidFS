@@ -48,6 +48,14 @@
             app:widgetLayout="@layout/preference_widget_material_switch"/>
 
         <SwitchPreferenceCompat
+            android:defaultValue="false"
+            android:icon="@drawable/icon_animation"
+            android:key="animate_thumbnails"
+            android:title="@string/animate_thumbnails"
+            android:summary="@string/animate_thumbnails_summary"
+            app:widgetLayout="@layout/preference_widget_material_switch"/>
+
+        <SwitchPreferenceCompat
             android:defaultValue="true"
             app:icon="@drawable/icon_folder_search"
             android:key="map_folders"

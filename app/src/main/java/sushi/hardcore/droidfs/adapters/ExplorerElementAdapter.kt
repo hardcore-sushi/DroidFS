@@ -8,9 +8,11 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.recyclerview.widget.RecyclerView
-import coil3.asImage
 import coil3.Image
 import coil3.ImageLoader
+import coil3.asImage
+import coil3.decode.BitmapFactoryDecoder
+import coil3.decode.Decoder
 import coil3.load
 import coil3.request.Disposable
 import sushi.hardcore.droidfs.FileTypes
@@ -24,6 +26,7 @@ import java.util.Locale
 class ExplorerElementAdapter(
     val activity: AppCompatActivity,
     val thumbnailsLoader: ImageLoader?,
+    private val animateThumbnails: Boolean,
     private val listener: Listener,
 ) : SelectableAdapter<ExplorerElement>(listener::onSelectionChanged) {
     val dateFormat: DateFormat = DateFormat.getDateTimeInstance(DateFormat.DEFAULT, DateFormat.DEFAULT, Locale.getDefault())
@@ -108,17 +111,32 @@ class ExplorerElementAdapter(
     }
 
     class FileViewHolder(itemView: View) : RegularElementViewHolder(itemView) {
+        companion object {
+            private val bitmapDecoderFactory = Decoder.Factory { result, options, _ ->
+                BitmapFactoryDecoder(result.source, options)
+            }
+        }
+
         private var thumbnailLoadingTask: Disposable? = null
 
         fun cancelThumbnailLoading() {
             thumbnailLoadingTask?.dispose()
         }
 
-        private fun setThumbnailOrDefaultIcon(fullPath: String, defaultIconId: Int, placeholder: Image?): Disposable? {
+        private fun setThumbnailOrDefaultIcon(
+            fullPath: String,
+            defaultIconId: Int,
+            placeholder: Image?,
+            static: Boolean,
+        ): Disposable? {
             val adapter = (bindingAdapter as ExplorerElementAdapter?)!!
             return if (adapter.loadThumbnails && adapter.thumbnailsLoader != null) {
                 icon.load(fullPath, adapter.thumbnailsLoader) {
                     placeholder(placeholder)
+                    if (static) {
+                        decoderFactory(bitmapDecoderFactory)
+                        memoryCacheKeyExtra("static", "true")
+                    }
                 }
             } else {
                 icon.setImageResource(defaultIconId)
@@ -131,10 +149,20 @@ class ExplorerElementAdapter(
             val adapter = bindingAdapter as ExplorerElementAdapter
             thumbnailLoadingTask = when {
                 FileTypes.isImage(explorerElement.name) -> {
-                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_image, adapter.iconImage)
+                    setThumbnailOrDefaultIcon(
+                        explorerElement.fullPath,
+                        R.drawable.icon_file_image,
+                        adapter.iconImage,
+                        !adapter.animateThumbnails,
+                    )
                 }
                 FileTypes.isVideo(explorerElement.name) -> {
-                    setThumbnailOrDefaultIcon(explorerElement.fullPath, R.drawable.icon_file_video, adapter.iconVideo)
+                    setThumbnailOrDefaultIcon(
+                        explorerElement.fullPath,
+                        R.drawable.icon_file_video,
+                        adapter.iconVideo,
+                        false,
+                    )
                 }
                 else -> {
                     icon.setImageResource(

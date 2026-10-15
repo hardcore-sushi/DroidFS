@@ -119,6 +119,7 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             } else {
                 null
             },
+            sharedPrefs.getBoolean("animate_thumbnails", false),
             this,
         )
         explorerViewModel = ViewModelProvider(this).get(ExplorerViewModel::class.java)

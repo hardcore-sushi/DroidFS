@@ -173,6 +173,8 @@
     <string name="theme">Theme</string>
     <string name="thumbnails">Thumbnails</string>
     <string name="thumbnails_summary">Show images and videos thumbnails</string>
+    <string name="animate_thumbnails">Animate thumbnails</string>
+    <string name="animate_thumbnails_summary">Can cause issues with large collections</string>
     <string name="seek_seconds_forward">+%d seconds</string>
     <string name="seek_seconds_backward">-%d seconds</string>
     <string name="add_volume">Add volume</string>
