@@ -4,6 +4,7 @@ import android.view.WindowManager
 import androidx.annotation.OptIn
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
@@ -35,7 +36,12 @@ abstract class MediaPlayer: FileViewerActivity() {
     private fun createMediaSource(filePath: String): MediaSource {
         val dataSourceFactory = EncryptedVolumeDataSource.Factory(encryptedVolume, filePath)
         return ProgressiveMediaSource.Factory(dataSourceFactory, DefaultExtractorsFactory())
-            .createMediaSource(MediaItem.fromUri(Constants.FAKE_URI))
+            .createMediaSource(
+                MediaItem.Builder()
+                    .setUri(Constants.FAKE_URI)
+                    .setMediaMetadata(MediaMetadata.Builder().setTitle(File(filePath).name).build())
+                    .build()
+            )
     }
 
     private fun initializePlayer(){
@@ -73,14 +79,9 @@ abstract class MediaPlayer: FileViewerActivity() {
                     window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 }
             }
-
             override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-                if (player.repeatMode != Player.REPEAT_MODE_ONE && fileViewerViewModel.currentPlaylistIndex != -1) {
-                    lifecycleScope.launch {
-                        playlistNext(player.currentMediaItemIndex == (fileViewerViewModel.currentPlaylistIndex + 1) % player.mediaItemCount)
-                        refreshFileName()
-                    }
-                }
+                setCurrentPlaylistIndex(player.currentMediaItemIndex)
+                refreshFileName()
             }
             override fun onRepeatModeChanged(repeatMode: Int) {
                 with (sharedPrefs.edit()) {
@@ -100,6 +101,6 @@ abstract class MediaPlayer: FileViewerActivity() {
     }
 
     private fun refreshFileName() {
-        onNewFileName(File(fileViewerViewModel.filePath!!).name)
+        onNewFileName(player.currentMediaItem?.mediaMetadata?.title.toString())
     }
 }

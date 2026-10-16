@@ -116,6 +116,11 @@ abstract class FileViewerActivity: BaseActivity() {
         fileViewerViewModel.filePath = fileViewerViewModel.playlist[fileViewerViewModel.currentPlaylistIndex].fullPath
     }
 
+    protected fun setCurrentPlaylistIndex(index: Int) {
+        fileViewerViewModel.currentPlaylistIndex = index
+        updateCurrentItem()
+    }
+
     protected suspend fun playlistNext(forward: Boolean) {
         createPlaylist()
         fileViewerViewModel.currentPlaylistIndex = if (forward) {
