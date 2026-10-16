@@ -68,6 +68,7 @@ class ImageViewer: FileViewerActivity() {
 
     class ImageViewModel : ViewModel() {
         var rotationAngle: Int = 0
+        var slideshowActive: Boolean = false
     }
 
     override val blackBackground: Boolean = true
@@ -82,13 +83,12 @@ class ImageViewer: FileViewerActivity() {
         val budget = am.memoryClass * 1024L * 1024L / 16L
         sqrt(budget / 4.0).toInt()
     }
-    private var slideshowActive = false
     private val hideUI = Runnable {
         binding.overlay.visibility = View.GONE
         hideSystemUi()
     }
     private val slideshowNext = Runnable {
-        if (slideshowActive){
+        if (imageViewModel.slideshowActive) {
             swipeImage(-1F, true)
         }
     }
@@ -145,11 +145,9 @@ class ImageViewer: FileViewerActivity() {
                 .show()
         }
         binding.imageButtonSlideshow.setOnClickListener {
-            if (!slideshowActive){
-                slideshowActive = true
-                handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
-                window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-                hideUI.run()
+            if (!imageViewModel.slideshowActive) {
+                imageViewModel.slideshowActive = true
+                startSlideshow()
                 Toast.makeText(this, R.string.slideshow_started, Toast.LENGTH_SHORT).show()
             } else {
                 stopSlideshow()
@@ -168,7 +166,7 @@ class ImageViewer: FileViewerActivity() {
         binding.imageRotateRight.setOnClickListener { onClickRotate(90) }
         binding.imageRotateLeft.setOnClickListener { onClickRotate(-90) }
         onBackPressedDispatcher.addCallback(this) {
-            if (slideshowActive) {
+            if (imageViewModel.slideshowActive) {
                 stopSlideshow()
             } else {
                 askSaveRotation {
@@ -179,6 +177,9 @@ class ImageViewer: FileViewerActivity() {
         }
         loadImage(false)
         handler.postDelayed(hideUI, hideDelay)
+        if (imageViewModel.slideshowActive) {
+            startSlideshow()
+        }
     }
 
     private fun loadImage(newImage: Boolean) {
@@ -210,7 +211,7 @@ class ImageViewer: FileViewerActivity() {
         lifecycleScope.launch {
             playlistNext(deltaX < 0)
             loadImage(true)
-            if (slideshowActive) {
+            if (imageViewModel.slideshowActive) {
                 if (!slideshowSwipe) { // reset slideshow delay if user swipes
                     handler.removeCallbacks(slideshowNext)
                 }
@@ -219,8 +220,14 @@ class ImageViewer: FileViewerActivity() {
         }
     }
 
-    private fun stopSlideshow(){
-        slideshowActive = false
+    private fun startSlideshow() {
+        handler.postDelayed(slideshowNext, Constants.SLIDESHOW_DELAY)
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        hideUI.run()
+    }
+
+    private fun stopSlideshow() {
+        imageViewModel.slideshowActive = false
         window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         Toast.makeText(this, R.string.slideshow_stopped, Toast.LENGTH_SHORT).show()
     }
@@ -231,7 +238,7 @@ class ImageViewer: FileViewerActivity() {
     }
 
     private fun askSaveRotation(callback: () -> Unit){
-        if (imageViewModel.rotationAngle != 0 && !slideshowActive) {
+        if (imageViewModel.rotationAngle != 0 && !imageViewModel.slideshowActive) {
             MaterialAlertDialogBuilder(this)
                 .setTitle(R.string.warning)
                 .setMessage(R.string.ask_save_img_rotated)
