@@ -167,6 +167,8 @@
     <string name="theme">Тема</string>
     <string name="thumbnails">Эскизы</string>
     <string name="thumbnails_summary">Показывать эскизы изображений и видео</string>
+    <string name="animate_thumbnails">Анимация эскизов</string>
+    <string name="animate_thumbnails_summary">Возможны проблемы при большом количестве файлов</string>
     <string name="seek_seconds_forward">+%d сек.</string>
     <string name="seek_seconds_backward">-%d сек.</string>
     <string name="add_volume">Добавить том</string>
