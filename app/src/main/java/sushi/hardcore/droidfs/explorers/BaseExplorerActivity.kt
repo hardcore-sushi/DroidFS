@@ -262,15 +262,15 @@ open class BaseExplorerActivity : BaseActivity(), ExplorerElementAdapter.Listene
             .show()
     }
 
-    protected fun createNewFile(callback: (Long) -> Unit) {
+    protected fun createNewFile(flags: Int, callback: (Long) -> Unit) {
         EditTextDialog(this, R.string.enter_file_name)
             .onSubmit {
                 if (it.isEmpty()) {
                     Toast.makeText(this, R.string.error_filename_empty, Toast.LENGTH_SHORT).show()
-                    createNewFile(callback)
+                    createNewFile(flags, callback)
                 } else {
                     val filePath = PathUtils.pathJoin(currentDirectoryPath, it)
-                    val handleID = encryptedVolume.openFileWriteMode(filePath)
+                    val handleID = encryptedVolume.create(filePath, flags)
                     if (handleID == -1L) {
                         MaterialAlertDialogBuilder(this)
                             .setTitle(R.string.error)

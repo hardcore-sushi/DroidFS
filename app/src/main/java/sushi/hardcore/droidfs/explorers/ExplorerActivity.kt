@@ -207,7 +207,7 @@ class ExplorerActivity : BaseExplorerActivity() {
                                 pickImportDirectory.launch(null)
                             }
                             "createFile" -> {
-                                createNewFile {
+                                createNewFile(0) {
                                     encryptedVolume.closeFile(it)
                                     refreshCurrentDirectory()
                                     invalidateOptionsMenu()

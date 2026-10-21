@@ -6,7 +6,6 @@ import java.io.OutputStream
 class EncryptedFileOutputStream(
     private val volume: EncryptedVolume,
     private val fileHandle: Long,
-    private val path: String,
 ) : OutputStream() {
     private var offset: Long = 0
 
@@ -27,7 +26,7 @@ class EncryptedFileOutputStream(
     }
 
     override fun close() {
-        volume.truncate(path, offset)
+        volume.truncate(fileHandle, offset)
         volume.closeFile(fileHandle)
     }
 }

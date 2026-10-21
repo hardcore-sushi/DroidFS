@@ -3,6 +3,7 @@ package sushi.hardcore.droidfs.explorers
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.system.OsConstants
 import android.view.Menu
 import android.view.MenuItem
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -64,7 +65,7 @@ class ExplorerActivityDrop : BaseExplorerActivity() {
                     val byteArray = ByteArray(byteBuffer.remaining())
                     byteBuffer.get(byteArray)
                     val size = byteArray.size.toLong()
-                    createNewFile {
+                    createNewFile(OsConstants.O_WRONLY) {
                         var offset = 0L
                         while (offset < size) {
                             offset += encryptedVolume.write(it, offset, byteArray, offset, size-offset)

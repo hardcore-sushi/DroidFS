@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.filesystems
 
+import android.system.OsConstants
 import okio.Buffer
 import okio.FileHandle
 import okio.FileMetadata
@@ -70,7 +71,7 @@ class EncryptedFileReaderFileSystem(private val encryptedVolume: EncryptedVolume
     }
 
     private fun tryOpenReadOnly(path: String): Long {
-        val fileHandle = encryptedVolume.openFileReadMode(path)
+        val fileHandle = encryptedVolume.open(path, OsConstants.O_RDONLY)
         if (fileHandle == -1L) {
             throw RuntimeException("Failed to open {$path} in read-only mode")
         }

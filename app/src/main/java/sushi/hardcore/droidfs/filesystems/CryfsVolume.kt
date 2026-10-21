@@ -36,7 +36,7 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         private external fun nativeOpen(fusePtr: Long, path: String, flags: Int): Long
         private external fun nativeRead(fusePtr: Long, fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
         private external fun nativeWrite(fusePtr: Long, fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int
-        private external fun nativeTruncate(fusePtr: Long, path: String, size: Long): Boolean
+        private external fun nativeTruncate(fusePtr: Long, fileHandle: Long, size: Long): Boolean
         private external fun nativeDeleteFile(fusePtr: Long, path: String): Boolean
         private external fun nativeCloseFile(fusePtr: Long, fileHandle: Long): Boolean
         private external fun nativeReadDir(fusePtr: Long, path: String): MutableList<ExplorerElement>?
@@ -100,17 +100,12 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         }
     }
 
-    override fun openFileReadMode(path: String): Long {
-        return nativeOpen(fusePtr, path, 0)
+    override fun open(path: String, flags: Int): Long {
+        return nativeOpen(fusePtr, path, flags)
     }
 
-    override fun openFileWriteMode(path: String): Long {
-        val fileHandle = nativeOpen(fusePtr, path, 0)
-        return if (fileHandle == -1L) {
-            nativeCreate(fusePtr, path, 0)
-        } else {
-            fileHandle
-        }
+    override fun create(path: String, flags: Int, mode: Int): Long {
+        return nativeCreate(fusePtr, path, mode)
     }
 
     override fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int {
@@ -121,8 +116,8 @@ class CryfsVolume(private val fusePtr: Long): EncryptedVolume() {
         return nativeWrite(fusePtr, fileHandle, fileOffset, buffer, srcOffset, length)
     }
 
-    override fun truncate(path: String, size: Long): Boolean {
-        return nativeTruncate(fusePtr, path, size)
+    override fun truncate(fileHandle: Long, size: Long): Boolean {
+        return nativeTruncate(fusePtr, fileHandle, size)
     }
 
     override fun closeFile(fileHandle: Long): Boolean {

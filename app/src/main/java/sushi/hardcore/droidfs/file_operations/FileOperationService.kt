@@ -15,6 +15,7 @@ import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.provider.Settings
+import android.system.OsConstants
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -381,9 +382,9 @@ class FileOperationService : Service() {
         srcEncryptedVolume: EncryptedVolume = encryptedVolume,
     ): Boolean {
         var success = true
-        val srcFileHandle = srcEncryptedVolume.openFileReadMode(srcPath)
+        val srcFileHandle = srcEncryptedVolume.open(srcPath, OsConstants.O_RDONLY)
         if (srcFileHandle != -1L) {
-            val dstFileHandle = encryptedVolume.openFileWriteMode(dstPath)
+            val dstFileHandle = encryptedVolume.overwrite(dstPath)
             if (dstFileHandle != -1L) {
                 var offset: Long = 0
                 val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
@@ -398,7 +399,7 @@ class FileOperationService : Service() {
                         break
                     }
                 }
-                encryptedVolume.truncate(dstPath, offset)
+                encryptedVolume.truncate(dstFileHandle, offset)
                 encryptedVolume.closeFile(dstFileHandle)
             } else {
                 success = false

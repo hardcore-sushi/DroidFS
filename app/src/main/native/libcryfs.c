@@ -62,9 +62,9 @@ JNIEXPORT jboolean JNICALL
 Java_sushi_hardcore_droidfs_filesystems_CryfsVolume_00024Companion_nativeTruncate(JNIEnv *env,
                                                                                   jobject thiz,
                                                                                   jlong fuse_ptr,
-                                                                                  jstring path,
+                                                                                  jlong file_handle,
                                                                                   jlong size) {
-    return cryfs_truncate(env, fuse_ptr, path, size) == 0;
+    return cryfs_truncate(env, fuse_ptr, file_handle, size) == 0;
 }
 
 JNIEXPORT jboolean JNICALL

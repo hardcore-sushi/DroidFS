@@ -10,11 +10,11 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
     private external fun native_close(sessionID: Int)
     private external fun native_is_closed(sessionID: Int): Boolean
     private external fun native_list_dir(sessionID: Int, dir_path: String): MutableList<ExplorerElement>?
-    private external fun native_open_read_mode(sessionID: Int, file_path: String): Int
-    private external fun native_open_write_mode(sessionID: Int, file_path: String, mode: Int): Int
+    private external fun native_open(sessionID: Int, file_path: String, flags: Int): Int
+    private external fun native_create(sessionID: Int, file_path: String, flags: Int, mode: Int): Int
     private external fun native_read_file(sessionID: Int, handleID: Int, fileOffset: Long, buff: ByteArray, dstOffset: Long, length: Int): Int
     private external fun native_write_file(sessionID: Int, handleID: Int, fileOffset: Long, buff: ByteArray, srcOffset: Long, length: Int): Int
-    private external fun native_truncate(sessionID: Int, path: String, offset: Long): Boolean
+    private external fun native_truncate(sessionID: Int, handleID: Int, offset: Long): Boolean
     private external fun native_close_file(sessionID: Int, handleID: Int)
     private external fun native_remove_file(sessionID: Int, file_path: String): Boolean
     private external fun native_mkdir(sessionID: Int, dir_path: String, mode: Int): Boolean
@@ -99,12 +99,12 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         }
     }
 
-    override fun openFileReadMode(path: String): Long {
-        return native_open_read_mode(sessionID, path).toLong()
+    override fun open(path: String, flags: Int): Long {
+        return native_open(sessionID, path, flags).toLong()
     }
 
-    override fun openFileWriteMode(path: String): Long {
-        return native_open_write_mode(sessionID, path, 384).toLong() // 0600
+    override fun create(path: String, flags: Int, mode: Int): Long {
+        return native_create(sessionID, path, flags, mode).toLong()
     }
 
     override fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int {
@@ -144,8 +144,8 @@ class GocryptfsVolume(private val sessionID: Int): EncryptedVolume() {
         return native_write_file(sessionID, fileHandle.toInt(), fileOffset, buffer, srcOffset, min(length.toInt(), MAX_KERNEL_WRITE))
     }
 
-    override fun truncate(path: String, size: Long): Boolean {
-        return native_truncate(sessionID, path, size)
+    override fun truncate(fileHandle: Long, size: Long): Boolean {
+        return native_truncate(sessionID, fileHandle.toInt(), size)
     }
 
     override fun deleteFile(path: String): Boolean {

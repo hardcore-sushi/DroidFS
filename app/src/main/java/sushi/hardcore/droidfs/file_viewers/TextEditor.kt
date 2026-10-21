@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.annotation.SuppressLint
+import android.system.OsConstants
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
@@ -72,12 +73,12 @@ class TextEditor: FileViewerActivity() {
     private fun save(): Boolean{
         var success = false
         val content = editor.text.toString().toByteArray()
-        val fileHandle = encryptedVolume.openFileWriteMode(fileViewerViewModel.filePath!!)
+        val fileHandle = encryptedVolume.open(fileViewerViewModel.filePath!!, OsConstants.O_WRONLY)
         if (fileHandle != -1L) {
             var offset: Long = 0
             while (offset < content.size && encryptedVolume.write(fileHandle, offset, content, offset, content.size.toLong()).also { offset += it } > 0) {}
             if (offset == content.size.toLong()){
-                success = encryptedVolume.truncate(fileViewerViewModel.filePath!!, offset)
+                success = encryptedVolume.truncate(fileHandle, offset)
             }
             encryptedVolume.closeFile(fileHandle)
         }

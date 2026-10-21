@@ -1,6 +1,7 @@
 package sushi.hardcore.droidfs.file_viewers
 
 import android.net.Uri
+import android.system.OsConstants
 import androidx.media3.common.C
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
@@ -19,7 +20,7 @@ class EncryptedVolumeDataSource(private val encryptedVolume: EncryptedVolume, pr
     private var bytesRemaining: Long = -1
 
     override fun open(dataSpec: DataSpec): Long {
-        fileHandle = encryptedVolume.openFileReadMode(filePath)
+        fileHandle = encryptedVolume.open(filePath, OsConstants.O_RDONLY)
         fileOffset = dataSpec.position
         val fileSize = encryptedVolume.getAttr(filePath)!!.size
         bytesRemaining = if (dataSpec.length == C.LENGTH_UNSET.toLong()) {

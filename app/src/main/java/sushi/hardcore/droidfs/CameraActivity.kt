@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.system.OsConstants
 import android.text.InputType
 import android.util.Size
 import android.view.MotionEvent
@@ -644,7 +645,7 @@ class CameraActivity : BaseActivity(), SensorOrientationListener.Listener {
         } else {
             startTimerThen {
                 val path = getOutputPath(true)
-                val fileHandle = encryptedVolume.openFileWriteMode(path)
+                val fileHandle = encryptedVolume.create(path, OsConstants.O_WRONLY)
                 if (fileHandle == -1L) {
                     MaterialAlertDialogBuilder(this)
                         .setTitle(R.string.error)

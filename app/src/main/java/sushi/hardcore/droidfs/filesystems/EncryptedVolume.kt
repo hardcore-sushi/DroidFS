@@ -1,5 +1,6 @@
 package sushi.hardcore.droidfs.filesystems
 
+import android.system.OsConstants
 import android.content.Context
 import android.net.Uri
 import sushi.hardcore.droidfs.Constants
@@ -97,13 +98,12 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
         }
     }
 
-    abstract fun openFileReadMode(path: String): Long
-    abstract fun openFileWriteMode(path: String): Long
+    abstract fun open(path: String, flags: Int): Long
+    abstract fun create(path: String, flags: Int, mode: Int): Long
     abstract fun read(fileHandle: Long, fileOffset: Long, buffer: ByteArray, dstOffset: Long, length: Long): Int
     abstract fun write(fileHandle: Long, fileOffset: Long, buffer: ByteArray, srcOffset: Long, length: Long): Int
     abstract fun closeFile(fileHandle: Long): Boolean
-    // Due to gocryptfs internals, truncate requires the file to be open before it is called
-    abstract fun truncate(path: String, size: Long): Boolean
+    abstract fun truncate(fileHandle: Long, size: Long): Boolean
     abstract fun deleteFile(path: String): Boolean
     abstract fun readDir(path: String): MutableList<ExplorerElement>?
     abstract fun mkdir(path: String): Boolean
@@ -122,6 +122,19 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
         return getAttr(path) != null
     }
 
+    fun create(path: String, flags: Int): Long {
+        return create(path, flags, Constants.CREATE_MODE)
+    }
+
+    fun overwrite(path: String): Long {
+        val fileHandle = open(path, OsConstants.O_WRONLY)
+        return if (fileHandle == -1L) {
+            create(path, OsConstants.O_WRONLY)
+        } else {
+            fileHandle
+        }
+    }
+
     fun exportFile(fileHandle: Long, os: OutputStream): Boolean {
         var offset: Long = 0
         val ioBuffer = ByteArray(Constants.IO_BUFF_SIZE)
@@ -136,7 +149,7 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
 
     fun exportFile(src_path: String, os: OutputStream): Boolean {
         var success = false
-        val srcfileHandle = openFileReadMode(src_path)
+        val srcfileHandle = open(src_path, OsConstants.O_RDONLY)
         if (srcfileHandle != -1L) {
             success = exportFile(srcfileHandle, os)
             closeFile(srcfileHandle)
@@ -157,7 +170,7 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
     }
 
     fun importFile(inputStream: InputStream, dst_path: String): Boolean {
-        val dstfileHandle = openFileWriteMode(dst_path)
+        val dstfileHandle = overwrite(dst_path)
         if (dstfileHandle != -1L) {
             var success = true
             var offset: Long = 0
@@ -172,7 +185,7 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
                     break
                 }
             }
-            truncate(dst_path, offset)
+            truncate(dstfileHandle, offset)
             closeFile(dstfileHandle)
             inputStream.close()
             return success
@@ -189,9 +202,9 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
     }
 
     fun openOutputStream(dstPath: String): EncryptedFileOutputStream? {
-        return when (val fileHandle = openFileWriteMode(dstPath)) {
+        return when (val fileHandle = overwrite(dstPath)) {
             -1L -> null
-            else -> EncryptedFileOutputStream(this, fileHandle, dstPath)
+            else -> EncryptedFileOutputStream(this, fileHandle)
         }
     }
 
@@ -209,7 +222,7 @@ abstract class EncryptedVolume: Observable<EncryptedVolume.Observer>() {
             }
             try {
                 val fileBuff = ByteArray(fileSize.toInt())
-                val fileHandle = openFileReadMode(fullPath)
+                val fileHandle = open(fullPath, OsConstants.O_RDONLY)
                 if (fileHandle == -1L) {
                     Pair(null, 3)
                 } else {

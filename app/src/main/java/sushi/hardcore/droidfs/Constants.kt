@@ -8,6 +8,7 @@ object Constants {
     const val SORT_ORDER_KEY = "sort_order"
     val FAKE_URI: Uri = Uri.parse("fakeuri://droidfs")
     const val WIPE_PASSES = 2
+    const val CREATE_MODE = 384 // 0600
     const val IO_BUFF_SIZE = 16384
     const val SLIDESHOW_DELAY: Long = 4000
     const val DEFAULT_THEME_VALUE = "dark_green"

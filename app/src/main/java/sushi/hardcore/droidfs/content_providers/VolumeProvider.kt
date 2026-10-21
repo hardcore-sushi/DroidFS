@@ -19,6 +19,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import sushi.hardcore.droidfs.BuildConfig
+import sushi.hardcore.droidfs.Constants
 import sushi.hardcore.droidfs.EncryptedFileProvider
 import sushi.hardcore.droidfs.FileTypes
 import sushi.hardcore.droidfs.R
@@ -280,7 +281,7 @@ class VolumeProvider: DocumentsProvider() {
         if (mimeType == DocumentsContract.Document.MIME_TYPE_DIR) {
             success = document.encryptedVolume.mkdir(path)
         } else {
-            val f = document.encryptedVolume.openFileWriteMode(path)
+            val f = document.encryptedVolume.create(path, 0)
             if (f != -1L) {
                 document.encryptedVolume.closeFile(f)
                 success = true
