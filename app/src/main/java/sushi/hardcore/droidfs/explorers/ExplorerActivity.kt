@@ -103,7 +103,7 @@ class ExplorerActivity : BaseExplorerActivity() {
             checkPathOverwrite(arrayListOf(operation), currentDirectoryPath) { checkedOperation ->
                 checkedOperation?.let {
                     activityScope.launch {
-                        val result = fileOperationService.importDirectory(volumeId, checkedOperation[0].dstPath!!, tree)
+                        val result = fileOperationService.importDirectory(volumeId, checkedOperation[0].dstPath!!, tree.uri)
                         onTaskResult(result.taskResult, R.string.import_failed) {
                             onImportComplete(result.uris, tree)
                         }

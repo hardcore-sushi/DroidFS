@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.provider.DocumentsContract
 import android.provider.Settings
 import android.system.OsConstants
 import android.util.Log
@@ -516,29 +517,76 @@ class FileOperationService : Service() {
         }
     }
 
+    private class ChildDocument(val uri: Uri, val name: String, val mimeType: String) {
+        val isDirectory: Boolean
+            get() = mimeType == DocumentsContract.Document.MIME_TYPE_DIR
+
+        val isFile: Boolean
+            get() = !isDirectory && mimeType.isNotEmpty()
+    }
+
+    /**
+     * List the children of a document provider directory.
+     *
+     * A single query is used to retrieve the URI, the name and the MIME type of every child.
+     * [DocumentFile.listFiles] only returns the document IDs, which forces 3 additional
+     * queries per child (one for its name, one for its MIME type and one more to know
+     * if it is a file or a directory). This is painfully slow on large directories.
+     *
+     * The returned sequence is lazy: the query is only executed once iteration starts and the
+     * cursor stays open until the sequence has been fully consumed.
+     */
+    private fun listChildDocuments(treeUri: Uri): Sequence<ChildDocument> = sequence {
+        contentResolver.query(
+            DocumentsContract.buildChildDocumentsUriUsingTree(
+                treeUri, DocumentsContract.getDocumentId(treeUri)
+            ),
+            arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE,
+            ),
+            null, null, null
+        )?.use { cursor ->
+            val documentIdIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+            val nameIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+            val mimeTypeIndex = cursor.getColumnIndex(DocumentsContract.Document.COLUMN_MIME_TYPE)
+            while (cursor.moveToNext()) {
+                yield(
+                    ChildDocument(
+                        DocumentsContract.buildDocumentUriUsingTree(
+                            treeUri,
+                            cursor.getString(documentIdIndex)
+                        ),
+                        cursor.getString(nameIndex),
+                        cursor.getString(mimeTypeIndex),
+                    )
+                )
+            }
+        }
+    }
+
     /**
      * Map the content of an unencrypted directory to prepare its import
      *
      * Contents of dstFiles and srcUris, at the same index, will match each other
      */
     private suspend fun recursiveMapDirectoryForImport(
-        rootSrcDir: DocumentFile,
+        srcTreeUri: Uri,
         rootDstPath: String,
         dstFiles: ArrayList<String>,
         srcUris: ArrayList<Uri>,
         dstDirs: ArrayList<String>,
     ) {
         dstDirs.add(rootDstPath)
-        for (child in rootSrcDir.listFiles()) {
+        for (child in listChildDocuments(srcTreeUri)) {
             yield()
-            child.name?.let { name ->
-                val subPath = PathUtils.pathJoin(rootDstPath, name)
-                if (child.isDirectory) {
-                    recursiveMapDirectoryForImport(child, subPath, dstFiles, srcUris, dstDirs)
-                } else if (child.isFile) {
-                    srcUris.add(child.uri)
-                    dstFiles.add(subPath)
-                }
+            val subPath = PathUtils.pathJoin(rootDstPath, child.name)
+            if (child.isDirectory) {
+                recursiveMapDirectoryForImport(child.uri, subPath, dstFiles, srcUris, dstDirs)
+            } else if (child.isFile) {
+                srcUris.add(child.uri)
+                dstFiles.add(subPath)
             }
         }
     }
@@ -548,14 +596,14 @@ class FileOperationService : Service() {
     suspend fun importDirectory(
         volumeId: Int,
         rootDstPath: String,
-        rootSrcDir: DocumentFile,
+        srcTreeUri: Uri,
     ): ImportDirectoryResult {
         val srcUris = arrayListOf<Uri>()
         return ImportDirectoryResult(volumeTask(R.string.file_op_import_msg, null, volumeId) { taskId, encryptedVolume ->
             var failedItem: String? = null
             val dstFiles = arrayListOf<String>()
             val dstDirs = arrayListOf<String>()
-            recursiveMapDirectoryForImport(rootSrcDir, rootDstPath, dstFiles, srcUris, dstDirs)
+            recursiveMapDirectoryForImport(srcTreeUri, rootDstPath, dstFiles, srcUris, dstDirs)
             // create destination folders so the new files can use them
             for (dir in dstDirs) {
                 // if directory creation fails, check if it was already present
