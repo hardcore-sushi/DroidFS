@@ -14,6 +14,7 @@ import android.net.Uri
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import android.os.SystemClock
 import android.provider.DocumentsContract
 import android.provider.Settings
 import android.system.OsConstants
@@ -50,6 +51,7 @@ import sushi.hardcore.droidfs.util.PathUtils
 import sushi.hardcore.droidfs.util.Wiper
 import java.io.File
 import java.io.FileNotFoundException
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
@@ -75,10 +77,23 @@ class FileOperationService : Service() {
         fun start(taskId: Int): Deferred<T> = getTask(taskId).also { onStart(taskId, it) }
     }
 
+    private class Task(val notificationBuilder: NotificationCompat.Builder) {
+        lateinit var job: Job
+        var lastProgressUpdateTime = 0L
+    }
+
     companion object {
         const val TAG = "FileOperationService"
         const val NOTIFICATION_CHANNEL_ID = "FileOperations"
         const val ACTION_CANCEL = "file_operation_cancel"
+
+        /**
+         * Minimum delay between two progress updates of the same notification.
+         *
+         * Posting notifications too frequently can make their action buttons (such as
+         * the cancel one) unresponsive.
+         */
+        private const val PROGRESS_UPDATE_INTERVAL_MS = 500L
 
         /**
          * Bind to the service.
@@ -124,9 +139,8 @@ class FileOperationService : Service() {
     private val notificationPermissionHelpers = ArrayDeque<AndroidUtils.NotificationPermissionHelper<BaseActivity>>(2)
     private var askForNotificationPermission = true
     private lateinit var notificationManager: NotificationManagerCompat
-    private val notifications = HashMap<Int, NotificationCompat.Builder>()
     private var foregroundNotificationId = -1
-    private val tasks = HashMap<Int, Job>()
+    private val tasks = ConcurrentHashMap<Int, Task>()
     // notification ID 1 is reserved for KeepAliveService
     private var newTaskId = 2
     private var pendingTask: PendingTask<*>? = null
@@ -222,8 +236,9 @@ class FileOperationService : Service() {
                 .setProgress(0, 0, true)
         }
         showNotification(newTaskId, notificationBuilder.build())
-        notifications[newTaskId] = notificationBuilder
-        tasks[newTaskId] = task.start(newTaskId)
+        val state = Task(notificationBuilder)
+        tasks[newTaskId] = state
+        state.job = task.start(newTaskId)
         newTaskId++
     }
 
@@ -239,15 +254,24 @@ class FileOperationService : Service() {
     }
 
     private fun updateNotificationProgress(taskId: Int, progress: Int, total: Int) {
-        val notificationBuilder = notifications[taskId] ?: return
-        notificationBuilder
+        val task = tasks[taskId] ?: return
+        val now = SystemClock.elapsedRealtime()
+        if (progress != total) {
+            // Throttle intermediate updates to keep the notification responsive,
+            // but always show the final progress.
+            if (now - task.lastProgressUpdateTime < PROGRESS_UPDATE_INTERVAL_MS) {
+                return
+            }
+        }
+        task.lastProgressUpdateTime = now
+        task.notificationBuilder
                 .setProgress(total, progress, false)
                 .setContentText("$progress/$total")
-        notificationManager.notify(taskId, notificationBuilder.build())
+        notificationManager.notify(taskId, task.notificationBuilder.build())
     }
 
     fun cancelOperation(taskId: Int) {
-        tasks[taskId]?.cancel()
+        tasks[taskId]?.job?.cancel()
     }
 
     private fun getEncryptedVolume(volumeId: Int): EncryptedVolume {
@@ -276,16 +300,15 @@ class FileOperationService : Service() {
                     TaskResult.error(e.localizedMessage)
                 } finally {
                     notificationManager.cancel(taskId)
-                    notifications.remove(taskId)
                     tasks.remove(taskId)
-                    if (tasks.size == 0) {
+                    if (tasks.isEmpty()) {
                         // last task finished, remove from foreground state but don't stop the service
                         ServiceCompat.stopForeground(this@FileOperationService, ServiceCompat.STOP_FOREGROUND_REMOVE)
                         foregroundNotificationId = -1
                     } else if (taskId == foregroundNotificationId) {
                         // foreground task finished, falling back to the next one
-                        val entry = notifications.entries.first()
-                        setForeground(entry.key, entry.value.build())
+                        val entry = tasks.entries.first()
+                        setForeground(entry.key, entry.value.notificationBuilder.build())
                     }
                 }
             }
