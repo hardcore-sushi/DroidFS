@@ -37,8 +37,8 @@ android {
         applicationId "sushi.hardcore.droidfs"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 40
-        versionName "2.3.2"
+        versionCode 41
+        versionName "2.3.3"
 
         buildConfigField "boolean", "CRYFS_DISABLED", "${project.ext.disableCryFS}"
         buildConfigField "boolean", "GOCRYPTFS_DISABLED", "${project.ext.disableGocryptfs}"

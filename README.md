@@ -75,7 +75,7 @@ Some available features are considered risky and are therefore disabled by defau
 	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="90" style="max-height: 90px; border: none;">
 </a>
 
-You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs), from GitHub [releases](https://github.com/hardcore-sushi/DroidFS/releases), or from IPFS: [local](http://bafybeihyhoptwcujos5bj2l2m354t5qobdlnooubv4c2uurtzcpewg4ufu.ipfs.localhost:8080), [gateway](https://bafybeihyhoptwcujos5bj2l2m354t5qobdlnooubv4c2uurtzcpewg4ufu.ipfs.dweb.link).
+You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs), from GitHub [releases](https://github.com/hardcore-sushi/DroidFS/releases), or from IPFS: [local](http://bafybeiecq3jetittpxsbrritawvodmm6zogfgc4zfl5ydbdj3nis4n5ede.ipfs.localhost:8080), [gateway](https://bafybeiecq3jetittpxsbrritawvodmm6zogfgc4zfl5ydbdj3nis4n5ede.ipfs.dweb.link).
 
 APKs are signed with my PGP key available on keyservers:
 

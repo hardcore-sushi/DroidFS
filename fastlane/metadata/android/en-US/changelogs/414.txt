@@ -1,0 +1,7 @@
+- Optional thumbnail animation
+- Faster directory import
+- Check mark replaced by paste icon to paste files
+- Gocryptfs fixes
+- UI bug fixes
+- Updated Russian translation
+- Dependencies update
