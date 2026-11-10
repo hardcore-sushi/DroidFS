@@ -3,6 +3,8 @@ package sushi.hardcore.droidfs
 import android.content.Context
 import coil3.Extras
 import coil3.ImageLoader
+import coil3.Uri
+import coil3.map.Mapper
 import coil3.video.VideoFrameDecoder
 import coil3.video.preferVideoFrameEmbeddedThumbnail
 import coil3.video.videoFramePercent
@@ -19,6 +21,8 @@ class VolumeResources(val volume: EncryptedVolume, context: Context) {
         ImageLoader.Builder(context).diskCache(null)
             .fileSystem(EncryptedFileReaderFileSystem(volume)).components {
                 add(VideoFrameDecoder.Factory())
+                // Prevent Coil from trying to parse paths as URIs.
+                add(Mapper<String, Uri> { data, _ -> Uri(path = data) })
             }.also {
                 it.extras[Extras.Key.videoFramePercent] = 0.1
                 it.extras[Extras.Key.preferVideoFrameEmbeddedThumbnail] = true
