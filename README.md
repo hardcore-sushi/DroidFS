@@ -5,9 +5,9 @@ It currently supports [gocryptfs](https://github.com/rfjakob/gocryptfs) and [Cry
 For mortals: Encrypted storage compatible with already existing softwares.
 
 <p align="center">
-<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" height="500" style="max-height: 500px;">
-<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" height="500" style="max-height: 500px;">
-<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" height="500" style="max-height: 500px;">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" width="32%">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/2.png" width="32%">
+<img src="https://tangled.org/cipherd.arkensys.dedyn.io/DroidFS/raw/master/fastlane/metadata/android/en-US/images/phoneScreenshots/6.png" width="32%">
 </p>
 
 # Support
@@ -72,7 +72,7 @@ Some available features are considered risky and are therefore disabled by defau
 
 # Download
 <a href="https://f-droid.org/packages/sushi.hardcore.droidfs">
-	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="90" style="max-height: 90px; border: none;">
+	<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" width="240">
 </a>
 
 You can download DroidFS from [F-Droid](https://f-droid.org/packages/sushi.hardcore.droidfs), from GitHub [releases](https://github.com/hardcore-sushi/DroidFS/releases), or from IPFS: [local](http://bafybeiecq3jetittpxsbrritawvodmm6zogfgc4zfl5ydbdj3nis4n5ede.ipfs.localhost:8080), [gateway](https://bafybeiecq3jetittpxsbrritawvodmm6zogfgc4zfl5ydbdj3nis4n5ede.ipfs.dweb.link).
