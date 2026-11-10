@@ -146,6 +146,9 @@ class ExplorerElementAdapter(
 
         override fun bind(explorerElement: ExplorerElement, position: Int, isSelected: Boolean) {
             super.bind(explorerElement, position, isSelected)
+            // Cancel the task from the previous bind to prevent the new
+            // thumbnail from being overwritten by the old one.
+            cancelThumbnailLoading()
             val adapter = bindingAdapter as ExplorerElementAdapter
             thumbnailLoadingTask = when {
                 FileTypes.isImage(explorerElement.name) -> {
