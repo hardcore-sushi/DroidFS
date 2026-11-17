@@ -1,0 +1,27 @@
+<resources>
+    <string-array name="sort_orders_entries">
+        <item>Nom</item>
+        <item>Taille</item>
+        <item>Date</item>
+        <item>Nom (décroissant)</item>
+        <item>Taille (décroissante)</item>
+        <item>Date (décroissante)</item>
+    </string-array>
+
+    <string-array name="color_names">
+        <item>Dynamique</item>
+        <item>Vert</item>
+        <item>Rouge</item>
+        <item>Bleu</item>
+        <item>Jaune</item>
+        <item>Orange</item>
+        <item>Violet</item>
+        <item>Rose</item>
+    </string-array>
+
+    <string-array name="export_methods">
+        <item>Auto (selon la mémoire disponible)</item>
+        <item>Exportation temporaire sur le disque (fiable mais peut laisser des traces)</item>
+        <item>Fichier en mémoire (plus sûr mais ne fonctionne pas toujours)</item>
+    </string-array>
+</resources>
