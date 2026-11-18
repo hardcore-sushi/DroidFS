@@ -289,7 +289,7 @@
     <string name="usf_background">Désactiver le verrouillage automatique des volumes</string>
     <string name="usf_background_summary">Ne pas verrouiller les volumes quand l\'application passe en arrière-plan</string>
     <string name="usf_keep_open">Garder les volumes ouverts</string>
-    <string name="usf_keep_open_summary">Maintenir l\'application en cours d\'exécution en arrière-plan pour garder les volumes ouverts</string>
+    <string name="usf_keep_open_summary">Maintenir l\'application en arrière-plan pour garder les volumes ouverts</string>
     <string name="lock_on_screen_lock">Verrouiller les volumes quand l\'écran est verrouillé</string>
     <string name="gocryptfs_details">Rapide, mais ne masque ni la taille des fichiers ni la structure des dossiers</string>
     <string name="cryfs_details">Plus lent, mais protège les métadonnées et empêche les attaques par remplacement</string>
