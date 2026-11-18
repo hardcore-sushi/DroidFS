@@ -7,7 +7,7 @@
     <string name="password">Mot de passe</string>
     <string name="import_files">Importer/Chiffrer des fichiers</string>
     <string name="import_folder">Importer/Chiffrer un dossier</string>
-    <string name="discovering_files">Recherche des fichiers…</string>
+    <string name="discovering_files">Recherche de fichiers…</string>
     <string name="mkdir">Créer un dossier</string>
     <string name="dir_empty">Dossier vide</string>
     <string name="warning">Attention !</string>
