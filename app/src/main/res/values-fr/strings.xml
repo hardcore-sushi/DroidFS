@@ -243,7 +243,7 @@
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, lecture seule)</string>
     <string name="volume_type_inaccessible">(%s, inaccessible)</string>
-    <string name="io_error">Erreur d\'E/S (I/O).</string>
+    <string name="io_error">Erreur d'entrée/sortie.</string>
     <string name="use_fingerprint">Utiliser l\'empreinte digitale au lieu du mot de passe actuel</string>
     <string name="remember_volume">Mémoriser le volume</string>
     <string name="open_volume">Ouvrir le volume</string>
@@ -251,7 +251,7 @@
     <string name="volume_unlocked">Volume déverrouillé</string>
     <string name="lock_volume">Verrouiller le volume</string>
     <string name="lock">Verrouiller</string>
-    <string name="ux">EU (UX)</string>
+    <string name="ux">Expérience utilisateur</string>
     <string name="theme_color">Couleur du thème</string>
     <string name="theme_color_summary">Changer la couleur du thème de l\'application</string>
     <string name="black_theme">Thème noir</string>
