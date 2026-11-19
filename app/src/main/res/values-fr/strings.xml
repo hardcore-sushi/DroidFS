@@ -7,7 +7,7 @@
     <string name="password">Mot de passe</string>
     <string name="import_files">Importer/Chiffrer des fichiers</string>
     <string name="import_folder">Importer/Chiffrer un dossier</string>
-    <string name="discovering_files">Recherche de fichiers…</string>
+    <string name="discovering_files">Énumération des fichiers…</string>
     <string name="mkdir">Créer un dossier</string>
     <string name="dir_empty">Dossier vide</string>
     <string name="warning">Attention !</string>
@@ -243,7 +243,7 @@
     <string name="volume_type">(%s)</string>
     <string name="volume_type_read_only">(%s, lecture seule)</string>
     <string name="volume_type_inaccessible">(%s, inaccessible)</string>
-    <string name="io_error">Erreur d\'E/S.</string>
+    <string name="io_error">Erreur d\'E/S (I/O).</string>
     <string name="use_fingerprint">Utiliser l\'empreinte digitale au lieu du mot de passe actuel</string>
     <string name="remember_volume">Mémoriser le volume</string>
     <string name="open_volume">Ouvrir le volume</string>
