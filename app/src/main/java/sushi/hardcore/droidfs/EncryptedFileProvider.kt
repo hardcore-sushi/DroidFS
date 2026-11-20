@@ -6,6 +6,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.ParcelFileDescriptor
 import android.system.Os
+import android.system.OsConstants
 import android.util.Log
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
@@ -201,7 +202,8 @@ class EncryptedFileProvider(context: Context) {
         allowWrites: Boolean,
     ): Pair<ParcelFileDescriptor?, Error> {
         val mode = ParcelFileDescriptor.parseMode(mode)
-        return if (mode and ParcelFileDescriptor.MODE_READ_ONLY != 0) {
+        val accessMode = mode and ParcelFileDescriptor.MODE_READ_WRITE
+        return if (accessMode == ParcelFileDescriptor.MODE_READ_ONLY) {
             if (!file.isValid) return Pair(null, Error.INVALID_STATE)
             Pair(file.open(mode, furtive), Error.SUCCESS)
         } else {
@@ -218,7 +220,7 @@ class EncryptedFileProvider(context: Context) {
                 }
             }
 
-            if (mode and ParcelFileDescriptor.MODE_WRITE_ONLY != 0) {
+            if (accessMode == ParcelFileDescriptor.MODE_WRITE_ONLY) {
                 if (mode and ParcelFileDescriptor.MODE_APPEND != 0) {
                     return Pair(null, Error.UNSUPPORTED_APPEND)
                 }
@@ -238,8 +240,10 @@ class EncryptedFileProvider(context: Context) {
                 if (!file.isValid) return Pair(null, Error.INVALID_STATE)
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     val fd = file.open(mode, false)
-                    Pair(ParcelFileDescriptor.wrap(fd, handler) { e ->
+                    val clientFd = ParcelFileDescriptor.dup(fd.fileDescriptor)
+                    Pair(ParcelFileDescriptor.wrap(clientFd, handler) { e ->
                         if (e == null) {
+                            Os.lseek(fd.fileDescriptor, 0, OsConstants.SEEK_SET)
                             import(FileInputStream(fd.fileDescriptor))
                             if (furtive) {
                                 file.free()
