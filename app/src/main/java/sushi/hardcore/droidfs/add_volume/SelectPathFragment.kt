@@ -238,7 +238,7 @@ class SelectPathFragment: Fragment() {
                 volumeDatabase.getVolume(volumeName.toString(), hidden)
             }
             if (currentVolumeData != null) {
-                warning = R.string.volume_alread_saved
+                warning = R.string.volume_already_saved
             }
         } else {
             warning = R.string.choose_existing_volume

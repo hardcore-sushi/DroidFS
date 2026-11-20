@@ -126,7 +126,6 @@
     <string name="slideshow_started">Apresentação começou</string>
     <string name="ask_save_img_rotated">A imagem foi alternada. Você deseja salvar estas mudanças e substituir a imagem original?</string>
     <string name="image_saved_successfully">Mudanças na imagem salva com sucesso.</string>
-    <string name="bitmap_compress_failed">Falha ao compactar o bitmap.</string>
     <string name="file_write_failed">Falha ao salvar o arquivo.</string>
     <string name="version">Versão</string>
     <string name="error_cipher_null">Erro, o cipher é nulo</string>
@@ -166,7 +165,7 @@
     <string name="thumbnails_summary">Mostrar imagens e vídeos em miniatura</string>
     <string name="seek_seconds_forward">+%d segundos</string>
     <string name="seek_seconds_backward">-%d segundos</string>
-    <string name="volume_alread_saved">O volume já está salvo</string>
+    <string name="volume_already_saved">O volume já está salvo</string>
     <string name="remove">Remover</string>
     <string name="settings">Configurações</string>
     <string name="select_all">Selecionar tudo</string>

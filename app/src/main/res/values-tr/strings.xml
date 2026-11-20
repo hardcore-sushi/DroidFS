@@ -130,7 +130,6 @@
     <string name="slideshow_started">Slayt gösterisi başlatıldı</string>
     <string name="ask_save_img_rotated">Resim döndürüldü. Bu değişiklikleri kaydedip orijinal resmin üzerine yazmak istiyor musunuz ?</string>
     <string name="image_saved_successfully">Resim değişiklikleri başarıyla kaydedildi.</string>
-    <string name="bitmap_compress_failed">Bitmap sıkıştırılamadı.</string>
     <string name="file_write_failed">Dosya yazılamadı.</string>
     <string name="error_not_a_volume">Şifrelenmiş birim tanınmadı. Lütfen seçilen yolu kontrol edin.</string>
     <string name="version">Versiyon</string>
@@ -173,7 +172,7 @@
     <string name="seek_seconds_backward">-%d saniye</string>
     <string name="add_volume">Birim ekle</string>
     <string name="pick_directory">Klasör seç</string>
-    <string name="volume_alread_saved">Birim zaten kayıtlı</string>
+    <string name="volume_already_saved">Birim zaten kayıtlı</string>
     <string name="open_dialog_title">Açılıyor %s:</string>
     <string name="remove">Kaldır</string>
     <string name="settings">Ayarlar</string>

@@ -129,7 +129,6 @@
     <string name="slideshow_started">بدأ عرض الشرائح</string>
     <string name="ask_save_img_rotated">تم تدوير الصورة. هل تريد حفظ هذه التغييرات والكتابة فوق الصورة الأصلية ?</string>
     <string name="image_saved_successfully">تم حفظ تغييرات الصورة بنجاح.</string>
-    <string name="bitmap_compress_failed">فشل ضغط الصورة النقطية.</string>
     <string name="file_write_failed">فشل كتابة الملف.</string>
     <string name="error_not_a_volume">لم يتم التعرف على المجلد المشفر. رجاءاً تحقق من المسار المحدد.</string>
     <string name="version">إصدار</string>
@@ -172,7 +171,7 @@
     <string name="seek_seconds_backward">-%d ثواني</string>
     <string name="add_volume">أضف مجلد مشفر</string>
     <string name="pick_directory">اختر مسار</string>
-    <string name="volume_alread_saved">تم حفظ المجلد المشفر بالفعل</string>
+    <string name="volume_already_saved">تم حفظ المجلد المشفر بالفعل</string>
     <string name="open_dialog_title">يتم فتح %s:</string>
     <string name="remove">إزالة</string>
     <string name="settings">إعدادات</string>

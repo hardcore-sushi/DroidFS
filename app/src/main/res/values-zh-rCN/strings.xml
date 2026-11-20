@@ -131,7 +131,6 @@
     <string name="slideshow_started">开始幻灯片放映</string>
     <string name="ask_save_img_rotated">图片已经被旋转。要存储并覆盖原图吗</string>
     <string name="image_saved_successfully">图片改动已经成功保存</string>
-    <string name="bitmap_compress_failed">位图压缩失败</string>
     <string name="file_write_failed">写入文件失败</string>
     <string name="error_not_a_volume">加密卷未能被识别，请检查路径</string>
     <string name="version">版本</string>
@@ -174,7 +173,7 @@
     <string name="seek_seconds_backward">-%d 秒</string>
     <string name="add_volume">添加卷</string>
     <string name="pick_directory">选择文件夹</string>
-    <string name="volume_alread_saved">卷已经保存</string>
+    <string name="volume_already_saved">卷已经保存</string>
     <string name="open_dialog_title">正在打开%s:</string>
     <string name="remove">移除</string>
     <string name="settings">设置</string>

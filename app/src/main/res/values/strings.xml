@@ -134,7 +134,6 @@
     <string name="slideshow_started">Slideshow started</string>
     <string name="ask_save_img_rotated">The image has been rotated. Do you want to save these changes and overwrite the original image ?</string>
     <string name="image_saved_successfully">Image changes successfully saved.</string>
-    <string name="bitmap_compress_failed">Failed to compress the bitmap.</string>
     <string name="file_write_failed">Failed to write the file.</string>
     <string name="error_not_a_volume">Encrypted volume not recognized. Please check the selected path.</string>
     <string name="version">Version</string>
@@ -179,7 +178,7 @@
     <string name="seek_seconds_backward">-%d seconds</string>
     <string name="add_volume">Add volume</string>
     <string name="pick_directory">Pick a directory</string>
-    <string name="volume_alread_saved">Volume already saved</string>
+    <string name="volume_already_saved">Volume already saved</string>
     <string name="open_dialog_title">Opening %s:</string>
     <string name="remove">Remove</string>
     <string name="settings">Settings</string>

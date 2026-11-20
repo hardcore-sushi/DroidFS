@@ -131,7 +131,6 @@
     <string name="slideshow_started">התחל מצגת</string>
     <string name="ask_save_img_rotated">התמונה סובבה. האם ברצונך לשמור את השינויים הללו ולדרוס את התמונה המקורית?</string>
     <string name="image_saved_successfully">השינויים בתמונה נשמרו בהצלחה.</string>
-    <string name="bitmap_compress_failed">דחיסת מפת הסיביות נכשלה.</string>
     <string name="file_write_failed">כתיבת הקובץ נכשלה.</string>
     <string name="error_not_a_volume">אמצעי אחסון מוצפן לא זוהה. אנא בדוק את הנתיב שנבחר.</string>
     <string name="version">גרסא</string>
@@ -174,7 +173,7 @@
     <string name="seek_seconds_backward">-%d שניות</string>
     <string name="add_volume">הוסף אמצעי אחסון</string>
     <string name="pick_directory">בחר ספרייה</string>
-    <string name="volume_alread_saved">אמצעי אחסון כבר נשמר</string>
+    <string name="volume_already_saved">אמצעי אחסון כבר נשמר</string>
     <string name="open_dialog_title">פותח %s:</string>
     <string name="remove">הסר</string>
     <string name="settings">הגדרות</string>

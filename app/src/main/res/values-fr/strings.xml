@@ -134,7 +134,6 @@
     <string name="slideshow_started">Diaporama démarré</string>
     <string name="ask_save_img_rotated">L\'image a été tournée. Voulez-vous enregistrer ces modifications et écraser l\'image d\'origine ?</string>
     <string name="image_saved_successfully">Modifications de l\'image enregistrées avec succès.</string>
-    <string name="bitmap_compress_failed">Impossible de compresser l\'image (bitmap).</string>
     <string name="file_write_failed">Impossible d\'écrire le fichier.</string>
     <string name="error_not_a_volume">Volume chiffré non reconnu. Vérifiez le chemin sélectionné.</string>
     <string name="version">Version</string>
@@ -179,7 +178,7 @@
     <string name="seek_seconds_backward">-%d secondes</string>
     <string name="add_volume">Ajouter un volume</string>
     <string name="pick_directory">Choisir un dossier</string>
-    <string name="volume_alread_saved">Volume déjà enregistré</string>
+    <string name="volume_already_saved">Volume déjà enregistré</string>
     <string name="open_dialog_title">Ouverture de %s :</string>
     <string name="remove">Retirer</string>
     <string name="settings">Paramètres</string>

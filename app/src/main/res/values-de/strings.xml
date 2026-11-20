@@ -130,7 +130,6 @@
     <string name="slideshow_started">Diashow gestartet</string>
     <string name="ask_save_img_rotated">Das Bild wurde gedreht. Möchten Sie diese Änderungen speichern und das ursprüngliche Bild überschreiben?</string>
     <string name="image_saved_successfully">Bildänderungen erfolgreich gespeichert.</string>
-    <string name="bitmap_compress_failed">Komprimierung der Bitmap fehlgeschlagen.</string>
     <string name="file_write_failed">Fehler beim Schreiben der Datei.</string>
     <string name="error_not_a_volume">Verschlüsselter Datenträger nicht erkannt. Bitte überprüfen Sie den gewählten Pfad.</string>
     <string name="version">Version</string>
@@ -173,7 +172,7 @@
     <string name="seek_seconds_backward">-%d Sekunden</string>
     <string name="add_volume">Datenträger hinzufügen</string>
     <string name="pick_directory">Verzeichnis auswählen</string>
-    <string name="volume_alread_saved">Volume bereits gespeichert</string>
+    <string name="volume_already_saved">Volume bereits gespeichert</string>
     <string name="open_dialog_title">Öffnen von %s:</string>
     <string name="remove">Entfernen</string>
     <string name="settings">Einstellungen</string>

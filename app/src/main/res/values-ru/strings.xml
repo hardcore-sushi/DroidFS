@@ -129,7 +129,6 @@
     <string name="slideshow_started">Слайдшоу запущено</string>
     <string name="ask_save_img_rotated">Изображение было повёрнуто. Сохранить изменения и перезаписать исходное изображение?</string>
     <string name="image_saved_successfully">Изменённое изображение успешно сохранено.</string>
-    <string name="bitmap_compress_failed">Невозможно сжать растровое изображение.</string>
     <string name="file_write_failed">Невозможно записать файл.</string>
     <string name="error_not_a_volume">Зашифрованный том не распознан. Проверьте выбранный путь.</string>
     <string name="version">Версия</string>
@@ -173,7 +172,7 @@
     <string name="seek_seconds_backward">-%d сек.</string>
     <string name="add_volume">Добавить том</string>
     <string name="pick_directory">Выбрать папку</string>
-    <string name="volume_alread_saved">Том уже сохранён</string>
+    <string name="volume_already_saved">Том уже сохранён</string>
     <string name="open_dialog_title">Открытие \"%s\":</string>
     <string name="remove">Удалить</string>
     <string name="settings">Настройки</string>
