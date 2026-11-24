@@ -62,6 +62,7 @@
             app:widgetLayout="@layout/preference_widget_material_switch" />
 
         <SwitchPreferenceCompat
+            android:defaultValue="true"
             android:icon="@drawable/icon_lock_screen"
             android:key="lock_on_screen_lock"
             android:title="@string/lock_on_screen_lock"
