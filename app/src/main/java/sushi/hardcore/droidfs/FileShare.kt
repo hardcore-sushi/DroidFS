@@ -66,12 +66,16 @@ class FileShare(context: Context) {
         return if (result == null) {
             Pair(null, R.string.export_failed_export)
         } else {
+            val appName = TemporaryFileProvider.instance.getAppPreference(File(exportedFile.path).extension)
             Pair(Intent(Intent.ACTION_VIEW).apply {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 if (usfSafWrite) {
                     addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
                 }
                 setDataAndType(result.first, result.second)
+                if (appName != null) {
+                    setPackage(appName)
+                }
             }, null)
         }
     }
